@@ -191,6 +191,24 @@ router.get('/applications-by-position', async (req, res) => {
   }
 });
 
+// Test position ID generation
+router.get('/test-position-id', (req, res) => {
+  const testCases = [
+    { location: { country: 'India' }, designation: 'President of India' },
+    { location: { country: 'India', zone: 'South India' }, designation: 'Head of South India' },
+    { location: { country: 'India', zone: 'South India', state: 'Goa' }, designation: 'Head of Goa' },
+    { location: { country: 'India', zone: 'West India', state: 'Maharashtra', pincode: '400011' }, designation: 'Head of 400011' }
+  ];
+  
+  const results = testCases.map(test => ({
+    location: test.location,
+    designation: test.designation,
+    generatedId: generatePositionId(test.location, test.designation)
+  }));
+  
+  res.json({ testResults: results });
+});
+
 // Helper function to create position with application status check
 async function createPositionWithApplicationStatus(sNo, post, designation, location) {
   try {
