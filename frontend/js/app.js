@@ -797,6 +797,17 @@ function openApplicationModal(positionId, positionTitle, location) {
 // Submit application
 async function submitApplication() {
     const form = document.getElementById('applicationForm');
+    
+    // Check if position information is available
+    if (!window.currentPosition) {
+        showNotification('Position information not found. Please try again.', 'error');
+        return;
+    }
+    
+    // Set position ID in the hidden form field BEFORE creating FormData
+    document.getElementById('positionId').value = window.currentPosition.id;
+    
+    // Now create FormData with the correct position ID
     const formData = new FormData(form);
     
     // Validate form
@@ -805,19 +816,12 @@ async function submitApplication() {
         return;
     }
     
-    // Check if position information is available
-    if (!window.currentPosition) {
-        showNotification('Position information not found. Please try again.', 'error');
-        return;
-    }
-    
     try {
         const submitBtn = document.getElementById('submitApplication');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
         
-        // Set position ID in the hidden form field instead of appending
-        document.getElementById('positionId').value = window.currentPosition.id;
+        // Add additional fields that aren't in the form
         formData.append('positionTitle', window.currentPosition.title);
         
         // Add location data from the position
