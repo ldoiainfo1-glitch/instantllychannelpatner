@@ -441,7 +441,7 @@ function clearDependentSelects(selectIds) {
     });
 }
 
-// Load positions from API with application status
+// Load applications directly from applications collection
 async function loadApplications() {
     try {
         showLoading(true);
@@ -456,7 +456,7 @@ async function loadApplications() {
         const pincode = document.getElementById('filterPincode').value;
         const village = document.getElementById('filterVillage').value;
         
-        // Build query params - use positions endpoint to show ALL positions (available + applied)
+        // Build query params - use applications endpoint to show all submitted applications
         const params = new URLSearchParams({ country });
         if (zone) params.append('zone', zone);
         if (state) params.append('state', state);
@@ -466,28 +466,52 @@ async function loadApplications() {
         if (pincode) params.append('pincode', pincode);
         if (village) params.append('village', village);
         
-        const url = `${API_BASE_URL}/positions?${params.toString()}`;
-        console.log('🔍 Loading positions with application status:', url);
+        const url = `${API_BASE_URL}/applications?${params.toString()}`;
+        console.log('🔍 Loading applications directly:', url);
         
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        currentPositions = await response.json();
-        console.log('📊 Positions loaded with application data:', currentPositions.length);
+        const applications = await response.json();
+        console.log('📊 Applications loaded:', applications.length);
         
-        // Log positions with applications for debugging
-        const positionsWithApplicants = currentPositions.filter(p => p.applicantDetails);
-        console.log('🎯 Positions with applicants:', positionsWithApplicants.length);
-        positionsWithApplicants.forEach(pos => {
+        // Convert applications to position-like format for display
+        currentPositions = applications.map((app, index) => ({
+            _id: app.positionId || app._id,
+            sNo: index + 1, // Generate serial number
+            post: 'Committee', // Default post type
+            designation: app.positionTitle || 'Position Applied', // Use position title if available
+            location: app.location || { country: 'India' }, // Use location from application
+            status: app.status === 'pending' ? 'Pending' : app.status === 'approved' ? 'Approved' : 'Verified',
+            applicantDetails: {
+                name: app.applicantInfo.name,
+                phone: app.applicantInfo.phone,
+                email: app.applicantInfo.email,
+                photo: app.applicantInfo.photo,
+                address: app.applicantInfo.address,
+                companyName: app.applicantInfo.companyName,
+                businessName: app.applicantInfo.businessName,
+                appliedDate: app.appliedDate,
+                introducedBy: app.introducedBy || 'Self',
+                introducedCount: 0,
+                days: Math.floor((new Date() - new Date(app.appliedDate)) / (1000 * 60 * 60 * 24)),
+                applicationId: app._id,
+                paymentStatus: app.paymentStatus || 'pending',
+                isVerified: app.isVerified || false
+            }
+        }));
+        
+        console.log('🎯 Applications converted to display format:', currentPositions.length);
+        currentPositions.forEach(pos => {
             console.log(`   - ${pos.designation}: ${pos.applicantDetails.name} (${pos.status})`);
         });
         
         displayPositions(currentPositions);
     } catch (error) {
-        console.error('❌ Error loading positions:', error);
-        showNotification('Error loading positions: ' + error.message, 'error');
+        console.error('❌ Error loading applications:', error);
+        showNotification('Error loading applications: ' + error.message, 'error');
     } finally {
         showLoading(false);
     }
@@ -548,13 +572,9 @@ function createPositionRow(position) {
     // Format location for position display
     const location = formatLocation(position.location);
     
-    // Handle name
+    // Handle name - since we're only showing applications, always show the applicant name
     let nameCell = '';
-    if (position.status === 'Available') {
-        nameCell = `<button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}')">
-                       <i class="fas fa-plus me-1"></i>Apply Now
-                   </button>`;
-    } else if (position.applicantDetails && position.applicantDetails.name) {
+    if (position.applicantDetails && position.applicantDetails.name) {
         nameCell = position.applicantDetails.name;
     } else {
         nameCell = '-';
@@ -765,22 +785,11 @@ function clearFilters() {
     showNotification('Filters cleared', 'info');
 }
 
-// Open application modal
+// Open application modal (for new applications - this system now shows existing applications only)
 function openApplicationModal(positionId) {
-    const position = currentPositions.find(p => p._id === positionId);
-    if (!position) {
-        showNotification('Position not found', 'error');
-        return;
-    }
-    
-    if (position.status !== 'Available') {
-        showNotification('This position is no longer available', 'warning');
-        return;
-    }
-    
-    document.getElementById('positionId').value = positionId;
-    const modal = new bootstrap.Modal(document.getElementById('applicationModal'));
-    modal.show();
+    // Since we're now showing applications directly, this function is not needed
+    // But keeping it for backwards compatibility
+    showNotification('This system now shows submitted applications. To apply for new positions, please contact admin.', 'info');
 }
 
 // Submit application

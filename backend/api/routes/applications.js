@@ -67,41 +67,21 @@ router.post('/', upload.single('photo'), async (req, res) => {
     fs.unlinkSync(photoPath);
     console.log('✅ Photo converted to base64 and file deleted from server');
 
-    // Handle both MongoDB ObjectIds and temporary IDs to find the position
-    let position;
-    let actualPositionId;
+    // Create a new ObjectId for this application (no need for positions collection)
+    const newApplicationId = new mongoose.Types.ObjectId();
+    console.log('🆔 Generated new application ID:', newApplicationId);
     
-    // Check if it's a valid MongoDB ObjectId
-    if (mongoose.Types.ObjectId.isValid(positionId)) {
-      position = await Position.findById(positionId);
-      actualPositionId = positionId;
-    } else {
-      // Handle temporary IDs by finding using sNo (extract number from temp ID)
-      console.log('⚠️  Non-ObjectId positionId detected:', positionId);
-      
-      // Extract serial number from temporary ID (e.g., "temp_1_1761581511896" -> 1)
-      const sNoMatch = positionId.match(/temp_(\d+)_/);
-      if (sNoMatch) {
-        const sNo = parseInt(sNoMatch[1]);
-        position = await Position.findOne({ sNo: sNo });
-        actualPositionId = position ? position._id : null;
-        console.log('🔄 Found position by sNo:', sNo, position ? 'Success' : 'Failed');
-      }
-    }
+    // For now, we'll use the positionId as a reference, but we don't need to validate it exists
+    // The application is self-contained with all necessary information
     
-    if (!position) {
-      console.error('❌ Position not found for ID:', positionId);
-      return res.status(404).json({ error: 'Position not found' });
-    }
-    
-    // Check if someone has already applied for this position
+    // Check if this user has already applied (by phone number)
     const existingApplication = await Application.findOne({ 
-      positionId: actualPositionId,
+      'applicantInfo.phone': phone.trim(),
       status: { $in: ['pending', 'approved'] }
     });
     
     if (existingApplication) {
-      return res.status(400).json({ error: 'Position is not available - someone has already applied' });
+      return res.status(400).json({ error: 'You have already submitted an application. Please wait for admin review.' });
     }
 
     // Generate email from phone
@@ -109,7 +89,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
 
     // Create new application in applications collection
     const newApplication = new Application({
-      positionId: actualPositionId,
+      positionId: newApplicationId, // Use the new application ID as position reference
       applicantInfo: {
         name: name.trim(),
         phone: phone.trim(),
