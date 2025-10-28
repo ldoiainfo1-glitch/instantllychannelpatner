@@ -559,9 +559,10 @@ function createPositionRow(position) {
     if (position.status === 'Available') {
         nameCell = `<button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
                         <i class="fas fa-plus me-1"></i>Apply Now
-                    </button>`;
+                    </button>
+                    <br><small class="text-muted mt-1">ID: ${position._id}</small>`;
     } else if (position.applicantDetails && position.applicantDetails.name) {
-        nameCell = position.applicantDetails.name;
+        nameCell = `${position.applicantDetails.name}<br><small class="text-muted">ID: ${position._id}</small>`;
     } else {
         nameCell = '-';
     }
@@ -773,11 +774,11 @@ function clearFilters() {
 
 // Open application modal for applying to positions
 function openApplicationModal(positionId, positionTitle, location) {
-    console.log('🎯 Opening application modal for:', { positionId, positionTitle, location });
+    console.log('🎯 Opening application modal for position ID:', positionId, 'Title:', positionTitle);
     
     // Store current position details for form submission
     window.currentPosition = {
-        id: positionId,
+        id: positionId, // This is the unique position ID from dynamic-positions
         title: positionTitle,
         location: location
     };

@@ -63,9 +63,9 @@ router.post('/', upload.single('photo'), async (req, res) => {
     
     console.log('📝 New application received:', { positionId, name, phone, companyName, businessName });
     
-    // Validate required fields
+    // Validate required fields (positionId is now the dynamic position ID from frontend)
     if (!positionId || !name || !phone || !address || !companyName || !businessName) {
-      return res.status(400).json({ error: 'Missing required fields: name, phone, companyName, businessName, address' });
+      return res.status(400).json({ error: 'Missing required fields: positionId, name, phone, companyName, businessName, address' });
     }
     
     if (!req.file) {
@@ -106,7 +106,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
 
     // Create new application in applications collection
     const newApplication = new Application({
-      positionId: newApplicationId, // Use the new application ID as position reference
+      positionId: positionId, // Use the position ID passed from frontend
       applicantInfo: {
         name: name.trim(),
         phone: phone.trim(),

@@ -122,43 +122,126 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get specific position status by position ID (real-time)
+router.get('/status/:positionId', async (req, res) => {
+  try {
+    const { positionId } = req.params;
+    console.log('🔍 Checking real-time status for position:', positionId);
+    
+    // Find application for this position ID
+    const application = await Application.findOne({ positionId: positionId });
+    
+    if (application) {
+      res.json({
+        positionId: positionId,
+        status: 'occupied',
+        applicationStatus: application.status,
+        applicant: {
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          appliedDate: application.appliedDate,
+          days: Math.floor((new Date() - new Date(application.appliedDate)) / (1000 * 60 * 60 * 24))
+        }
+      });
+    } else {
+      res.json({
+        positionId: positionId,
+        status: 'available',
+        applicationStatus: null,
+        applicant: null
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error checking position status:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all applications grouped by position ID
+router.get('/applications-by-position', async (req, res) => {
+  try {
+    console.log('📊 Getting all applications grouped by position ID');
+    
+    const applications = await Application.find({}).sort({ appliedDate: -1 });
+    
+    const groupedByPosition = {};
+    applications.forEach(app => {
+      const posId = app.positionId || 'no-position-id';
+      if (!groupedByPosition[posId]) {
+        groupedByPosition[posId] = [];
+      }
+      groupedByPosition[posId].push({
+        applicationId: app._id,
+        applicantName: app.applicantInfo.name,
+        phone: app.applicantInfo.phone,
+        status: app.status,
+        appliedDate: app.appliedDate,
+        location: app.location
+      });
+    });
+    
+    res.json({
+      totalApplications: applications.length,
+      positionsWithApplications: Object.keys(groupedByPosition).length,
+      applicationsByPosition: groupedByPosition
+    });
+  } catch (error) {
+    console.error('❌ Error grouping applications by position:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Helper function to create position with application status check
 async function createPositionWithApplicationStatus(sNo, post, designation, location) {
   try {
-    // Create a unique identifier for this position based on location
-    const locationKey = Object.values(location).filter(v => v).join('_').toLowerCase().replace(/\s+/g, '_');
-    const positionId = `pos_${locationKey}`;
+    // Create a unique, consistent position ID based on location hierarchy
+    const positionId = generatePositionId(location, designation);
     
-    console.log('🔍 Checking for applications matching position:', designation, location);
+    console.log('🔍 Checking for applications with position ID:', positionId);
     
-    // Check if someone has already applied for this exact position in channelpartner.applications
-    let matchQuery = {
-      'location.country': location.country || 'India'
-    };
+    // Check if someone has already applied for this exact position using position ID
+    let existingApplication = await Application.findOne({ 
+      positionId: positionId 
+    });
     
-    // Only add location filters if they have values (not empty/null/undefined)
-    if (location.zone) matchQuery['location.zone'] = location.zone;
-    if (location.state) matchQuery['location.state'] = location.state;
-    if (location.division) matchQuery['location.division'] = location.division;
-    if (location.district) matchQuery['location.district'] = location.district;
-    if (location.tehsil) matchQuery['location.tehsil'] = location.tehsil;
-    if (location.pincode) matchQuery['location.pincode'] = location.pincode;
-    if (location.village) matchQuery['location.village'] = location.village;
-    
-    // For positions without specific location requirements, match applications with undefined/null values
-    if (!location.zone && !location.state && !location.division && !location.district && !location.tehsil && !location.pincode && !location.village) {
-      // This is a country-level position (like President), match apps with only country set
-      matchQuery = {
-        'location.country': 'India',
-        $or: [
-          { 'location.zone': { $in: [null, undefined] } },
-          { 'location.zone': { $exists: false } }
-        ]
+    // If no application found with position ID, try legacy location-based matching (for old applications)
+    if (!existingApplication) {
+      let matchQuery = {
+        'location.country': location.country || 'India'
       };
+      
+      // Only add location filters if they have values (not empty/null/undefined)
+      if (location.zone) matchQuery['location.zone'] = location.zone;
+      if (location.state) matchQuery['location.state'] = location.state;
+      if (location.division) matchQuery['location.division'] = location.division;
+      if (location.district) matchQuery['location.district'] = location.district;
+      if (location.tehsil) matchQuery['location.tehsil'] = location.tehsil;
+      if (location.pincode) matchQuery['location.pincode'] = location.pincode;
+      if (location.village) matchQuery['location.village'] = location.village;
+      
+      // For positions without specific location requirements, match applications with undefined/null values
+      if (!location.zone && !location.state && !location.division && !location.district && !location.tehsil && !location.pincode && !location.village) {
+        // This is a country-level position (like President), match apps with only country set
+        matchQuery = {
+          'location.country': 'India',
+          $or: [
+            { 'location.zone': { $in: [null, undefined] } },
+            { 'location.zone': { $exists: false } }
+          ]
+        };
+      }
+      
+      existingApplication = await Application.findOne(matchQuery);
+      
+      // If found through legacy matching, update it with the correct position ID
+      if (existingApplication) {
+        console.log('� Updating legacy application with position ID:', positionId);
+        existingApplication.positionId = positionId;
+        await existingApplication.save();
+      }
     }
     
-    let existingApplication = await Application.findOne(matchQuery);
-    console.log('🔍 Query:', JSON.stringify(matchQuery), 'Result:', existingApplication ? existingApplication.applicantInfo.name : 'None');
+    console.log('🔍 Position ID:', positionId, 'Application:', existingApplication ? existingApplication.applicantInfo.name : 'None');
     
     // If no exact match and this is a more specific position, try broader matches
     if (!existingApplication && (location.zone || location.state || location.district)) {
@@ -226,6 +309,35 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       applicantDetails: null
     };
   }
+}
+
+// Generate consistent position ID based on location hierarchy
+function generatePositionId(location, designation) {
+  const parts = [];
+  
+  // Build hierarchical position ID
+  if (location.country) parts.push(location.country.toLowerCase().replace(/\s+/g, '-'));
+  if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+  if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
+  if (location.division) parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
+  if (location.district) parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
+  if (location.tehsil) parts.push(location.tehsil.toLowerCase().replace(/\s+/g, '-'));
+  if (location.pincode) parts.push(location.pincode.toLowerCase().replace(/\s+/g, '-'));
+  if (location.village) parts.push(location.village.toLowerCase().replace(/\s+/g, '-'));
+  
+  // Determine position type
+  let positionType = 'president';
+  if (location.village) positionType = 'village-head';
+  else if (location.pincode) positionType = 'pincode-head';
+  else if (location.tehsil) positionType = 'tehsil-head';
+  else if (location.district) positionType = 'district-head';
+  else if (location.division) positionType = 'division-head';
+  else if (location.state) positionType = 'state-head';
+  else if (location.zone) positionType = 'zone-head';
+  
+  // Create unique position ID: pos_type_location-hierarchy
+  const locationPath = parts.join('_');
+  return `pos_${positionType}_${locationPath}`;
 }
 
 module.exports = router;
