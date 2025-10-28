@@ -58,6 +58,7 @@ router.get('/', async (req, res) => {
       
       if (application) {
         // Position has an application
+        console.log(`📝 Found application for position ${position.sNo} (${position.designation}): ${application.applicantInfo.name}`);
         positionObj.status = application.status === 'pending' ? 'Pending' : 'Approved';
         positionObj.applicantDetails = {
           name: application.applicantInfo.name,

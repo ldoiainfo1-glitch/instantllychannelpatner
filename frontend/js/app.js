@@ -470,12 +470,24 @@ async function loadApplications() {
         console.log('🔍 Loading positions with application status:', url);
         
         const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         currentPositions = await response.json();
         console.log('📊 Positions loaded with application data:', currentPositions.length);
+        
+        // Log positions with applications for debugging
+        const positionsWithApplicants = currentPositions.filter(p => p.applicantDetails);
+        console.log('🎯 Positions with applicants:', positionsWithApplicants.length);
+        positionsWithApplicants.forEach(pos => {
+            console.log(`   - ${pos.designation}: ${pos.applicantDetails.name} (${pos.status})`);
+        });
+        
         displayPositions(currentPositions);
     } catch (error) {
-        console.error('Error loading positions:', error);
-        showNotification('Error loading positions', 'error');
+        console.error('❌ Error loading positions:', error);
+        showNotification('Error loading positions: ' + error.message, 'error');
     } finally {
         showLoading(false);
     }
@@ -788,10 +800,15 @@ async function submitApplication() {
         const result = await response.json();
         
         if (response.ok) {
-            showNotification('Application submitted successfully!', 'success');
+            showNotification('Application submitted successfully! Refreshing data...', 'success');
             bootstrap.Modal.getInstance(document.getElementById('applicationModal')).hide();
             form.reset();
-            loadApplications(); // Refresh applications
+            
+            // Add a small delay to ensure database is updated, then refresh
+            setTimeout(() => {
+                console.log('🔄 Refreshing positions data after application submission...');
+                loadApplications(); // Refresh applications to show updated status
+            }, 1000);
         } else {
             throw new Error(result.error || 'Application failed');
         }
