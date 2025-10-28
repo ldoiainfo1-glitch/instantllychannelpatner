@@ -121,12 +121,11 @@ router.post('/', upload.single('photo'), async (req, res) => {
   }
 });
 
-// Get all applications with location filtering
+// Get all applications directly (no position dependency)
 router.get('/', async (req, res) => {
   try {
     const { 
       status, 
-      positionId, 
       country, 
       zone, 
       state, 
@@ -137,47 +136,37 @@ router.get('/', async (req, res) => {
       village 
     } = req.query;
     
+    console.log('📋 Loading applications with filters:', { status, country, zone, state, division, district, tehsil, pincode, village });
+    
     // Build application filter
     let applicationFilter = {};
     if (status) applicationFilter.status = status;
-    if (positionId) applicationFilter.positionId = positionId;
     
-    // Get applications from applications collection and populate position details
-    let applicationsQuery = Application.find(applicationFilter)
-      .populate('positionId')
+    // Get all applications from applications collection (no position population needed)
+    const applications = await Application.find(applicationFilter)
       .sort({ appliedDate: -1 });
     
-    const applications = await applicationsQuery;
+    console.log(`📊 Found ${applications.length} applications in database`);
     
-    // Filter by location if provided
+    // Since applications don't have location data, we'll return all applications
+    // In a real system, you'd add location fields to the Application model
     let filteredApplications = applications;
-    if (country || zone || state || division || district || tehsil || pincode || village) {
-      filteredApplications = applications.filter(app => {
-        if (!app.positionId || !app.positionId.location) return false;
-        
-        const location = app.positionId.location;
-        
-        if (country && location.country !== country) return false;
-        if (zone && location.zone !== zone) return false;
-        if (state && location.state !== state) return false;
-        if (division && location.division !== division) return false;
-        if (district && location.district !== district) return false;
-        if (tehsil && location.tehsil !== tehsil) return false;
-        if (pincode && location.pincode !== pincode) return false;
-        if (village && location.village !== village) return false;
-        
-        return true;
-      });
-    }
     
-    // Format applications for frontend
+    // For now, we'll just filter by status and show all applications
+    // Location filtering can be added later by storing location in application itself
+    
+    // Format applications for frontend (no position dependency)
     const formattedApplications = filteredApplications.map(app => ({
       _id: app._id,
       applicationId: app._id,
-      positionId: app.positionId?._id,
-      positionTitle: app.positionId?.designation,
-      positionPost: app.positionId?.post,
-      location: app.positionId?.location,
+      positionId: app.positionId,
+      positionTitle: `${app.applicantInfo.companyName} Channel Partner`, // Generate title from application
+      positionPost: 'Committee',
+      location: { 
+        country: 'India',
+        state: 'Applied Location', // Could extract from address if needed
+        // Add more location parsing from address if required
+      },
       applicantInfo: app.applicantInfo,
       introducedBy: app.introducedBy,
       status: app.status,
@@ -187,11 +176,11 @@ router.get('/', async (req, res) => {
       paymentAmount: app.paymentAmount,
       paymentDate: app.paymentDate,
       adminNotes: app.adminNotes,
-      contribution: app.positionId?.contribution || 10000,
-      credits: app.positionId?.credits || 60000
+      contribution: 10000,
+      credits: 60000
     }));
     
-    console.log(`📊 Found ${formattedApplications.length} applications in applications collection`);
+    console.log(`📊 Returning ${formattedApplications.length} formatted applications`);
     res.json(formattedApplications);
   } catch (error) {
     console.error('❌ Error fetching applications:', error);

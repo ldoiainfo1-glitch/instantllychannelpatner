@@ -36,6 +36,20 @@ const applicationSchema = new mongoose.Schema({
       required: true
     }
   },
+  // Add location information to the application itself
+  location: {
+    country: {
+      type: String,
+      default: 'India'
+    },
+    zone: String,
+    state: String,
+    division: String,
+    district: String,
+    tehsil: String,
+    pincode: String,
+    village: String
+  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
