@@ -529,15 +529,17 @@ function createPositionRow(position) {
     
     const statusClass = getStatusClass(position.status);
     
-    // Determine status text based on payment and verification
+    // Determine status text based on application workflow
     let statusText = position.status;
-    if (position.applicantDetails && position.applicantDetails.userId) {
-        if (position.applicantDetails.userId.paymentStatus === 'paid' && position.isVerified) {
+    if (position.applicantDetails) {
+        if (position.status === 'Verified' || (position.applicantDetails.isVerified && position.applicantDetails.paymentStatus === 'paid')) {
+            statusText = 'Verified';
+        } else if (position.status === 'Approved' && position.applicantDetails.paymentStatus === 'paid') {
             statusText = 'Payment Done';
-        } else if (position.applicantDetails.userId.paymentStatus === 'paid') {
-            statusText = 'Paid - Pending Verification';
-        } else if (position.status === 'Approved') {
+        } else if (position.status === 'Approved' && position.applicantDetails.paymentStatus === 'pending') {
             statusText = 'Approved - Payment Pending';
+        } else if (position.status === 'Pending') {
+            statusText = 'Pending Admin Review';
         } else {
             statusText = position.status;
         }
@@ -653,7 +655,12 @@ function getStatusClass(status) {
     const statusClasses = {
         'Available': 'bg-success',
         'Pending': 'bg-warning text-dark',
+        'Pending Admin Review': 'bg-warning text-dark',
         'Approved': 'bg-info',
+        'Approved - Payment Pending': 'bg-info',
+        'Payment Done': 'bg-primary',
+        'Verified': 'bg-success',
+        'Rejected': 'bg-danger',
         'Occupied': 'bg-secondary'
     };
     return statusClasses[status] || 'bg-secondary';
@@ -808,7 +815,7 @@ async function submitApplication() {
             setTimeout(() => {
                 console.log('🔄 Refreshing positions data after application submission...');
                 loadApplications(); // Refresh applications to show updated status
-            }, 1000);
+            }, 500);
         } else {
             throw new Error(result.error || 'Application failed');
         }

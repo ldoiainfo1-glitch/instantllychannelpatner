@@ -43,23 +43,37 @@ router.get('/', async (req, res) => {
     
     const positions = await query;
     
-    // Get applications for these positions from applications collection
+    // Get applications for these positions from channelpartner.applications collection
     const Application = require('../models/Application');
     const User = require('../models/User');
+    
+    console.log(`🔍 Checking applications for ${positions.length} positions...`);
     
     const enrichedPositions = await Promise.all(positions.map(async (position) => {
       const positionObj = position.toObject();
       
-      // Find application for this position
+      // Find application for this specific position in channelpartner.applications
       const application = await Application.findOne({ 
-        positionId: position._id,
-        status: { $in: ['pending', 'approved'] }
-      });
+        positionId: position._id
+      }).populate('userId');
       
       if (application) {
-        // Position has an application
-        console.log(`📝 Found application for position ${position.sNo} (${position.designation}): ${application.applicantInfo.name}`);
-        positionObj.status = application.status === 'pending' ? 'Pending' : 'Approved';
+        // Position has an application - show applicant data instead of Apply button
+        console.log(`✅ Found application for position ${position.sNo} (${position.designation}): ${application.applicantInfo.name} - Status: ${application.status}`);
+        
+        // Set status based on application workflow
+        let displayStatus = 'Pending';
+        if (application.status === 'approved' && application.isVerified) {
+          displayStatus = 'Verified';
+        } else if (application.status === 'approved') {
+          displayStatus = 'Approved';
+        } else if (application.status === 'pending') {
+          displayStatus = 'Pending';
+        } else if (application.status === 'rejected') {
+          displayStatus = 'Rejected';
+        }
+        
+        positionObj.status = displayStatus;
         positionObj.applicantDetails = {
           name: application.applicantInfo.name,
           phone: application.applicantInfo.phone,
@@ -69,22 +83,25 @@ router.get('/', async (req, res) => {
           companyName: application.applicantInfo.companyName,
           businessName: application.applicantInfo.businessName,
           appliedDate: application.appliedDate,
-          introducedBy: application.introducedBy,
-          days: Math.floor((new Date() - new Date(application.appliedDate)) / (1000 * 60 * 60 * 24))
+          introducedBy: application.introducedBy || 'Self',
+          introducedCount: 0,
+          days: Math.floor((new Date() - new Date(application.appliedDate)) / (1000 * 60 * 60 * 24)),
+          applicationId: application._id,
+          paymentStatus: application.paymentStatus || 'pending',
+          isVerified: application.isVerified || false
         };
         
-        // If approved, get user details
-        if (application.status === 'approved') {
-          const user = await User.findOne({ phone: application.applicantInfo.phone });
-          if (user) {
-            positionObj.applicantDetails.userId = user._id;
-            positionObj.applicantDetails.personCode = user.personCode;
-            positionObj.applicantDetails.introducedCount = user.introducedCount || 0;
-            positionObj.isVerified = user.isVerified;
-          }
+        // Get additional user details if user exists
+        if (application.userId) {
+          const user = application.userId;
+          positionObj.applicantDetails.userId = user._id;
+          positionObj.applicantDetails.personCode = user.personCode;
+          positionObj.applicantDetails.introducedCount = user.introducedCount || 0;
+          positionObj.isVerified = user.isVerified || application.isVerified;
         }
       } else {
-        // Position is available
+        // Position is available - show Apply Now button
+        console.log(`❓ No application found for position ${position.sNo} (${position.designation}) - Available`);
         positionObj.status = 'Available';
         positionObj.applicantDetails = null;
       }
