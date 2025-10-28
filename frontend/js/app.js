@@ -34,14 +34,8 @@ function setupEventListeners() {
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
     
-    // Cascade filters
-    document.getElementById('filterZone').addEventListener('change', handleZoneChange);
-    document.getElementById('filterState').addEventListener('change', handleStateChange);
-    document.getElementById('filterDivision').addEventListener('change', handleDivisionChange);
-    document.getElementById('filterDistrict').addEventListener('change', handleDistrictChange);
-    document.getElementById('filterTehsil').addEventListener('change', handleTehsilChange);
-    document.getElementById('filterPincode').addEventListener('change', handlePincodeChange);
-    document.getElementById('filterVillage').addEventListener('change', handleVillageChange);
+    // Setup searchable filters
+    setupSearchableFilters();
     
     // Application form
     document.getElementById('submitApplication').addEventListener('click', submitApplication);
@@ -242,28 +236,11 @@ function buildLocationHierarchy(positions) {
     return hierarchy;
 }
 
-// Populate all dropdowns with complete options for direct selection
+// Initialize searchable filters - options are populated on-demand when users click
 function populateAllDropdowns() {
-    // Populate zones
-    populateDropdown('filterZone', locationData.zones);
-    
-    // Populate all states from entire India
-    populateDropdown('filterState', locationData.states);
-    
-    // Populate all divisions
-    populateDropdown('filterDivision', locationData.divisions);
-    
-    // Populate all districts
-    populateDropdown('filterDistrict', locationData.districts);
-    
-    // Populate all tehsils
-    populateDropdown('filterTehsil', locationData.tehsils);
-    
-    // Populate all pincodes
-    populateDropdown('filterPincode', locationData.pincodes);
-    
-    // Populate all villages
-    populateDropdown('filterVillage', locationData.villages);
+    console.log('Searchable filters ready with location data loaded');
+    // Note: Individual filter dropdowns are now populated on-demand when clicked
+    // This improves performance and provides better search functionality
 }
 
 // Populate zone filter
@@ -762,10 +739,36 @@ async function handleSearch() {
 
 // Clear all filters
 function clearFilters() {
+    // Clear search inputs
     document.getElementById('searchName').value = '';
     document.getElementById('searchPhone').value = '';
-    document.getElementById('filterZone').selectedIndex = 0;
-    clearDependentSelects(['filterState', 'filterDivision', 'filterDistrict', 'filterTehsil', 'filterPincode', 'filterVillage']);
+    
+    // Clear all location filters
+    const filters = ['filterZone', 'filterState', 'filterDivision', 'filterDistrict', 'filterTehsil', 'filterPincode', 'filterVillage'];
+    filters.forEach(filterId => {
+        const input = document.getElementById(filterId);
+        const clearBtn = document.getElementById(filterId.replace('filter', 'clear'));
+        
+        if (input) {
+            input.value = '';
+            input.classList.remove('has-value');
+        }
+        
+        if (clearBtn) {
+            clearBtn.style.display = 'none';
+        }
+    });
+    
+    // Hide all dropdowns
+    const dropdowns = ['zoneDropdown', 'stateDropdown', 'divisionDropdown', 'districtDropdown', 'tehsilDropdown', 'pincodeDropdown', 'villageDropdown'];
+    dropdowns.forEach(dropdownId => {
+        hideFilterDropdown(dropdownId);
+    });
+    
+    // Remove active classes from all filter containers
+    document.querySelectorAll('.filter-container.active').forEach(container => {
+        container.classList.remove('active');
+    });
     
     // Reload applications with default India filter
     loadApplications();
@@ -1386,6 +1389,193 @@ function showLoading(show) {
             </tr>
         `;
     }
+}
+
+// Setup searchable filters with autocomplete functionality
+function setupSearchableFilters() {
+    const filters = [
+        { id: 'filterZone', dropdown: 'zoneDropdown', clear: 'clearZone', dataKey: 'zones' },
+        { id: 'filterState', dropdown: 'stateDropdown', clear: 'clearState', dataKey: 'states' },
+        { id: 'filterDivision', dropdown: 'divisionDropdown', clear: 'clearDivision', dataKey: 'divisions' },
+        { id: 'filterDistrict', dropdown: 'districtDropdown', clear: 'clearDistrict', dataKey: 'districts' },
+        { id: 'filterTehsil', dropdown: 'tehsilDropdown', clear: 'clearTehsil', dataKey: 'tehsils' },
+        { id: 'filterPincode', dropdown: 'pincodeDropdown', clear: 'clearPincode', dataKey: 'pincodes' },
+        { id: 'filterVillage', dropdown: 'villageDropdown', clear: 'clearVillage', dataKey: 'villages' }
+    ];
+
+    filters.forEach(filter => {
+        const input = document.getElementById(filter.id);
+        const dropdown = document.getElementById(filter.dropdown);
+        const clearBtn = document.getElementById(filter.clear);
+
+        if (input && dropdown && clearBtn) {
+            // Setup input click to show dropdown
+            input.addEventListener('click', () => {
+                showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
+            });
+
+            // Setup input focus to show dropdown
+            input.addEventListener('focus', () => {
+                showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
+            });
+
+            // Setup clear button
+            clearBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                clearSingleFilter(filter.id, filter.clear);
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    hideFilterDropdown(filter.dropdown);
+                }
+            });
+
+            // Reposition dropdown on scroll and resize
+            const repositionDropdown = () => {
+                if (dropdown.classList.contains('show')) {
+                    const rect = input.getBoundingClientRect();
+                    dropdown.style.top = `${rect.bottom}px`;
+                    dropdown.style.left = `${rect.left}px`;
+                    dropdown.style.width = `${rect.width}px`;
+                }
+            };
+
+            window.addEventListener('scroll', repositionDropdown);
+            window.addEventListener('resize', repositionDropdown);
+        }
+    });
+}
+
+// Show filter dropdown with search functionality
+function showFilterDropdown(inputId, dropdownId, dataKey) {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+    const container = input.closest('.filter-container');
+    
+    if (!locationData[dataKey] || !Array.isArray(locationData[dataKey])) {
+        return;
+    }
+
+    // Add active class to container for higher z-index
+    if (container) {
+        container.classList.add('active');
+    }
+
+    const data = locationData[dataKey];
+    
+    // Create search input and options
+    dropdown.innerHTML = `
+        <input type="text" class="filter-search-input" placeholder="Type to search..." id="search_${inputId}">
+        <div class="filter-options" id="options_${inputId}"></div>
+    `;
+
+    const searchInput = document.getElementById(`search_${inputId}`);
+    const optionsContainer = document.getElementById(`options_${inputId}`);
+
+    // Initial display of all options
+    displayFilterOptions(optionsContainer, data, inputId, dropdownId);
+
+    // Setup search functionality
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const filteredData = data.filter(item => 
+            item.toLowerCase().includes(searchTerm)
+        );
+        displayFilterOptions(optionsContainer, filteredData, inputId, dropdownId);
+    });
+
+    // Focus on search input
+    setTimeout(() => searchInput.focus(), 50);
+
+    // Position dropdown correctly (since it's now fixed positioned)
+    const rect = input.getBoundingClientRect();
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = `${rect.bottom}px`;
+    dropdown.style.left = `${rect.left}px`;
+    dropdown.style.width = `${rect.width}px`;
+    
+    // Show dropdown
+    dropdown.classList.add('show');
+}
+
+// Display filter options in dropdown
+function displayFilterOptions(container, data, inputId, dropdownId) {
+    if (data.length === 0) {
+        container.innerHTML = '<div class="no-results">No results found</div>';
+        return;
+    }
+
+    container.innerHTML = data.map(item => 
+        `<div class="filter-dropdown-item" data-value="${item}">${item}</div>`
+    ).join('');
+
+    // Setup click handlers for options
+    container.querySelectorAll('.filter-dropdown-item').forEach(item => {
+        item.addEventListener('click', () => {
+            selectFilterOption(inputId, dropdownId, item.dataset.value);
+        });
+    });
+}
+
+// Select a filter option
+function selectFilterOption(inputId, dropdownId, value) {
+    const input = document.getElementById(inputId);
+    const clearBtn = document.getElementById(inputId.replace('filter', 'clear'));
+    
+    // Set the input value
+    input.value = value;
+    input.classList.add('has-value');
+    
+    // Show clear button
+    if (clearBtn) {
+        clearBtn.style.display = 'flex';
+    }
+    
+    // Hide dropdown
+    hideFilterDropdown(dropdownId);
+    
+    // Trigger filter update
+    loadApplications();
+}
+
+// Hide filter dropdown
+function hideFilterDropdown(dropdownId) {
+    const dropdown = document.getElementById(dropdownId);
+    if (dropdown) {
+        dropdown.classList.remove('show');
+        
+        // Clear inline positioning styles
+        dropdown.style.top = '';
+        dropdown.style.left = '';
+        dropdown.style.width = '';
+        dropdown.style.position = '';
+        
+        // Remove active class from container
+        const container = dropdown.closest('.filter-container');
+        if (container) {
+            container.classList.remove('active');
+        }
+    }
+}
+
+// Clear a single filter
+function clearSingleFilter(inputId, clearBtnId) {
+    const input = document.getElementById(inputId);
+    const clearBtn = document.getElementById(clearBtnId);
+    
+    if (input) {
+        input.value = '';
+        input.classList.remove('has-value');
+    }
+    
+    if (clearBtn) {
+        clearBtn.style.display = 'none';
+    }
+    
+    // Trigger filter update
+    loadApplications();
 }
 
 

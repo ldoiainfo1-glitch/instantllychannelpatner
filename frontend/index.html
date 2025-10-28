@@ -122,7 +122,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Table location Filters -->
+                            <!-- Table location Filters with Search -->
                             <div class="row g-2 mt-2">
                                 <div class="col-auto" style="width: 120px;">
                                     <select class="form-select" id="filterCountry">
@@ -130,39 +130,67 @@
                                     </select>
                                 </div>
                                 <div class="col-auto" style="width: 140px;">
-                                    <select class="form-select" id="filterZone">
-                                        <option value="">Zones...</option>
-                                    </select>
+                                    <div class="filter-container">
+                                        <input type="text" class="form-control searchable-filter" id="filterZone" placeholder="Zones..." readonly>
+                                        <button type="button" class="btn-clear-filter" id="clearZone" style="display: none;" title="Clear Zone">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <div class="filter-dropdown" id="zoneDropdown"></div>
+                                    </div>
                                 </div>
                                 <div class="col-auto" style="width: 140px;">
-                                    <select class="form-select" id="filterState">
-                                        <option value="">States...</option>
-                                    </select>
+                                    <div class="filter-container">
+                                        <input type="text" class="form-control searchable-filter" id="filterState" placeholder="States..." readonly>
+                                        <button type="button" class="btn-clear-filter" id="clearState" style="display: none;" title="Clear State">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <div class="filter-dropdown" id="stateDropdown"></div>
+                                    </div>
                                 </div>
                                 <div class="col-auto" style="width: 140px;">
-                                    <select class="form-select" id="filterDivision">
-                                        <option value="">Divisions...</option>
-                                    </select>
+                                    <div class="filter-container">
+                                        <input type="text" class="form-control searchable-filter" id="filterDivision" placeholder="Divisions..." readonly>
+                                        <button type="button" class="btn-clear-filter" id="clearDivision" style="display: none;" title="Clear Division">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <div class="filter-dropdown" id="divisionDropdown"></div>
+                                    </div>
                                 </div>
                                 <div class="col-auto" style="width: 140px;">
-                                    <select class="form-select" id="filterDistrict">
-                                        <option value="">Districts...</option>
-                                    </select>
+                                    <div class="filter-container">
+                                        <input type="text" class="form-control searchable-filter" id="filterDistrict" placeholder="Districts..." readonly>
+                                        <button type="button" class="btn-clear-filter" id="clearDistrict" style="display: none;" title="Clear District">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <div class="filter-dropdown" id="districtDropdown"></div>
+                                    </div>
                                 </div>
                                 <div class="col-auto" style="width: 140px;">
-                                    <select class="form-select" id="filterTehsil">
-                                        <option value="">Tehsils...</option>
-                                    </select>
+                                    <div class="filter-container">
+                                        <input type="text" class="form-control searchable-filter" id="filterTehsil" placeholder="Tehsils..." readonly>
+                                        <button type="button" class="btn-clear-filter" id="clearTehsil" style="display: none;" title="Clear Tehsil">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <div class="filter-dropdown" id="tehsilDropdown"></div>
+                                    </div>
                                 </div>
                                 <div class="col-auto" style="width: 140px;">
-                                    <select class="form-select" id="filterPincode">
-                                        <option value="">Pincodes...</option>
-                                    </select>
+                                    <div class="filter-container">
+                                        <input type="text" class="form-control searchable-filter" id="filterPincode" placeholder="Pincodes..." readonly>
+                                        <button type="button" class="btn-clear-filter" id="clearPincode" style="display: none;" title="Clear Pincode">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <div class="filter-dropdown" id="pincodeDropdown"></div>
+                                    </div>
                                 </div>
                                 <div class="col-auto" style="width: 140px;">
-                                    <select class="form-select" id="filterVillage">
-                                        <option value="">Villages...</option>
-                                    </select>
+                                    <div class="filter-container">
+                                        <input type="text" class="form-control searchable-filter" id="filterVillage" placeholder="Villages..." readonly>
+                                        <button type="button" class="btn-clear-filter" id="clearVillage" style="display: none;" title="Clear Village">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <div class="filter-dropdown" id="villageDropdown"></div>
+                                    </div>
                                 </div>
                                 <div class="col-auto">
                                     <button class="btn btn-outline-secondary" id="clearFilters">
