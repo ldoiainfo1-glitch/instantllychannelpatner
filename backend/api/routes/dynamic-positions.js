@@ -218,6 +218,12 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
     console.log('🔍 Generated position ID for', designation, ':', positionId);
     console.log('🔍 Location used:', JSON.stringify(location));
     
+    // Validate that we got a proper position ID
+    if (!positionId || positionId.includes('_1761') || positionId.startsWith('pos_1_')) {
+      console.error('❌ Invalid position ID generated:', positionId);
+      console.error('❌ This indicates the generatePositionId function is not working properly');
+    }
+    
     // Check if someone has already applied for this exact position using position ID
     let existingApplication = await Application.findOne({ 
       positionId: positionId 
@@ -270,7 +276,7 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
     }
     
     const position = {
-      _id: positionId, // Use the generated position ID
+      _id: positionId, // Use the generated position ID as the main ID
       sNo,
       post,
       designation,
@@ -278,8 +284,8 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       contribution: 10000,
       credits: 60000,
       isTemplate: true, // Mark as dynamically generated
-      status: 'Available',
-      positionId: positionId // Also store as positionId field for clarity
+      status: 'Available'
+      // Don't duplicate positionId field - use _id as the position identifier
     };
     
     if (existingApplication) {
@@ -327,7 +333,6 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       credits: 60000,
       status: 'Available',
       isTemplate: true,
-      positionId: fallbackPositionId,
       applicantDetails: null
     };
   }

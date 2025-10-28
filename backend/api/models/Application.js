@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 const applicationSchema = new mongoose.Schema({
   positionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Position',
-    required: true
+    type: String, // Changed from ObjectId to String to support custom position IDs
+    required: true,
+    index: true // Add index for faster queries
   },
   applicantInfo: {
     name: {

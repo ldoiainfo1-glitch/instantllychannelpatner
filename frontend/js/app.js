@@ -816,8 +816,8 @@ async function submitApplication() {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
         
-        // Add position and location data to form
-        formData.append('positionId', window.currentPosition.id);
+        // Set position ID in the hidden form field instead of appending
+        document.getElementById('positionId').value = window.currentPosition.id;
         formData.append('positionTitle', window.currentPosition.title);
         
         // Add location data from the position
@@ -832,6 +832,11 @@ async function submitApplication() {
         if (location.village) formData.append('village', location.village);
         
         console.log('📝 Submitting application with location data:', location);
+        console.log('📝 Position ID being sent:', window.currentPosition.id);
+        console.log('📝 FormData entries:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`   ${key}: ${value}`);
+        }
         
         const response = await fetch(`${API_BASE_URL}/applications`, {
             method: 'POST',

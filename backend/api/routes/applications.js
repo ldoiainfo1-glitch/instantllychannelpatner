@@ -63,10 +63,17 @@ router.post('/', upload.single('photo'), async (req, res) => {
     
     console.log('📝 New application received:', { positionId, name, phone, companyName, businessName });
     
-    // Validate required fields (positionId is now the dynamic position ID from frontend)
-    if (!positionId || !name || !phone || !address || !companyName || !businessName) {
-      return res.status(400).json({ error: 'Missing required fields: positionId, name, phone, companyName, businessName, address' });
+    // Validate position ID format and required fields
+    if (!positionId || Array.isArray(positionId)) {
+      console.error('❌ Invalid positionId received:', positionId, 'Type:', typeof positionId);
+      return res.status(400).json({ error: 'Invalid position ID format' });
     }
+    
+    if (!name || !phone || !address || !companyName || !businessName) {
+      return res.status(400).json({ error: 'Missing required fields: name, phone, companyName, businessName, address' });
+    }
+    
+    console.log('✅ Position ID validation passed:', positionId);
     
     if (!req.file) {
       return res.status(400).json({ error: 'Photo is required' });
