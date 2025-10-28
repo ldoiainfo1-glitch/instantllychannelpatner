@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 200">
+  <rect width="300" height="200" fill="#ffffff" stroke="#dee2e6" stroke-width="2" rx="10"/>
+  <rect x="50" y="30" width="200" height="120" fill="#007bff" rx="15"/>
+  <rect x="60" y="40" width="180" height="15" fill="#ffffff" opacity="0.3" rx="7"/>
+  <rect x="60" y="60" width="120" height="10" fill="#ffffff" opacity="0.5" rx="5"/>
+  <circle cx="200" cy="90" r="20" fill="#ffffff" opacity="0.4"/>
+  <rect x="60" y="110" width="180" height="8" fill="#ffffff" opacity="0.3" rx="4"/>
+  <rect x="60" y="125" width="140" height="8" fill="#ffffff" opacity="0.3" rx="4"/>
+  <text x="150" y="170" text-anchor="middle" fill="#007bff" font-family="Arial" font-size="14" font-weight="bold">Instantly Cards</text>
+  <text x="150" y="185" text-anchor="middle" fill="#6c757d" font-family="Arial" font-size="10">Digital Card Created</text>
+</svg>

@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instantly Cards - Channel Partner Program</title>
+    <link rel="icon" href="images/logo.jpeg" type="image/jpeg">
+    <link rel="shortcut icon" href="images/logo.jpeg" type="image/jpeg">
+    <!-- Updated for production deployment - v1.4 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="#home">
+                <img src="images/logo.jpeg" alt="Instantly Cards Logo" height="45" class="me-3 navbar-logo">
+                Instantly Cards
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#positions">Positions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#instructions">Instructions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#feedback">Feedback</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Home Section -->
+    <section id="home" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center min-vh-100 pt-5">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold text-white mb-4">
+                        Join Our Channel Partner Program
+                    </h1>
+                    <p class="lead text-white-50 mb-4">
+                        Become a part of Instantly Cards network and earn while helping others access instant digital cards and financial services.
+                    </p>
+                    <div class="d-flex gap-3 mb-4">
+                        <a href="#positions" class="btn btn-light btn-lg px-4">
+                            <i class="fas fa-search me-2"></i>
+                            Find Positions
+                        </a>
+                        <a href="#instructions" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Learn More
+                        </a>
+                    </div>
+                    <div class="stats-row">
+                        <div class="row text-center text-white">
+                            <div class="col-4">
+                                <h3 class="fw-bold">120K+</h3>
+                                <p class="small">Positions Available</p>
+                            </div>
+                            <div class="col-4">
+                                <h3 class="fw-bold">36</h3>
+                                <p class="small">States Covered</p>
+                            </div>
+                            <div class="col-4">
+                                <h3 class="fw-bold">₹5L</h3>
+                                <p class="small">Max Contribution</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-image text-center">
+                        <div class="mb-4 hero-logo-container">
+                            <img src="images/logo.jpeg" alt="Instantly Cards Logo" class="img-fluid hero-main-logo">
+                        </div>
+                        <img src="images/hero-illustration.svg" alt="Channel Partner" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Positions Section -->
+    <section id="positions" class="py-5 bg-light">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="display-5 fw-bold mb-3">Available Positions</h2>
+                    <p class="lead text-muted">Search and apply for channel partner positions across India</p>
+                </div>
+            </div>
+
+            <!-- Search Filters -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="searchName" placeholder="Search by name...">
+                                </div>
+                                <div class="col-md-3">
+                                    <input type="text" class="form-control" id="searchPhone" placeholder="Search by phone...">
+                                </div>
+
+                                <div class="col-md-2">
+                                    <button class="btn btn-primary w-100" id="searchBtn">
+                                        <i class="fas fa-search me-1"></i>
+                                        Search
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Table location Filters -->
+                            <div class="row g-2 mt-2">
+                                <div class="col-auto" style="width: 120px;">
+                                    <select class="form-select" id="filterCountry">
+                                        <option value="India">India</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto" style="width: 140px;">
+                                    <select class="form-select" id="filterZone">
+                                        <option value="">Zones...</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto" style="width: 140px;">
+                                    <select class="form-select" id="filterState">
+                                        <option value="">States...</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto" style="width: 140px;">
+                                    <select class="form-select" id="filterDivision">
+                                        <option value="">Divisions...</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto" style="width: 140px;">
+                                    <select class="form-select" id="filterDistrict">
+                                        <option value="">Districts...</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto" style="width: 140px;">
+                                    <select class="form-select" id="filterTehsil">
+                                        <option value="">Tehsils...</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto" style="width: 140px;">
+                                    <select class="form-select" id="filterPincode">
+                                        <option value="">Pincodes...</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto" style="width: 140px;">
+                                    <select class="form-select" id="filterVillage">
+                                        <option value="">Villages...</option>
+                                    </select>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-outline-secondary" id="clearFilters">
+                                        <i class="fas fa-times me-1"></i>
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Positions Table -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                List of Proposed Committee Positions of India
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0" id="positionsTable">
+                                    <thead class="table-dark">
+                                        <tr>
+                                            <th>Sr No.</th>
+                                            <th>Post</th>
+                                            <th>Designation</th>
+                                            <th>Name</th>
+                                            <th>Photo</th>
+                                            <th>Phone No.</th>
+                                            <th>Introduced By</th>
+                                            <th>Days</th>
+                                            <th>Status</th>
+                                            <th>Others</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="positionsTableBody">
+                                        <!-- Table content will be loaded dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Instructions Section -->
+    <section id="instructions" class="py-5">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="display-5 fw-bold mb-3">How to Use Instantly Cards App</h2>
+                    <p class="lead text-muted">Complete guide on using the Instantly Cards mobile application</p>
+                </div>
+            </div>
+
+            <!-- Step-by-Step Guide -->
+            <div class="row g-4 mb-5">
+                <!-- Step 1: Download -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100 shadow-sm text-center">
+                        <div class="card-body">
+                            <div class="step-number mb-3">1</div>
+                            <div class="feature-icon bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+                                <i class="fas fa-download fa-2x"></i>
+                            </div>
+                            <h5 class="card-title">Download App</h5>
+                            <p class="card-text">Get the Instantly Cards app from Google Play Store. Available for Android devices.</p>
+                            <div class="mt-3">
+                                <a href="https://play.google.com/store/apps/details?id=com.instantllycards.www.twa" target="_blank" class="btn btn-success btn-sm">
+                                    <i class="fab fa-google-play me-1"></i>
+                                    Download Now
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Register -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100 shadow-sm text-center">
+                        <div class="card-body">
+                            <div class="step-number mb-3">2</div>
+                            <div class="feature-icon bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+                                <i class="fas fa-user-plus fa-2x"></i>
+                            </div>
+                            <h5 class="card-title">Register Account</h5>
+                            <p class="card-text">Sign up with your mobile number, verify OTP, and complete your profile with basic information and KYC documents.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Add Your Links -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100 shadow-sm text-center">
+                        <div class="card-body">
+                            <div class="step-number mb-3">3</div>
+                            <div class="feature-icon bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+                                <i class="fas fa-link fa-2x"></i>
+                            </div>
+                            <h5 class="card-title">Add Your Links</h5>
+                            <p class="card-text">Add all your important links - website, Facebook, Instagram, LinkedIn, company links, and contact information to your digital card.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Create Card -->
+                <div class="col-lg-3 col-md-6">
+                    <div class="card h-100 shadow-sm text-center">
+                        <div class="card-body">
+                            <div class="step-number mb-3">4</div>
+                            <div class="feature-icon bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+                                <i class="fas fa-credit-card fa-2x"></i>
+                            </div>
+                            <h5 class="card-title">Create & Share</h5>
+                            <p class="card-text">Add your details, upload photo, generate your digital card instantly and share via QR code, WhatsApp, or email.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Video Instructions -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="card shadow-lg">
+                        <div class="card-header bg-gradient text-white text-center" style="background: linear-gradient(135deg, #1e88e5 0%, #ff7043 100%);">
+                            <h5 class="mb-0">
+                                <i class="fas fa-play-circle me-2"></i>
+                                Video Tutorial: Complete App Guide
+                            </h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="video-container" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; background: #f8f9fa;">
+                                <video 
+                                    id="instructionVideo"
+                                    controls 
+                                    controlsList="nodownload"
+                                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000;"
+                                    poster="images/logo.jpeg"
+                                    preload="metadata"
+                                    onerror="this.style.display='none'; document.getElementById('videoFallback').style.display='flex';">
+                                    <source src="/api/video/stream/instruction_video.mp4" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                                <div id="videoFallback" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); display: none;">
+                                    <div class="text-center p-4">
+                                        <i class="fas fa-video fa-4x text-muted mb-3"></i>
+                                        <h5 class="text-dark">Video Tutorial Coming Soon</h5>
+                                        <p class="text-muted mb-0">Complete app guide will be available shortly.<br>
+                                        <small>Please check back later or contact support.</small></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <div class="row text-center">
+                                <div class="col-md-4">
+                                    <div class="text-primary">
+                                        <i class="fas fa-clock fa-2x mb-2"></i>
+                                        <p class="mb-0"><strong>Watch & Learn</strong><br>Complete video tutorial</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-success">
+                                        <i class="fas fa-microphone fa-2x mb-2"></i>
+                                        <p class="mb-0"><strong>Voice Instructions</strong><br>Step-by-step narration</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-info">
+                                        <i class="fas fa-mobile-alt fa-2x mb-2"></i>
+                                        <p class="mb-0"><strong>Live Demo</strong><br>Real app demonstration</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Instructions -->
+            <div class="row g-4">
+                <!-- App Navigation -->
+                <div class="col-lg-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-mobile-alt text-info me-2"></i>
+                                App Navigation Guide
+                            </h5>
+                            <div class="instruction-list">
+                                <div class="instruction-item">
+                                    <div class="instruction-icon">📱</div>
+                                    <div class="instruction-content">
+                                        <strong>Home Screen:</strong> View your card collection and quick access to create new cards
+                                    </div>
+                                </div>
+                                <div class="instruction-item">
+                                    <div class="instruction-icon">💬</div>
+                                    <div class="instruction-content">
+                                        <strong>Messages:</strong> Chat with your connections, create group chats, and manage conversations
+                                    </div>
+                                </div>
+                                <div class="instruction-item">
+                                    <div class="instruction-icon">�</div>
+                                    <div class="instruction-content">
+                                        <strong>Connections:</strong> View and manage your network of business connections
+                                    </div>
+                                </div>
+                                <div class="instruction-item">
+                                    <div class="instruction-icon">💳</div>
+                                    <div class="instruction-content">
+                                        <strong>My Cards:</strong> View, edit, and manage all your created digital cards with links
+                                    </div>
+                                </div>
+                                <div class="instruction-item">
+                                    <div class="instruction-icon">📊</div>
+                                    <div class="instruction-content">
+                                        <strong>Analytics:</strong> Track card views, connections made, and engagement metrics
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Features -->
+                <div class="col-lg-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-star text-warning me-2"></i>
+                                Key App Features
+                            </h5>
+                            <div class="feature-list">
+                                <div class="feature-item">
+                                    <div class="feature-icon bg-success">⚡</div>
+                                    <div class="feature-content">
+                                        <strong>Instant Generation:</strong> Create professional cards in under 2 minutes
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon bg-primary">💬</div>
+                                    <div class="feature-content">
+                                        <strong>Messaging System:</strong> Chat directly with your connections and build relationships
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon bg-info">�</div>
+                                    <div class="feature-content">
+                                        <strong>Group Chat:</strong> Create group chats with your connections for networking
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon bg-warning">🔗</div>
+                                    <div class="feature-content">
+                                        <strong>All Your Links:</strong> Share website, social media, and company links in one card
+                                    </div>
+                                </div>
+                                <div class="feature-item">
+                                    <div class="feature-icon bg-secondary">�</div>
+                                    <div class="feature-content">
+                                        <strong>Analytics:</strong> Track card views, connections, and engagement insights
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Touch Guide -->
+                <div class="col-lg-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-hand-pointer text-primary me-2"></i>
+                                Touch & Gesture Guide
+                            </h5>
+                            <div class="gesture-list">
+                                <div class="gesture-item">
+                                    <div class="gesture-icon">👆</div>
+                                    <div class="gesture-content">
+                                        <strong>Single Tap:</strong> Select templates, buttons, or menu items
+                                    </div>
+                                </div>
+                                <div class="gesture-item">
+                                    <div class="gesture-icon">✌️</div>
+                                    <div class="gesture-content">
+                                        <strong>Double Tap:</strong> Quick edit mode for text fields and images
+                                    </div>
+                                </div>
+                                <div class="gesture-item">
+                                    <div class="gesture-icon">👈</div>
+                                    <div class="gesture-content">
+                                        <strong>Swipe Left:</strong> Navigate to next template or card
+                                    </div>
+                                </div>
+                                <div class="gesture-item">
+                                    <div class="gesture-icon">👉</div>
+                                    <div class="gesture-content">
+                                        <strong>Swipe Right:</strong> Go back or access quick actions menu
+                                    </div>
+                                </div>
+                                <div class="gesture-item">
+                                    <div class="gesture-icon">🖐️</div>
+                                    <div class="gesture-content">
+                                        <strong>Long Press:</strong> Access context menu and additional options
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pro Tips -->
+                <div class="col-lg-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-lightbulb text-warning me-2"></i>
+                                Pro Tips for Best Results
+                            </h5>
+                            <div class="tips-list">
+                                <div class="tip-item">
+                                    <div class="tip-icon">�</div>
+                                    <div class="tip-content">
+                                        <strong>Add All Your Links:</strong> Include website, Facebook, Instagram, LinkedIn, and company links
+                                    </div>
+                                </div>
+                                <div class="tip-item">
+                                    <div class="tip-icon">💬</div>
+                                    <div class="tip-content">
+                                        <strong>Use Messaging:</strong> Engage with connections through direct messages and group chats
+                                    </div>
+                                </div>
+                                <div class="tip-item">
+                                    <div class="tip-icon">🔄</div>
+                                    <div class="tip-content">
+                                        <strong>Keep Links Updated:</strong> Regularly update your social media and website links
+                                    </div>
+                                </div>
+                                <div class="tip-item">
+                                    <div class="tip-icon">👥</div>
+                                    <div class="tip-content">
+                                        <strong>Build Groups:</strong> Create group chats with similar business interests
+                                    </div>
+                                </div>
+                                <div class="tip-item">
+                                    <div class="tip-icon">📊</div>
+                                    <div class="tip-content">
+                                        <strong>Monitor Engagement:</strong> Track who's viewing and connecting with your card
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feedback Section -->
+    <section id="feedback" class="py-5 bg-light">
+        <div class="container">
+            <div class="row mb-5">
+                <div class="col-lg-8 mx-auto text-center">
+                    <h2 class="display-5 fw-bold mb-3">User Feedback</h2>
+                    <p class="lead text-muted">What our channel partners are saying about the Instantly Cards app</p>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <!-- Feedback Card 1 -->
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=64&h=64&fit=crop&crop=face" 
+                                     alt="Rajesh Kumar" class="rounded-circle me-3" width="50" height="50">
+                                <div>
+                                    <h6 class="mb-0">Rajesh Kumar</h6>
+                                    <small class="text-muted">Mumbai, Maharashtra</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                            </div>
+                            <p class="card-text">"The Instantly Cards app is amazing! Creating digital cards is so quick and easy. The interface is user-friendly and the card designs are professional. Highly recommended!"</p>
+                            <small class="text-muted">Posted 2 days ago</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Card 2 -->
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=64&h=64&fit=crop&crop=face" 
+                                     alt="Priya Sharma" class="rounded-circle me-3" width="50" height="50">
+                                <div>
+                                    <h6 class="mb-0">Priya Sharma</h6>
+                                    <small class="text-muted">Delhi, India</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star"><i class="far fa-star"></i></span>
+                            </div>
+                            <p class="card-text">"Great app for creating instant digital business cards. The QR code feature is fantastic and the customer support is very responsive. Perfect for networking!"</p>
+                            <small class="text-muted">Posted 5 days ago</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Card 3 -->
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=64&h=64&fit=crop&crop=face" 
+                                     alt="Amit Patel" class="rounded-circle me-3" width="50" height="50">
+                                <div>
+                                    <h6 class="mb-0">Amit Patel</h6>
+                                    <small class="text-muted">Ahmedabad, Gujarat</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                            </div>
+                            <p class="card-text">"Excellent app! The card creation process is super smooth and the final cards look very professional. Love the multiple template options available."</p>
+                            <small class="text-muted">Posted 1 week ago</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Card 4 -->
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=64&h=64&fit=crop&crop=face" 
+                                     alt="Sunita Singh" class="rounded-circle me-3" width="50" height="50">
+                                <div>
+                                    <h6 class="mb-0">Sunita Singh</h6>
+                                    <small class="text-muted">Bangalore, Karnataka</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star"><i class="far fa-star"></i></span>
+                            </div>
+                            <p class="card-text">"Very convenient app for creating digital visiting cards. The sharing options are great and the cards are always accessible on my phone. Saves time and paper!"</p>
+                            <small class="text-muted">Posted 1 week ago</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Card 5 -->
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=64&h=64&fit=crop&crop=face" 
+                                     alt="Vikram Gupta" class="rounded-circle me-3" width="50" height="50">
+                                <div>
+                                    <h6 class="mb-0">Vikram Gupta</h6>
+                                    <small class="text-muted">Pune, Maharashtra</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                            </div>
+                            <p class="card-text">"Outstanding app! The instant card generation feature is a game-changer. The app is fast, reliable, and the card quality is top-notch. 5 stars!"</p>
+                            <small class="text-muted">Posted 2 weeks ago</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feedback Card 6 -->
+                <div class="col-lg-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=64&h=64&fit=crop&crop=face" 
+                                     alt="Kavya Reddy" class="rounded-circle me-3" width="50" height="50">
+                                <div>
+                                    <h6 class="mb-0">Kavya Reddy</h6>
+                                    <small class="text-muted">Hyderabad, Telangana</small>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star active"><i class="fas fa-star"></i></span>
+                                <span class="star"><i class="far fa-star"></i></span>
+                            </div>
+                            <p class="card-text">"Really impressed with this app! The digital cards look professional and the sharing feature is very convenient. Great for business networking events."</p>
+                            <small class="text-muted">Posted 3 weeks ago</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overall Rating Summary -->
+            <div class="row mt-5">
+                <div class="col-lg-6 mx-auto">
+                    <div class="card bg-primary text-white text-center">
+                        <div class="card-body">
+                            <h4 class="mb-3">Overall Rating</h4>
+                            <div class="mb-3">
+                                <span class="star active" style="font-size: 1.5rem;"><i class="fas fa-star"></i></span>
+                                <span class="star active" style="font-size: 1.5rem;"><i class="fas fa-star"></i></span>
+                                <span class="star active" style="font-size: 1.5rem;"><i class="fas fa-star"></i></span>
+                                <span class="star active" style="font-size: 1.5rem;"><i class="fas fa-star"></i></span>
+                                <span class="star active" style="font-size: 1.5rem;"><i class="fas fa-star"></i></span>
+                            </div>
+                            <h3 class="mb-2">4.8 out of 5</h3>
+                            <p class="mb-0">Based on 1,250+ reviews</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Application Modal -->
+    <div class="modal fade" id="applicationModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Apply for Position</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="applicationForm" enctype="multipart/form-data">
+                        <input type="hidden" id="positionId" name="positionId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="applicantName" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="applicantName" name="name" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="applicantPhone" class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="applicantPhone" name="phone" pattern="[0-9]{10}" required>
+                                <small class="text-muted">10 digit phone number</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="companyName" class="form-label">Company Name *</label>
+                                <input type="text" class="form-control" id="companyName" name="companyName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="businessName" class="form-label">Business Name *</label>
+                                <input type="text" class="form-control" id="businessName" name="businessName" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="applicantPhoto" class="form-label">Photo *</label>
+                                <input type="file" class="form-control" id="applicantPhoto" name="photo" accept="image/*" required>
+                                <small class="text-muted">Upload your photo (JPG, PNG)</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="introducedBy" class="form-label">Introduced By</label>
+                                <input type="text" class="form-control" id="introducedBy" name="introducedBy" placeholder="Person Code (Optional)">
+                            </div>
+                            <div class="col-12">
+                                <label for="applicantAddress" class="form-label">Address *</label>
+                                <textarea class="form-control" id="applicantAddress" name="address" rows="3" required></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitApplication">Submit Application</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Instantly Cards</h5>
+                    <p class="mb-0">Channel Partner Program - Join the digital revolution</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">&copy; 2024 Instantly Cards. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/video-manager.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

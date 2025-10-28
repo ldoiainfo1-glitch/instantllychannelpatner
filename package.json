@@ -1,0 +1,14 @@
+{
+  "name": "instantly-channel-partner",
+  "version": "1.0.0",
+  "description": "Instantly Cards Channel Partner Application System",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "install": "cd backend && npm install",
+    "backend": "cd backend && npm run dev",
+    "frontend": "cd frontend && npm start"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
