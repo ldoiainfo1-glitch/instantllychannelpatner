@@ -132,47 +132,39 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
     console.log('🔍 Checking for applications matching position:', designation, location);
     
     // Check if someone has already applied for this exact position in channelpartner.applications
-    let existingApplication = await Application.findOne({
-      $and: [
-        { 'location.country': location.country || 'India' },
-        { 'location.zone': location.zone || { $in: [null, undefined, ''] } },
-        { 'location.state': location.state || { $in: [null, undefined, ''] } },
-        { 'location.division': location.division || { $in: [null, undefined, ''] } },
-        { 'location.district': location.district || { $in: [null, undefined, ''] } },
-        { 'location.tehsil': location.tehsil || { $in: [null, undefined, ''] } },
-        { 'location.pincode': location.pincode || { $in: [null, undefined, ''] } },
-        { 'location.village': location.village || { $in: [null, undefined, ''] } }
-      ]
-    });
+    let matchQuery = {
+      'location.country': location.country || 'India'
+    };
     
-    // If no exact match, try broader match based on designation content
-    if (!existingApplication) {
-      // For "President of India" position, check for ANY application (since old apps don't have location)
-      if (designation.includes('President of India')) {
-        existingApplication = await Application.findOne({
-          $or: [
-            // New applications with proper location
-            { 'location.country': 'India' },
-            // Old applications with empty location object
-            { 'location': {} },
-            // Applications with no location field at all
-            { 'location': { $exists: false } }
-          ]
-        });
-        console.log('🔍 Checking for President applications (any location):', existingApplication ? `Found: ${existingApplication.applicantInfo?.name}` : 'Not found');
-      }
-      // For zone heads, check applications with that zone
-      else if (designation.includes('Head of ') && location.zone) {
-        existingApplication = await Application.findOne({
-          'location.zone': location.zone
-        });
-      }
-      // For state heads, check applications with that state
-      else if (location.state) {
-        existingApplication = await Application.findOne({
-          'location.state': location.state
-        });
-      }
+    // Only add location filters if they have values (not empty/null/undefined)
+    if (location.zone) matchQuery['location.zone'] = location.zone;
+    if (location.state) matchQuery['location.state'] = location.state;
+    if (location.division) matchQuery['location.division'] = location.division;
+    if (location.district) matchQuery['location.district'] = location.district;
+    if (location.tehsil) matchQuery['location.tehsil'] = location.tehsil;
+    if (location.pincode) matchQuery['location.pincode'] = location.pincode;
+    if (location.village) matchQuery['location.village'] = location.village;
+    
+    // For positions without specific location requirements, match applications with undefined/null values
+    if (!location.zone && !location.state && !location.division && !location.district && !location.tehsil && !location.pincode && !location.village) {
+      // This is a country-level position (like President), match apps with only country set
+      matchQuery = {
+        'location.country': 'India',
+        $or: [
+          { 'location.zone': { $in: [null, undefined] } },
+          { 'location.zone': { $exists: false } }
+        ]
+      };
+    }
+    
+    let existingApplication = await Application.findOne(matchQuery);
+    console.log('🔍 Query:', JSON.stringify(matchQuery), 'Result:', existingApplication ? existingApplication.applicantInfo.name : 'None');
+    
+    // If no exact match and this is a more specific position, try broader matches
+    if (!existingApplication && (location.zone || location.state || location.district)) {
+      console.log('🔍 No exact match found, trying broader search...');
+      // For specific location positions, we already have the exact matching above
+      // This section can be used for future enhancements
     }
     
     const position = {
