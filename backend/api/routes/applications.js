@@ -189,10 +189,9 @@ router.get('/', async (req, res) => {
       positionId: app.positionId,
       positionTitle: `${app.applicantInfo.companyName} Channel Partner`, // Generate title from application
       positionPost: 'Committee',
-      location: { 
+      location: app.location && Object.keys(app.location).length > 0 ? app.location : { 
         country: 'India',
-        state: 'Applied Location', // Could extract from address if needed
-        // Add more location parsing from address if required
+        // For applications without location data, default to basic location
       },
       applicantInfo: app.applicantInfo,
       introducedBy: app.introducedBy,

@@ -129,17 +129,51 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
     const locationKey = Object.values(location).filter(v => v).join('_').toLowerCase().replace(/\s+/g, '_');
     const positionId = `pos_${locationKey}`;
     
-    // Check if someone has already applied for this exact position
-    const existingApplication = await Application.findOne({
-      'location.country': location.country,
-      'location.zone': location.zone || null,
-      'location.state': location.state || null,
-      'location.division': location.division || null,
-      'location.district': location.district || null,
-      'location.tehsil': location.tehsil || null,
-      'location.pincode': location.pincode || null,
-      'location.village': location.village || null
+    console.log('🔍 Checking for applications matching position:', designation, location);
+    
+    // Check if someone has already applied for this exact position in channelpartner.applications
+    let existingApplication = await Application.findOne({
+      $and: [
+        { 'location.country': location.country || 'India' },
+        { 'location.zone': location.zone || { $in: [null, undefined, ''] } },
+        { 'location.state': location.state || { $in: [null, undefined, ''] } },
+        { 'location.division': location.division || { $in: [null, undefined, ''] } },
+        { 'location.district': location.district || { $in: [null, undefined, ''] } },
+        { 'location.tehsil': location.tehsil || { $in: [null, undefined, ''] } },
+        { 'location.pincode': location.pincode || { $in: [null, undefined, ''] } },
+        { 'location.village': location.village || { $in: [null, undefined, ''] } }
+      ]
     });
+    
+    // If no exact match, try broader match based on designation content
+    if (!existingApplication) {
+      // For "President of India" position, check for ANY application (since old apps don't have location)
+      if (designation.includes('President of India')) {
+        existingApplication = await Application.findOne({
+          $or: [
+            // New applications with proper location
+            { 'location.country': 'India' },
+            // Old applications with empty location object
+            { 'location': {} },
+            // Applications with no location field at all
+            { 'location': { $exists: false } }
+          ]
+        });
+        console.log('🔍 Checking for President applications (any location):', existingApplication ? `Found: ${existingApplication.applicantInfo?.name}` : 'Not found');
+      }
+      // For zone heads, check applications with that zone
+      else if (designation.includes('Head of ') && location.zone) {
+        existingApplication = await Application.findOne({
+          'location.zone': location.zone
+        });
+      }
+      // For state heads, check applications with that state
+      else if (location.state) {
+        existingApplication = await Application.findOne({
+          'location.state': location.state
+        });
+      }
+    }
     
     const position = {
       _id: positionId,
