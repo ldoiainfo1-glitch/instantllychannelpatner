@@ -441,7 +441,7 @@ function clearDependentSelects(selectIds) {
     });
 }
 
-// Load applications directly from applications collection
+// Load dynamic positions based on location filters - generates positions for each location level
 async function loadApplications() {
     try {
         showLoading(true);
@@ -456,7 +456,7 @@ async function loadApplications() {
         const pincode = document.getElementById('filterPincode').value;
         const village = document.getElementById('filterVillage').value;
         
-        // Build query params - use applications endpoint to show all submitted applications
+        // Build query params for dynamic positions endpoint
         const params = new URLSearchParams({ country });
         if (zone) params.append('zone', zone);
         if (state) params.append('state', state);
@@ -466,46 +466,28 @@ async function loadApplications() {
         if (pincode) params.append('pincode', pincode);
         if (village) params.append('village', village);
         
-        const url = `${API_BASE_URL}/applications?${params.toString()}`;
-        console.log('🔍 Loading applications directly:', url);
+        const url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
+        console.log('🔍 Loading dynamic positions for location:', url);
         
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
         
-        const applications = await response.json();
-        console.log('📊 Applications loaded:', applications.length);
+        const positions = await response.json();
+        console.log('📊 Dynamic positions generated:', positions.length);
         
-        // Convert applications to position-like format for display
-        currentPositions = applications.map((app, index) => ({
-            _id: app.positionId || app._id,
-            sNo: index + 1, // Generate serial number
-            post: 'Committee', // Default post type
-            designation: app.positionTitle || 'Position Applied', // Use position title if available
-            location: app.location || { country: 'India' }, // Use location from application
-            status: app.status === 'pending' ? 'Pending' : app.status === 'approved' ? 'Approved' : 'Verified',
-            applicantDetails: {
-                name: app.applicantInfo.name,
-                phone: app.applicantInfo.phone,
-                email: app.applicantInfo.email,
-                photo: app.applicantInfo.photo,
-                address: app.applicantInfo.address,
-                companyName: app.applicantInfo.companyName,
-                businessName: app.applicantInfo.businessName,
-                appliedDate: app.appliedDate,
-                introducedBy: app.introducedBy || 'Self',
-                introducedCount: 0,
-                days: Math.floor((new Date() - new Date(app.appliedDate)) / (1000 * 60 * 60 * 24)),
-                applicationId: app._id,
-                paymentStatus: app.paymentStatus || 'pending',
-                isVerified: app.isVerified || false
-            }
+        // Store positions directly - they are already formatted with application data
+        currentPositions = positions.map((pos, index) => ({
+            ...pos,
+            sNo: index + 1 // Ensure sequential numbering
         }));
         
-        console.log('🎯 Applications converted to display format:', currentPositions.length);
+        console.log('🎯 Positions loaded with application status:');
         currentPositions.forEach(pos => {
-            console.log(`   - ${pos.designation}: ${pos.applicantDetails.name} (${pos.status})`);
+            const statusInfo = pos.status === 'Available' ? 'Available for Application' : 
+                              pos.applicantDetails ? `Applied by ${pos.applicantDetails.name} (${pos.status})` : 'Available';
+            console.log(`   - ${pos.designation}: ${statusInfo}`);
         });
         
         displayPositions(currentPositions);
@@ -572,9 +554,13 @@ function createPositionRow(position) {
     // Format location for position display
     const location = formatLocation(position.location);
     
-    // Handle name - since we're only showing applications, always show the applicant name
+    // Handle name - show applicant name or Apply button
     let nameCell = '';
-    if (position.applicantDetails && position.applicantDetails.name) {
+    if (position.status === 'Available') {
+        nameCell = `<button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
+                        <i class="fas fa-plus me-1"></i>Apply Now
+                    </button>`;
+    } else if (position.applicantDetails && position.applicantDetails.name) {
         nameCell = position.applicantDetails.name;
     } else {
         nameCell = '-';
@@ -785,11 +771,26 @@ function clearFilters() {
     showNotification('Filters cleared', 'info');
 }
 
-// Open application modal (for new applications - this system now shows existing applications only)
-function openApplicationModal(positionId) {
-    // Since we're now showing applications directly, this function is not needed
-    // But keeping it for backwards compatibility
-    showNotification('This system now shows submitted applications. To apply for new positions, please contact admin.', 'info');
+// Open application modal for applying to positions
+function openApplicationModal(positionId, positionTitle, location) {
+    console.log('🎯 Opening application modal for:', { positionId, positionTitle, location });
+    
+    // Store current position details for form submission
+    window.currentPosition = {
+        id: positionId,
+        title: positionTitle,
+        location: location
+    };
+    
+    // Update modal title
+    document.querySelector('#applicationModal .modal-title').textContent = `Apply for: ${positionTitle}`;
+    
+    // Reset and show the application form
+    document.getElementById('applicationForm').reset();
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('applicationModal'));
+    modal.show();
 }
 
 // Submit application
@@ -803,10 +804,33 @@ async function submitApplication() {
         return;
     }
     
+    // Check if position information is available
+    if (!window.currentPosition) {
+        showNotification('Position information not found. Please try again.', 'error');
+        return;
+    }
+    
     try {
         const submitBtn = document.getElementById('submitApplication');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+        
+        // Add position and location data to form
+        formData.append('positionId', window.currentPosition.id);
+        formData.append('positionTitle', window.currentPosition.title);
+        
+        // Add location data from the position
+        const location = window.currentPosition.location;
+        if (location.country) formData.append('country', location.country);
+        if (location.zone) formData.append('zone', location.zone);
+        if (location.state) formData.append('state', location.state);
+        if (location.division) formData.append('division', location.division);
+        if (location.district) formData.append('district', location.district);
+        if (location.tehsil) formData.append('tehsil', location.tehsil);
+        if (location.pincode) formData.append('pincode', location.pincode);
+        if (location.village) formData.append('village', location.village);
+        
+        console.log('📝 Submitting application with location data:', location);
         
         const response = await fetch(`${API_BASE_URL}/applications`, {
             method: 'POST',
@@ -816,20 +840,22 @@ async function submitApplication() {
         const result = await response.json();
         
         if (response.ok) {
-            showNotification('Application submitted successfully! Refreshing data...', 'success');
-            bootstrap.Modal.getInstance(document.getElementById('applicationModal')).hide();
-            form.reset();
+            showNotification('Application submitted successfully! Please wait for admin review.', 'success');
             
-            // Add a small delay to ensure database is updated, then refresh
-            setTimeout(() => {
-                console.log('🔄 Refreshing positions data after application submission...');
-                loadApplications(); // Refresh applications to show updated status
-            }, 500);
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('applicationModal'));
+            modal.hide();
+            
+            // Reload positions to show the new application
+            await loadApplications();
+            
+            // Clear current position
+            window.currentPosition = null;
         } else {
-            throw new Error(result.error || 'Application failed');
+            throw new Error(result.error || 'Failed to submit application');
         }
     } catch (error) {
-        console.error('Error submitting application:', error);
+        console.error('❌ Error submitting application:', error);
         showNotification(error.message || 'Error submitting application', 'error');
     } finally {
         const submitBtn = document.getElementById('submitApplication');

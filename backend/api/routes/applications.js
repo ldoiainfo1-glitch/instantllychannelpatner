@@ -42,7 +42,24 @@ const upload = multer({
 // Apply for a position - Store in applications collection
 router.post('/', upload.single('photo'), async (req, res) => {
   try {
-    const { positionId, name, phone, address, introducedBy, companyName, businessName } = req.body;
+    const { 
+      positionId, 
+      name, 
+      phone, 
+      address, 
+      introducedBy, 
+      companyName, 
+      businessName,
+      // Location fields
+      country,
+      zone,
+      state,
+      division,
+      district,
+      tehsil,
+      pincode,
+      village
+    } = req.body;
     
     console.log('📝 New application received:', { positionId, name, phone, companyName, businessName });
     
@@ -98,6 +115,16 @@ router.post('/', upload.single('photo'), async (req, res) => {
         address: address.trim(),
         companyName: companyName.trim(),
         businessName: businessName.trim()
+      },
+      location: {
+        country: country || 'India',
+        zone: zone || null,
+        state: state || null,
+        division: division || null,
+        district: district || null,
+        tehsil: tehsil || null,
+        pincode: pincode || null,
+        village: village || null
       },
       introducedBy: introducedBy ? introducedBy.trim() : 'Self',
       status: 'pending',
