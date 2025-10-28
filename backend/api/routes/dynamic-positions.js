@@ -251,7 +251,7 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
     }
     
     const position = {
-      _id: positionId,
+      _id: positionId, // Use the generated position ID
       sNo,
       post,
       designation,
@@ -259,7 +259,8 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       contribution: 10000,
       credits: 60000,
       isTemplate: true, // Mark as dynamically generated
-      status: 'Available'
+      status: 'Available',
+      positionId: positionId // Also store as positionId field for clarity
     };
     
     if (existingApplication) {
@@ -295,9 +296,10 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
   } catch (error) {
     console.error('Error checking application status for position:', error);
     
-    // Return basic available position if error
+    // Return basic available position if error (still use proper position ID)
+    const fallbackPositionId = generatePositionId(location, designation);
     return {
-      _id: `pos_${sNo}_${Date.now()}`,
+      _id: fallbackPositionId,
       sNo,
       post,
       designation,
@@ -306,6 +308,7 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       credits: 60000,
       status: 'Available',
       isTemplate: true,
+      positionId: fallbackPositionId,
       applicantDetails: null
     };
   }
