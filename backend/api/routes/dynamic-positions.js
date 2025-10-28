@@ -197,7 +197,8 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
     // Create a unique, consistent position ID based on location hierarchy
     const positionId = generatePositionId(location, designation);
     
-    console.log('🔍 Checking for applications with position ID:', positionId);
+    console.log('🔍 Generated position ID for', designation, ':', positionId);
+    console.log('🔍 Location used:', JSON.stringify(location));
     
     // Check if someone has already applied for this exact position using position ID
     let existingApplication = await Application.findOne({ 
