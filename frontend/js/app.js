@@ -1,4 +1,4 @@
-// Configuration
+// Configuration - Updated for Vercel deployment fix
 const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
 
 // Global variables
