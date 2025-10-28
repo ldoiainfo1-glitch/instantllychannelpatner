@@ -79,7 +79,7 @@ const videoRoutes = require('../api/routes/video');
 const usersRoutes = require('../api/routes/users');
 
 // Routes
-app.use('/api/positions', dynamicPositionsRoutes);
+app.use('/api/dynamic-positions', dynamicPositionsRoutes);
 app.use('/api/applications', applicationsRoutes);
 app.use('/api/locations', locationsRoutes);
 app.use('/api/admin', adminRoutes);
