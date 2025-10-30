@@ -78,18 +78,6 @@ const applicationSchema = new mongoose.Schema({
   adminNotes: {
     type: String
   },
-  paymentStatus: {
-    type: String,
-    enum: ['pending', 'paid', 'failed'],
-    default: 'pending'
-  },
-  paymentAmount: {
-    type: Number,
-    default: 10000
-  },
-  paymentDate: {
-    type: Date
-  },
   isVerified: {
     type: Boolean,
     default: false

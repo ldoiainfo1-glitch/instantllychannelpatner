@@ -86,7 +86,7 @@ router.put('/applications/:id/approve', async (req, res) => {
     console.log(`✅ Application ${application._id} approved successfully`);
     
     res.json({
-      message: 'Application approved successfully! The position is now marked as approved.',
+      message: 'Application approved successfully!',
       application
     });
   } catch (error) {
@@ -357,52 +357,14 @@ router.post('/initialize-positions', async (req, res) => {
   }
 });
 
-// Verify user after payment
-router.put('/users/:userId/verify', async (req, res) => {
-  try {
-    const User = require('../models/User');
-    const user = await User.findById(req.params.userId).populate('positionId');
-    
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    
-    if (user.paymentStatus !== 'paid') {
-      return res.status(400).json({ error: 'User must complete payment before verification' });
-    }
-    
-    user.isVerified = true;
-    await user.save();
-    
-    // Update position verification status
-    if (user.positionId) {
-      const position = await Position.findById(user.positionId);
-      if (position) {
-        position.isVerified = true;
-        position.status = 'Occupied';
-        await position.save();
-      }
-    }
-    
-    res.json({
-      message: 'User verified successfully',
-      user
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Get users pending verification (paid but not verified)
 router.get('/users/pending-verification', async (req, res) => {
   try {
     const User = require('../models/User');
     const pendingUsers = await User.find({
-      paymentStatus: 'paid',
       isVerified: false
     })
-      .populate('positionId')
-      .sort({ paymentDate: -1 });
+      .sort({ createdAt: -1 });
     
     res.json(pendingUsers);
   } catch (error) {

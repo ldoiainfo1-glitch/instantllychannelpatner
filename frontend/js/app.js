@@ -515,12 +515,10 @@ function createPositionRow(position) {
     // Determine status text based on application workflow
     let statusText = position.status;
     if (position.applicantDetails) {
-        if (position.status === 'Verified' || (position.applicantDetails.isVerified && position.applicantDetails.paymentStatus === 'paid')) {
+        if (position.status === 'Verified' || position.applicantDetails.isVerified) {
             statusText = 'Verified';
-        } else if (position.status === 'Approved' && position.applicantDetails.paymentStatus === 'paid') {
-            statusText = 'Payment Done';
-        } else if (position.status === 'Approved' && position.applicantDetails.paymentStatus === 'pending') {
-            statusText = 'Approved - Payment Pending';
+        } else if (position.status === 'Approved') {
+            statusText = 'Approved';
         } else if (position.status === 'Pending') {
             statusText = 'Pending Admin Review';
         } else {
@@ -641,8 +639,6 @@ function getStatusClass(status) {
         'Pending': 'bg-warning text-dark',
         'Pending Admin Review': 'bg-warning text-dark',
         'Approved': 'bg-info',
-        'Approved - Payment Pending': 'bg-info',
-        'Payment Done': 'bg-primary',
         'Verified': 'bg-success',
         'Rejected': 'bg-danger',
         'Occupied': 'bg-secondary'

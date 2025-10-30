@@ -308,7 +308,6 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
         introducedCount: 0,
         days: Math.floor((new Date() - new Date(existingApplication.appliedDate)) / (1000 * 60 * 60 * 24)),
         applicationId: existingApplication._id,
-        paymentStatus: existingApplication.paymentStatus || 'pending',
         isVerified: existingApplication.isVerified || false
       };
     } else {
