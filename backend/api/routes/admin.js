@@ -31,10 +31,33 @@ router.get('/dashboard', async (req, res) => {
 router.get('/applications/pending', async (req, res) => {
   try {
     const pendingApplications = await Application.find({ status: 'pending' })
-      .populate('positionId')
       .sort({ appliedDate: -1 });
     
     res.json(pendingApplications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all approved applications
+router.get('/applications/approved', async (req, res) => {
+  try {
+    const approvedApplications = await Application.find({ status: 'approved' })
+      .sort({ approvedDate: -1 });
+    
+    res.json(approvedApplications);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all rejected applications
+router.get('/applications/rejected', async (req, res) => {
+  try {
+    const rejectedApplications = await Application.find({ status: 'rejected' })
+      .sort({ appliedDate: -1 });
+    
+    res.json(rejectedApplications);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
