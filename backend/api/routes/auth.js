@@ -56,6 +56,8 @@ router.post('/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
 
+    console.log('🔐 Login attempt:', { phone, passwordLength: password?.length });
+
     if (!phone || !password) {
       return res.status(400).json({ error: 'Phone number and password are required' });
     }
@@ -63,12 +65,18 @@ router.post('/login', async (req, res) => {
     // Find user by phone
     const user = await User.findOne({ phone });
     if (!user) {
+      console.log('❌ User not found:', phone);
       return res.status(401).json({ error: 'Invalid phone number or password' });
     }
 
+    console.log('✅ User found:', { name: user.name, phone: user.phone, hasPassword: !!user.password });
+
     // Check password
     const isMatch = await user.comparePassword(password);
+    console.log('🔑 Password match:', isMatch);
+    
     if (!isMatch) {
+      console.log('❌ Password mismatch for user:', user.name);
       return res.status(401).json({ error: 'Invalid phone number or password' });
     }
 
@@ -76,6 +84,8 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ userId: user._id, phone: user.phone }, JWT_SECRET, {
       expiresIn: '7d'
     });
+
+    console.log('✅ Login successful:', user.name);
 
     res.json({
       message: 'Login successful',

@@ -430,4 +430,53 @@ router.get('/user-documents/:phone', async (req, res) => {
   }
 });
 
+// Test endpoint: Check user and reset password (for debugging)
+router.post('/test-user/:phone', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const { phone } = req.params;
+    const { newPassword } = req.body;
+    
+    const user = await User.findOne({ phone });
+    
+    if (!user) {
+      return res.status(404).json({ 
+        error: 'User not found',
+        phone: phone
+      });
+    }
+
+    const result = {
+      found: true,
+      name: user.name,
+      phone: user.phone,
+      email: user.email,
+      credits: user.credits,
+      hasPassword: !!user.password,
+      passwordHash: user.password ? user.password.substring(0, 30) + '...' : 'None'
+    };
+
+    // If newPassword provided, update it
+    if (newPassword) {
+      user.password = newPassword; // Will be hashed by pre-save hook
+      await user.save();
+      result.passwordUpdated = true;
+      result.newPassword = newPassword;
+    }
+
+    // Test password comparison with phone number
+    const testWithPhone = await user.comparePassword(phone);
+    result.phoneNumberWorks = testWithPhone;
+
+    if (newPassword) {
+      const testWithNew = await user.comparePassword(newPassword);
+      result.newPasswordWorks = testWithNew;
+    }
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
