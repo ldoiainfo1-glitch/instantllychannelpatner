@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Instantly Cards</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 3rem 0;
+        }
+        
+        .profile-photo-container {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            margin: 0 auto;
+        }
+        
+        .profile-photo {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .photo-upload-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: #667eea;
+            color: white;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .photo-upload-btn:hover {
+            background: #764ba2;
+            transform: scale(1.1);
+        }
+        
+        .credits-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            color: white;
+        }
+        
+        .stats-card {
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .edit-mode input,
+        .edit-mode textarea {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .nav-tabs .nav-link {
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="index.html">
+                <img src="images/logo.jpeg" alt="Instantly Cards Logo" height="45" class="me-3 navbar-logo">
+                Instantly Cards
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="profile.html">
+                            <i class="fas fa-user-circle me-1"></i>Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <button class="btn btn-outline-light btn-sm ms-2" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Section (shown when not logged in) -->
+    <section class="profile-header" id="loginSection">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card shadow">
+                        <div class="card-body p-5">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-user-circle fa-4x text-primary mb-3"></i>
+                                <h3>Login to Your Profile</h3>
+                                <p class="text-muted">Access your dashboard and manage your account</p>
+                            </div>
+                            
+                            <div id="loginError" class="alert alert-danger d-none"></div>
+                            
+                            <form id="loginForm">
+                                <div class="mb-3">
+                                    <label for="loginPhone" class="form-label">
+                                        <i class="fas fa-phone me-2"></i>Phone Number
+                                    </label>
+                                    <input type="tel" class="form-control form-control-lg" id="loginPhone" 
+                                           placeholder="Enter your phone number" required>
+                                    <small class="form-text text-muted">Use the phone number you registered with</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="loginPassword" class="form-label">
+                                        <i class="fas fa-lock me-2"></i>Password
+                                    </label>
+                                    <input type="password" class="form-control form-control-lg" id="loginPassword" 
+                                           placeholder="Enter your password" required>
+                                    <small class="form-text text-muted">
+                                        Default password is your phone number (change after first login)
+                                    </small>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Login to Dashboard
+                                </button>
+                            </form>
+                            
+                            <div class="mt-4 text-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Your account is created automatically when your application is approved
+                                </small>
+                                <hr>
+                                <a href="index.html" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Back to Home
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Profile Header -->
+    <section class="profile-header" id="profileSection" style="display: none;">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-3 text-center">
+                    <div class="profile-photo-container">
+                        <img src="" alt="Profile Photo" id="profilePhoto" class="rounded-circle profile-photo">
+                        <label for="photoUpload" class="photo-upload-btn">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="photoUpload" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h2 class="mb-2" id="userName">Loading...</h2>
+                    <p class="mb-1">
+                        <i class="fas fa-phone me-2"></i>
+                        <span id="userPhone">-</span>
+                    </p>
+                    <p class="mb-0">
+                        <i class="fas fa-envelope me-2"></i>
+                        <span id="userEmail">-</span>
+                    </p>
+                </div>
+                <div class="col-md-3">
+                    <div class="card credits-card">
+                        <div class="card-body text-center">
+                            <h6 class="mb-2">
+                                <i class="fas fa-coins me-2"></i>Available Credits
+                            </h6>
+                            <h1 class="mb-0" id="userCredits">0</h1>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="py-5 bg-light">
+        <div class="container">
+            <!-- Stats Row -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-user-friends fa-2x text-primary"></i>
+                            </div>
+                            <h4 class="mb-0" id="introducedCount">0</h4>
+                            <p class="text-muted mb-0">People Introduced</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-briefcase fa-2x text-success"></i>
+                            </div>
+                            <h4 class="mb-0" id="totalApplications">0</h4>
+                            <p class="text-muted mb-0">Total Applications</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="card stats-card">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-check-circle fa-2x text-info"></i>
+                            </div>
+                            <h4 class="mb-0" id="approvedApplications">0</h4>
+                            <p class="text-muted mb-0">Approved Positions</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profileTab">
+                        <i class="fas fa-user me-2"></i>Profile Information
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#applicationsTab">
+                        <i class="fas fa-file-alt me-2"></i>My Applications
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#creditsTab">
+                        <i class="fas fa-history me-2"></i>Credits History
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#securityTab">
+                        <i class="fas fa-lock me-2"></i>Security
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#documentsTab">
+                        <i class="fas fa-file-upload me-2"></i>Documents
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Profile Tab -->
+                <div class="tab-pane fade show active" id="profileTab">
+                    <div class="info-card">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="mb-0">
+                                <i class="fas fa-user me-2"></i>Personal Information
+                            </h4>
+                            <button class="btn btn-primary" id="editProfileBtn" onclick="toggleEditMode()">
+                                <i class="fas fa-edit me-2"></i>Edit Profile
+                            </button>
+                        </div>
+
+                        <form id="profileForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-user me-2"></i>Full Name
+                                    </label>
+                                    <input type="text" class="form-control" id="editName" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-phone me-2"></i>Phone Number
+                                    </label>
+                                    <input type="tel" class="form-control" id="editPhone" readonly disabled>
+                                    <small class="text-muted">Phone number cannot be changed</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-envelope me-2"></i>Email Address
+                                    </label>
+                                    <input type="email" class="form-control" id="editEmail" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-user-friends me-2"></i>Introduced By
+                                    </label>
+                                    <input type="text" class="form-control" id="editIntroducedBy" readonly disabled>
+                                </div>
+                            </div>
+
+                            <div class="text-end d-none" id="profileActions">
+                                <button type="button" class="btn btn-secondary me-2" onclick="cancelEditMode()">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Applications Tab -->
+                <div class="tab-pane fade" id="applicationsTab">
+                    <div class="info-card">
+                        <h4 class="mb-4">
+                            <i class="fas fa-file-alt me-2"></i>My Applications
+                        </h4>
+                        <div id="applicationsList">
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-3 text-muted">Loading applications...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Credits History Tab -->
+                <div class="tab-pane fade" id="creditsTab">
+                    <div class="info-card">
+                        <h4 class="mb-4">
+                            <i class="fas fa-history me-2"></i>Credits History
+                        </h4>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Initial Credits:</strong> You received 500 credits when your first application was approved!
+                        </div>
+                        <div id="creditsHistory">
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-plus-circle text-success me-2"></i>
+                                            <strong>Initial Credits Granted</strong>
+                                            <br>
+                                            <small class="text-muted">Welcome bonus on first approval</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <h5 class="mb-0 text-success">+500</h5>
+                                            <small class="text-muted" id="creditsDate">-</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Tab -->
+                <div class="tab-pane fade" id="securityTab">
+                    <div class="info-card">
+                        <h4 class="mb-4">
+                            <i class="fas fa-lock me-2"></i>Security Settings
+                        </h4>
+                        
+                        <div class="mb-4">
+                            <h5>Change Password</h5>
+                            <p class="text-muted">Update your password to keep your account secure</p>
+                            
+                            <form id="passwordForm">
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Current Password</label>
+                                        <input type="password" class="form-control" id="currentPassword" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">New Password</label>
+                                        <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                        <small class="text-muted">Minimum 6 characters</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Confirm New Password</label>
+                                        <input type="password" class="form-control" id="confirmPassword" required>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key me-2"></i>Update Password
+                                </button>
+                            </form>
+                        </div>
+
+                        <hr>
+
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Security Tip:</strong> Never share your password with anyone. Instantly Cards will never ask for your password via email or phone.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Documents Tab -->
+                <div class="tab-pane fade" id="documentsTab">
+                    <div class="info-card">
+                        <h4 class="mb-4">
+                            <i class="fas fa-file-upload me-2"></i>Identity Documents
+                        </h4>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Document upload is optional but recommended for verification purposes.
+                        </div>
+
+                        <div class="row">
+                            <!-- PAN Card Upload -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-id-card me-2 text-primary"></i>PAN Card
+                                        </h5>
+                                        <p class="text-muted small">Upload a clear image of your PAN card</p>
+                                        
+                                        <div class="text-center mb-3" id="panPreviewContainer">
+                                            <img id="panPreview" src="" alt="PAN Card" class="img-fluid rounded border" style="max-height: 200px; display: none;">
+                                            <div id="panPlaceholder" class="border rounded p-4 bg-light">
+                                                <i class="fas fa-id-card fa-3x text-muted mb-2"></i>
+                                                <p class="text-muted mb-0">No PAN card uploaded</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2">
+                                            <label for="panUpload" class="btn btn-outline-primary">
+                                                <i class="fas fa-upload me-2"></i>
+                                                <span id="panUploadText">Upload PAN Card</span>
+                                            </label>
+                                            <input type="file" id="panUpload" accept="image/*" style="display: none;">
+                                            <button class="btn btn-sm btn-outline-danger d-none" id="removePanBtn" onclick="removeDocument('pan')">
+                                                <i class="fas fa-trash me-2"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Aadhaar Card Upload -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-address-card me-2 text-success"></i>Aadhaar Card
+                                        </h5>
+                                        <p class="text-muted small">Upload a clear image of your Aadhaar card</p>
+                                        
+                                        <div class="text-center mb-3" id="aadhaarPreviewContainer">
+                                            <img id="aadhaarPreview" src="" alt="Aadhaar Card" class="img-fluid rounded border" style="max-height: 200px; display: none;">
+                                            <div id="aadhaarPlaceholder" class="border rounded p-4 bg-light">
+                                                <i class="fas fa-address-card fa-3x text-muted mb-2"></i>
+                                                <p class="text-muted mb-0">No Aadhaar card uploaded</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="d-grid gap-2">
+                                            <label for="aadhaarUpload" class="btn btn-outline-success">
+                                                <i class="fas fa-upload me-2"></i>
+                                                <span id="aadhaarUploadText">Upload Aadhaar Card</span>
+                                            </label>
+                                            <input type="file" id="aadhaarUpload" accept="image/*" style="display: none;">
+                                            <button class="btn btn-sm btn-outline-danger d-none" id="removeAadhaarBtn" onclick="removeDocument('aadhaar')">
+                                                <i class="fas fa-trash me-2"></i>Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning mt-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Privacy Note:</strong> Your documents are securely stored and only visible to administrators for verification purposes.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:5000/api'
+            : 'https://instantllychannelpatner.onrender.com/api';
+
+        let authToken = localStorage.getItem('authToken');
+        let currentUser = null;
+        let isEditMode = false;
+
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!authToken) {
+                // Show login section
+                document.getElementById('loginSection').style.display = 'block';
+                document.getElementById('profileSection').style.display = 'none';
+                document.querySelector('.bg-light').style.display = 'none';
+                return;
+            }
+            
+            // Hide login, show profile
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'block';
+            document.querySelector('.bg-light').style.display = 'block';
+            
+            loadUserProfile();
+            loadUserApplications();
+        });
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleLogin();
+        });
+
+        // Handle login
+        async function handleLogin() {
+            const phone = document.getElementById('loginPhone').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ phone, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store token
+                    authToken = data.token;
+                    localStorage.setItem('authToken', authToken);
+                    currentUser = data.user;
+
+                    // Hide error
+                    errorDiv.classList.add('d-none');
+
+                    // Reload page to show profile
+                    window.location.reload();
+                } else {
+                    errorDiv.textContent = data.error || 'Login failed';
+                    errorDiv.classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.classList.remove('d-none');
+            }
+        }
+
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentUser = data.user;
+                    displayUserProfile(currentUser);
+                } else {
+                    throw new Error('Failed to load profile');
+                }
+            } catch (error) {
+                console.error('Profile load error:', error);
+                showNotification('Failed to load profile. Please login again.', 'error');
+                setTimeout(() => {
+                    localStorage.removeItem('authToken');
+                    window.location.href = 'index.html';
+                }, 2000);
+            }
+        }
+
+        // Display user profile
+        function displayUserProfile(user) {
+            // Header
+            document.getElementById('userName').textContent = user.name;
+            document.getElementById('userPhone').textContent = user.phone;
+            document.getElementById('userEmail').textContent = user.email || 'Not provided';
+            document.getElementById('userCredits').textContent = user.credits || 0;
+
+            // Stats
+            document.getElementById('introducedCount').textContent = user.introducedCount || 0;
+            
+            // Profile photo
+            const profilePhoto = document.getElementById('profilePhoto');
+            if (user.photo) {
+                profilePhoto.src = user.photo;
+            } else {
+                profilePhoto.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNzUiIHI9Ijc1IiBmaWxsPSIjZTJlOGYwIi8+Cjwvc3ZnPg==';
+            }
+
+            // Form fields
+            document.getElementById('editName').value = user.name;
+            document.getElementById('editPhone').value = user.phone;
+            document.getElementById('editEmail').value = user.email || '';
+            document.getElementById('editIntroducedBy').value = user.introducedBy || 'Self';
+
+            // Credits date
+            if (user.createdAt) {
+                document.getElementById('creditsDate').textContent = new Date(user.createdAt).toLocaleDateString();
+            }
+            
+            // Load documents if available
+            if (user.documents) {
+                displayDocuments(user.documents);
+            }
+        }
+
+        // Display documents
+        function displayDocuments(documents) {
+            // PAN Card
+            if (documents.panCard) {
+                document.getElementById('panPreview').src = documents.panCard;
+                document.getElementById('panPreview').style.display = 'block';
+                document.getElementById('panPlaceholder').style.display = 'none';
+                document.getElementById('panUploadText').textContent = 'Change PAN Card';
+                document.getElementById('removePanBtn').classList.remove('d-none');
+            }
+            
+            // Aadhaar Card
+            if (documents.aadhaarCard) {
+                document.getElementById('aadhaarPreview').src = documents.aadhaarCard;
+                document.getElementById('aadhaarPreview').style.display = 'block';
+                document.getElementById('aadhaarPlaceholder').style.display = 'none';
+                document.getElementById('aadhaarUploadText').textContent = 'Change Aadhaar Card';
+                document.getElementById('removeAadhaarBtn').classList.remove('d-none');
+            }
+        }
+
+        // Load user applications
+        async function loadUserApplications() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/applications`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const applications = await response.json();
+                    displayApplications(applications);
+                    
+                    // Update stats
+                    const approved = applications.filter(app => app.status === 'approved').length;
+                    document.getElementById('totalApplications').textContent = applications.length;
+                    document.getElementById('approvedApplications').textContent = approved;
+                } else {
+                    document.getElementById('applicationsList').innerHTML = `
+                        <p class="text-muted text-center">No applications found</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Applications load error:', error);
+                document.getElementById('applicationsList').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Failed to load applications
+                    </div>
+                `;
+            }
+        }
+
+        // Display applications
+        function displayApplications(applications) {
+            const container = document.getElementById('applicationsList');
+            
+            if (applications.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No applications yet</h5>
+                        <p class="text-muted">Go to the positions page to apply for a position</p>
+                        <a href="index.html#positions" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Browse Positions
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = applications.map(app => {
+                const statusClass = app.status === 'approved' ? 'success' : 
+                                  app.status === 'rejected' ? 'danger' : 'warning';
+                const statusIcon = app.status === 'approved' ? 'check-circle' : 
+                                 app.status === 'rejected' ? 'times-circle' : 'clock';
+
+                return `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="mb-2">${app.positionId.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ')}</h5>
+                                    <p class="mb-1">
+                                        <i class="fas fa-calendar me-2"></i>
+                                        Applied: ${new Date(app.appliedDate).toLocaleDateString()}
+                                    </p>
+                                    ${app.approvedDate ? `
+                                        <p class="mb-0">
+                                            <i class="fas fa-check me-2"></i>
+                                            Approved: ${new Date(app.approvedDate).toLocaleDateString()}
+                                        </p>
+                                    ` : ''}
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="badge bg-${statusClass} fs-6">
+                                        <i class="fas fa-${statusIcon} me-1"></i>
+                                        ${app.status.toUpperCase()}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle edit mode
+        function toggleEditMode() {
+            isEditMode = true;
+            document.getElementById('editName').removeAttribute('readonly');
+            document.getElementById('editEmail').removeAttribute('readonly');
+            document.getElementById('profileForm').classList.add('edit-mode');
+            document.getElementById('profileActions').classList.remove('d-none');
+            document.getElementById('editProfileBtn').classList.add('d-none');
+        }
+
+        // Cancel edit mode
+        function cancelEditMode() {
+            isEditMode = false;
+            document.getElementById('editName').setAttribute('readonly', true);
+            document.getElementById('editEmail').setAttribute('readonly', true);
+            document.getElementById('profileForm').classList.remove('edit-mode');
+            document.getElementById('profileActions').classList.add('d-none');
+            document.getElementById('editProfileBtn').classList.remove('d-none');
+            
+            // Reset values
+            displayUserProfile(currentUser);
+        }
+
+        // Profile form submit
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('editName').value;
+            const email = document.getElementById('editEmail').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name, email })
+                });
+
+                if (response.ok) {
+                    showNotification('Profile updated successfully!', 'success');
+                    cancelEditMode();
+                    loadUserProfile();
+                } else {
+                    const data = await response.json();
+                    showNotification(data.error || 'Failed to update profile', 'error');
+                }
+            } catch (error) {
+                console.error('Profile update error:', error);
+                showNotification('Network error. Please try again.', 'error');
+            }
+        });
+
+        // Password form submit
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showNotification('Passwords do not match', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        currentPassword,
+                        newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    showNotification('Password changed successfully!', 'success');
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    const data = await response.json();
+                    showNotification(data.error || 'Failed to change password', 'error');
+                }
+            } catch (error) {
+                console.error('Password change error:', error);
+                showNotification('Network error. Please try again.', 'error');
+            }
+        });
+
+        // Photo upload
+        document.getElementById('photoUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Check file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showNotification('Photo size must be less than 2MB', 'error');
+                return;
+            }
+
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const photoBase64 = event.target.result;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ photo: photoBase64 })
+                    });
+
+                    if (response.ok) {
+                        document.getElementById('profilePhoto').src = photoBase64;
+                        showNotification('Photo updated successfully!', 'success');
+                        loadUserProfile();
+                    } else {
+                        showNotification('Failed to upload photo', 'error');
+                    }
+                } catch (error) {
+                    console.error('Photo upload error:', error);
+                    showNotification('Network error. Please try again.', 'error');
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // PAN Card upload
+        document.getElementById('panUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Check file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showNotification('Document size must be less than 2MB', 'error');
+                return;
+            }
+
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const panBase64 = event.target.result;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ panCard: panBase64 })
+                    });
+
+                    if (response.ok) {
+                        document.getElementById('panPreview').src = panBase64;
+                        document.getElementById('panPreview').style.display = 'block';
+                        document.getElementById('panPlaceholder').style.display = 'none';
+                        document.getElementById('panUploadText').textContent = 'Change PAN Card';
+                        document.getElementById('removePanBtn').classList.remove('d-none');
+                        showNotification('PAN Card uploaded successfully!', 'success');
+                        loadUserProfile();
+                    } else {
+                        showNotification('Failed to upload PAN card', 'error');
+                    }
+                } catch (error) {
+                    console.error('PAN upload error:', error);
+                    showNotification('Network error. Please try again.', 'error');
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Aadhaar Card upload
+        document.getElementById('aadhaarUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Check file size (max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showNotification('Document size must be less than 2MB', 'error');
+                return;
+            }
+
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                const aadhaarBase64 = event.target.result;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ aadhaarCard: aadhaarBase64 })
+                    });
+
+                    if (response.ok) {
+                        document.getElementById('aadhaarPreview').src = aadhaarBase64;
+                        document.getElementById('aadhaarPreview').style.display = 'block';
+                        document.getElementById('aadhaarPlaceholder').style.display = 'none';
+                        document.getElementById('aadhaarUploadText').textContent = 'Change Aadhaar Card';
+                        document.getElementById('removeAadhaarBtn').classList.remove('d-none');
+                        showNotification('Aadhaar Card uploaded successfully!', 'success');
+                        loadUserProfile();
+                    } else {
+                        showNotification('Failed to upload Aadhaar card', 'error');
+                    }
+                } catch (error) {
+                    console.error('Aadhaar upload error:', error);
+                    showNotification('Network error. Please try again.', 'error');
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Remove document function
+        async function removeDocument(type) {
+            const confirmDelete = confirm(`Are you sure you want to remove your ${type === 'pan' ? 'PAN' : 'Aadhaar'} card?`);
+            if (!confirmDelete) return;
+
+            try {
+                const body = type === 'pan' ? { panCard: '' } : { aadhaarCard: '' };
+                
+                const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                if (response.ok) {
+                    if (type === 'pan') {
+                        document.getElementById('panPreview').style.display = 'none';
+                        document.getElementById('panPlaceholder').style.display = 'block';
+                        document.getElementById('panUploadText').textContent = 'Upload PAN Card';
+                        document.getElementById('removePanBtn').classList.add('d-none');
+                        document.getElementById('panUpload').value = '';
+                    } else {
+                        document.getElementById('aadhaarPreview').style.display = 'none';
+                        document.getElementById('aadhaarPlaceholder').style.display = 'block';
+                        document.getElementById('aadhaarUploadText').textContent = 'Upload Aadhaar Card';
+                        document.getElementById('removeAadhaarBtn').classList.add('d-none');
+                        document.getElementById('aadhaarUpload').value = '';
+                    }
+                    showNotification(`${type === 'pan' ? 'PAN' : 'Aadhaar'} card removed successfully!`, 'success');
+                    loadUserProfile();
+                } else {
+                    showNotification('Failed to remove document', 'error');
+                }
+            } catch (error) {
+                console.error('Document removal error:', error);
+                showNotification('Network error. Please try again.', 'error');
+            }
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = 'index.html';
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const toastHtml = `
+                <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+
+            let toastContainer = document.getElementById('toastContainer');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.id = 'toastContainer';
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                toastContainer.style.zIndex = '9999';
+                document.body.appendChild(toastContainer);
+            }
+
+            const toastElement = document.createElement('div');
+            toastElement.innerHTML = toastHtml;
+            toastContainer.appendChild(toastElement.firstElementChild);
+
+            const toast = new bootstrap.Toast(toastElement.firstElementChild, {
+                autohide: true,
+                delay: 3000
+            });
+            toast.show();
+
+            toastElement.firstElementChild.addEventListener('hidden.bs.toast', () => {
+                toastElement.remove();
+            });
+        }
+    </script>
+</body>
+</html>

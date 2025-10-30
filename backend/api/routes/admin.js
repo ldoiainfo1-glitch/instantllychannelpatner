@@ -67,6 +67,8 @@ router.get('/applications/rejected', async (req, res) => {
 router.put('/applications/:id/approve', async (req, res) => {
   try {
     const { adminNotes } = req.body;
+    const User = require('../models/User');
+    
     // Don't populate positionId since it's a string, not a reference
     const application = await Application.findById(req.params.id);
     
@@ -78,16 +80,46 @@ router.put('/applications/:id/approve', async (req, res) => {
     console.log(`📍 Position ID: ${application.positionId}`);
     console.log(`👤 Applicant: ${application.applicantInfo.name}`);
 
+    // Check if user exists or create new user
+    let user = await User.findOne({ phone: application.applicantInfo.phone });
+    
+    if (!user) {
+      // Create new user account with default password (phone number)
+      user = new User({
+        name: application.applicantInfo.name,
+        phone: application.applicantInfo.phone,
+        email: application.applicantInfo.email || '',
+        password: application.applicantInfo.phone, // Default password is phone number
+        credits: 0,
+        hasReceivedInitialCredits: false,
+        photo: application.applicantInfo.photo
+      });
+      await user.save();
+      console.log(`✨ Created new user account for ${user.name}`);
+    }
+
+    // Grant 500 credits on first approval if not already received
+    if (!user.hasReceivedInitialCredits) {
+      user.credits = (user.credits || 0) + 500;
+      user.hasReceivedInitialCredits = true;
+      await user.save();
+      console.log(`💰 Granted 500 initial credits to ${user.name}. Total credits: ${user.credits}`);
+    }
+
+    // Update application
     application.status = 'approved';
     application.approvedDate = new Date();
+    application.userId = user._id;
     if (adminNotes) application.adminNotes = adminNotes;
 
     await application.save();
     console.log(`✅ Application ${application._id} approved successfully`);
     
     res.json({
-      message: 'Application approved successfully!',
-      application
+      message: 'Application approved successfully! User has been granted 500 credits.',
+      application,
+      creditsGranted: !user.hasReceivedInitialCredits ? 500 : 0,
+      userCredits: user.credits
     });
   } catch (error) {
     console.error('❌ Error approving application:', error);
@@ -367,6 +399,32 @@ router.get('/users/pending-verification', async (req, res) => {
       .sort({ createdAt: -1 });
     
     res.json(pendingUsers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get user documents by phone number (for admin)
+router.get('/user-documents/:phone', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const user = await User.findOne({ phone: req.params.phone }).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        credits: user.credits,
+        documents: user.documents,
+        createdAt: user.createdAt
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

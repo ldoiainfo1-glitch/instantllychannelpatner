@@ -3,8 +3,12 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
 const Application = require('../models/Application');
 const Position = require('../models/Position');
+
+// JWT Secret
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Ensure uploads directory exists
 const fs = require('fs');
@@ -93,7 +97,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
     } else {
       console.log('ℹ️ No photo uploaded - using default placeholder');
       // Use a default user icon as base64
-      photoBase64 = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxNiIgeT0iMTYiPgo8cGF0aCBkPSJNMjQgMjRDMjguNDE4MyAyNCAzMiAyMC40MTgzIDMyIDE2QzMyIDExLjU4MTcgMjguNDE4MyA4IDI0IDhDMTkuNTgxNyA4IDE2IDExLjU4MTcgMTYgMTZDMTYgMjAuNDE4MyAxOS41ODE3IDI0IDI0IDI0WiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMjQgMjhDMTguNjcgMjggMTQgMzIuNjcgMTQgMzhWNDBIMzRWMzhDMzQgMzIuNjcgMjkuMzMgMjggMjQgMjhaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4=';
+      photoBase64 = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxNiIgeT0iMTYiPgo8cGF0aCBkPSJNMjQgMjRDMjguNDE4MyAyNCAzMiAyMC40MTgzIDMyIDE2QzMyIDExLjU4MTcgMjguNDE4MyA4IDI0IDhDMTkuNTgxNyA4IDE2IDExLjU4MTcgMTYgMTZDMTYgMjAuNDE4MyAxOS41ODE3IDI0IDI0IDIwWiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMjQgMjhDMTguNjcgMjggMTQgMzIuNjcgMTQgMzhWNDBIMzRWMzhDMzQgMzIuNjcgMjkuMzMgMjggMjQgMjhaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4=';
     }
 
     // Create a new ObjectId for this application (no need for positions collection)
@@ -340,6 +344,35 @@ router.put('/:id/payment', async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+// Get user's own applications (requires authentication)
+router.get('/me', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const User = require('../models/User');
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Find all applications by this user's phone number
+    const applications = await Application.find({ 
+      'applicantInfo.phone': user.phone 
+    }).sort({ appliedDate: -1 });
+
+    res.json(applications);
+  } catch (error) {
+    console.error('Applications fetch error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 

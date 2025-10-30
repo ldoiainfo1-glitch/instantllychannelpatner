@@ -6,12 +6,21 @@ let currentPositions = [];
 let locationData = {};
 let isAdmin = false;
 
+// Store auth token
+let authToken = localStorage.getItem('authToken');
+let currentUser = null;
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
     setupEventListeners();
     loadLocationData();
     loadApplications();
+    
+    // Check if user is logged in on page load
+    if (authToken) {
+        verifyToken();
+    }
 });
 
 // Initialize the application
@@ -44,6 +53,15 @@ function setupEventListeners() {
     
     // Rating stars
     setupRatingStars();
+    
+    // Login form handler
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleLogin();
+        });
+    }
 }
 
 // Setup navigation smooth scrolling
@@ -615,9 +633,8 @@ function createPositionRow(position) {
     
     row.innerHTML = `
         <td><strong>${position.sNo}</strong></td>
-        <td><span class="badge bg-secondary">${position.post}</span></td>
         <td>
-            <strong>${position.designation}</strong><br>
+            <strong>${position.post}</strong><br>
             <small class="text-muted">${location}</small>
         </td>
         <td>${nameCell}</td>
@@ -963,100 +980,17 @@ function submitFeedback(e) {
     document.getElementById('feedbackRating').value = '0';
 }
 
-// Edit Profile Function
+// Edit Profile Function - Redirect to profile page with login
 function editProfile(positionId) {
-    const position = currentPositions.find(p => p._id === positionId);
-    if (!position || !position.applicantDetails) {
-        showNotification('Profile not found', 'error');
+    // Check if user is logged in
+    if (!authToken) {
+        // Redirect to profile page which will handle login
+        window.location.href = 'profile.html';
         return;
     }
     
-    const applicant = position.applicantDetails;
-    
-    // Create profile modal HTML
-    const modalHTML = `
-        <div class="modal fade" id="profileModal" tabindex="-1">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-user me-2"></i>User Profile
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-4 text-center">
-                                ${applicant.photo ? 
-                                    `<img src="${API_BASE_URL.replace('/api', '')}/uploads/${applicant.photo}" 
-                                         alt="${applicant.name}" 
-                                         class="img-fluid rounded-circle mb-3" 
-                                         style="width: 150px; height: 150px; object-fit: cover;">` :
-                                    `<div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
-                                         style="width: 150px; height: 150px;">
-                                         <i class="fas fa-user fa-4x text-muted"></i>
-                                     </div>`
-                                }
-                            </div>
-                            <div class="col-md-8">
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Name:</label>
-                                    <p class="form-control-plaintext">${applicant.name}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Phone No:</label>
-                                    <p class="form-control-plaintext">${applicant.phone}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Login ID:</label>
-                                    <p class="form-control-plaintext">${applicant.phone}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Person Code:</label>
-                                    <p class="form-control-plaintext badge bg-info fs-6">${applicant.personCode || 'Not assigned'}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">Position:</label>
-                                    <p class="form-control-plaintext">${position.designation}</p>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-bold">People Introduced:</label>
-                                    <p class="form-control-plaintext badge bg-success fs-6">${applicant.introducedCount || 0}</p>
-                                </div>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Default Password:</strong> MUSK (for first login)<br>
-                            <small>Users can change their password after logging in.</small>
-                        </div>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-warning" onclick="showChangePasswordForm()">
-                                <i class="fas fa-key me-2"></i>Change Password
-                            </button>
-                            <button class="btn btn-outline-primary" onclick="showForgotPasswordForm('${applicant.phone}')">
-                                <i class="fas fa-lock me-2"></i>Forgot Password
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Remove existing modal if any
-    const existingModal = document.getElementById('profileModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-    
-    // Add modal to body
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('profileModal'));
-    modal.show();
+    // User is logged in, go to profile page
+    window.location.href = 'profile.html';
 }
 
 // View Promotion Code
@@ -1339,38 +1273,265 @@ async function processPayment(positionId) {
     }
 }
 
-// Utility functions
-function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `alert alert-${getAlertClass(type)} alert-dismissible fade show position-fixed`;
-    notification.style.cssText = 'top: 100px; right: 20px; z-index: 9999; min-width: 300px;';
-    
-    notification.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
+// ============================================
+// Authentication Functions
+// ============================================
+
+// Open login modal
+function openLoginModal() {
+    const modal = new bootstrap.Modal(document.getElementById('loginModal'));
+    modal.show();
+}
+
+// Handle login
+async function handleLogin() {
+    const phone = document.getElementById('loginPhone').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ phone, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Store token
+            authToken = data.token;
+            localStorage.setItem('authToken', authToken);
+            currentUser = data.user;
+
+            // Hide error
+            errorDiv.classList.add('d-none');
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+            modal.hide();
+
+            // Update UI
+            updateAuthUI();
+
+            // Show success message
+            showNotification('Login successful!', 'success');
+
+            // Show profile if first login
+            if (!data.user.hasReceivedInitialCredits) {
+                setTimeout(() => {
+                    showProfile();
+                }, 500);
+            }
+        } else {
+            errorDiv.textContent = data.error || 'Login failed';
+            errorDiv.classList.remove('d-none');
         }
-    }, 5000);
+    } catch (error) {
+        console.error('Login error:', error);
+        errorDiv.textContent = 'Network error. Please try again.';
+        errorDiv.classList.remove('d-none');
+    }
 }
 
-function getAlertClass(type) {
-    const classes = {
-        'success': 'success',
-        'error': 'danger',
-        'warning': 'warning',
-        'info': 'info'
-    };
-    return classes[type] || 'info';
+// Verify token
+async function verifyToken() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            currentUser = data.user;
+            updateAuthUI();
+        } else {
+            // Token invalid, logout
+            logout();
+        }
+    } catch (error) {
+        console.error('Token verification error:', error);
+        logout();
+    }
 }
 
+// Update UI based on auth state
+function updateAuthUI() {
+    const loginNavItem = document.getElementById('loginNavItem');
+    const profileNavItem = document.getElementById('profileNavItem');
+    const userNameSpan = document.getElementById('userName');
+    const userCreditsSpan = document.getElementById('userCredits');
+
+    if (currentUser) {
+        // Hide login, show profile
+        loginNavItem.classList.add('d-none');
+        profileNavItem.classList.remove('d-none');
+        
+        // Update user info
+        userNameSpan.textContent = currentUser.name;
+        userCreditsSpan.textContent = currentUser.credits || 0;
+    } else {
+        // Show login, hide profile
+        loginNavItem.classList.remove('d-none');
+        profileNavItem.classList.add('d-none');
+    }
+}
+
+// Logout
+function logout() {
+    authToken = null;
+    currentUser = null;
+    localStorage.removeItem('authToken');
+    updateAuthUI();
+    showNotification('Logged out successfully', 'info');
+}
+
+// Show profile
+async function showProfile() {
+    if (!authToken) {
+        openLoginModal();
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const user = data.user;
+
+            // Update profile modal
+            document.getElementById('profileName').textContent = user.name;
+            document.getElementById('profilePhone').textContent = user.phone;
+            document.getElementById('profileEmail').textContent = user.email || 'Not provided';
+            document.getElementById('profileCredits').textContent = user.credits || 0;
+            document.getElementById('profileIntroducedBy').textContent = user.introducedBy || 'Self';
+            document.getElementById('profileIntroducedCount').textContent = user.introducedCount || 0;
+
+            // Set profile photo
+            const profilePhoto = document.getElementById('profilePhoto');
+            if (user.photo) {
+                profilePhoto.src = user.photo;
+            } else {
+                profilePhoto.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjUwIiBmaWxsPSIjZTJlOGYwIi8+Cjwvc3ZnPg==';
+            }
+
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('profileModal'));
+            modal.show();
+
+            // Update current user
+            currentUser = user;
+            updateAuthUI();
+        } else {
+            showNotification('Failed to load profile', 'error');
+        }
+    } catch (error) {
+        console.error('Profile fetch error:', error);
+        showNotification('Network error', 'error');
+    }
+}
+
+// Show credits (alternative to profile)
+function showCredits() {
+    showProfile();
+}
+
+// Change password
+async function changePassword() {
+    const currentPassword = prompt('Enter current password:');
+    if (!currentPassword) return;
+
+    const newPassword = prompt('Enter new password:');
+    if (!newPassword) return;
+
+    const confirmPassword = prompt('Confirm new password:');
+    if (newPassword !== confirmPassword) {
+        showNotification('Passwords do not match', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                currentPassword,
+                newPassword
+            })
+        });
+
+        if (response.ok) {
+            showNotification('Password changed successfully', 'success');
+            
+            // Close profile modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
+            if (modal) modal.hide();
+        } else {
+            const data = await response.json();
+            showNotification(data.error || 'Failed to change password', 'error');
+        }
+    } catch (error) {
+        console.error('Password change error:', error);
+        showNotification('Network error', 'error');
+    }
+}
+
+// Show notification (toast-style)
+function showNotification(message, type = 'info') {
+    // Create toast element
+    const toastHtml = `
+        <div class="toast align-items-center text-white bg-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+
+    // Create container if not exists
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toastContainer';
+        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+        toastContainer.style.zIndex = '9999';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Add toast
+    const toastElement = document.createElement('div');
+    toastElement.innerHTML = toastHtml;
+    toastContainer.appendChild(toastElement.firstElementChild);
+
+    // Show toast
+    const toast = new bootstrap.Toast(toastElement.firstElementChild, {
+        autohide: true,
+        delay: 3000
+    });
+    toast.show();
+
+    // Remove from DOM after hiding
+    toastElement.firstElementChild.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+    });
+}
+
+// Utility functions
 function showLoading(show) {
     const tbody = document.getElementById('positionsTableBody');
     if (show) {

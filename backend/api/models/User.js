@@ -9,30 +9,38 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
   email: {
     type: String,
-    required: true
+    required: false
   },
   personCode: {
     type: String,
-    required: true,
-    unique: true
+    required: false,
+    unique: true,
+    sparse: true
   },
   loginId: {
     type: String,
-    required: true,
-    unique: true
+    required: false,
+    unique: true,
+    sparse: true
   },
   password: {
     type: String,
     required: true
-    // Default password: First 4 letters of name in CAPITAL (e.g., "John Doe" -> "JOHN")
+    // Password for login (will be hashed)
   },
   credits: {
     type: Number,
-    default: 0
+    default: 0,
+    min: 0
+  },
+  hasReceivedInitialCredits: {
+    type: Boolean,
+    default: false
   },
   introducedBy: {
     type: String,
@@ -74,6 +82,19 @@ const userSchema = new mongoose.Schema({
   },
   photo: {
     type: String
+  },
+  documents: {
+    panCard: {
+      type: String,
+      required: false
+    },
+    aadhaarCard: {
+      type: String,
+      required: false
+    },
+    uploadedAt: {
+      type: Date
+    }
   },
   createdAt: {
     type: Date,

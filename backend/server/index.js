@@ -77,6 +77,7 @@ const locationsRoutes = require('../api/routes/locations');
 const adminRoutes = require('../api/routes/admin');
 const videoRoutes = require('../api/routes/video');
 const usersRoutes = require('../api/routes/users');
+const authRoutes = require('../api/routes/auth');
 
 // Routes
 app.use('/api/dynamic-positions', dynamicPositionsRoutes);
@@ -85,6 +86,7 @@ app.use('/api/locations', locationsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/video', videoRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {
