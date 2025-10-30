@@ -69,27 +69,32 @@ router.post('/', upload.single('photo'), async (req, res) => {
       return res.status(400).json({ error: 'Invalid position ID format' });
     }
     
-    if (!name || !phone || !address || !companyName || !businessName) {
-      return res.status(400).json({ error: 'Missing required fields: name, phone, companyName, businessName, address' });
+    // Only name and phone are required
+    if (!name || !phone) {
+      return res.status(400).json({ error: 'Missing required fields: name and phone' });
     }
     
     console.log('✅ Position ID validation passed:', positionId);
     
-    if (!req.file) {
-      return res.status(400).json({ error: 'Photo is required' });
+    // Photo is now optional
+    let photoBase64 = null;
+    if (req.file) {
+      console.log('📸 Photo uploaded:', req.file.filename);
+
+      // Convert photo to base64 for MongoDB storage
+      const fs = require('fs');
+      const photoPath = path.join(uploadsDir, req.file.filename);
+      const photoBuffer = fs.readFileSync(photoPath);
+      photoBase64 = `data:${req.file.mimetype};base64,${photoBuffer.toString('base64')}`;
+      
+      // Delete the file from server after converting to base64
+      fs.unlinkSync(photoPath);
+      console.log('✅ Photo converted to base64 and file deleted from server');
+    } else {
+      console.log('ℹ️ No photo uploaded - using default placeholder');
+      // Use a default user icon as base64
+      photoBase64 = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxNiIgeT0iMTYiPgo8cGF0aCBkPSJNMjQgMjRDMjguNDE4MyAyNCAzMiAyMC40MTgzIDMyIDE2QzMyIDExLjU4MTcgMjguNDE4MyA4IDI0IDhDMTkuNTgxNyA4IDE2IDExLjU4MTcgMTYgMTZDMTYgMjAuNDE4MyAxOS41ODE3IDI0IDI0IDI0WiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMjQgMjhDMTguNjcgMjggMTQgMzIuNjcgMTQgMzhWNDBIMzRWMzhDMzQgMzIuNjcgMjkuMzMgMjggMjQgMjhaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4=';
     }
-
-    console.log('📸 Photo uploaded:', req.file.filename);
-
-    // Convert photo to base64 for MongoDB storage
-    const fs = require('fs');
-    const photoPath = path.join(uploadsDir, req.file.filename);
-    const photoBuffer = fs.readFileSync(photoPath);
-    const photoBase64 = `data:${req.file.mimetype};base64,${photoBuffer.toString('base64')}`;
-    
-    // Delete the file from server after converting to base64
-    fs.unlinkSync(photoPath);
-    console.log('✅ Photo converted to base64 and file deleted from server');
 
     // Create a new ObjectId for this application (no need for positions collection)
     const newApplicationId = new mongoose.Types.ObjectId();
@@ -119,9 +124,9 @@ router.post('/', upload.single('photo'), async (req, res) => {
         phone: phone.trim(),
         email: email,
         photo: photoBase64,
-        address: address.trim(),
-        companyName: companyName.trim(),
-        businessName: businessName.trim()
+        address: address ? address.trim() : '',
+        companyName: companyName ? companyName.trim() : '',
+        businessName: businessName ? businessName.trim() : ''
       },
       location: {
         country: country || 'India',
