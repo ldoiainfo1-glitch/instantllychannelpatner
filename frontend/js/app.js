@@ -1410,13 +1410,21 @@ function setupSearchableFilters() {
 
         if (input && dropdown && clearBtn) {
             // Setup input click to show dropdown
-            input.addEventListener('click', () => {
+            input.addEventListener('click', (e) => {
+                e.preventDefault();
                 showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
             });
 
             // Setup input focus to show dropdown
             input.addEventListener('focus', () => {
                 showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
+            });
+
+            // Setup hover to show dropdown
+            input.addEventListener('mouseenter', () => {
+                if (!dropdown.classList.contains('show')) {
+                    showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
+                }
             });
 
             // Setup clear button
@@ -1432,18 +1440,12 @@ function setupSearchableFilters() {
                 }
             });
 
-            // Reposition dropdown on scroll and resize
-            const repositionDropdown = () => {
+            // Close dropdown on scroll to prevent positioning issues
+            window.addEventListener('scroll', () => {
                 if (dropdown.classList.contains('show')) {
-                    const rect = input.getBoundingClientRect();
-                    dropdown.style.top = `${rect.bottom}px`;
-                    dropdown.style.left = `${rect.left}px`;
-                    dropdown.style.width = `${rect.width}px`;
+                    hideFilterDropdown(filter.dropdown);
                 }
-            };
-
-            window.addEventListener('scroll', repositionDropdown);
-            window.addEventListener('resize', repositionDropdown);
+            });
         }
     });
 }
@@ -1458,58 +1460,76 @@ function showFilterDropdown(inputId, dropdownId, dataKey) {
         return;
     }
 
-    // Add active class to container for higher z-index
-    if (container) {
-        container.classList.add('active');
-    }
+    // Close all other dropdowns
+    document.querySelectorAll('.filter-dropdown.show').forEach(d => {
+        if (d.id !== dropdownId) {
+            d.classList.remove('show');
+            d.closest('.filter-container')?.classList.remove('active');
+        }
+    });
+
+    // Add active class to current container
+    container?.classList.add('active');
 
     const data = locationData[dataKey];
     
-    // Create search input and options
-    dropdown.innerHTML = `
-        <input type="text" class="filter-search-input" placeholder="Type to search..." id="search_${inputId}">
-        <div class="filter-options" id="options_${inputId}"></div>
-    `;
+    // Only create dropdown content if it doesn't exist or data changed
+    if (!dropdown.dataset.initialized || dropdown.dataset.dataKey !== dataKey) {
+        dropdown.innerHTML = `
+            <input type="text" class="filter-search-input" placeholder="Type to search..." id="search_${inputId}" autocomplete="off">
+            <div class="filter-options" id="options_${inputId}"></div>
+        `;
+        dropdown.dataset.initialized = 'true';
+        dropdown.dataset.dataKey = dataKey;
+    }
 
     const searchInput = document.getElementById(`search_${inputId}`);
     const optionsContainer = document.getElementById(`options_${inputId}`);
 
-    // Initial display of all options
-    displayFilterOptions(optionsContainer, data, inputId, dropdownId);
+    // Clear previous search
+    searchInput.value = '';
 
-    // Setup search functionality
-    searchInput.addEventListener('input', (e) => {
+    // Initial display - show first 50 items for performance
+    displayFilterOptions(optionsContainer, data.slice(0, 50), data, inputId, dropdownId);
+
+    // Setup search functionality (remove old listeners first)
+    const newSearchInput = searchInput.cloneNode(true);
+    searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+    
+    newSearchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
-        const filteredData = data.filter(item => 
-            item.toLowerCase().includes(searchTerm)
-        );
-        displayFilterOptions(optionsContainer, filteredData, inputId, dropdownId);
+        if (searchTerm) {
+            const filteredData = data.filter(item => 
+                item.toLowerCase().includes(searchTerm)
+            );
+            displayFilterOptions(optionsContainer, filteredData, data, inputId, dropdownId);
+        } else {
+            // Show first 50 when no search term
+            displayFilterOptions(optionsContainer, data.slice(0, 50), data, inputId, dropdownId);
+        }
     });
 
     // Focus on search input
-    setTimeout(() => searchInput.focus(), 50);
-
-    // Position dropdown correctly (since it's now fixed positioned)
-    const rect = input.getBoundingClientRect();
-    dropdown.style.position = 'fixed';
-    dropdown.style.top = `${rect.bottom}px`;
-    dropdown.style.left = `${rect.left}px`;
-    dropdown.style.width = `${rect.width}px`;
+    setTimeout(() => newSearchInput.focus(), 10);
     
-    // Show dropdown
+    // Show dropdown (use absolute positioning, not fixed)
     dropdown.classList.add('show');
 }
 
 // Display filter options in dropdown
-function displayFilterOptions(container, data, inputId, dropdownId) {
-    if (data.length === 0) {
+function displayFilterOptions(container, displayData, fullData, inputId, dropdownId) {
+    if (displayData.length === 0) {
         container.innerHTML = '<div class="no-results">No results found</div>';
         return;
     }
 
-    container.innerHTML = data.map(item => 
+    // Limit to 100 items for performance
+    const limitedData = displayData.slice(0, 100);
+    const hasMore = displayData.length > 100;
+
+    container.innerHTML = limitedData.map(item => 
         `<div class="filter-dropdown-item" data-value="${item}">${item}</div>`
-    ).join('');
+    ).join('') + (hasMore ? `<div class="no-results">Showing ${limitedData.length} of ${displayData.length} results. Type to search...</div>` : '');
 
     // Setup click handlers for options
     container.querySelectorAll('.filter-dropdown-item').forEach(item => {
@@ -1545,12 +1565,6 @@ function hideFilterDropdown(dropdownId) {
     const dropdown = document.getElementById(dropdownId);
     if (dropdown) {
         dropdown.classList.remove('show');
-        
-        // Clear inline positioning styles
-        dropdown.style.top = '';
-        dropdown.style.left = '';
-        dropdown.style.width = '';
-        dropdown.style.position = '';
         
         // Remove active class from container
         const container = dropdown.closest('.filter-container');

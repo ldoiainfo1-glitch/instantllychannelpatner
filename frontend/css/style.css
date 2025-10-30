@@ -1,30 +1,18 @@
 :root {
-    --primary-color: /* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, #1e88e5 0%, #ff7043 50%, #42a5f5 100%);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
-    animation: float 20s ease-in-out infinite;
-}dary-color: #6c757d;
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
     --success-color: #28a745;
     --warning-color: #ffc107;
     --danger-color: #dc3545;
     --info-color: #17a2b8;
     --light-color: #f8f9fa;
     --dark-color: #343a40;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 * {
@@ -745,7 +733,7 @@ html {
     position: relative;
     display: inline-block;
     width: 100%;
-    z-index: 1;
+    z-index: 100;
 }
 
 .searchable-filter {
@@ -798,21 +786,24 @@ html {
 }
 
 .filter-dropdown {
-    position: fixed;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     background: white;
     border: 1px solid #ced4da;
     border-top: none;
     border-radius: 0 0 0.375rem 0.375rem;
     max-height: 200px;
     overflow-y: auto;
-    z-index: 99999;
+    z-index: 999999;
     display: none;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .filter-dropdown.show {
     display: block;
-    z-index: 10000;
+    z-index: 1000000;
 }
 
 .filter-dropdown-item {
@@ -858,20 +849,38 @@ html {
     font-size: 0.875rem;
 }
 
-/* Active filter container when dropdown is open */
+/* Enhanced filter positioning */
 .filter-container.active {
-    z-index: 10001;
+    z-index: 1000000;
 }
 
-/* Ensure dropdown appears above Bootstrap components and tables */
-.filter-dropdown {
-    z-index: 99999 !important;
-    position: fixed !important;
+/* Ensure filters section has higher stacking context */
+.card.shadow-sm {
+    position: relative;
+    z-index: 50;
 }
 
-.filter-dropdown.show {
-    z-index: 100000 !important;
-    position: fixed !important;
+.card.shadow-sm .card-body {
+    overflow: visible;
+    position: relative;
+    z-index: 60;
 }
 
-/* Updated Mon Oct 28 2025 */
+/* Table should have lower z-index */
+.card.shadow {
+    position: relative;
+    z-index: 10;
+}
+
+/* Ensure filter row allows overflow */
+.row.g-2.mt-2 {
+    overflow: visible;
+    position: relative; 
+    z-index: 200;
+}
+
+.col-auto {
+    overflow: visible;
+}
+
+/* Updated Tue Oct 29 2025 */
