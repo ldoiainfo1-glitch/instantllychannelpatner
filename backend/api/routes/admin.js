@@ -121,6 +121,44 @@ router.put('/applications/:id/reject', async (req, res) => {
   }
 });
 
+// Delete application
+router.delete('/applications/:id/delete', async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id).populate('positionId');
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    console.log(`🗑️ Admin deleting application: ${application._id}`);
+
+    // Reset position to available if it was associated
+    const position = await Position.findById(application.positionId);
+    if (position) {
+      position.status = 'Available';
+      position.applicantDetails = undefined;
+      await position.save();
+      console.log(`🔄 Position ${position._id} reset to Available after deletion`);
+    }
+
+    // Delete the application from database
+    await Application.findByIdAndDelete(req.params.id);
+    console.log(`✅ Application ${application._id} deleted from database`);
+    
+    res.json({
+      message: 'Application deleted successfully from database.',
+      deletedApplication: {
+        id: application._id,
+        name: application.applicantInfo.name,
+        phone: application.applicantInfo.phone
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error deleting application:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 // Initialize sample positions
 router.post('/initialize-positions', async (req, res) => {
   try {
