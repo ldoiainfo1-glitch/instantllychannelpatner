@@ -44,42 +44,31 @@ router.get('/applications/pending', async (req, res) => {
 router.put('/applications/:id/approve', async (req, res) => {
   try {
     const { adminNotes } = req.body;
-    const application = await Application.findById(req.params.id).populate('positionId');
+    // Don't populate positionId since it's a string, not a reference
+    const application = await Application.findById(req.params.id);
     
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
     }
 
     console.log(`👨‍💼 Admin approving application: ${application._id}`);
+    console.log(`📍 Position ID: ${application.positionId}`);
+    console.log(`👤 Applicant: ${application.applicantInfo.name}`);
 
     application.status = 'approved';
     application.approvedDate = new Date();
     if (adminNotes) application.adminNotes = adminNotes;
 
-    // Update position status to Approved
-    const position = await Position.findById(application.positionId);
-    if (position) {
-      position.status = 'Approved';
-      // Update days since application
-      if (position.applicantDetails && position.applicantDetails.appliedDate) {
-        const daysSinceApplication = Math.ceil((new Date() - new Date(position.applicantDetails.appliedDate)) / (1000 * 60 * 60 * 24));
-        position.applicantDetails.days = daysSinceApplication;
-      }
-      await position.save();
-      console.log(`✅ Position ${position._id} status updated to Approved`);
-    }
-
     await application.save();
     console.log(`✅ Application ${application._id} approved successfully`);
     
     res.json({
-      message: 'Application approved successfully! Payment option is now available.',
-      application,
-      position
+      message: 'Application approved successfully! The position is now marked as approved.',
+      application
     });
   } catch (error) {
     console.error('❌ Error approving application:', error);
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -87,59 +76,46 @@ router.put('/applications/:id/approve', async (req, res) => {
 router.put('/applications/:id/reject', async (req, res) => {
   try {
     const { adminNotes } = req.body;
-    const application = await Application.findById(req.params.id).populate('positionId');
+    // Don't populate positionId since it's a string, not a reference
+    const application = await Application.findById(req.params.id);
     
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
     }
 
     console.log(`👨‍💼 Admin rejecting application: ${application._id}`);
+    console.log(`📍 Position ID: ${application.positionId}`);
+    console.log(`👤 Applicant: ${application.applicantInfo.name}`);
 
     application.status = 'rejected';
     if (adminNotes) application.adminNotes = adminNotes;
-
-    // Reset position to available
-    const position = await Position.findById(application.positionId);
-    if (position) {
-      position.status = 'Available';
-      position.applicantDetails = undefined;
-      await position.save();
-      console.log(`🔄 Position ${position._id} reset to Available`);
-    }
 
     await application.save();
     console.log(`❌ Application ${application._id} rejected`);
     
     res.json({
       message: 'Application rejected successfully. Position is now available for new applications.',
-      application,
-      position
+      application
     });
   } catch (error) {
     console.error('❌ Error rejecting application:', error);
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
 // Delete application
 router.delete('/applications/:id/delete', async (req, res) => {
   try {
-    const application = await Application.findById(req.params.id).populate('positionId');
+    // Don't populate positionId since it's a string, not a reference
+    const application = await Application.findById(req.params.id);
     
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
     }
 
     console.log(`🗑️ Admin deleting application: ${application._id}`);
-
-    // Reset position to available if it was associated
-    const position = await Position.findById(application.positionId);
-    if (position) {
-      position.status = 'Available';
-      position.applicantDetails = undefined;
-      await position.save();
-      console.log(`🔄 Position ${position._id} reset to Available after deletion`);
-    }
+    console.log(`📍 Position ID: ${application.positionId}`);
+    console.log(`👤 Applicant: ${application.applicantInfo.name}`);
 
     // Delete the application from database
     await Application.findByIdAndDelete(req.params.id);
@@ -150,12 +126,13 @@ router.delete('/applications/:id/delete', async (req, res) => {
       deletedApplication: {
         id: application._id,
         name: application.applicantInfo.name,
-        phone: application.applicantInfo.phone
+        phone: application.applicantInfo.phone,
+        positionId: application.positionId
       }
     });
   } catch (error) {
     console.error('❌ Error deleting application:', error);
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
 
