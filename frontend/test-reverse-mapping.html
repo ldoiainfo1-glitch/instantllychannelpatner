@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Reverse Mapping</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">🧪 Reverse Mapping Test Tool</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <strong>How to test:</strong> Enter any location value below and click "Test" to see if reverse mapping works.
+                            The API will return the complete location hierarchy.
+                        </div>
+
+                        <!-- Test Input -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <label class="form-label fw-bold">Enter Location Value:</label>
+                                <input type="text" id="testValue" class="form-control" placeholder="e.g., 400011, MAHARASHTRA, Mumbai, etc.">
+                                <small class="text-muted">Examples: 400011 (pincode), MAHARASHTRA (state), Mumbai (district)</small>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button class="btn btn-primary w-100" onclick="testReverseLookup()">
+                                    🔍 Test Reverse Lookup
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quick Test Buttons -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Quick Tests:</label>
+                            <div class="btn-group d-flex flex-wrap gap-2" role="group">
+                                <button class="btn btn-outline-secondary" onclick="quickTest('400011')">Pincode: 400011</button>
+                                <button class="btn btn-outline-secondary" onclick="quickTest('MAHARASHTRA')">State: MAHARASHTRA</button>
+                                <button class="btn btn-outline-secondary" onclick="quickTest('MUMBAI')">District: MUMBAI</button>
+                                <button class="btn btn-outline-secondary" onclick="quickTest('110001')">Pincode: 110001</button>
+                                <button class="btn btn-outline-secondary" onclick="quickTest('DELHI')">State: DELHI</button>
+                            </div>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="results"></div>
+
+                        <!-- Implementation Check -->
+                        <div class="mt-4">
+                            <h5>✅ Implementation Status:</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6>Backend API:</h6>
+                                            <p class="mb-1">
+                                                <strong>Endpoint:</strong> <code>/api/locations/reverse-lookup/:value</code>
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>Method:</strong> GET
+                                            </p>
+                                            <p class="mb-0">
+                                                <strong>Status:</strong> <span class="badge bg-success" id="apiStatus">Checking...</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card bg-light">
+                                        <div class="card-body">
+                                            <h6>Frontend Implementation:</h6>
+                                            <p class="mb-1">
+                                                <strong>Function:</strong> <code>performReverseMapping()</code>
+                                            </p>
+                                            <p class="mb-1">
+                                                <strong>Helper:</strong> <code>autoPopulateField()</code>
+                                            </p>
+                                            <p class="mb-0">
+                                                <strong>Status:</strong> <span class="badge bg-success">Implemented ✓</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- How It Works -->
+                        <div class="mt-4">
+                            <h5>📚 How Reverse Mapping Works:</h5>
+                            <ol>
+                                <li>User selects a location value (e.g., Pincode "400011")</li>
+                                <li>Frontend calls: <code>/api/locations/reverse-lookup/400011</code></li>
+                                <li>Backend searches MongoDB for location with pincode = "400011"</li>
+                                <li>Backend returns complete hierarchy: Zone, State, Division, District, Tehsil, etc.</li>
+                                <li>Frontend auto-populates all parent filter fields</li>
+                            </ol>
+                            
+                            <div class="alert alert-success">
+                                <strong>Example Flow:</strong>
+                                <ul class="mb-0">
+                                    <li>Select Pincode: <strong>400011</strong></li>
+                                    <li>Auto-fills Zone: <strong>Western India</strong></li>
+                                    <li>Auto-fills State: <strong>MAHARASHTRA</strong></li>
+                                    <li>Auto-fills Division: <strong>South Mumbai</strong></li>
+                                    <li>Auto-fills District: <strong>MUMBAI</strong></li>
+                                    <li>Auto-fills Tehsil: <strong>Mumbai</strong></li>
+                                    <li>Auto-fills Village: <strong>Chinchpokli S.O</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+
+        // Check API status on load
+        window.addEventListener('load', () => {
+            checkAPIStatus();
+        });
+
+        async function checkAPIStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/MAHARASHTRA`);
+                const statusBadge = document.getElementById('apiStatus');
+                
+                if (response.ok) {
+                    statusBadge.className = 'badge bg-success';
+                    statusBadge.textContent = 'Working ✓';
+                } else {
+                    statusBadge.className = 'badge bg-warning';
+                    statusBadge.textContent = 'Check Connection';
+                }
+            } catch (error) {
+                const statusBadge = document.getElementById('apiStatus');
+                statusBadge.className = 'badge bg-danger';
+                statusBadge.textContent = 'Error ✗';
+            }
+        }
+
+        function quickTest(value) {
+            document.getElementById('testValue').value = value;
+            testReverseLookup();
+        }
+
+        async function testReverseLookup() {
+            const value = document.getElementById('testValue').value.trim();
+            const resultsDiv = document.getElementById('results');
+
+            if (!value) {
+                resultsDiv.innerHTML = '<div class="alert alert-warning">Please enter a value to test</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="alert alert-info">Testing reverse lookup for: <strong>' + value + '</strong>...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(value)}`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    let html = '<div class="alert alert-success">';
+                    html += '<h5>✅ Reverse Lookup Successful!</h5>';
+                    html += '<p class="mb-0">Complete location hierarchy retrieved:</p>';
+                    html += '</div>';
+                    
+                    html += '<div class="card">';
+                    html += '<div class="card-body">';
+                    html += '<h6>Location Hierarchy:</h6>';
+                    html += '<table class="table table-bordered">';
+                    html += '<tbody>';
+                    html += '<tr><th width="30%">Country</th><td>' + (data.country || '-') + '</td></tr>';
+                    html += '<tr><th>Zone</th><td>' + (data.zone || '-') + '</td></tr>';
+                    html += '<tr><th>State</th><td>' + (data.state || '-') + '</td></tr>';
+                    html += '<tr><th>Division</th><td>' + (data.division || '-') + '</td></tr>';
+                    html += '<tr><th>District</th><td>' + (data.district || '-') + '</td></tr>';
+                    html += '<tr><th>Tehsil</th><td>' + (data.tehsil || '-') + '</td></tr>';
+                    html += '<tr><th>Pincode</th><td>' + (data.pincode || '-') + '</td></tr>';
+                    html += '<tr><th>Village</th><td>' + (data.village || '-') + '</td></tr>';
+                    html += '</tbody>';
+                    html += '</table>';
+                    html += '</div>';
+                    html += '</div>';
+                    
+                    html += '<div class="alert alert-info mt-3">';
+                    html += '<strong>📝 What happens in index.html:</strong>';
+                    html += '<p class="mb-0">When a user selects "<strong>' + value + '</strong>" in any filter, all the above parent fields will be automatically populated!</p>';
+                    html += '</div>';
+                    
+                    resultsDiv.innerHTML = html;
+                } else {
+                    const error = await response.json();
+                    resultsDiv.innerHTML = '<div class="alert alert-danger">' +
+                        '<h5>❌ Not Found</h5>' +
+                        '<p class="mb-0">' + (error.error || 'Location not found in database') + '</p>' +
+                        '</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = '<div class="alert alert-danger">' +
+                    '<h5>❌ Error</h5>' +
+                    '<p class="mb-0">' + error.message + '</p>' +
+                    '</div>';
+            }
+        }
+    </script>
+</body>
+</html>
