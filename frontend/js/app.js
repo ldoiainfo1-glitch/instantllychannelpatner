@@ -1719,6 +1719,99 @@ function selectFilterOption(inputId, dropdownId, value) {
     loadApplications();
 }
 
+// Perform reverse mapping when a location is selected
+async function performReverseMapping(inputId, value) {
+    try {
+        console.log('🔍 Reverse mapping triggered for:', { inputId, value });
+        
+        // Call reverse-lookup API to get full location hierarchy
+        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(value)}`);
+        
+        console.log('📡 API Response status:', response.status);
+        
+        if (response.ok) {
+            const locationHierarchy = await response.json();
+            console.log('📦 Location hierarchy received:', locationHierarchy);
+            
+            // Auto-populate parent fields based on what was selected
+            // Mapping: Village → Pincode → Tehsil → District → Division → State → Zone
+            
+            if (inputId === 'filterVillage') {
+                console.log('🏘️ Populating from Village...');
+                // Populate all parent fields
+                autoPopulateField('filterPincode', 'clearPincode', locationHierarchy.pincode);
+                autoPopulateField('filterTehsil', 'clearTehsil', locationHierarchy.tehsil);
+                autoPopulateField('filterDistrict', 'clearDistrict', locationHierarchy.district);
+                autoPopulateField('filterDivision', 'clearDivision', locationHierarchy.division);
+                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
+                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
+            }
+            else if (inputId === 'filterPincode') {
+                console.log('📮 Populating from Pincode...');
+                // Populate parent fields (Tehsil, District, Division, State, Zone)
+                autoPopulateField('filterTehsil', 'clearTehsil', locationHierarchy.tehsil);
+                autoPopulateField('filterDistrict', 'clearDistrict', locationHierarchy.district);
+                autoPopulateField('filterDivision', 'clearDivision', locationHierarchy.division);
+                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
+                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
+            }
+            else if (inputId === 'filterTehsil') {
+                console.log('🏛️ Populating from Tehsil...');
+                // Populate parent fields (District, Division, State, Zone)
+                autoPopulateField('filterDistrict', 'clearDistrict', locationHierarchy.district);
+                autoPopulateField('filterDivision', 'clearDivision', locationHierarchy.division);
+                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
+                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
+            }
+            else if (inputId === 'filterDistrict') {
+                console.log('🏙️ Populating from District...');
+                // Populate parent fields (Division, State, Zone)
+                autoPopulateField('filterDivision', 'clearDivision', locationHierarchy.division);
+                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
+                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
+            }
+            else if (inputId === 'filterDivision') {
+                console.log('📍 Populating from Division...');
+                // Populate parent fields (State, Zone)
+                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
+                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
+            }
+            else if (inputId === 'filterState') {
+                console.log('🗺️ Populating from State...');
+                // Populate parent field (Zone)
+                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
+            }
+            
+            // Update selected filters display after auto-population
+            updateSelectedFiltersBadges();
+        } else {
+            console.log('⚠️ Reverse lookup not available for:', value);
+        }
+    } catch (error) {
+        console.error('❌ Error in reverse mapping:', error);
+        // Non-critical error, continue without reverse mapping
+    }
+}
+
+// Helper function to auto-populate a field
+function autoPopulateField(inputId, clearBtnId, value) {
+    if (!value || value === 'N/A' || value === '') return;
+    
+    const input = document.getElementById(inputId);
+    const clearBtn = document.getElementById(clearBtnId);
+    
+    if (input && input.value === '') { // Only populate if field is empty
+        input.value = value;
+        input.classList.add('has-value');
+        
+        if (clearBtn) {
+            clearBtn.style.display = 'flex';
+        }
+        
+        console.log(`  ✅ Auto-populated ${inputId}: ${value}`);
+    }
+}
+
 // Update the display of selected filters as colored badges
 function updateSelectedFiltersBadges() {
     const container = document.getElementById('selectedFiltersContainer');
