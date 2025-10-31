@@ -1810,23 +1810,59 @@ function showLoginCredentials(phone, name) {
     const nameForPassword = name.replace(/\s+/g, ''); // Remove spaces
     const password = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
     
-    const message = `
-🔐 YOUR LOGIN CREDENTIALS
-
-Login ID: ${phone}
-Password: ${password}
-
-📱 Login at: profile.html
-
-💡 Note: Your login ID is your phone number
-         Your password is the first 4 letters of your name in CAPITAL
-
-Example for "Muskaan Shaikh" (8828188930):
-- Login ID: 8828188930
-- Password: MUSK
-    `.trim();
+    // Show confirmation modal with credentials and redirect option
+    const modalHTML = `
+        <div class="modal fade" id="loginCredentialsModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 15px;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #0066cc 0%, #ffa500 100%); color: white; border: none;">
+                        <h5 class="modal-title">
+                            <i class="fas fa-key me-2"></i>YOUR LOGIN CREDENTIALS
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body text-center py-4">
+                        <div class="mb-4">
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">Login ID (Phone Number):</h6>
+                                <div style="background: #f5f7fa; padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                    <h4 class="fw-bold mb-0" style="color: #0066cc;">${phone}</h4>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">Password:</h6>
+                                <div style="background: #f5f7fa; padding: 15px; border-radius: 10px; margin: 10px 0;">
+                                    <h4 class="fw-bold mb-0" style="color: #ffa500; letter-spacing: 5px;">${password}</h4>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info" style="background: #e3f2fd; border: none;">
+                            <small><i class="fas fa-info-circle me-1"></i> Password is first 4 letters of your name in CAPITAL</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top: 1px solid #e9ecef; justify-content: center;">
+                        <a href="profile.html" class="btn btn-primary px-4" style="background: linear-gradient(135deg, #0066cc 0%, #ffa500 100%); border: none;">
+                            <i class="fas fa-sign-in-alt me-2"></i>Go to Login Page
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
     
-    alert(message);
+    // Remove existing modal if any
+    const existingModal = document.getElementById('loginCredentialsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('loginCredentialsModal'));
+    modal.show();
 }
 
 // Show referral code with credits info
@@ -1851,37 +1887,112 @@ async function showReferralCode(positionId, phone) {
         const remainingReferrals = Math.max(0, maxReferrals - introducedCount);
         const canEarnMore = introducedCount < maxReferrals;
         
-        const message = `
-🎁 YOUR REFERRAL CODE
-
-Referral Code: ${personCode}
-
-📊 Your Referral Stats:
-- People Introduced: ${introducedCount}
-- Credits Per Referral: ${creditsPerReferral}
-${canEarnMore ? `- Remaining Paid Referrals: ${remainingReferrals}/${maxReferrals}` : '- ✅ Max paid referrals reached!'}
-
-💰 Earnings:
-${canEarnMore ? 
-`- You can earn ${remainingReferrals * creditsPerReferral} more credits
-- After ${maxReferrals} referrals, you still get credit in "Introduced" count` :
-`- You've earned maximum ${maxReferrals * creditsPerReferral} credits from referrals!
-- New referrals still count in "Introduced" column`}
-
-📢 How to Use:
-1. Share your code: ${personCode}
-2. Ask people to enter it when they apply
-3. Get ${creditsPerReferral} credits when they get approved!
-4. Max ${creditsPerReferral * maxReferrals} credits from first ${maxReferrals} people
-
-Keep sharing to grow your network! 🚀
-        `.trim();
+        // Create modern modal for referral code
+        const modalHTML = `
+            <div class="modal fade" id="referralModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                        <div class="modal-body p-0">
+                            <div style="background: linear-gradient(135deg, #0066cc 0%, #00a8ff 50%, #ffa500 100%); padding: 30px; text-align: center; position: relative;">
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="position: absolute; top: 15px; right: 15px;"></button>
+                                <div style="margin-top: 10px;">
+                                    <i class="fas fa-gift" style="font-size: 3rem; color: white; margin-bottom: 10px;"></i>
+                                    <h4 class="text-white fw-bold mb-0">Your Referral Code</h4>
+                                </div>
+                            </div>
+                            
+                            <div style="padding: 30px; background: white;">
+                                <!-- Referral Code Display -->
+                                <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                                    <h1 class="fw-bold text-center mb-0" style="color: #0066cc; font-size: 2.8rem; letter-spacing: 5px;">${personCode}</h1>
+                                </div>
+                                
+                                <!-- Stats Row -->
+                                <div class="row text-center mb-4">
+                                    <div class="col-4">
+                                        <div class="p-2">
+                                            <h4 class="mb-1 fw-bold" style="color: #0066cc;">${introducedCount}</h4>
+                                            <small class="text-muted" style="font-size: 0.75rem;">Introduced</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-2">
+                                            <h4 class="mb-1 fw-bold" style="color: #ffa500;">${creditsPerReferral}</h4>
+                                            <small class="text-muted" style="font-size: 0.75rem;">Credits/Referral</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="p-2">
+                                            <h4 class="mb-1 fw-bold" style="color: #28a745;">${remainingReferrals}/${maxReferrals}</h4>
+                                            <small class="text-muted" style="font-size: 0.75rem;">Remaining</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Instructions -->
+                                <div style="background: #fff3e0; border-left: 4px solid #ffa500; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                                    <div class="d-flex align-items-start mb-2">
+                                        <span style="background: #ffa500; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; margin-right: 10px; flex-shrink: 0;">1</span>
+                                        <small style="color: #666;">Share your referral code with friends to join Instantly Cards</small>
+                                    </div>
+                                    <div class="d-flex align-items-start">
+                                        <span style="background: #ffa500; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items-center; justify-content: center; font-size: 0.8rem; font-weight: bold; margin-right: 10px; flex-shrink: 0;">2</span>
+                                        <small style="color: #666;">Get <strong>${creditsPerReferral} credits</strong> when they apply using your code (up to ${maxReferrals} people)</small>
+                                    </div>
+                                </div>
+                                
+                                ${!canEarnMore ? `
+                                <div class="alert alert-success mb-3" style="background: #e8f5e9; border: none; border-radius: 10px;">
+                                    <small><i class="fas fa-check-circle me-1"></i> You've reached max paid referrals! Keep sharing - count still increases</small>
+                                </div>
+                                ` : ''}
+                                
+                                <!-- Copy Button -->
+                                <button type="button" class="btn btn-lg w-100" onclick="copyReferralCode('${personCode}')" style="background: linear-gradient(135deg, #ffa500 0%, #ff7043 100%); border: none; color: white; padding: 15px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3);">
+                                    <i class="fas fa-copy me-2"></i>Copy Code
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
         
-        alert(message);
+        // Remove existing modal if any
+        const existingModal = document.getElementById('referralModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('referralModal'));
+        modal.show();
+        
     } catch (error) {
         console.error('Error fetching referral code:', error);
         alert('Error loading referral code. Please try again.');
     }
+}
+
+// Copy referral code to clipboard
+function copyReferralCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        // Show success message
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+        btn.style.background = '#28a745';
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.background = 'linear-gradient(135deg, #0066cc 0%, #ffa500 100%)';
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy code. Please copy manually: ' + code);
+    });
 }
 
 // Show ID Card with download option
@@ -2021,43 +2132,65 @@ async function downloadIDCard(name, phone, photo, personCode) {
         downloadBtn.disabled = true;
         downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
         
-        // Wait a moment for images to load
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('Starting PDF generation...');
+        
+        // Wait for images to fully load
+        const images = element.querySelectorAll('img');
+        console.log('Found', images.length, 'images to load');
+        
+        await Promise.all(Array.from(images).map(img => {
+            return new Promise((resolve) => {
+                if (img.complete) {
+                    resolve();
+                } else {
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve(); // Continue even if image fails
+                    setTimeout(() => resolve(), 2000); // Timeout after 2s
+                }
+            });
+        }));
+        
+        console.log('All images loaded, generating PDF...');
+        
+        // Additional wait for rendering
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         const opt = {
-            margin: 0.3,
+            margin: [0.3, 0.3, 0.3, 0.3],
             filename: `ID_Card_${name.replace(/\s+/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
+            image: { type: 'jpeg', quality: 0.95 },
             html2canvas: { 
-                scale: 3,
+                scale: 2,
                 useCORS: true,
-                allowTaint: true,
-                logging: false,
-                backgroundColor: '#ffffff'
+                logging: true,
+                letterRendering: true,
+                allowTaint: false,
+                backgroundColor: '#0066cc'
             },
             jsPDF: { 
                 unit: 'in', 
                 format: 'letter', 
-                orientation: 'landscape',
-                compress: true
+                orientation: 'landscape'
             }
         };
         
+        console.log('Calling html2pdf...');
+        
         // Generate and save PDF
         await html2pdf().set(opt).from(element).save();
+        
+        console.log('PDF generated successfully!');
         
         // Restore button
         downloadBtn.disabled = false;
         downloadBtn.innerHTML = originalText;
         
         // Success message
-        setTimeout(() => {
-            alert('✅ ID Card downloaded successfully!');
-        }, 300);
+        alert('✅ ID Card downloaded successfully!');
         
     } catch (error) {
         console.error('Error downloading ID card:', error);
-        alert('❌ Error downloading ID card. Please try again.');
+        alert('❌ Error downloading ID card: ' + error.message + '\n\nCheck browser console for details.');
         
         // Restore button if error occurs
         if (event && event.target) {
