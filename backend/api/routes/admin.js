@@ -93,8 +93,21 @@ router.put('/applications/:id/approve', async (req, res) => {
     let user = await User.findOne({ phone: application.applicantInfo.phone });
     
     if (!user) {
-      // Use the person code from application (already generated when application was submitted)
-      const personCode = application.personCode;
+      // Generate personCode if not already present in application
+      let personCode = application.personCode;
+      if (!personCode) {
+        // Generate unique person code: YYYY-MMDD-XXXX (XXXX is 4-digit random)
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const random = String(Math.floor(1000 + Math.random() * 9000)); // 4-digit number
+        personCode = `${year}-${month}${day}-${random}`;
+        
+        // Save personCode to application
+        application.personCode = personCode;
+        console.log(`🆔 Generated new personCode: ${personCode}`);
+      }
       
       // Generate password: First 4 letters of name in CAPITAL
       const nameForPassword = application.applicantInfo.name.replace(/\s+/g, ''); // Remove spaces
