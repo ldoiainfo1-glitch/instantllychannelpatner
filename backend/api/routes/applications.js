@@ -294,41 +294,57 @@ router.put('/:id/status', async (req, res) => {
       // Create user account
       const User = require('../models/User');
       
-      // Use the person code from application (already generated when application was submitted)
-      const personCode = application.personCode;
-      
-      // Generate password: First 4 letters of name in CAPITAL
-      const nameForPassword = application.applicantInfo.name.replace(/\s+/g, ''); // Remove spaces
-      const defaultPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X'); // Ensure at least 4 chars
-      
-      const newUser = new User({
-        name: application.applicantInfo.name,
-        phone: application.applicantInfo.phone,
-        email: application.applicantInfo.email,
-        personCode: personCode,
-        loginId: application.applicantInfo.phone, // Login ID is phone number
-        password: defaultPassword, // First 4 letters of name in CAPITAL
-        photo: application.applicantInfo.photo,
-        introducedBy: application.introducedBy,
-        positionId: application.positionId,
-        appliedDate: application.appliedDate,
-        approvedDate: new Date(),
-        paymentStatus: 'pending',
-        paymentAmount: 10000,
-        isVerified: false,
-        isFirstLogin: true
-      });
-      
-      await newUser.save();
-      
-      // Link user to application
-      application.userId = newUser._id;
-      
-      console.log('✅ User account created:', {
-        personCode,
-        loginId: application.applicantInfo.phone,
-        defaultPassword
-      });
+      // Check if user already exists
+      const existingUser = await User.findOne({ phone: application.applicantInfo.phone });
+      if (existingUser) {
+        console.log('⚠️ User already exists for this phone number:', application.applicantInfo.phone);
+        // Link existing user to application
+        application.userId = existingUser._id;
+      } else {
+        // Use the person code from application (already generated when application was submitted)
+        const personCode = application.personCode;
+        
+        // Generate password: First 4 letters of name in CAPITAL
+        const nameForPassword = application.applicantInfo.name.replace(/\s+/g, ''); // Remove spaces
+        const defaultPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X'); // Ensure at least 4 chars
+        
+        console.log('🔐 Creating user account with credentials:', {
+          loginId: application.applicantInfo.phone,
+          password: defaultPassword,
+          personCode: personCode
+        });
+        
+        const newUser = new User({
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          email: application.applicantInfo.email,
+          personCode: personCode,
+          loginId: application.applicantInfo.phone, // Login ID is phone number
+          password: defaultPassword, // First 4 letters of name in CAPITAL
+          photo: application.applicantInfo.photo,
+          introducedBy: application.introducedBy,
+          positionId: application.positionId,
+          appliedDate: application.appliedDate,
+          approvedDate: new Date(),
+          paymentStatus: 'pending',
+          paymentAmount: 10000,
+          isVerified: false,
+          isFirstLogin: true
+        });
+        
+        await newUser.save();
+        
+        // Link user to application
+        application.userId = newUser._id;
+        
+        console.log('✅ User account created successfully:', {
+          userId: newUser._id,
+          personCode: personCode,
+          loginId: application.applicantInfo.phone,
+          defaultPassword: defaultPassword,
+          passwordLength: defaultPassword.length
+        });
+      }
       
       // Update introduced count and credits for introducer
       if (application.introducedBy && application.introducedBy !== 'Self') {
@@ -349,6 +365,8 @@ router.put('/:id/status', async (req, res) => {
           }
           
           await introducer.save();
+        } else {
+          console.log(`⚠️ Introducer not found with personCode: ${application.introducedBy}`);
         }
       }
     }
