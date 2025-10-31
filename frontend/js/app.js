@@ -824,7 +824,13 @@ function openApplicationModal(positionId, positionTitle, location) {
 }
 
 // Submit application
-async function submitApplication() {
+async function submitApplication(event) {
+    // Prevent default form submission
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     const form = document.getElementById('applicationForm');
     
     // Check if position information is available
@@ -879,17 +885,30 @@ async function submitApplication() {
         const result = await response.json();
         
         if (response.ok) {
-            showNotification('Application submitted successfully! Please wait for admin review.', 'success');
+            showNotification('✅ Application submitted successfully! Refreshing list...', 'success');
             
             // Close modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('applicationModal'));
-            modal.hide();
+            const modalElement = document.getElementById('applicationModal');
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Reset form
+            form.reset();
             
             // Reload positions to show the new application
+            console.log('🔄 Reloading applications...');
             await loadApplications();
+            console.log('✅ Applications reloaded successfully');
             
             // Clear current position
             window.currentPosition = null;
+            
+            // Show success notification again after reload
+            setTimeout(() => {
+                showNotification('Your application is now visible in the list!', 'success');
+            }, 500);
         } else {
             throw new Error(result.error || 'Failed to submit application');
         }
@@ -898,8 +917,10 @@ async function submitApplication() {
         showNotification(error.message || 'Error submitting application', 'error');
     } finally {
         const submitBtn = document.getElementById('submitApplication');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Submit Application';
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Submit Application';
+        }
     }
 }
 
@@ -1919,20 +1940,62 @@ async function showReferralCode(positionId, phone) {
 
 // Copy referral code to clipboard
 function copyReferralCode(code) {
-    navigator.clipboard.writeText(code).then(() => {
-        // Show success message
-        const btn = event.target.closest('button');
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
-        btn.style.background = '#28a745';
-        
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.style.background = 'linear-gradient(135deg, #0066cc 0%, #ffa500 100%)';
-        }, 2000);
-    }).catch(err => {
-        alert('Failed to copy code. Please copy manually: ' + code);
-    });
+    // Don't copy if code is not valid
+    if (!code || code === 'N/A' || code === 'Not assigned yet') {
+        alert('Referral code not available yet. Please wait for admin approval.');
+        return;
+    }
+    
+    // Try clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(() => {
+            // Show success message
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+            btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.style.background = 'linear-gradient(135deg, #ffa500 0%, #ff7043 100%)';
+            }, 2000);
+        }).catch(err => {
+            console.error('Clipboard write failed:', err);
+            // Fallback to manual copy
+            fallbackCopyTextToClipboard(code);
+        });
+    } else {
+        // Fallback for browsers that don't support clipboard API
+        fallbackCopyTextToClipboard(code);
+    }
+}
+
+// Fallback copy method for older browsers
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.top = '0';
+    textArea.style.left = '0';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            // Show success notification
+            showNotification('Referral code copied: ' + text, 'success');
+        } else {
+            alert('Failed to copy. Please copy manually: ' + text);
+        }
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        alert('Failed to copy. Please copy manually: ' + text);
+    }
+    
+    document.body.removeChild(textArea);
 }
 
 // Show ID Card with download option
