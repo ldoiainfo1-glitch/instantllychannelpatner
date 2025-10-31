@@ -606,7 +606,7 @@ function createPositionRow(position) {
         nameCell = `<button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
                         <i class="fas fa-plus me-1"></i>Apply Now
                     </button>
-                    // <br><small class="text-muted mt-1">ID: ${position._id}</small>`;
+    `;
     } else if (position.applicantDetails && position.applicantDetails.name) {
         nameCell = `${position.applicantDetails.name}<br><small class="text-muted">ID: ${position._id}</small>`;
     } else {
