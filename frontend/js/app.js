@@ -2132,65 +2132,105 @@ async function downloadIDCard(name, phone, photo, personCode) {
         downloadBtn.disabled = true;
         downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
         
-        console.log('Starting PDF generation...');
+        console.log('🎨 Starting PDF generation...');
+        console.log('📋 Name:', name, 'Phone:', phone, 'Partner ID:', personCode);
         
-        // Wait for images to fully load
+        // Convert all images to base64 to avoid CORS issues
         const images = element.querySelectorAll('img');
-        console.log('Found', images.length, 'images to load');
+        console.log('🖼️ Found', images.length, 'images to process');
         
-        await Promise.all(Array.from(images).map(img => {
-            return new Promise((resolve) => {
-                if (img.complete) {
-                    resolve();
-                } else {
-                    img.onload = () => resolve();
-                    img.onerror = () => resolve(); // Continue even if image fails
-                    setTimeout(() => resolve(), 2000); // Timeout after 2s
+        for (let i = 0; i < images.length; i++) {
+            const img = images[i];
+            console.log(`🔄 Processing image ${i + 1}:`, img.src.substring(0, 50) + '...');
+            
+            try {
+                // If it's already base64, skip
+                if (img.src.startsWith('data:')) {
+                    console.log(`✓ Image ${i + 1} already base64`);
+                    continue;
                 }
-            });
-        }));
+                
+                // Convert to base64
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Wait for image to load
+                await new Promise((resolve, reject) => {
+                    if (img.complete && img.naturalWidth > 0) {
+                        resolve();
+                    } else {
+                        img.onload = () => resolve();
+                        img.onerror = () => reject(new Error('Image failed to load'));
+                        setTimeout(() => reject(new Error('Image load timeout')), 5000);
+                    }
+                });
+                
+                canvas.width = img.naturalWidth || img.width;
+                canvas.height = img.naturalHeight || img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                // Convert to base64
+                const base64 = canvas.toDataURL('image/jpeg', 0.95);
+                img.src = base64;
+                console.log(`✅ Image ${i + 1} converted to base64 (${base64.length} chars)`);
+                
+            } catch (imgError) {
+                console.warn(`⚠️ Failed to convert image ${i + 1}:`, imgError.message);
+                // Use placeholder for failed images
+                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4=';
+            }
+        }
         
-        console.log('All images loaded, generating PDF...');
+        console.log('⏳ Waiting for DOM to settle...');
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        // Additional wait for rendering
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log('📄 Generating PDF with html2pdf...');
         
         const opt = {
             margin: [0.3, 0.3, 0.3, 0.3],
-            filename: `ID_Card_${name.replace(/\s+/g, '_')}.pdf`,
-            image: { type: 'jpeg', quality: 0.95 },
+            filename: `ID_Card_${name.replace(/\s+/g, '_')}_${Date.now()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
             html2canvas: { 
-                scale: 2,
+                scale: 3,
                 useCORS: true,
+                allowTaint: true,
                 logging: true,
                 letterRendering: true,
-                allowTaint: false,
-                backgroundColor: '#0066cc'
+                imageTimeout: 0,
+                backgroundColor: '#ffffff',
+                removeContainer: true,
+                scrollY: 0,
+                scrollX: 0,
+                width: element.scrollWidth,
+                height: element.scrollHeight
             },
             jsPDF: { 
                 unit: 'in', 
                 format: 'letter', 
-                orientation: 'landscape'
-            }
+                orientation: 'landscape',
+                compress: true
+            },
+            pagebreak: { mode: 'avoid-all' }
         };
         
-        console.log('Calling html2pdf...');
+        // Generate PDF
+        const worker = html2pdf().set(opt).from(element);
+        await worker.save();
         
-        // Generate and save PDF
-        await html2pdf().set(opt).from(element).save();
-        
-        console.log('PDF generated successfully!');
+        console.log('✅ PDF generated and downloaded successfully!');
         
         // Restore button
         downloadBtn.disabled = false;
         downloadBtn.innerHTML = originalText;
         
-        // Success message
-        alert('✅ ID Card downloaded successfully!');
+        // Show success notification
+        showNotification('ID Card PDF downloaded successfully!', 'success');
         
     } catch (error) {
-        console.error('Error downloading ID card:', error);
-        alert('❌ Error downloading ID card: ' + error.message + '\n\nCheck browser console for details.');
+        console.error('❌ Error downloading ID card:', error);
+        console.error('Error stack:', error.stack);
+        
+        alert('❌ Error downloading ID card: ' + error.message + '\n\nPlease check:\n1. Images are loading properly\n2. Browser console for detailed errors\n3. Try again after refreshing the page');
         
         // Restore button if error occurs
         if (event && event.target) {
