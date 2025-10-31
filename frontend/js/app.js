@@ -486,6 +486,9 @@ async function loadApplications() {
         });
         
         displayPositions(currentPositions);
+        
+        // Update selected filters display
+        updateSelectedFiltersBadges();
     } catch (error) {
         console.error('❌ Error loading applications:', error);
         showNotification('Error loading applications: ' + error.message, 'error');
@@ -569,6 +572,29 @@ function createPositionRow(position) {
         nameCell = '-';
     }
     
+    // Determine Area Head For - show most specific location level
+    let areaHeadFor = '-';
+    if (position.location) {
+        // Priority: pincode > village > tehsil > district > division > state > zone > country
+        if (position.location.pincode) {
+            areaHeadFor = position.location.pincode;
+        } else if (position.location.village) {
+            areaHeadFor = position.location.village;
+        } else if (position.location.tehsil) {
+            areaHeadFor = position.location.tehsil;
+        } else if (position.location.district) {
+            areaHeadFor = position.location.district;
+        } else if (position.location.division) {
+            areaHeadFor = position.location.division;
+        } else if (position.location.state) {
+            areaHeadFor = position.location.state;
+        } else if (position.location.zone) {
+            areaHeadFor = position.location.zone;
+        } else if (position.location.country) {
+            areaHeadFor = position.location.country;
+        }
+    }
+
     // Handle photo
     let photoCell = '';
     if (position.applicantDetails && position.applicantDetails.photo) {
@@ -651,6 +677,7 @@ function createPositionRow(position) {
     row.innerHTML = `
         <td><strong>${position.sNo}</strong></td>
         <td>${nameCell}</td>
+        <td>${areaHeadFor}</td>
         <td class="text-center">${photoCell}</td>
         <td>${phoneNo}</td>
         <td>${introducedBy}</td>
@@ -795,6 +822,9 @@ function clearFilters() {
     document.querySelectorAll('.filter-container.active').forEach(container => {
         container.classList.remove('active');
     });
+    
+    // Update selected filters display
+    updateSelectedFiltersBadges();
     
     // Reload applications with default India filter
     loadApplications();
@@ -1682,109 +1712,53 @@ function selectFilterOption(inputId, dropdownId, value) {
     // Perform reverse mapping to auto-populate parent fields
     performReverseMapping(inputId, value);
     
+    // Update selected filters display
+    updateSelectedFiltersBadges();
+    
     // Trigger filter update
     loadApplications();
 }
 
-// Perform reverse mapping when a location is selected
-async function performReverseMapping(inputId, value) {
-    try {
-        console.log('🔍 Reverse mapping triggered for:', { inputId, value });
+// Update the display of selected filters as colored badges
+function updateSelectedFiltersBadges() {
+    const container = document.getElementById('selectedFiltersContainer');
+    const badgesDiv = document.getElementById('selectedFiltersBadges');
+    
+    if (!container || !badgesDiv) return;
+    
+    // Filter configuration with colors
+    const filterConfig = [
+        { id: 'filterCountry', label: 'India', color: '#f0e68c', value: 'India' }, // Light yellow
+        { id: 'filterZone', label: 'Zone', color: '#add8e6' }, // Light blue
+        { id: 'filterState', label: 'State', color: '#90ee90' }, // Light green
+        { id: 'filterDivision', label: 'Div', color: '#dda0dd' }, // Plum
+        { id: 'filterDistrict', label: 'District', color: '#ffb6c1' }, // Light pink
+        { id: 'filterTehsil', label: 'Tehsil', color: '#ffa07a' }, // Light salmon
+        { id: 'filterPincode', label: 'Pincode', color: '#87ceeb' }, // Sky blue
+        { id: 'filterVillage', label: 'Post Office', color: '#98fb98' } // Pale green
+    ];
+    
+    let badges = [];
+    let hasActiveFilters = false;
+    
+    filterConfig.forEach(config => {
+        let value = config.value || (document.getElementById(config.id)?.value || '');
         
-        // Call reverse-lookup API to get full location hierarchy
-        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(value)}`);
-        
-        console.log('📡 API Response status:', response.status);
-        
-        if (response.ok) {
-            const locationHierarchy = await response.json();
-            console.log('📦 Location hierarchy received:', locationHierarchy);
-            
-            // Auto-populate parent fields based on what was selected
-            // Mapping: Village → Pincode → Tehsil → District → Division → State → Zone
-            
-            if (inputId === 'filterVillage') {
-                console.log('🏘️ Populating from Village...');
-                // Populate all parent fields
-                autoPopulateField('filterPincode', 'clearPincode', locationHierarchy.pincode);
-                autoPopulateField('filterTehsil', 'clearTehsil', locationHierarchy.tehsil);
-                autoPopulateField('filterDistrict', 'clearDistrict', locationHierarchy.district);
-                autoPopulateField('filterDivision', 'clearDivision', locationHierarchy.division);
-                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
-                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
-            }
-            else if (inputId === 'filterPincode') {
-                console.log('📮 Populating from Pincode...');
-                // Populate parent fields (Tehsil, District, Division, State, Zone)
-                autoPopulateField('filterTehsil', 'clearTehsil', locationHierarchy.tehsil);
-                autoPopulateField('filterDistrict', 'clearDistrict', locationHierarchy.district);
-                autoPopulateField('filterDivision', 'clearDivision', locationHierarchy.division);
-                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
-                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
-            }
-            else if (inputId === 'filterTehsil') {
-                console.log('🏛️ Populating from Tehsil...');
-                // Populate parent fields (District, Division, State, Zone)
-                autoPopulateField('filterDistrict', 'clearDistrict', locationHierarchy.district);
-                autoPopulateField('filterDivision', 'clearDivision', locationHierarchy.division);
-                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
-                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
-            }
-            else if (inputId === 'filterDistrict') {
-                console.log('🏙️ Populating from District...');
-                // Populate parent fields (Division, State, Zone)
-                autoPopulateField('filterDivision', 'clearDivision', locationHierarchy.division);
-                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
-                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
-            }
-            else if (inputId === 'filterDivision') {
-                console.log('📍 Populating from Division...');
-                // Populate parent fields (State, Zone)
-                autoPopulateField('filterState', 'clearState', locationHierarchy.state);
-                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
-            }
-            else if (inputId === 'filterState') {
-                console.log('🗺️ Populating from State...');
-                // Populate parent field (Zone)
-                autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
-            }
-            
-            console.log('✅ Reverse mapping applied successfully!');
-        } else {
-            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-            console.warn('⚠️ API returned error:', response.status, errorData);
+        if (value && value.trim() !== '') {
+            hasActiveFilters = true;
+            badges.push(`
+                <span class="badge" style="background-color: ${config.color}; color: #333; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: 500;">
+                    ${config.label}: ${value}
+                </span>
+            `);
         }
-    } catch (error) {
-        console.error('❌ Error in reverse mapping:', error);
-        console.error('Error details:', error.message, error.stack);
-        // Continue without reverse mapping if API fails
-    }
-}
-
-// Auto-populate a field with value
-function autoPopulateField(fieldId, clearBtnId, value) {
-    if (!value) {
-        console.log(`⏭️ Skipping ${fieldId} - no value provided`);
-        return;
-    }
+    });
     
-    const field = document.getElementById(fieldId);
-    const clearBtn = document.getElementById(clearBtnId);
-    
-    if (!field) {
-        console.error(`❌ Field not found: ${fieldId}`);
-        return;
-    }
-    
-    if (field && value) {
-        field.value = value;
-        field.classList.add('has-value');
-        
-        if (clearBtn) {
-            clearBtn.style.display = 'flex';
-        }
-        
-        console.log(`✓ Auto-populated ${fieldId} = "${value}"`);
+    if (hasActiveFilters) {
+        badgesDiv.innerHTML = badges.join('');
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
     }
 }
 
@@ -1815,6 +1789,9 @@ function clearSingleFilter(inputId, clearBtnId) {
     if (clearBtn) {
         clearBtn.style.display = 'none';
     }
+    
+    // Update selected filters display
+    updateSelectedFiltersBadges();
     
     // Trigger filter update
     loadApplications();

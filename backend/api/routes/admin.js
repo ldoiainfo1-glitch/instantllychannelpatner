@@ -6,18 +6,27 @@ const Position = require('../models/Position');
 // Get dashboard statistics
 router.get('/dashboard', async (req, res) => {
   try {
-    const totalPositions = await Position.countDocuments();
-    const availablePositions = await Position.countDocuments({ status: 'Available' });
+    // Count total applications (each application represents a filled position)
+    const totalApplications = await Application.countDocuments();
     const pendingApplications = await Application.countDocuments({ status: 'pending' });
     const approvedApplications = await Application.countDocuments({ status: 'approved' });
-    const totalApplications = await Application.countDocuments();
+    const rejectedApplications = await Application.countDocuments({ status: 'rejected' });
+    
+    // In dynamic position system:
+    // - Total positions = All applications (each represents an occupied position)
+    // - Available positions would be infinite (dynamic generation)
+    // So we show "Total Positions" as total applications submitted
+    const totalPositions = totalApplications;
+    const availablePositions = 0; // Dynamic system - positions are generated on demand
+    const occupiedPositions = totalApplications;
 
     const stats = {
       totalPositions,
       availablePositions,
-      occupiedPositions: totalPositions - availablePositions,
+      occupiedPositions,
       pendingApplications,
       approvedApplications,
+      rejectedApplications,
       totalApplications
     };
 
@@ -84,18 +93,47 @@ router.put('/applications/:id/approve', async (req, res) => {
     let user = await User.findOne({ phone: application.applicantInfo.phone });
     
     if (!user) {
-      // Create new user account with default password (phone number)
+      // Use the person code from application (already generated when application was submitted)
+      const personCode = application.personCode;
+      
+      // Generate password: First 4 letters of name in CAPITAL
+      const nameForPassword = application.applicantInfo.name.replace(/\s+/g, ''); // Remove spaces
+      const defaultPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X'); // Ensure at least 4 chars
+      
+      console.log('🔐 Creating user account with credentials:', {
+        loginId: application.applicantInfo.phone,
+        password: defaultPassword,
+        personCode: personCode
+      });
+      
+      // Create new user account with proper credentials
       user = new User({
         name: application.applicantInfo.name,
         phone: application.applicantInfo.phone,
         email: application.applicantInfo.email || '',
-        password: application.applicantInfo.phone, // Default password is phone number
+        personCode: personCode,
+        loginId: application.applicantInfo.phone, // Login ID is phone number
+        password: defaultPassword, // First 4 letters of name in CAPITAL
+        photo: application.applicantInfo.photo,
+        introducedBy: application.introducedBy,
+        positionId: application.positionId,
+        appliedDate: application.appliedDate,
+        approvedDate: new Date(),
         credits: 0,
         hasReceivedInitialCredits: false,
-        photo: application.applicantInfo.photo
+        introducedCount: 0,
+        isVerified: false,
+        isFirstLogin: true
       });
       await user.save();
-      console.log(`✨ Created new user account for ${user.name}`);
+      
+      console.log('✅ User account created successfully:', {
+        userId: user._id,
+        personCode: personCode,
+        loginId: application.applicantInfo.phone,
+        defaultPassword: defaultPassword,
+        passwordLength: defaultPassword.length
+      });
     }
 
     // Grant 500 credits on first approval if not already received
@@ -104,6 +142,30 @@ router.put('/applications/:id/approve', async (req, res) => {
       user.hasReceivedInitialCredits = true;
       await user.save();
       console.log(`💰 Granted 500 initial credits to ${user.name}. Total credits: ${user.credits}`);
+    }
+    
+    // Update introduced count and credits for introducer
+    if (application.introducedBy && application.introducedBy !== 'Self') {
+      const introducer = await User.findOne({ personCode: application.introducedBy });
+      if (introducer) {
+        // Increment introduced count (always, no limit)
+        introducer.introducedCount = (introducer.introducedCount || 0) + 1;
+        
+        // Add 100 credits only for first 20 referrals
+        const maxPaidReferrals = 20;
+        const creditsPerReferral = 100;
+        
+        if (introducer.introducedCount <= maxPaidReferrals) {
+          introducer.credits = (introducer.credits || 0) + creditsPerReferral;
+          console.log(`✅ Introducer ${introducer.name} earned ${creditsPerReferral} credits (${introducer.introducedCount}/${maxPaidReferrals})`);
+        } else {
+          console.log(`✅ Introducer ${introducer.name} count increased (${introducer.introducedCount}) - max credits reached`);
+        }
+        
+        await introducer.save();
+      } else {
+        console.log(`⚠️ Introducer not found with personCode: ${application.introducedBy}`);
+      }
     }
 
     // Update application
