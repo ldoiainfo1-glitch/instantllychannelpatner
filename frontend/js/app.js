@@ -528,6 +528,15 @@ function displayPositions(positions) {
 function createPositionRow(position) {
     const row = document.createElement('tr');
     
+    // 🐛 DEBUG: Log position data to troubleshoot action button visibility
+    console.log('🔍 Creating row for position:', {
+        id: position._id,
+        status: position.status,
+        hasApplicantDetails: !!position.applicantDetails,
+        applicantName: position.applicantDetails?.name,
+        willShowActionButton: position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')
+    });
+    
     const statusClass = getStatusClass(position.status);
     
     // Determine status text based on application workflow
@@ -588,17 +597,16 @@ function createPositionRow(position) {
         ? position.applicantDetails.days 
         : '-';
     
-    // Others column - Actions dropdown (disabled until verified)
+    // Others column - Actions dropdown
     let othersCell = '';
     
-    // Check if user has paid and admin has verified
-    const isPaidAndVerified = position.applicantDetails && 
-                              position.applicantDetails.userId && 
-                              position.applicantDetails.userId.paymentStatus === 'paid' && 
-                              position.isVerified === true;
-    
-    if (isPaidAndVerified) {
-        // Enabled Actions dropdown - after payment and verification
+    // Show action button IMMEDIATELY when status is Approved (no payment required)
+    // Status can be: "Available", "Pending", "Approved", "Verified", "Rejected"
+    if (position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')) {
+        // ENABLED Actions dropdown - shows immediately after admin approval
+        const phone = position.applicantDetails.phone || '';
+        const name = position.applicantDetails.name || '';
+        
         othersCell = `
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
@@ -607,8 +615,8 @@ function createPositionRow(position) {
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
                     <li>
-                        <a class="dropdown-item" href="#" onclick="editProfile('${position._id}'); return false;">
-                            <i class="fas fa-edit me-2"></i>Edit
+                        <a class="dropdown-item" href="profile.html" onclick="localStorage.setItem('editMode', 'true'); localStorage.setItem('editPositionId', '${position._id}');">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
                         </a>
                     </li>
                     <li>
@@ -616,15 +624,23 @@ function createPositionRow(position) {
                             <i class="fas fa-qrcode me-2"></i>Promotion Code
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="showLoginCredentials('${phone}', '${name}'); return false;">
+                            <i class="fas fa-key me-2"></i>Login Credentials
+                        </a>
+                    </li>
                 </ul>
             </div>
         `;
+    } else if (position.status === 'Available') {
+        // No action button for available positions
+        othersCell = `<span class="text-muted small">-</span>`;
     } else {
-        // Disabled Actions dropdown - before payment and verification
+        // DISABLED Actions dropdown - for Pending or Rejected status
         othersCell = `
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" 
-                        disabled title="Available after payment verification">
+                        disabled title="Available after admin approval">
                     Actions ▼
                 </button>
             </div>
@@ -987,74 +1003,6 @@ function editProfile(positionId) {
     
     // User is logged in, go to profile page
     window.location.href = 'profile.html';
-}
-
-// View Promotion Code
-function viewPromotionCode(positionId) {
-    const position = currentPositions.find(p => p._id === positionId);
-    if (!position || !position.applicantDetails) {
-        showNotification('Position not found', 'error');
-        return;
-    }
-    
-    const personCode = position.applicantDetails.personCode || 'NOT_ASSIGNED';
-    const promotionUrl = `${window.location.origin}?ref=${personCode}`;
-    
-    // Create promotion code modal
-    const modalHTML = `
-        <div class="modal fade" id="promotionModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">
-                            <i class="fas fa-qrcode me-2"></i>Promotion Code
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body text-center">
-                        <h4 class="mb-4">Your Promotion Code</h4>
-                        <div class="bg-light p-4 rounded mb-3">
-                            <h2 class="text-primary fw-bold">${personCode}</h2>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Referral URL:</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="promotionUrl" value="${promotionUrl}" readonly>
-                                <button class="btn btn-outline-secondary" onclick="copyPromotionUrl()">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <p class="text-muted">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Share this code with people you introduce to earn rewards
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Remove existing modal if any
-    const existingModal = document.getElementById('promotionModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-    
-    // Add modal to body
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('promotionModal'));
-    modal.show();
-}
-
-// Copy promotion URL
-function copyPromotionUrl() {
-    const urlInput = document.getElementById('promotionUrl');
-    urlInput.select();
-    document.execCommand('copy');
-    showNotification('Promotion URL copied to clipboard!', 'success');
 }
 
 // Show change password form
@@ -1848,6 +1796,65 @@ function clearSingleFilter(inputId, clearBtnId) {
     
     // Trigger filter update
     loadApplications();
+}
+
+// Show login credentials to user
+function showLoginCredentials(phone, name) {
+    if (!phone || !name) {
+        alert('Login credentials not available');
+        return;
+    }
+    
+    // Generate password as per the rule: First 4 capital letters of name
+    const nameForPassword = name.replace(/\s+/g, ''); // Remove spaces
+    const password = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
+    
+    const message = `
+🔐 YOUR LOGIN CREDENTIALS
+
+Login ID: ${phone}
+Password: ${password}
+
+📱 Login at: profile.html
+
+💡 Note: Your login ID is your phone number
+         Your password is the first 4 letters of your name in CAPITAL
+
+Example for "Muskaan Shaikh" (8828188930):
+- Login ID: 8828188930
+- Password: MUSK
+    `.trim();
+    
+    alert(message);
+}
+
+// View promotion code for the user
+function viewPromotionCode(positionId) {
+    // This will fetch and display the user's promotion code
+    fetch(`${API_BASE_URL}/positions/${positionId}`)
+        .then(res => res.json())
+        .then(position => {
+            if (position.applicantDetails && position.applicantDetails.userId) {
+                const personCode = position.applicantDetails.userId.personCode || 'Not assigned yet';
+                const message = `
+📢 YOUR PROMOTION CODE
+
+Person Code: ${personCode}
+
+Share this code with others to introduce them!
+When they apply using your code, you'll earn credits.
+
+🎁 Earn 5000 credits for each successful referral!
+                `.trim();
+                alert(message);
+            } else {
+                alert('Promotion code not available yet. Please contact admin.');
+            }
+        })
+        .catch(err => {
+            console.error('Error fetching promotion code:', err);
+            alert('Error loading promotion code. Please try again.');
+        });
 }
 
 
