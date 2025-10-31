@@ -106,9 +106,15 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Hash password before saving
+// Hash password before saving AND update timestamp
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  // Update timestamp
+  this.updatedAt = Date.now();
+  
+  // Hash password if modified
+  if (!this.isModified('password')) {
+    return next();
+  }
   
   try {
     const salt = await bcrypt.genSalt(10);
@@ -123,11 +129,5 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
-
-// Update timestamp
-userSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
-  next();
-});
 
 module.exports = mongoose.model('User', userSchema);
