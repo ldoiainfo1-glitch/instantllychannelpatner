@@ -301,12 +301,26 @@ router.put('/:id/status', async (req, res) => {
         defaultPassword
       });
       
-      // Update introduced count for introducer
+      // Update introduced count and credits for introducer
       if (application.introducedBy && application.introducedBy !== 'Self') {
-        await User.updateOne(
-          { personCode: application.introducedBy },
-          { $inc: { introducedCount: 1 } }
-        );
+        const introducer = await User.findOne({ personCode: application.introducedBy });
+        if (introducer) {
+          // Increment introduced count (always, no limit)
+          introducer.introducedCount = (introducer.introducedCount || 0) + 1;
+          
+          // Add 100 credits only for first 20 referrals
+          const maxPaidReferrals = 20;
+          const creditsPerReferral = 100;
+          
+          if (introducer.introducedCount <= maxPaidReferrals) {
+            introducer.credits = (introducer.credits || 0) + creditsPerReferral;
+            console.log(`✅ Introducer ${introducer.name} earned ${creditsPerReferral} credits (${introducer.introducedCount}/${maxPaidReferrals})`);
+          } else {
+            console.log(`✅ Introducer ${introducer.name} count increased (${introducer.introducedCount}) - max credits reached`);
+          }
+          
+          await introducer.save();
+        }
       }
     }
 

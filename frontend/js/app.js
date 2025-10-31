@@ -606,6 +606,7 @@ function createPositionRow(position) {
         // ENABLED Actions dropdown - shows immediately after admin approval
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
+        const photo = position.applicantDetails.photo || '';
         
         othersCell = `
             <div class="dropdown">
@@ -615,18 +616,18 @@ function createPositionRow(position) {
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
                     <li>
-                        <a class="dropdown-item" href="profile.html" onclick="localStorage.setItem('editMode', 'true'); localStorage.setItem('editPositionId', '${position._id}');">
-                            <i class="fas fa-edit me-2"></i>Edit Profile
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="#" onclick="viewPromotionCode('${position._id}'); return false;">
-                            <i class="fas fa-qrcode me-2"></i>Promotion Code
-                        </a>
-                    </li>
-                    <li>
                         <a class="dropdown-item" href="#" onclick="showLoginCredentials('${phone}', '${name}'); return false;">
                             <i class="fas fa-key me-2"></i>Login Credentials
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="showReferralCode('${position._id}', '${phone}'); return false;">
+                            <i class="fas fa-users me-2"></i>Referral Code
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', '${position._id}'); return false;">
+                            <i class="fas fa-id-card me-2"></i>ID Card
                         </a>
                     </li>
                 </ul>
@@ -1828,33 +1829,203 @@ Example for "Muskaan Shaikh" (8828188930):
     alert(message);
 }
 
-// View promotion code for the user
-function viewPromotionCode(positionId) {
-    // This will fetch and display the user's promotion code
-    fetch(`${API_BASE_URL}/positions/${positionId}`)
-        .then(res => res.json())
-        .then(position => {
-            if (position.applicantDetails && position.applicantDetails.userId) {
-                const personCode = position.applicantDetails.userId.personCode || 'Not assigned yet';
-                const message = `
-📢 YOUR PROMOTION CODE
-
-Person Code: ${personCode}
-
-Share this code with others to introduce them!
-When they apply using your code, you'll earn credits.
-
-🎁 Earn 5000 credits for each successful referral!
-                `.trim();
-                alert(message);
-            } else {
-                alert('Promotion code not available yet. Please contact admin.');
-            }
-        })
-        .catch(err => {
-            console.error('Error fetching promotion code:', err);
-            alert('Error loading promotion code. Please try again.');
+// Show referral code with credits info
+async function showReferralCode(positionId, phone) {
+    try {
+        // Fetch user details by phone
+        const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
         });
+        
+        if (!response.ok) {
+            alert('User details not found. Please contact admin.');
+            return;
+        }
+        
+        const user = await response.json();
+        const personCode = user.personCode || 'Not assigned yet';
+        const introducedCount = user.introducedCount || 0;
+        const creditsPerReferral = 100;
+        const maxReferrals = 20;
+        const remainingReferrals = Math.max(0, maxReferrals - introducedCount);
+        const canEarnMore = introducedCount < maxReferrals;
+        
+        const message = `
+🎁 YOUR REFERRAL CODE
+
+Referral Code: ${personCode}
+
+📊 Your Referral Stats:
+- People Introduced: ${introducedCount}
+- Credits Per Referral: ${creditsPerReferral}
+${canEarnMore ? `- Remaining Paid Referrals: ${remainingReferrals}/${maxReferrals}` : '- ✅ Max paid referrals reached!'}
+
+💰 Earnings:
+${canEarnMore ? 
+`- You can earn ${remainingReferrals * creditsPerReferral} more credits
+- After ${maxReferrals} referrals, you still get credit in "Introduced" count` :
+`- You've earned maximum ${maxReferrals * creditsPerReferral} credits from referrals!
+- New referrals still count in "Introduced" column`}
+
+📢 How to Use:
+1. Share your code: ${personCode}
+2. Ask people to enter it when they apply
+3. Get ${creditsPerReferral} credits when they get approved!
+4. Max ${creditsPerReferral * maxReferrals} credits from first ${maxReferrals} people
+
+Keep sharing to grow your network! 🚀
+        `.trim();
+        
+        alert(message);
+    } catch (error) {
+        console.error('Error fetching referral code:', error);
+        alert('Error loading referral code. Please try again.');
+    }
+}
+
+// Show ID Card with download option
+async function showIDCard(name, phone, photo, positionId) {
+    try {
+        // Fetch user details
+        const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            alert('User details not found.');
+            return;
+        }
+        
+        const user = await response.json();
+        const personCode = user.personCode || 'N/A';
+        
+        // Create modal with ID card
+        const modalHTML = `
+            <div class="modal fade" id="idCardModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-id-card me-2"></i>Channel Partner ID Card
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <div id="idCardContent" style="background: linear-gradient(135deg, #0066cc 0%, #00a8ff 50%, #ffa500 100%); padding: 40px;">
+                                <!-- Landscape ID Card Design -->
+                                <div style="background: white; border-radius: 20px; padding: 30px; max-width: 800px; margin: 0 auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+                                    <div class="row align-items-center">
+                                        <!-- Company Logo Section -->
+                                        <div class="col-md-3 text-center">
+                                            <img src="images/logo.jpeg" alt="Instantly Cards Logo" style="width: 120px; height: 120px; object-fit: contain; border-radius: 15px;">
+                                            <h6 class="mt-3 mb-0" style="color: #0066cc; font-weight: bold;">INSTANTLY CARDS</h6>
+                                            <small style="color: #ffa500;">Channel Partner</small>
+                                        </div>
+                                        
+                                        <!-- Photo Section -->
+                                        <div class="col-md-3 text-center">
+                                            <img src="${photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4='}" 
+                                                 alt="${name}" 
+                                                 style="width: 140px; height: 160px; object-fit: cover; border-radius: 10px; border: 4px solid #0066cc;">
+                                        </div>
+                                        
+                                        <!-- Details Section -->
+                                        <div class="col-md-6">
+                                            <h4 style="color: #333; font-weight: bold; margin-bottom: 15px;">${name}</h4>
+                                            <div style="margin-bottom: 10px;">
+                                                <i class="fas fa-phone me-2" style="color: #0066cc;"></i>
+                                                <strong>Phone:</strong> ${phone}
+                                            </div>
+                                            <div style="margin-bottom: 10px;">
+                                                <i class="fas fa-id-badge me-2" style="color: #ffa500;"></i>
+                                                <strong>Partner ID:</strong> ${personCode}
+                                            </div>
+                                            <div style="margin-bottom: 10px;">
+                                                <i class="fas fa-calendar me-2" style="color: #00a8ff;"></i>
+                                                <strong>Joined:</strong> ${new Date().toLocaleDateString()}
+                                            </div>
+                                            <div class="mt-3">
+                                                <div style="background: linear-gradient(135deg, #0066cc 0%, #ffa500 100%); color: white; padding: 10px; border-radius: 8px; text-align: center;">
+                                                    <strong>AUTHORIZED CHANNEL PARTNER</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Footer -->
+                                    <div class="mt-4 pt-3" style="border-top: 2px solid #0066cc;">
+                                        <div class="row text-center">
+                                            <div class="col-6">
+                                                <small style="color: #666;">
+                                                    <i class="fas fa-globe me-1"></i>
+                                                    www.instantlycards.com
+                                                </small>
+                                            </div>
+                                            <div class="col-6">
+                                                <small style="color: #666;">
+                                                    <i class="fas fa-envelope me-1"></i>
+                                                    support@instantlycards.com
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="downloadIDCard('${name}', '${phone}', '${photo}', '${personCode}')">
+                                <i class="fas fa-download me-2"></i>Download as PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('idCardModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('idCardModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Error showing ID card:', error);
+        alert('Error loading ID card. Please try again.');
+    }
+}
+
+// Download ID Card as PDF (landscape)
+async function downloadIDCard(name, phone, photo, personCode) {
+    // You'll need to include html2pdf library in index.html
+    // Add this script tag: <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    const element = document.getElementById('idCardContent');
+    
+    const opt = {
+        margin: 0.5,
+        filename: `ID_Card_${name.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+    };
+    
+    try {
+        await html2pdf().set(opt).from(element).save();
+        alert('ID Card downloaded successfully!');
+    } catch (error) {
+        console.error('Error downloading ID card:', error);
+        alert('Error downloading ID card. Make sure popup blockers are disabled.');
+    }
 }
 
 
