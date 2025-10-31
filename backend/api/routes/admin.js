@@ -109,7 +109,7 @@ router.put('/applications/:id/approve', async (req, res) => {
         console.log(`🆔 Generated new personCode: ${personCode}`);
       }
       
-      // Generate password: First 4 letters of name in CAPITAL
+      // Generate password: First 4 letters of name in capital
       const nameForPassword = application.applicantInfo.name.replace(/\s+/g, ''); // Remove spaces
       const defaultPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X'); // Ensure at least 4 chars
       
