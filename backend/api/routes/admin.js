@@ -455,7 +455,7 @@ router.post('/test-user/:phone', async (req, res) => {
       name: user.name,
       phone: user.phone,
       email: user.email,
-      personCode: user.personCode || 'N/A',
+      personCode: user.personCode || (application ? application.personCode : null) || 'N/A',
       introducedCount: user.introducedCount || 0,
       credits: user.credits || 0,
       applicationId: application ? application._id : null,

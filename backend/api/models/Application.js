@@ -6,6 +6,12 @@ const applicationSchema = new mongoose.Schema({
     required: true,
     index: true // Add index for faster queries
   },
+  personCode: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow null values but enforce uniqueness when present
+    index: true
+  },
   applicantInfo: {
     name: {
       type: String,

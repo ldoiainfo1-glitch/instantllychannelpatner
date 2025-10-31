@@ -120,9 +120,38 @@ router.post('/', upload.single('photo'), async (req, res) => {
     // Generate email from phone
     const email = `${phone}@instantlycards.com`;
 
+    // Generate unique 6-digit person code immediately
+    const generatePersonCode = () => {
+      // Generate 6-digit random number (100000-999999)
+      return Math.floor(100000 + Math.random() * 900000).toString();
+    };
+    
+    let personCode = generatePersonCode();
+    
+    // Ensure uniqueness by checking against existing applications and users
+    const User = require('../models/User');
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (!isUnique && attempts < maxAttempts) {
+      const existingUser = await User.findOne({ personCode: personCode });
+      const existingApp = await Application.findOne({ personCode: personCode });
+      
+      if (!existingUser && !existingApp) {
+        isUnique = true;
+      } else {
+        personCode = generatePersonCode();
+        attempts++;
+      }
+    }
+    
+    console.log('🎫 Generated unique person code:', personCode);
+
     // Create new application in applications collection
     const newApplication = new Application({
       positionId: positionId, // Use the position ID passed from frontend
+      personCode: personCode, // Store person code in application
       applicantInfo: {
         name: name.trim(),
         phone: phone.trim(),
@@ -265,8 +294,8 @@ router.put('/:id/status', async (req, res) => {
       // Create user account
       const User = require('../models/User');
       
-      // Generate person code (you can customize this logic)
-      const personCode = `IC${Date.now().toString().slice(-8)}`;
+      // Use the person code from application (already generated when application was submitted)
+      const personCode = application.personCode;
       
       // Generate password: First 4 letters of name in CAPITAL
       const nameForPassword = application.applicantInfo.name.replace(/\s+/g, ''); // Remove spaces
