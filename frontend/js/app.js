@@ -4,6 +4,7 @@ const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
 // Global variables
 let currentPositions = [];
 let locationData = {};
+let locationDataLoaded = false; // Track if location data is loaded
 let isAdmin = false;
 
 // Store auth token
@@ -14,8 +15,15 @@ let currentUser = null;
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
     setupEventListeners();
-    loadLocationData();
+    
+    // Load table data immediately for fast initial display
     loadApplications();
+    
+    // Load location data in background (lazy loading - only when filters are used)
+    // This prevents blocking the initial table load
+    setTimeout(() => {
+        loadLocationData();
+    }, 500); // Load after 500ms delay
     
     // Check if user is logged in on page load
     if (authToken) {
@@ -82,55 +90,55 @@ function setupNavigation() {
 
 // Load location data from API
 async function loadLocationData() {
+    // Return immediately if already loaded (caching)
+    if (locationDataLoaded) {
+        console.log('✅ Location data already loaded (using cache)');
+        return;
+    }
+    
     try {
-        console.log('Loading location data...');
+        console.log('⚡ Loading location data in background...');
         
-        // Load ALL location data from entire India
-        const [zonesRes, statesRes, divisionsRes, districtsRes, tehsilsRes, pincodesRes, villagesRes] = await Promise.all([
-            fetch(`${API_BASE_URL}/locations/zones`),
-            fetch(`${API_BASE_URL}/locations/states`),
-            fetch(`${API_BASE_URL}/locations/divisions`),
-            fetch(`${API_BASE_URL}/locations/districts`),
-            fetch(`${API_BASE_URL}/locations/tehsils`),
-            fetch(`${API_BASE_URL}/locations/pincodes`),
-            fetch(`${API_BASE_URL}/locations/villages`)
-        ]);
+        // Use single optimized endpoint instead of 7 separate calls
+        // This is much faster and reduces server load
+        const response = await fetch(`${API_BASE_URL}/locations/all`);
         
-        const [zones, states, divisions, districts, tehsils, pincodes, villages] = await Promise.all([
-            zonesRes.json(),
-            statesRes.json(),
-            divisionsRes.json(),
-            districtsRes.json(),
-            tehsilsRes.json(),
-            pincodesRes.json(),
-            villagesRes.json()
-        ]);
+        if (!response.ok) {
+            throw new Error('Failed to load location data');
+        }
+        
+        const data = await response.json();
         
         // Store all options
         locationData = {
-            zones: zones || [],
-            states: states || [],
-            divisions: divisions || [],
-            districts: districts || [],
-            tehsils: tehsils || [],
-            pincodes: pincodes || [],
-            villages: villages || []
+            zones: data.zones || [],
+            states: data.states || [],
+            divisions: data.divisions || [],
+            districts: data.districts || [],
+            tehsils: data.tehsils || [],
+            pincodes: data.pincodes || [],
+            villages: data.villages || []
         };
         
-        // Populate all dropdowns with complete options
-        populateAllDropdowns();
+        locationDataLoaded = true; // Mark as loaded
         
-        console.log('Location data loaded successfully');
-        console.log('Available zones:', locationData.zones.length);
-        console.log('Available states:', locationData.states.length);
-        console.log('Available divisions:', locationData.divisions.length);
-        console.log('Available districts:', locationData.districts.length);
-        console.log('Available tehsils:', locationData.tehsils.length);
-        console.log('Available pincodes:', locationData.pincodes.length);
-        console.log('Available villages:', locationData.villages.length);
+        console.log('✅ Location data loaded in background');
+        console.log('📊 Loaded:', {
+            zones: locationData.zones.length,
+            states: locationData.states.length,
+            divisions: locationData.divisions.length,
+            districts: locationData.districts.length,
+            tehsils: locationData.tehsils.length,
+            pincodes: locationData.pincodes.length,
+            villages: locationData.villages.length
+        });
+        
+        // Note: We don't populate dropdowns here - they are populated on-demand when clicked
+        console.log('🎯 Searchable filters ready with location data loaded');
     } catch (error) {
-        console.error('Error loading location data:', error);
-        showNotification('Error loading location data', 'error');
+        console.error('❌ Error loading location data:', error);
+        // Don't show error to user - filters will still work with on-demand loading
+        console.log('ℹ️ Filters will use on-demand data loading');
     }
 }
 
@@ -439,7 +447,19 @@ function clearDependentSelects(selectIds) {
 // Load dynamic positions based on location filters - generates positions for each location level
 async function loadApplications() {
     try {
-        showLoading(true);
+        const tbody = document.getElementById('positionsTableBody');
+        
+        // Show minimal loading state (don't block UI)
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="ms-2 text-muted">Loading...</span>
+                </td>
+            </tr>
+        `;
         
         // Get all filter values
         const country = document.getElementById('filterCountry').value || 'India';
@@ -462,7 +482,6 @@ async function loadApplications() {
         if (village) params.append('village', village);
         
         const url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
-        console.log('🔍 Loading dynamic positions for location:', url);
         
         const response = await fetch(url);
         if (!response.ok) {
@@ -470,20 +489,12 @@ async function loadApplications() {
         }
         
         const positions = await response.json();
-        console.log('📊 Dynamic positions generated:', positions.length);
         
         // Store positions directly - they are already formatted with application data
         currentPositions = positions.map((pos, index) => ({
             ...pos,
             sNo: index + 1 // Ensure sequential numbering
         }));
-        
-        console.log('🎯 Positions loaded with application status:');
-        currentPositions.forEach(pos => {
-            const statusInfo = pos.status === 'Available' ? 'Available for Application' : 
-                              pos.applicantDetails ? `Applied by ${pos.applicantDetails.name} (${pos.status})` : 'Available';
-            console.log(`   - ${pos.designation}: ${statusInfo}`);
-        });
         
         displayPositions(currentPositions);
         
@@ -492,53 +503,55 @@ async function loadApplications() {
     } catch (error) {
         console.error('❌ Error loading applications:', error);
         showNotification('Error loading applications: ' + error.message, 'error');
-    } finally {
-        showLoading(false);
+        
+        // Show error in table
+        const tbody = document.getElementById('positionsTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="text-center py-4 text-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error loading positions. Please refresh the page.
+                </td>
+            </tr>
+        `;
     }
 }
 
 // Display positions in table
 function displayPositions(positions) {
     const tbody = document.getElementById('positionsTableBody');
-    tbody.innerHTML = '';
     
     if (positions.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center py-4">
+                <td colspan="9" class="text-center py-4">
                     <i class="fas fa-search fa-2x text-muted mb-3"></i>
-                    <p class="text-muted">No positions found matching your criteria</p>
+                    <p class="text-muted mb-0">No positions found matching your criteria</p>
                 </td>
             </tr>
         `;
         return;
     }
     
+    // Use DocumentFragment for faster DOM manipulation
+    const fragment = document.createDocumentFragment();
+    
     positions.forEach(position => {
         const row = createPositionRow(position);
-        tbody.appendChild(row);
+        fragment.appendChild(row);
     });
     
-    // Add fade-in animation
-    tbody.querySelectorAll('tr').forEach((row, index) => {
-        setTimeout(() => {
-            row.classList.add('fade-in-up');
-        }, index * 50);
-    });
+    // Clear and append all at once (much faster than individual appends)
+    tbody.innerHTML = '';
+    tbody.appendChild(fragment);
+    
+    // Skip animations for faster rendering
+    // Animation removed for performance
 }
 
 // Create position table row
 function createPositionRow(position) {
     const row = document.createElement('tr');
-    
-    // 🐛 DEBUG: Log position data to troubleshoot action button visibility
-    console.log('🔍 Creating row for position:', {
-        id: position._id,
-        status: position.status,
-        hasApplicantDetails: !!position.applicantDetails,
-        applicantName: position.applicantDetails?.name,
-        willShowActionButton: position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')
-    });
     
     const statusClass = getStatusClass(position.status);
     
@@ -565,7 +578,7 @@ function createPositionRow(position) {
         nameCell = `<button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
                         <i class="fas fa-plus me-1"></i>Apply Now
                     </button>
-                    <br><small class="text-muted mt-1">ID: ${position._id}</small>`;
+                    // <br><small class="text-muted mt-1">ID: ${position._id}</small>`;
     } else if (position.applicantDetails && position.applicantDetails.name) {
         nameCell = `${position.applicantDetails.name}<br><small class="text-muted">ID: ${position._id}</small>`;
     } else {
