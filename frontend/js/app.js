@@ -1799,70 +1799,10 @@ function clearSingleFilter(inputId, clearBtnId) {
     loadApplications();
 }
 
-// Show login credentials to user
+// Redirect to login page
 function showLoginCredentials(phone, name) {
-    if (!phone || !name) {
-        alert('Login credentials not available');
-        return;
-    }
-    
-    // Generate password as per the rule: First 4 capital letters of name
-    const nameForPassword = name.replace(/\s+/g, ''); // Remove spaces
-    const password = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
-    
-    // Show confirmation modal with credentials and redirect option
-    const modalHTML = `
-        <div class="modal fade" id="loginCredentialsModal" tabindex="-1">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="border-radius: 15px;">
-                    <div class="modal-header" style="background: linear-gradient(135deg, #0066cc 0%, #ffa500 100%); color: white; border: none;">
-                        <h5 class="modal-title">
-                            <i class="fas fa-key me-2"></i>YOUR LOGIN CREDENTIALS
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body text-center py-4">
-                        <div class="mb-4">
-                            <div class="mb-3">
-                                <h6 class="text-muted mb-2">Login ID (Phone Number):</h6>
-                                <div style="background: #f5f7fa; padding: 15px; border-radius: 10px; margin: 10px 0;">
-                                    <h4 class="fw-bold mb-0" style="color: #0066cc;">${phone}</h4>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <h6 class="text-muted mb-2">Password:</h6>
-                                <div style="background: #f5f7fa; padding: 15px; border-radius: 10px; margin: 10px 0;">
-                                    <h4 class="fw-bold mb-0" style="color: #ffa500; letter-spacing: 5px;">${password}</h4>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="alert alert-info" style="background: #e3f2fd; border: none;">
-                            <small><i class="fas fa-info-circle me-1"></i> Password is first 4 letters of your name in CAPITAL</small>
-                        </div>
-                    </div>
-                    <div class="modal-footer" style="border-top: 1px solid #e9ecef; justify-content: center;">
-                        <a href="profile.html" class="btn btn-primary px-4" style="background: linear-gradient(135deg, #0066cc 0%, #ffa500 100%); border: none;">
-                            <i class="fas fa-sign-in-alt me-2"></i>Go to Login Page
-                        </a>
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Remove existing modal if any
-    const existingModal = document.getElementById('loginCredentialsModal');
-    if (existingModal) {
-        existingModal.remove();
-    }
-    
-    // Add modal to body
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
-    // Show modal
-    const modal = new bootstrap.Modal(document.getElementById('loginCredentialsModal'));
-    modal.show();
+    // Simply redirect to the login page
+    window.location.href = 'profile.html';
 }
 
 // Show referral code with credits info

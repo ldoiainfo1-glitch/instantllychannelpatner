@@ -439,17 +439,34 @@ router.post('/test-user/:phone', async (req, res) => {
     const { newPassword } = req.body;
     
     const user = await User.findOne({ phone });
+    const application = await Application.findOne({ 'applicantInfo.phone': phone });
     
-    if (!user) {
+    // If no user AND no application, return 404
+    if (!user && !application) {
       return res.status(404).json({ 
-        error: 'User not found',
+        error: 'No user or application found for this phone number',
         phone: phone
       });
     }
 
-    // Get application details
-    const application = await Application.findOne({ 'applicantInfo.phone': phone });
+    // If only application exists (pending approval)
+    if (!user && application) {
+      return res.json({
+        found: true,
+        name: application.applicantInfo.name,
+        phone: application.applicantInfo.phone,
+        email: application.applicantInfo.email,
+        personCode: application.personCode || 'N/A',
+        introducedCount: 0,
+        credits: 0,
+        applicationId: application._id,
+        status: application.status,
+        isPendingApproval: true,
+        hasPassword: false
+      });
+    }
 
+    // User exists - return full details
     const result = {
       found: true,
       name: user.name,
@@ -459,6 +476,8 @@ router.post('/test-user/:phone', async (req, res) => {
       introducedCount: user.introducedCount || 0,
       credits: user.credits || 0,
       applicationId: application ? application._id : null,
+      status: application ? application.status : 'approved',
+      isPendingApproval: false,
       hasPassword: !!user.password,
       passwordHash: user.password ? user.password.substring(0, 30) + '...' : 'None'
     };
