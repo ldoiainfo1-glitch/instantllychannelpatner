@@ -99,26 +99,56 @@ async function loadLocationData() {
     try {
         console.log('⚡ Loading location data in background...');
         
-        // Use single optimized endpoint instead of 7 separate calls
-        // This is much faster and reduces server load
-        const response = await fetch(`${API_BASE_URL}/locations/all`);
+        // Try new optimized endpoint first
+        let response = await fetch(`${API_BASE_URL}/locations/all`);
         
-        if (!response.ok) {
-            throw new Error('Failed to load location data');
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Store all options
+            locationData = {
+                zones: data.zones || [],
+                states: data.states || [],
+                divisions: data.divisions || [],
+                districts: data.districts || [],
+                tehsils: data.tehsils || [],
+                pincodes: data.pincodes || [],
+                villages: data.villages || []
+            };
+        } else {
+            // Fallback to individual endpoints if /all doesn't exist
+            console.log('⚠️ Using fallback: loading from individual endpoints...');
+            
+            const [zonesRes, statesRes, divisionsRes, districtsRes, tehsilsRes, pincodesRes, villagesRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/locations/zones`),
+                fetch(`${API_BASE_URL}/locations/states`),
+                fetch(`${API_BASE_URL}/locations/divisions`),
+                fetch(`${API_BASE_URL}/locations/districts`),
+                fetch(`${API_BASE_URL}/locations/tehsils`),
+                fetch(`${API_BASE_URL}/locations/pincodes`),
+                fetch(`${API_BASE_URL}/locations/villages`)
+            ]);
+            
+            const [zones, states, divisions, districts, tehsils, pincodes, villages] = await Promise.all([
+                zonesRes.json(),
+                statesRes.json(),
+                divisionsRes.json(),
+                districtsRes.json(),
+                tehsilsRes.json(),
+                pincodesRes.json(),
+                villagesRes.json()
+            ]);
+            
+            locationData = {
+                zones: zones || [],
+                states: states || [],
+                divisions: divisions || [],
+                districts: districts || [],
+                tehsils: tehsils || [],
+                pincodes: pincodes || [],
+                villages: villages || []
+            };
         }
-        
-        const data = await response.json();
-        
-        // Store all options
-        locationData = {
-            zones: data.zones || [],
-            states: data.states || [],
-            divisions: data.divisions || [],
-            districts: data.districts || [],
-            tehsils: data.tehsils || [],
-            pincodes: data.pincodes || [],
-            villages: data.villages || []
-        };
         
         locationDataLoaded = true; // Mark as loaded
         
@@ -133,11 +163,9 @@ async function loadLocationData() {
             villages: locationData.villages.length
         });
         
-        // Note: We don't populate dropdowns here - they are populated on-demand when clicked
         console.log('🎯 Searchable filters ready with location data loaded');
     } catch (error) {
         console.error('❌ Error loading location data:', error);
-        // Don't show error to user - filters will still work with on-demand loading
         console.log('ℹ️ Filters will use on-demand data loading');
     }
 }
@@ -1617,12 +1645,27 @@ function setupSearchableFilters() {
 }
 
 // Show filter dropdown with search functionality
-function showFilterDropdown(inputId, dropdownId, dataKey) {
+async function showFilterDropdown(inputId, dropdownId, dataKey) {
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
     const container = input.closest('.filter-container');
     
-    if (!locationData[dataKey] || !Array.isArray(locationData[dataKey])) {
+    // Wait for location data to load if not yet loaded
+    if (!locationDataLoaded) {
+        console.log('⏳ Waiting for location data to load...');
+        dropdown.innerHTML = '<div class="no-results">Loading...</div>';
+        dropdown.classList.add('show');
+        container?.classList.add('active');
+        
+        // Wait for location data
+        await loadLocationData();
+    }
+    
+    if (!locationData[dataKey] || !Array.isArray(locationData[dataKey]) || locationData[dataKey].length === 0) {
+        console.log('⚠️ No data available for', dataKey);
+        dropdown.innerHTML = '<div class="no-results">No data available</div>';
+        dropdown.classList.add('show');
+        container?.classList.add('active');
         return;
     }
 
@@ -1638,6 +1681,7 @@ function showFilterDropdown(inputId, dropdownId, dataKey) {
     container?.classList.add('active');
 
     const data = locationData[dataKey];
+    console.log(`✅ Showing dropdown for ${dataKey}:`, data.length, 'items');
     
     // Only create dropdown content if it doesn't exist or data changed
     if (!dropdown.dataset.initialized || dropdown.dataset.dataKey !== dataKey) {
