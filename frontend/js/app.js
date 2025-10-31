@@ -2016,7 +2016,7 @@ async function showIDCard(name, phone, photo, positionId) {
         // Create modal with ID card
         const modalHTML = `
             <div class="modal fade" id="idCardModal" tabindex="-1">
-                <div class="modal-dialog modal-xl modal-dialog-centered">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content">
                         <div class="modal-header bg-primary text-white">
                             <h5 class="modal-title">
@@ -2024,92 +2024,61 @@ async function showIDCard(name, phone, photo, positionId) {
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="modal-body p-4">
-                            <!-- Professional Horizontal ID Card (Standard Credit Card Size Ratio 3.375" x 2.125") -->
-                            <div id="idCardContent" style="width: 800px; height: 500px; margin: 0 auto; position: relative; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.4);">
-                                
-                                <!-- Decorative Wave Pattern -->
-                                <div style="position: absolute; top: 0; right: 0; width: 300px; height: 300px; background: linear-gradient(135deg, rgba(255,165,0,0.3) 0%, rgba(255,140,0,0.2) 100%); border-radius: 0 0 0 100%; opacity: 0.6;"></div>
-                                <div style="position: absolute; bottom: 0; left: 0; width: 250px; height: 250px; background: linear-gradient(135deg, rgba(0,102,204,0.3) 0%, rgba(0,168,255,0.2) 100%); border-radius: 0 100% 0 0; opacity: 0.6;"></div>
-                                
-                                <div style="position: relative; z-index: 10; padding: 40px 50px; height: 100%;">
-                                    <div style="display: flex; align-items: center; height: 100%; gap: 40px;">
-                                        
-                                        <!-- Left Section: Logo -->
-                                        <div style="flex: 0 0 180px; text-align: center;">
-                                            <div style="background: white; padding: 15px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                                                <img src="images/logo.jpeg" alt="Instantly Cards Logo" style="width: 150px; height: 150px; object-fit: contain; border-radius: 10px;">
-                                            </div>
-                                            <div style="margin-top: 15px;">
-                                                <h5 style="color: white; font-weight: bold; margin: 0; font-size: 1.1rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">INSTANTLY CARDS</h5>
-                                                <p style="color: #ffa500; font-weight: 600; margin: 5px 0 0 0; font-size: 0.9rem;">Channel Partner</p>
-                                            </div>
+                        <div class="modal-body p-0">
+                            <!-- Standard ID Card Size: 90mm × 54mm (340px × 204px at 96 DPI, scaled 2.5x for display = 850px × 510px) -->
+                            <div id="idCardContent" style="background: linear-gradient(135deg, #0066cc 0%, #00a8ff 50%, #ffa500 100%); padding: 25px; width: 850px; height: 510px; margin: 0 auto;">
+                                <!-- Landscape ID Card Design -->
+                                <div style="background: white; border-radius: 20px; padding: 20px; width: 100%; height: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); display: flex; align-items: center;">
+                                    <div style="display: flex; align-items: center; width: 100%; gap: 20px;">
+                                        <!-- Company Logo Section -->
+                                        <div style="flex: 0 0 160px; text-align: center;">
+                                            <img src="images/logo.jpeg" alt="Instantly Cards Logo" style="width: 120px; height: 120px; object-fit: contain; border-radius: 15px;">
+                                            <h6 style="margin-top: 10px; margin-bottom: 0; color: #0066cc; font-weight: bold; font-size: 0.95rem;">INSTANTLY CARDS</h6>
+                                            <small style="color: #ffa500; font-size: 0.8rem;">Channel Partner</small>
                                         </div>
                                         
-                                        <!-- Middle Section: Photo -->
-                                        <div style="flex: 0 0 180px; text-align: center;">
-                                            <div style="background: white; padding: 8px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-                                                <img src="${photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjIyMCIgdmlld0JveD0iMCAwIDE4MCAyMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE4MCIgaGVpZ2h0PSIyMjAiIGZpbGw9IiNlMmU4ZjAiLz48Y2lyY2xlIGN4PSI5MCIgY3k9IjgwIiByPSI0MCIgZmlsbD0iI2JkYzNjNyIvPjxwYXRoIGQ9Ik0zMCAxODBDMzAgMTUwIDU1IDEzMCA5MCAxMzBDMTI1IDEzMCAxNTAgMTUwIDE1MCAxODBWMjIwSDMwVjE4MFoiIGZpbGw9IiNiZGMzYzciLz48L3N2Zz4='}" 
-                                                     alt="${name}" 
-                                                     style="width: 164px; height: 200px; object-fit: cover; border-radius: 10px; display: block;">
-                                            </div>
+                                        <!-- Photo Section -->
+                                        <div style="flex: 0 0 140px; text-align: center;">
+                                            <img src="${photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4='}" 
+                                                 alt="${name}" 
+                                                 style="width: 130px; height: 150px; object-fit: cover; border-radius: 10px; border: 3px solid #0066cc;">
                                         </div>
                                         
-                                        <!-- Right Section: Details -->
-                                        <div style="flex: 1; color: white;">
-                                            <div style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; box-shadow: 0 8px 32px rgba(0,0,0,0.2);">
-                                                <h3 style="color: white; font-weight: bold; margin: 0 0 25px 0; font-size: 1.8rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">${name}</h3>
-                                                
-                                                <div style="margin-bottom: 15px; display: flex; align-items: center;">
-                                                    <div style="background: rgba(0,168,255,0.3); width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                                                        <i class="fas fa-phone" style="color: #fff; font-size: 1rem;"></i>
-                                                    </div>
-                                                    <div>
-                                                        <small style="color: rgba(255,255,255,0.8); display: block; font-size: 0.7rem; margin-bottom: 2px;">Phone</small>
-                                                        <strong style="color: white; font-size: 1.1rem;">${phone}</strong>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div style="margin-bottom: 15px; display: flex; align-items: center;">
-                                                    <div style="background: rgba(255,165,0,0.3); width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                                                        <i class="fas fa-id-badge" style="color: #ffa500; font-size: 1rem;"></i>
-                                                    </div>
-                                                    <div>
-                                                        <small style="color: rgba(255,255,255,0.8); display: block; font-size: 0.7rem; margin-bottom: 2px;">Partner ID</small>
-                                                        <strong style="color: #ffa500; font-size: 1.1rem;">${partnerId}</strong>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div style="margin-bottom: 20px; display: flex; align-items: center;">
-                                                    <div style="background: rgba(0,204,102,0.3); width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-                                                        <i class="fas fa-calendar" style="color: #00cc66; font-size: 1rem;"></i>
-                                                    </div>
-                                                    <div>
-                                                        <small style="color: rgba(255,255,255,0.8); display: block; font-size: 0.7rem; margin-bottom: 2px;">Joined</small>
-                                                        <strong style="color: white; font-size: 1.1rem;">${new Date().toLocaleDateString()}</strong>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div style="background: linear-gradient(135deg, #ffa500 0%, #ff7043 100%); color: white; padding: 12px; border-radius: 10px; text-align: center; margin-top: 25px; box-shadow: 0 4px 15px rgba(255,165,0,0.4);">
-                                                    <strong style="font-size: 0.95rem; letter-spacing: 1px;">AUTHORIZED CHANNEL PARTNER</strong>
-                                                </div>
+                                        <!-- Details Section -->
+                                        <div style="flex: 1;">
+                                            <h4 style="color: #333; font-weight: bold; margin-bottom: 12px; font-size: 1.4rem;">${name}</h4>
+                                            <div style="margin-bottom: 8px;">
+                                                <i class="fas fa-phone me-2" style="color: #0066cc;"></i>
+                                                <strong style="font-size: 0.9rem;">Phone:</strong> <span style="font-size: 0.9rem;">${phone}</span>
                                             </div>
-                                            
-                                            <!-- Footer -->
-                                            <div style="margin-top: 20px; text-align: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.2);">
-                                                <div style="display: flex; justify-content: space-around; align-items: center;">
-                                                    <small style="color: rgba(255,255,255,0.9); font-size: 0.8rem;">
-                                                        <i class="fas fa-globe" style="margin-right: 5px;"></i>
-                                                        www.instantlycards.com
-                                                    </small>
-                                                    <small style="color: rgba(255,255,255,0.9); font-size: 0.8rem;">
-                                                        <i class="fas fa-envelope" style="margin-right: 5px;"></i>
-                                                        instantllycardsonlinemeeting@gmail.com
-                                                    </small>
+                                            <div style="margin-bottom: 8px;">
+                                                <i class="fas fa-id-badge me-2" style="color: #ffa500;"></i>
+                                                <strong style="font-size: 0.9rem;">Partner ID:</strong> <span style="font-size: 0.9rem;">${partnerId}</span>
+                                            </div>
+                                            <div style="margin-bottom: 12px;">
+                                                <i class="fas fa-calendar me-2" style="color: #00a8ff;"></i>
+                                                <strong style="font-size: 0.9rem;">Joined:</strong> <span style="font-size: 0.9rem;">${new Date().toLocaleDateString()}</span>
+                                            </div>
+                                            <div>
+                                                <div style="background: linear-gradient(135deg, #0066cc 0%, #ffa500 100%); color: white; padding: 8px; border-radius: 8px; text-align: center;">
+                                                    <strong style="font-size: 0.85rem;">AUTHORIZED CHANNEL PARTNER</strong>
                                                 </div>
                                             </div>
                                         </div>
-                                        
+                                    </div>
+                                    
+                                    <!-- Footer -->
+                                    <div style="position: absolute; bottom: 25px; left: 25px; right: 25px; padding-top: 12px; border-top: 2px solid #0066cc;">
+                                        <div style="display: flex; justify-content: space-around; align-items: center;">
+                                            <small style="color: #666; font-size: 0.75rem;">
+                                                <i class="fas fa-globe me-1"></i>
+                                                www.instantlycards.com
+                                            </small>
+                                            <small style="color: #666; font-size: 0.75rem;">
+                                                <i class="fas fa-envelope me-1"></i>
+                                                instantllycardsonlinemeeting@gmail.com
+                                            </small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2214,6 +2183,9 @@ async function downloadIDCard(name, phone, photo, personCode) {
         
         console.log('📄 Generating PDF with html2pdf...');
         
+        // Standard ID card size: 90mm × 54mm
+        // At 300 DPI: 1063px × 638px
+        // We'll use half scale for reasonable file size: 850px × 510px
         const opt = {
             margin: 0,
             filename: `ID_Card_${name.replace(/\s+/g, '_')}_${Date.now()}.pdf`,
@@ -2229,16 +2201,13 @@ async function downloadIDCard(name, phone, photo, personCode) {
                 removeContainer: true,
                 scrollY: 0,
                 scrollX: 0,
-                width: 800,
-                height: 500,
-                windowWidth: 800,
-                windowHeight: 500
+                width: 850,
+                height: 510
             },
             jsPDF: { 
-                unit: 'px',
-                format: [800, 500],
-                orientation: 'landscape',
-                hotfixes: ['px_scaling']
+                unit: 'mm',
+                format: [90, 54],
+                orientation: 'landscape'
             },
             pagebreak: { mode: 'avoid-all' }
         };
