@@ -434,6 +434,7 @@ router.get('/user-documents/:phone', async (req, res) => {
 router.post('/test-user/:phone', async (req, res) => {
   try {
     const User = require('../models/User');
+    const Application = require('../models/Application');
     const { phone } = req.params;
     const { newPassword } = req.body;
     
@@ -446,12 +447,18 @@ router.post('/test-user/:phone', async (req, res) => {
       });
     }
 
+    // Get application details
+    const application = await Application.findOne({ 'applicantInfo.phone': phone });
+
     const result = {
       found: true,
       name: user.name,
       phone: user.phone,
       email: user.email,
-      credits: user.credits,
+      personCode: user.personCode || 'N/A',
+      introducedCount: user.introducedCount || 0,
+      credits: user.credits || 0,
+      applicationId: application ? application._id : null,
       hasPassword: !!user.password,
       passwordHash: user.password ? user.password.substring(0, 30) + '...' : 'None'
     };

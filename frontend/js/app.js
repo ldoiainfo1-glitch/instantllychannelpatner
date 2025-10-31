@@ -1899,7 +1899,8 @@ async function showIDCard(name, phone, photo, positionId) {
         }
         
         const user = await response.json();
-        const personCode = user.personCode || 'N/A';
+        // Use personCode if available, otherwise use applicationId
+        const partnerId = user.personCode || user.applicationId || 'N/A';
         
         // Create modal with ID card
         const modalHTML = `
@@ -1940,7 +1941,7 @@ async function showIDCard(name, phone, photo, positionId) {
                                             </div>
                                             <div style="margin-bottom: 10px;">
                                                 <i class="fas fa-id-badge me-2" style="color: #ffa500;"></i>
-                                                <strong>Partner ID:</strong> ${personCode}
+                                                <strong>Partner ID:</strong> ${partnerId}
                                             </div>
                                             <div style="margin-bottom: 10px;">
                                                 <i class="fas fa-calendar me-2" style="color: #00a8ff;"></i>
@@ -1966,7 +1967,7 @@ async function showIDCard(name, phone, photo, positionId) {
                                             <div class="col-6">
                                                 <small style="color: #666;">
                                                     <i class="fas fa-envelope me-1"></i>
-                                                    support@instantlycards.com
+                                                    instantllycardsonlinemeeting@gmail.com
                                                 </small>
                                             </div>
                                         </div>
@@ -1976,7 +1977,7 @@ async function showIDCard(name, phone, photo, positionId) {
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" onclick="downloadIDCard('${name}', '${phone}', '${photo}', '${personCode}')">
+                            <button type="button" class="btn btn-primary" onclick="downloadIDCard('${name}', '${phone}', '${photo}', '${partnerId}')">
                                 <i class="fas fa-download me-2"></i>Download as PDF
                             </button>
                         </div>
@@ -2006,25 +2007,63 @@ async function showIDCard(name, phone, photo, positionId) {
 
 // Download ID Card as PDF (landscape)
 async function downloadIDCard(name, phone, photo, personCode) {
-    // You'll need to include html2pdf library in index.html
-    // Add this script tag: <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
-    const element = document.getElementById('idCardContent');
-    
-    const opt = {
-        margin: 0.5,
-        filename: `ID_Card_${name.replace(/\s+/g, '_')}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
-    };
-    
     try {
+        const element = document.getElementById('idCardContent');
+        
+        if (!element) {
+            alert('ID Card content not found. Please try again.');
+            return;
+        }
+        
+        // Show loading message
+        const downloadBtn = event.target;
+        const originalText = downloadBtn.innerHTML;
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
+        
+        // Wait a moment for images to load
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const opt = {
+            margin: 0.3,
+            filename: `ID_Card_${name.replace(/\s+/g, '_')}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 3,
+                useCORS: true,
+                allowTaint: true,
+                logging: false,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: { 
+                unit: 'in', 
+                format: 'letter', 
+                orientation: 'landscape',
+                compress: true
+            }
+        };
+        
+        // Generate and save PDF
         await html2pdf().set(opt).from(element).save();
-        alert('ID Card downloaded successfully!');
+        
+        // Restore button
+        downloadBtn.disabled = false;
+        downloadBtn.innerHTML = originalText;
+        
+        // Success message
+        setTimeout(() => {
+            alert('✅ ID Card downloaded successfully!');
+        }, 300);
+        
     } catch (error) {
         console.error('Error downloading ID card:', error);
-        alert('Error downloading ID card. Make sure popup blockers are disabled.');
+        alert('❌ Error downloading ID card. Please try again.');
+        
+        // Restore button if error occurs
+        if (event && event.target) {
+            event.target.disabled = false;
+            event.target.innerHTML = '<i class="fas fa-download me-2"></i>Download as PDF';
+        }
     }
 }
 
