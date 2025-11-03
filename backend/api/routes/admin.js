@@ -895,4 +895,49 @@ router.post('/fix-credits-history', async (req, res) => {
   }
 });
 
+// FIX ENDPOINT: Sync introducedBy from applications to users
+router.post('/fix-introduced-by', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Get all approved applications
+    const approvedApplications = await Application.find({ status: 'approved' });
+    const fixed = [];
+    
+    for (const application of approvedApplications) {
+      const user = await User.findOne({ phone: application.applicantInfo.phone });
+      
+      if (!user) {
+        continue;
+      }
+      
+      // If application has introducedBy and user doesn't (or is "Self"), sync it
+      if (application.introducedBy && 
+          application.introducedBy !== 'Self' && 
+          (!user.introducedBy || user.introducedBy === 'Self')) {
+        
+        const oldValue = user.introducedBy;
+        user.introducedBy = application.introducedBy;
+        await user.save();
+        
+        fixed.push({
+          name: user.name,
+          phone: user.phone,
+          oldIntroducedBy: oldValue,
+          newIntroducedBy: application.introducedBy
+        });
+      }
+    }
+    
+    res.json({
+      message: 'IntroducedBy synced from applications to users',
+      fixed: fixed.length,
+      details: fixed
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
