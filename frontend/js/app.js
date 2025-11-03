@@ -1547,19 +1547,20 @@ function showNotification(message, type = 'info') {
     }
 
     // Add toast
-    const toastElement = document.createElement('div');
-    toastElement.innerHTML = toastHtml;
-    toastContainer.appendChild(toastElement.firstElementChild);
+    const toastWrapper = document.createElement('div');
+    toastWrapper.innerHTML = toastHtml;
+    const toastElement = toastWrapper.firstElementChild;
+    toastContainer.appendChild(toastElement);
 
     // Show toast
-    const toast = new bootstrap.Toast(toastElement.firstElementChild, {
+    const toast = new bootstrap.Toast(toastElement, {
         autohide: true,
         delay: 3000
     });
     toast.show();
 
     // Remove from DOM after hiding
-    toastElement.firstElementChild.addEventListener('hidden.bs.toast', () => {
+    toastElement.addEventListener('hidden.bs.toast', () => {
         toastElement.remove();
     });
 }
