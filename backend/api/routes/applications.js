@@ -117,9 +117,9 @@ router.post('/', upload.single('photo'), async (req, res) => {
       return res.status(400).json({ error: 'You have already submitted an application. Please wait for admin review.' });
     }
 
-    // Generate email from phone
-    const email = `${phone}@instantlycards.com`;
-
+    // Email is optional - don't auto-generate
+    // Users can provide their own email or leave it empty
+    
     // Generate unique 6-digit person code immediately
     const generatePersonCode = () => {
       // Generate 6-digit random number (100000-999999)
@@ -155,7 +155,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
       applicantInfo: {
         name: name.trim(),
         phone: phone.trim(),
-        email: email,
+        email: email || '', // Email from request body, or empty string if not provided
         photo: photoBase64,
         address: address ? address.trim() : '',
         companyName: companyName ? companyName.trim() : '',

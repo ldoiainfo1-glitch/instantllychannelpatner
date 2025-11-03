@@ -750,4 +750,58 @@ router.post('/fix-user/:phone', async (req, res) => {
   }
 });
 
+// GET ALL USERS - for debugging and frontend display
+router.get('/all-users', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// FIX ENDPOINT: Recalculate all introducedCount values
+router.post('/fix-introduced-counts', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Get all users
+    const allUsers = await User.find({});
+    const fixed = [];
+    
+    for (const user of allUsers) {
+      // Count how many users have this user's personCode as introducedBy
+      const introducedCount = await User.countDocuments({ 
+        introducedBy: user.personCode 
+      });
+      
+      const oldCount = user.introducedCount;
+      
+      if (oldCount !== introducedCount) {
+        user.introducedCount = introducedCount;
+        await user.save();
+        
+        fixed.push({
+          name: user.name,
+          phone: user.phone,
+          personCode: user.personCode,
+          oldCount,
+          newCount: introducedCount
+        });
+      }
+    }
+    
+    res.json({
+      message: 'Introduced counts fixed',
+      fixed: fixed.length,
+      details: fixed
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
