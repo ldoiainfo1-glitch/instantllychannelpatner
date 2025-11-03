@@ -903,6 +903,7 @@ async function submitApplication(event) {
     }
     
     const form = document.getElementById('applicationForm');
+    const submitBtn = document.getElementById('submitApplication');
     
     // Check if position information is available
     if (!window.currentPosition) {
@@ -923,7 +924,6 @@ async function submitApplication(event) {
     }
     
     try {
-        const submitBtn = document.getElementById('submitApplication');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
         
@@ -945,7 +945,7 @@ async function submitApplication(event) {
         console.log('📝 Position ID being sent:', window.currentPosition.id);
         console.log('📝 FormData entries:');
         for (let [key, value] of formData.entries()) {
-            console.log(`   ${key}: ${value}`);
+            console.log(`   ${key}: ${value instanceof File ? `File: ${value.name}` : value}`);
         }
         
         const response = await fetch(`${API_BASE_URL}/applications`, {
@@ -956,9 +956,7 @@ async function submitApplication(event) {
         const result = await response.json();
         
         if (response.ok) {
-            showNotification('✅ Application submitted successfully! Refreshing list...', 'success');
-            
-            // Close modal
+            // Close modal immediately
             const modalElement = document.getElementById('applicationModal');
             const modal = bootstrap.Modal.getInstance(modalElement);
             if (modal) {
@@ -968,26 +966,24 @@ async function submitApplication(event) {
             // Reset form
             form.reset();
             
-            // Reload positions to show the new application
-            console.log('🔄 Reloading applications...');
-            await loadApplications();
-            console.log('✅ Applications reloaded successfully');
+            // Show success notification
+            showNotification('✅ Application submitted successfully! Reloading page...', 'success');
             
             // Clear current position
             window.currentPosition = null;
             
-            // Show success notification again after reload
+            // Reload the entire page after a short delay
             setTimeout(() => {
-                showNotification('Your application is now visible in the list!', 'success');
-            }, 500);
+                window.location.reload();
+            }, 1000);
         } else {
             throw new Error(result.error || 'Failed to submit application');
         }
     } catch (error) {
         console.error('❌ Error submitting application:', error);
         showNotification(error.message || 'Error submitting application', 'error');
-    } finally {
-        const submitBtn = document.getElementById('submitApplication');
+        
+        // Re-enable submit button on error
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Submit Application';
