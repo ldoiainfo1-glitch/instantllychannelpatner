@@ -927,11 +927,6 @@ async function submitApplication(event) {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
         
-        // Ensure email field is included (empty string if not provided)
-        if (!formData.has('email')) {
-            formData.append('email', '');
-        }
-        
         // Add additional fields that aren't in the form
         formData.append('positionTitle', window.currentPosition.title);
         

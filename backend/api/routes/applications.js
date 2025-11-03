@@ -156,7 +156,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
       applicantInfo: {
         name: name.trim(),
         phone: phone.trim(),
-        email: email || '', // Email from request body, or empty string if not provided
+        email: email ? email.trim() : '', // Email is optional - empty string if not provided
         photo: photoBase64,
         address: address ? address.trim() : '',
         companyName: companyName ? companyName.trim() : '',

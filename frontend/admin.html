@@ -211,7 +211,84 @@
         // Check admin access on page load
         document.addEventListener('DOMContentLoaded', function() {
             checkAdminAccess();
+            setupTabAutoReload();
         });
+
+        // Setup auto-reload when switching tabs
+        function setupTabAutoReload() {
+            const pendingTab = document.getElementById('pending-tab');
+            const approvedTab = document.getElementById('approved-tab');
+            const rejectedTab = document.getElementById('rejected-tab');
+
+            // Auto-reload when clicking Pending tab
+            pendingTab.addEventListener('click', async function() {
+                console.log('🔄 Reloading pending applications...');
+                try {
+                    // Reload dashboard stats first
+                    await refreshDashboardStats();
+                    
+                    // Then reload pending applications
+                    const pendingResponse = await fetch(`${API_BASE_URL}/admin/applications/pending`);
+                    const pendingApplications = await pendingResponse.json();
+                    displayPendingApplications(pendingApplications);
+                    document.getElementById('pendingCount').textContent = pendingApplications.length;
+                    console.log('✅ Pending applications reloaded');
+                } catch (error) {
+                    console.error('Error reloading pending applications:', error);
+                }
+            });
+
+            // Auto-reload when clicking Approved tab
+            approvedTab.addEventListener('click', async function() {
+                console.log('🔄 Reloading approved applications...');
+                try {
+                    // Reload dashboard stats first
+                    await refreshDashboardStats();
+                    
+                    // Then reload approved applications
+                    const approvedResponse = await fetch(`${API_BASE_URL}/admin/applications/approved`);
+                    const approvedApplications = await approvedResponse.json();
+                    displayApprovedApplications(approvedApplications);
+                    document.getElementById('approvedCount').textContent = approvedApplications.length;
+                    console.log('✅ Approved applications reloaded');
+                } catch (error) {
+                    console.error('Error reloading approved applications:', error);
+                }
+            });
+
+            // Auto-reload when clicking Rejected tab
+            rejectedTab.addEventListener('click', async function() {
+                console.log('🔄 Reloading rejected applications...');
+                try {
+                    // Reload dashboard stats first
+                    await refreshDashboardStats();
+                    
+                    // Then reload rejected applications
+                    const rejectedResponse = await fetch(`${API_BASE_URL}/admin/applications/rejected`);
+                    const rejectedApplications = await rejectedResponse.json();
+                    displayRejectedApplications(rejectedApplications);
+                    document.getElementById('rejectedCount').textContent = rejectedApplications.length;
+                    console.log('✅ Rejected applications reloaded');
+                } catch (error) {
+                    console.error('Error reloading rejected applications:', error);
+                }
+            });
+        }
+
+        // Refresh dashboard statistics
+        async function refreshDashboardStats() {
+            try {
+                const statsResponse = await fetch(`${API_BASE_URL}/admin/dashboard`);
+                const stats = await statsResponse.json();
+                
+                document.getElementById('totalPositions').textContent = stats.totalPositions || 0;
+                document.getElementById('availablePositions').textContent = stats.availablePositions || 0;
+                document.getElementById('pendingApplications').textContent = stats.pendingApplications || 0;
+                document.getElementById('approvedApplications').textContent = stats.approvedApplications || 0;
+            } catch (error) {
+                console.error('Error refreshing dashboard stats:', error);
+            }
+        }
 
         function checkAdminAccess() {
             const adminPassword = localStorage.getItem('adminPassword');
