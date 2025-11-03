@@ -835,15 +835,8 @@ router.post('/fix-credits-history', async (req, res) => {
     const fixed = [];
     
     for (const user of allUsers) {
-      // Skip if user already has credits history
-      if (user.creditsHistory && user.creditsHistory.length > 0) {
-        continue;
-      }
-      
-      // Initialize credits history array
-      if (!user.creditsHistory) {
-        user.creditsHistory = [];
-      }
+      // CLEAR existing credits history and rebuild from scratch
+      user.creditsHistory = [];
       
       // Add initial credits entry (1200)
       if (user.hasReceivedInitialCredits || user.credits >= 1200) {
@@ -858,7 +851,7 @@ router.post('/fix-credits-history', async (req, res) => {
       // Add referral bonus entries for each person they referred
       // Calculate how many referral bonuses they should have
       if (user.introducedCount > 0) {
-        // Find users who were introduced by this person
+        // Find users who were introduced by this person (using personCode)
         const referredUsers = await User.find({ introducedBy: user.personCode });
         
         for (const referredUser of referredUsers) {
@@ -878,6 +871,7 @@ router.post('/fix-credits-history', async (req, res) => {
         name: user.name,
         phone: user.phone,
         personCode: user.personCode,
+        introducedBy: user.introducedBy,
         credits: user.credits,
         historyEntries: user.creditsHistory.length,
         introducedCount: user.introducedCount
@@ -885,7 +879,7 @@ router.post('/fix-credits-history', async (req, res) => {
     }
     
     res.json({
-      message: 'Credits history backfilled',
+      message: 'Credits history rebuilt for all users',
       fixed: fixed.length,
       details: fixed
     });
