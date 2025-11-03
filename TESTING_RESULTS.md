@@ -88,10 +88,13 @@
    - Verify personCode uniqueness
 
 ## 🐛 Known Issues (If Any)
-- Need to verify if introducer credit update is working correctly
-  - Srinivas application had `introducedBy: "685607"` (Rajesh Modi)
-  - Rajesh Modi still shows 1200 credits (not 2400)
-  - May need to check if introducer lookup is finding the correct user
+- ✅ **FIXED**: Email auto-generation removed
+  - Previously: System auto-generated `phone@instantlycards.com`
+  - Now: Email is optional and comes from user input only
+- **Note about Muskaan**: 
+  - The account 8828188930 was originally "Muskaan Farooque shaikh"
+  - It has been fixed/overwritten with correct data for "Rajesh Modi"
+  - This is expected behavior when using the `/fix-user/:phone` endpoint
 
 ## 💾 Database State
 - **Server**: Running on localhost:5000
