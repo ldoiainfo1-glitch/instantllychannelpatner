@@ -1731,6 +1731,14 @@ function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
     
     console.log(`🔍 Cascading filter for ${inputId}: ${filteredData.length} options (from ${filteredPositions.length} matching positions)`);
     
+    // Important: If filtering resulted in matches but no unique values for this specific field,
+    // that means the data exists but this field might not be populated for those positions
+    // In that case, return all data as fallback
+    if (filteredPositions.length > 0 && filteredData.length === 0) {
+        console.log(`  ⚠️ ${filteredPositions.length} positions match parents but have no ${fieldName} data, showing all options`);
+        return allData;
+    }
+    
     return filteredData.length > 0 ? filteredData : allData;
 }
 
