@@ -295,26 +295,22 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       position.status = existingApplication.status === 'pending' ? 'Pending' : 
                        existingApplication.status === 'approved' ? 'Approved' : 'Verified';
       
-      // Get the introducer's count if someone referred this applicant
-      let referrerIntroducedCount = 0;
-      if (existingApplication.introducedBy && existingApplication.introducedBy !== 'Self') {
-        const User = require('../models/User');
-        const Application = require('../models/Application');
-        
-        // Try to find the referrer in Users collection first (if approved)
-        const referrerUser = await User.findOne({ personCode: existingApplication.introducedBy });
-        if (referrerUser) {
-          referrerIntroducedCount = referrerUser.introducedCount || 0;
-        } else {
-          // If not in Users (pending), count their applications in Application collection
-          const referrerApplication = await Application.findOne({ personCode: existingApplication.introducedBy });
-          if (referrerApplication) {
-            // Count how many people used this referrer's code
-            const referralCount = await Application.countDocuments({ 
-              introducedBy: existingApplication.introducedBy 
-            });
-            referrerIntroducedCount = referralCount;
-          }
+      // Get THIS applicant's introduced count (how many people they referred)
+      let applicantIntroducedCount = 0;
+      const User = require('../models/User');
+      
+      // Try to find the applicant in Users collection (if approved)
+      const applicantUser = await User.findOne({ phone: existingApplication.applicantInfo.phone });
+      if (applicantUser) {
+        applicantIntroducedCount = applicantUser.introducedCount || 0;
+      } else {
+        // If not in Users (pending), check their person code in Application
+        if (existingApplication.personCode) {
+          // Count how many people used THIS applicant's referral code
+          const referralCount = await Application.countDocuments({ 
+            introducedBy: existingApplication.personCode 
+          });
+          applicantIntroducedCount = referralCount;
         }
       }
       
@@ -328,7 +324,7 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
         businessName: existingApplication.applicantInfo.businessName,
         appliedDate: existingApplication.appliedDate,
         introducedBy: existingApplication.introducedBy || 'Self',
-        introducedCount: referrerIntroducedCount, // This is the referrer's count
+        introducedCount: applicantIntroducedCount, // How many people THIS person referred
         days: Math.floor((new Date() - new Date(existingApplication.appliedDate)) / (1000 * 60 * 60 * 24)),
         applicationId: existingApplication._id,
         isVerified: existingApplication.isVerified || false
