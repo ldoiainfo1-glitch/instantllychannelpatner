@@ -7,6 +7,8 @@ let locationData = {};
 let locationDataLoaded = false; // Track if location data is loaded
 let isAdmin = false;
 
+console.log('🚀 Instantly Channel Partner App - v1.0.2 - Frontend Ready');
+
 // Store auth token
 let authToken = localStorage.getItem('authToken');
 let currentUser = null;

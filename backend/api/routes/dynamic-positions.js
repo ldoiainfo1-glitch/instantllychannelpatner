@@ -300,6 +300,7 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       const User = require('../models/User');
       
       // Try to find the applicant in Users collection (if approved)
+      console.log(`🔍 Checking introducedCount for ${existingApplication.applicantInfo.name}`);
       const applicantUser = await User.findOne({ phone: existingApplication.applicantInfo.phone });
       if (applicantUser) {
         applicantIntroducedCount = applicantUser.introducedCount || 0;
