@@ -38,6 +38,28 @@ const userSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
+  creditsHistory: [{
+    type: {
+      type: String,
+      enum: ['initial', 'referral', 'purchase', 'deduction', 'bonus'],
+      required: true
+    },
+    amount: {
+      type: Number,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    referredUser: {
+      type: String  // Name or phone of referred user
+    },
+    date: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   hasReceivedInitialCredits: {
     type: Boolean,
     default: false

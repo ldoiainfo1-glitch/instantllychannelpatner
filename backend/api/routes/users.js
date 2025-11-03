@@ -176,6 +176,28 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
+// Get user credits history
+router.get('/:userId/credits-history', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).select('creditsHistory credits');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Sort credits history by date (newest first)
+    const history = user.creditsHistory || [];
+    history.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    res.json({ 
+      creditsHistory: history,
+      currentCredits: user.credits
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Process payment
 router.post('/:userId/process-payment', async (req, res) => {
   try {

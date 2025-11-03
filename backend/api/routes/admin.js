@@ -165,6 +165,16 @@ router.put('/applications/:id/approve', async (req, res) => {
       if (!user.hasReceivedInitialCredits) {
         user.credits = (user.credits || 0) + 1200; // CHANGED FROM 500 TO 1200
         user.hasReceivedInitialCredits = true;
+        
+        // Add to credits history
+        if (!user.creditsHistory) user.creditsHistory = [];
+        user.creditsHistory.push({
+          type: 'initial',
+          amount: 1200,
+          description: 'Welcome bonus on first approval',
+          date: new Date()
+        });
+        
         await user.save();
         console.log(`💰 Granted 1200 initial credits to ${user.name}. Total credits: ${user.credits}`);
       }
@@ -181,6 +191,17 @@ router.put('/applications/:id/approve', async (req, res) => {
         const creditsPerReferral = 1200;
         
         introducer.credits = (introducer.credits || 0) + creditsPerReferral;
+        
+        // Add to credits history
+        if (!introducer.creditsHistory) introducer.creditsHistory = [];
+        introducer.creditsHistory.push({
+          type: 'referral',
+          amount: creditsPerReferral,
+          description: `Referral bonus for ${application.applicantInfo.name}`,
+          referredUser: application.applicantInfo.name,
+          date: new Date()
+        });
+        
         console.log(`✅ Introducer ${introducer.name} earned ${creditsPerReferral} credits (Total referrals: ${introducer.introducedCount})`);
         
         await introducer.save();

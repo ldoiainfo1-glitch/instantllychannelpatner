@@ -555,6 +555,7 @@
             
             loadUserProfile();
             loadUserApplications();
+            loadCreditsHistory();
         });
 
         // Login form handler
@@ -718,58 +719,103 @@
             }
         }
 
-        // Display applications
-        function displayApplications(applications) {
-            const container = document.getElementById('applicationsList');
-            
-            if (applications.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-5">
-                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
-                        <h5 class="text-muted">No applications yet</h5>
-                        <p class="text-muted">Go to the positions page to apply for a position</p>
-                        <a href="index.html#positions" class="btn btn-primary">
-                            <i class="fas fa-search me-2"></i>Browse Positions
-                        </a>
-                    </div>
-                `;
-                return;
+        // Load credits history
+        async function loadCreditsHistory() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const user = data.user;
+                    displayCreditsHistory(user.creditsHistory || [], user.approvedDate || user.createdAt);
+                } else {
+                    console.error('Failed to load credits history');
+                }
+            } catch (error) {
+                console.error('Credits history load error:', error);
             }
+        }
 
-            container.innerHTML = applications.map(app => {
-                const statusClass = app.status === 'approved' ? 'success' : 
-                                  app.status === 'rejected' ? 'danger' : 'warning';
-                const statusIcon = app.status === 'approved' ? 'check-circle' : 
-                                 app.status === 'rejected' ? 'times-circle' : 'clock';
-
-                return `
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-md-8">
-                                    <h5 class="mb-2">${app.positionId.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ')}</h5>
-                                    <p class="mb-1">
-                                        <i class="fas fa-calendar me-2"></i>
-                                        Applied: ${new Date(app.appliedDate).toLocaleDateString()}
-                                    </p>
-                                    ${app.approvedDate ? `
-                                        <p class="mb-0">
-                                            <i class="fas fa-check me-2"></i>
-                                            Approved: ${new Date(app.approvedDate).toLocaleDateString()}
-                                        </p>
-                                    ` : ''}
+        // Display credits history
+        function displayCreditsHistory(history, userCreatedDate) {
+            const container = document.getElementById('creditsHistory');
+            
+            if (!history || history.length === 0) {
+                // Show default initial credits message
+                container.innerHTML = `
+                    <div class="list-group">
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-plus-circle text-success me-2"></i>
+                                    <strong>Initial Credits Granted</strong>
+                                    <br>
+                                    <small class="text-muted">Welcome bonus on first approval</small>
                                 </div>
-                                <div class="col-md-4 text-end">
-                                    <span class="badge bg-${statusClass} fs-6">
-                                        <i class="fas fa-${statusIcon} me-1"></i>
-                                        ${app.status.toUpperCase()}
-                                    </span>
+                                <div class="text-end">
+                                    <h5 class="mb-0 text-success">+1200</h5>
+                                    <small class="text-muted">${new Date(userCreatedDate).toLocaleDateString()}</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 `;
-            }).join('');
+                return;
+            }
+
+            // Sort by date (newest first)
+            const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            container.innerHTML = `
+                <div class="list-group">
+                    ${sortedHistory.map(entry => {
+                        const typeIcons = {
+                            'initial': 'plus-circle',
+                            'referral': 'users',
+                            'purchase': 'shopping-cart',
+                            'deduction': 'minus-circle',
+                            'bonus': 'gift'
+                        };
+                        
+                        const typeColors = {
+                            'initial': 'success',
+                            'referral': 'info',
+                            'purchase': 'primary',
+                            'deduction': 'danger',
+                            'bonus': 'warning'
+                        };
+                        
+                        const icon = typeIcons[entry.type] || 'circle';
+                        const color = typeColors[entry.type] || 'secondary';
+                        const sign = entry.amount > 0 ? '+' : '';
+                        
+                        return `
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-${icon} text-${color} me-2"></i>
+                                        <strong>${entry.description}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            ${entry.type === 'referral' && entry.referredUser ? 
+                                                `Referred: ${entry.referredUser}` : 
+                                                entry.type.charAt(0).toUpperCase() + entry.type.slice(1) + ' credits'}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="mb-0 text-${color}">${sign}${entry.amount}</h5>
+                                        <small class="text-muted">${new Date(entry.date).toLocaleDateString()}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
         }
 
         // Toggle edit mode
