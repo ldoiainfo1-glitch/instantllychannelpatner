@@ -977,10 +977,10 @@ async function submitApplication(event) {
             // Clear current position
             window.currentPosition = null;
             
-            // Reload the entire page after a short delay
+            // Force reload the entire page after a short delay (hard reload to bypass cache)
             setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+                window.location.reload(true);
+            }, 1500);
         } else {
             throw new Error(result.error || 'Failed to submit application');
         }
