@@ -825,4 +825,74 @@ router.post('/fix-introduced-counts', async (req, res) => {
   }
 });
 
+// FIX ENDPOINT: Backfill credits history for existing users
+router.post('/fix-credits-history', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Get all users
+    const allUsers = await User.find({});
+    const fixed = [];
+    
+    for (const user of allUsers) {
+      // Skip if user already has credits history
+      if (user.creditsHistory && user.creditsHistory.length > 0) {
+        continue;
+      }
+      
+      // Initialize credits history array
+      if (!user.creditsHistory) {
+        user.creditsHistory = [];
+      }
+      
+      // Add initial credits entry (1200)
+      if (user.hasReceivedInitialCredits || user.credits >= 1200) {
+        user.creditsHistory.push({
+          type: 'initial',
+          amount: 1200,
+          description: 'Welcome bonus on first approval',
+          date: user.approvedDate || user.createdAt || new Date()
+        });
+      }
+      
+      // Add referral bonus entries for each person they referred
+      // Calculate how many referral bonuses they should have
+      if (user.introducedCount > 0) {
+        // Find users who were introduced by this person
+        const referredUsers = await User.find({ introducedBy: user.personCode });
+        
+        for (const referredUser of referredUsers) {
+          user.creditsHistory.push({
+            type: 'referral',
+            amount: 1200,
+            description: `Referral bonus for ${referredUser.name}`,
+            referredUser: referredUser.name,
+            date: referredUser.approvedDate || referredUser.createdAt || new Date()
+          });
+        }
+      }
+      
+      await user.save();
+      
+      fixed.push({
+        name: user.name,
+        phone: user.phone,
+        personCode: user.personCode,
+        credits: user.credits,
+        historyEntries: user.creditsHistory.length,
+        introducedCount: user.introducedCount
+      });
+    }
+    
+    res.json({
+      message: 'Credits history backfilled',
+      fixed: fixed.length,
+      details: fixed
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
