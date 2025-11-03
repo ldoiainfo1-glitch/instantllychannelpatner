@@ -260,6 +260,37 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get user's own applications (requires authentication)
+// MUST be before /:id route to avoid matching /me as an ID
+router.get('/me', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+
+    if (!token) {
+      return res.status(401).json({ error: 'No token provided' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const User = require('../models/User');
+    const user = await User.findById(decoded.userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Find all applications by this user's phone number
+    const applications = await Application.find({ 
+      'applicantInfo.phone': user.phone 
+    }).sort({ appliedDate: -1 });
+
+    console.log(`✅ Found ${applications.length} applications for user ${user.phone}`);
+    res.json(applications);
+  } catch (error) {
+    console.error('Applications fetch error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get application by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -406,35 +437,6 @@ router.put('/:id/payment', async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({ error: error.message });
-  }
-});
-
-// Get user's own applications (requires authentication)
-router.get('/me', async (req, res) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-
-    if (!token) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const User = require('../models/User');
-    const user = await User.findById(decoded.userId);
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Find all applications by this user's phone number
-    const applications = await Application.find({ 
-      'applicantInfo.phone': user.phone 
-    }).sort({ appliedDate: -1 });
-
-    res.json(applications);
-  } catch (error) {
-    console.error('Applications fetch error:', error);
-    res.status(500).json({ error: error.message });
   }
 });
 

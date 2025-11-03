@@ -707,7 +707,8 @@
         // Load user applications
         async function loadUserApplications() {
             try {
-                const response = await fetch(`${API_BASE_URL}/applications`, {
+                // Use /me endpoint to get only current user's applications
+                const response = await fetch(`${API_BASE_URL}/applications/me`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
