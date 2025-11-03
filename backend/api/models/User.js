@@ -51,8 +51,7 @@ const userSchema = new mongoose.Schema({
     default: 0
   },
   positionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Position'
+    type: String  // Changed from ObjectId to String for dynamic position system
   },
   appliedDate: {
     type: Date

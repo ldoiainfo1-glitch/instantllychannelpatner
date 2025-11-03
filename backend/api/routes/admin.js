@@ -93,23 +93,35 @@ router.put('/applications/:id/approve', async (req, res) => {
     let user = await User.findOne({ phone: application.applicantInfo.phone });
     
     if (!user) {
-      // Generate personCode if not already present in application
+      // Generate UNIQUE personCode if not already present in application
       let personCode = application.personCode;
       if (!personCode) {
         // Generate unique person code: YYYY-MMDD-XXXX (XXXX is 4-digit random)
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const random = String(Math.floor(1000 + Math.random() * 9000)); // 4-digit number
-        personCode = `${year}-${month}${day}-${random}`;
+        // Keep trying until we get a unique one
+        let isUnique = false;
+        while (!isUnique) {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          const random = String(Math.floor(1000 + Math.random() * 9000)); // 4-digit number
+          personCode = `${year}-${month}${day}-${random}`;
+          
+          // Check if this personCode already exists
+          const existingUser = await User.findOne({ personCode });
+          const existingApp = await Application.findOne({ personCode });
+          
+          if (!existingUser && !existingApp) {
+            isUnique = true;
+          }
+        }
         
         // Save personCode to application
         application.personCode = personCode;
-        console.log(`🆔 Generated new personCode: ${personCode}`);
+        console.log(`🆔 Generated new UNIQUE personCode: ${personCode}`);
       }
       
-      // Generate password: First 4 letters of name in capital
+      // Generate password: First 4 letters of name in CAPITAL
       const nameForPassword = application.applicantInfo.name.replace(/\s+/g, ''); // Remove spaces
       const defaultPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X'); // Ensure at least 4 chars
       
@@ -126,14 +138,14 @@ router.put('/applications/:id/approve', async (req, res) => {
         email: application.applicantInfo.email || '',
         personCode: personCode,
         loginId: application.applicantInfo.phone, // Login ID is phone number
-        password: defaultPassword, // First 4 letters of name in CAPITAL
+        password: defaultPassword, // First 4 letters of name in CAPITAL (e.g., "RAJE" for Rajesh)
         photo: application.applicantInfo.photo,
         introducedBy: application.introducedBy,
         positionId: application.positionId,
         appliedDate: application.appliedDate,
         approvedDate: new Date(),
-        credits: 0,
-        hasReceivedInitialCredits: false,
+        credits: 1200, // START WITH 1200 CREDITS (not 0)
+        hasReceivedInitialCredits: true, // Mark as already received
         introducedCount: 0,
         isVerified: false,
         isFirstLogin: true
@@ -145,35 +157,31 @@ router.put('/applications/:id/approve', async (req, res) => {
         personCode: personCode,
         loginId: application.applicantInfo.phone,
         defaultPassword: defaultPassword,
-        passwordLength: defaultPassword.length
+        passwordLength: defaultPassword.length,
+        initialCredits: 1200
       });
-    }
-
-    // Grant 500 credits on first approval if not already received
-    if (!user.hasReceivedInitialCredits) {
-      user.credits = (user.credits || 0) + 500;
-      user.hasReceivedInitialCredits = true;
-      await user.save();
-      console.log(`💰 Granted 500 initial credits to ${user.name}. Total credits: ${user.credits}`);
+    } else {
+      // User already exists - grant 1200 credits on first approval if not already received
+      if (!user.hasReceivedInitialCredits) {
+        user.credits = (user.credits || 0) + 1200; // CHANGED FROM 500 TO 1200
+        user.hasReceivedInitialCredits = true;
+        await user.save();
+        console.log(`💰 Granted 1200 initial credits to ${user.name}. Total credits: ${user.credits}`);
+      }
     }
     
-    // Update introduced count and credits for introducer
+    // Update introduced count and credits for introducer (CHANGED TO 1200 CREDITS)
     if (application.introducedBy && application.introducedBy !== 'Self') {
       const introducer = await User.findOne({ personCode: application.introducedBy });
       if (introducer) {
         // Increment introduced count (always, no limit)
         introducer.introducedCount = (introducer.introducedCount || 0) + 1;
         
-        // Add 100 credits only for first 20 referrals
-        const maxPaidReferrals = 20;
-        const creditsPerReferral = 100;
+        // Add 1200 credits for EACH referral (CHANGED FROM 100 TO 1200, NO LIMIT)
+        const creditsPerReferral = 1200;
         
-        if (introducer.introducedCount <= maxPaidReferrals) {
-          introducer.credits = (introducer.credits || 0) + creditsPerReferral;
-          console.log(`✅ Introducer ${introducer.name} earned ${creditsPerReferral} credits (${introducer.introducedCount}/${maxPaidReferrals})`);
-        } else {
-          console.log(`✅ Introducer ${introducer.name} count increased (${introducer.introducedCount}) - max credits reached`);
-        }
+        introducer.credits = (introducer.credits || 0) + creditsPerReferral;
+        console.log(`✅ Introducer ${introducer.name} earned ${creditsPerReferral} credits (Total referrals: ${introducer.introducedCount})`);
         
         await introducer.save();
       } else {
@@ -191,9 +199,9 @@ router.put('/applications/:id/approve', async (req, res) => {
     console.log(`✅ Application ${application._id} approved successfully`);
     
     res.json({
-      message: 'Application approved successfully! User has been granted 500 credits.',
+      message: 'Application approved successfully! User has been granted 1200 credits.',
       application,
-      creditsGranted: !user.hasReceivedInitialCredits ? 500 : 0,
+      creditsGranted: 1200,
       userCredits: user.credits
     });
   } catch (error) {
@@ -575,6 +583,168 @@ router.post('/test-user/:phone', async (req, res) => {
     }
 
     res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// FIX ENDPOINT: Create user accounts for approved applications that don't have user accounts
+router.post('/fix-approved-without-users', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Find all approved applications
+    const approvedApplications = await Application.find({ status: 'approved' });
+    
+    const fixed = [];
+    const skipped = [];
+    const errors = [];
+    
+    for (const application of approvedApplications) {
+      try {
+        // Check if user already exists
+        const existingUser = await User.findOne({ phone: application.applicantInfo.phone });
+        
+        if (existingUser) {
+          skipped.push({
+            name: application.applicantInfo.name,
+            phone: application.applicantInfo.phone,
+            reason: 'User already exists'
+          });
+          continue;
+        }
+        
+        // Generate UNIQUE personCode
+        let personCode = application.personCode;
+        if (!personCode) {
+          let isUnique = false;
+          while (!isUnique) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const random = String(Math.floor(1000 + Math.random() * 9000));
+            personCode = `${year}-${month}${day}-${random}`;
+            
+            const existingUser = await User.findOne({ personCode });
+            const existingApp = await Application.findOne({ personCode });
+            
+            if (!existingUser && !existingApp) {
+              isUnique = true;
+            }
+          }
+          application.personCode = personCode;
+          await application.save();
+        }
+        
+        // Generate password: First 4 letters of name in CAPITAL
+        const nameForPassword = application.applicantInfo.name.replace(/\s+/g, '');
+        const defaultPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
+        
+        // Create user account
+        const user = new User({
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          email: application.applicantInfo.email || '',
+          personCode: personCode,
+          loginId: application.applicantInfo.phone,
+          password: defaultPassword,
+          photo: application.applicantInfo.photo,
+          introducedBy: application.introducedBy,
+          positionId: application.positionId,
+          appliedDate: application.appliedDate,
+          approvedDate: application.approvedDate || new Date(),
+          credits: 1200, // 1200 credits for all users
+          hasReceivedInitialCredits: true,
+          introducedCount: 0,
+          isVerified: false,
+          isFirstLogin: true
+        });
+        
+        await user.save();
+        
+        // Update application with userId
+        application.userId = user._id;
+        await application.save();
+        
+        fixed.push({
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          personCode: personCode,
+          loginId: application.applicantInfo.phone,
+          password: defaultPassword,
+          credits: 1200
+        });
+        
+      } catch (error) {
+        errors.push({
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          error: error.message
+        });
+      }
+    }
+    
+    res.json({
+      message: 'Fix completed',
+      fixed: fixed.length,
+      skipped: skipped.length,
+      errors: errors.length,
+      details: {
+        fixed,
+        skipped,
+        errors
+      }
+    });
+    
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// FIX ENDPOINT: Update specific user - fix name and credits
+router.post('/fix-user/:phone', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const { phone } = req.params;
+    const { name, password, credits } = req.body;
+    
+    const user = await User.findOne({ phone });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    const oldData = {
+      name: user.name,
+      credits: user.credits
+    };
+    
+    // Update fields if provided
+    if (name) user.name = name;
+    if (password) user.password = password; // Will be hashed by pre-save hook
+    if (credits !== undefined) user.credits = credits;
+    
+    await user.save();
+    
+    res.json({
+      message: 'User updated successfully',
+      oldData,
+      newData: {
+        name: user.name,
+        phone: user.phone,
+        personCode: user.personCode,
+        credits: user.credits,
+        loginId: user.loginId,
+        passwordUpdated: !!password
+      },
+      loginCredentials: {
+        loginId: user.phone,
+        password: password || '(not changed)',
+        credits: user.credits
+      }
+    });
+    
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
