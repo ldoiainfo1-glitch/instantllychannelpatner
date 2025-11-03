@@ -162,12 +162,14 @@ router.get('/profile', async (req, res) => {
         phone: user.phone,
         email: user.email,
         credits: user.credits,
+        creditsHistory: user.creditsHistory || [],
         hasReceivedInitialCredits: user.hasReceivedInitialCredits,
         introducedBy: user.introducedBy,
         introducedCount: user.introducedCount,
         photo: user.photo,
         documents: user.documents,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        approvedDate: user.approvedDate
       }
     });
   } catch (error) {

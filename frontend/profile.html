@@ -632,31 +632,45 @@
         // Display user profile
         function displayUserProfile(user) {
             // Header
-            document.getElementById('userName').textContent = user.name;
-            document.getElementById('userPhone').textContent = user.phone;
-            document.getElementById('userEmail').textContent = user.email || 'Not provided';
-            document.getElementById('userCredits').textContent = user.credits || 0;
+            const userNameEl = document.getElementById('userName');
+            const userPhoneEl = document.getElementById('userPhone');
+            const userEmailEl = document.getElementById('userEmail');
+            const userCreditsEl = document.getElementById('userCredits');
+            
+            if (userNameEl) userNameEl.textContent = user.name;
+            if (userPhoneEl) userPhoneEl.textContent = user.phone;
+            if (userEmailEl) userEmailEl.textContent = user.email || 'Not provided';
+            if (userCreditsEl) userCreditsEl.textContent = user.credits || 0;
 
             // Stats
-            document.getElementById('introducedCount').textContent = user.introducedCount || 0;
+            const introducedCountEl = document.getElementById('introducedCount');
+            if (introducedCountEl) introducedCountEl.textContent = user.introducedCount || 0;
             
             // Profile photo
             const profilePhoto = document.getElementById('profilePhoto');
-            if (user.photo) {
-                profilePhoto.src = user.photo;
-            } else {
-                profilePhoto.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNzUiIHI9Ijc1IiBmaWxsPSIjZTJlOGYwIi8+Cjwvc3ZnPg==';
+            if (profilePhoto) {
+                if (user.photo) {
+                    profilePhoto.src = user.photo;
+                } else {
+                    profilePhoto.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNzUiIHI9Ijc1IiBmaWxsPSIjZTJlOGYwIi8+Cjwvc3ZnPg==';
+                }
             }
 
             // Form fields
-            document.getElementById('editName').value = user.name;
-            document.getElementById('editPhone').value = user.phone;
-            document.getElementById('editEmail').value = user.email || '';
-            document.getElementById('editIntroducedBy').value = user.introducedBy || 'Self';
+            const editNameEl = document.getElementById('editName');
+            const editPhoneEl = document.getElementById('editPhone');
+            const editEmailEl = document.getElementById('editEmail');
+            const editIntroducedByEl = document.getElementById('editIntroducedBy');
+            
+            if (editNameEl) editNameEl.value = user.name;
+            if (editPhoneEl) editPhoneEl.value = user.phone;
+            if (editEmailEl) editEmailEl.value = user.email || '';
+            if (editIntroducedByEl) editIntroducedByEl.value = user.introducedBy || 'Self';
 
             // Credits date
-            if (user.createdAt) {
-                document.getElementById('creditsDate').textContent = new Date(user.createdAt).toLocaleDateString();
+            const creditsDateEl = document.getElementById('creditsDate');
+            if (creditsDateEl && user.createdAt) {
+                creditsDateEl.textContent = new Date(user.createdAt).toLocaleDateString();
             }
             
             // Load documents if available
@@ -731,6 +745,8 @@
                 if (response.ok) {
                     const data = await response.json();
                     const user = data.user;
+                    console.log('📊 Credits History:', user.creditsHistory);
+                    console.log('💰 Total Credits:', user.credits);
                     displayCreditsHistory(user.creditsHistory || [], user.approvedDate || user.createdAt);
                 } else {
                     console.error('Failed to load credits history');
@@ -816,6 +832,65 @@
                     }).join('')}
                 </div>
             `;
+        }
+
+        // Display applications
+        function displayApplications(applications) {
+            const container = document.getElementById('applicationsList');
+            
+            if (!container) {
+                console.error('applicationsList container not found');
+                return;
+            }
+            
+            if (applications.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No applications yet</h5>
+                        <p class="text-muted">Go to the positions page to apply for a position</p>
+                        <a href="index.html#positions" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Browse Positions
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = applications.map(app => {
+                const statusClass = app.status === 'approved' ? 'success' : 
+                                  app.status === 'rejected' ? 'danger' : 'warning';
+                const statusIcon = app.status === 'approved' ? 'check-circle' : 
+                                 app.status === 'rejected' ? 'times-circle' : 'clock';
+
+                return `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-8">
+                                    <h5 class="mb-2">${app.positionId.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' - ')}</h5>
+                                    <p class="mb-1">
+                                        <i class="fas fa-calendar me-2"></i>
+                                        Applied: ${new Date(app.appliedDate).toLocaleDateString()}
+                                    </p>
+                                    ${app.approvedDate ? `
+                                        <p class="mb-0">
+                                            <i class="fas fa-check me-2"></i>
+                                            Approved: ${new Date(app.approvedDate).toLocaleDateString()}
+                                        </p>
+                                    ` : ''}
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <span class="badge bg-${statusClass} fs-6">
+                                        <i class="fas fa-${statusIcon} me-1"></i>
+                                        ${app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // Toggle edit mode
