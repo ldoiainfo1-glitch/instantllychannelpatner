@@ -49,7 +49,8 @@ router.post('/', upload.single('photo'), async (req, res) => {
     const { 
       positionId, 
       name, 
-      phone, 
+      phone,
+      email, 
       address, 
       introducedBy, 
       companyName, 
