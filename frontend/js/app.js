@@ -654,10 +654,10 @@ function createPositionRow(position) {
         ? position.applicantDetails.phone 
         : '-';
     
-    // Handle introduced count - show just the number of people the referrer has introduced
-    const introducedBy = position.applicantDetails 
-        ? position.applicantDetails.introducedCount || 0
-        : '-';
+    // Handle introduced by - show who referred this person (their referrer's name/code)
+    const introducedBy = position.applicantDetails && position.applicantDetails.introducedBy
+        ? position.applicantDetails.introducedBy
+        : (position.applicantDetails ? 'Self' : '-');
     
     // Handle days since application
     const days = position.applicantDetails && position.applicantDetails.days !== undefined 
