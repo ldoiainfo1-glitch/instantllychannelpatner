@@ -280,33 +280,45 @@
         <div class="tab-content">
             <!-- All Ads Tab -->
             <div class="tab-pane fade show active" id="allAdsTab">
-                <div class="card">
-                    <div class="card-header text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">All Advertisements</h5>
-                        <button class="btn btn-outline-light btn-sm" onclick="loadAllAds()">
-                            <i class="fas fa-sync-alt me-2"></i>Refresh
+                <div class="card border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card-header bg-transparent text-white border-0">
+                        <h5 class="mb-0 d-flex align-items-center">
+                            <i class="fas fa-bullhorn me-3"></i>
+                            Advertisements Management
+                        </h5>
+                        <p class="mb-0 mt-1 small">Manage all advertisements for InstantllyCards mobile app</p>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h6 class="mb-0 text-dark fw-semibold">All Advertisements</h6>
+                        <button class="btn btn-sm text-white" 
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;"
+                                onclick="loadAllAds()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
                         </button>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle">
+                            <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Sr</th>
-                                        <th>Images</th>
-                                        <th>Title</th>
-                                        <th>Uploader</th>
-                                        <th>Phone</th>
-                                        <th>Schedule</th>
-                                        <th>Status</th>
-                                        <th>Priority</th>
-                                        <th>Actions</th>
+                                        <th class="px-3 py-3">Sr</th>
+                                        <th class="px-3 py-3">Images</th>
+                                        <th class="px-3 py-3">Title</th>
+                                        <th class="px-3 py-3">Uploader</th>
+                                        <th class="px-3 py-3">Phone</th>
+                                        <th class="px-3 py-3">Schedule</th>
+                                        <th class="px-3 py-3">Status</th>
+                                        <th class="px-3 py-3">Priority</th>
+                                        <th class="px-3 py-3">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="allAdsTableBody">
                                     <tr>
                                         <td colspan="9" class="text-center py-5">
-                                            <div class="spinner-border text-primary" role="status">
+                                            <div class="spinner-border" style="color: #667eea;" role="status">
                                                 <span class="visually-hidden">Loading...</span>
                                             </div>
                                             <p class="mt-3 text-muted">Loading advertisements...</p>
@@ -321,28 +333,38 @@
 
             <!-- Pending Ads Tab -->
             <div class="tab-pane fade" id="pendingTab">
-                <div class="card">
-                    <div class="card-header text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="fas fa-exclamation-triangle me-2"></i>Pending Approval
+                <div class="card border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card-header bg-transparent text-white border-0">
+                        <h5 class="mb-0 d-flex align-items-center">
+                            <i class="fas fa-clock me-3"></i>
+                            Pending Approval
                         </h5>
-                        <button class="btn btn-outline-light btn-sm" onclick="loadPendingAds()">
-                            <i class="fas fa-sync-alt me-2"></i>Refresh
+                        <p class="mb-0 mt-1 small">Review and approve channel partner advertisements</p>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h6 class="mb-0 text-dark fw-semibold">Advertisements Awaiting Approval</h6>
+                        <button class="btn btn-sm text-white"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;" 
+                                onclick="loadPendingAds()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
                         </button>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle">
+                            <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Sr</th>
-                                        <th>Images</th>
-                                        <th>Title</th>
-                                        <th>Uploader</th>
-                                        <th>Phone</th>
-                                        <th>Schedule</th>
-                                        <th>Uploaded</th>
-                                        <th>Actions</th>
+                                        <th class="px-3 py-3">Sr</th>
+                                        <th class="px-3 py-3">Images</th>
+                                        <th class="px-3 py-3">Title</th>
+                                        <th class="px-3 py-3">Uploader</th>
+                                        <th class="px-3 py-3">Phone</th>
+                                        <th class="px-3 py-3">Schedule</th>
+                                        <th class="px-3 py-3">Uploaded</th>
+                                        <th class="px-3 py-3">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="pendingAdsTableBody">
@@ -361,66 +383,76 @@
 
             <!-- Create Ad Tab -->
             <div class="tab-pane fade" id="createTab">
-                <div class="card">
-                    <div class="card-header text-white">
-                        <h5 class="mb-0">
-                            <i class="fas fa-plus-circle me-2"></i>Create New Advertisement
+                <div class="card border-0" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="card-header bg-transparent text-white border-0">
+                        <h5 class="mb-0 d-flex align-items-center">
+                            <i class="fas fa-plus-circle me-3"></i>
+                            Create New Advertisement
                         </h5>
                     </div>
-                    <div class="card-body">
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-body p-4">
                         <form id="createAdForm">
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-dark fw-semibold">
                                         Ad Title <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" class="form-control" id="adTitle" required>
+                                    <input type="text" class="form-control form-control-lg" id="adTitle" required 
+                                           placeholder="Enter advertisement title">
                                 </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">
+                                <div class="col-md-6">
+                                    <label class="form-label text-dark fw-semibold">
                                         Contact Phone <span class="text-danger">*</span>
                                     </label>
-                                    <input type="tel" class="form-control" id="phoneNumber" required>
+                                    <input type="tel" class="form-control form-control-lg" id="phoneNumber" required
+                                           placeholder="Enter contact number">
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">
+                                <div class="col-md-4">
+                                    <label class="form-label text-dark fw-semibold">
                                         Start Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control" id="startDate" required>
+                                    <input type="date" class="form-control form-control-lg" id="startDate" required>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">
+                                <div class="col-md-4">
+                                    <label class="form-label text-dark fw-semibold">
                                         End Date <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control" id="endDate" required>
+                                    <input type="date" class="form-control form-control-lg" id="endDate" required>
                                 </div>
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label fw-bold">
+                                <div class="col-md-4">
+                                    <label class="form-label text-dark fw-semibold">
                                         Priority (1-10)
                                     </label>
-                                    <input type="number" class="form-control" id="priority" min="1" max="10" value="5">
+                                    <input type="number" class="form-control form-control-lg" id="priority" min="1" max="10" value="5">
                                 </div>
-                                <div class="col-12 mb-3">
-                                    <label class="form-label fw-bold">
+                                <div class="col-12">
+                                    <label class="form-label text-dark fw-semibold">
                                         Images <span class="text-danger">*</span>
-                                        <small class="text-muted">(Bottom Banner: Required, Fullscreen: Optional)</small>
+                                        <span class="text-muted fw-normal">(Bottom Banner: Required, Fullscreen: Optional)</span>
                                     </label>
-                                    <div class="upload-area" id="uploadArea">
-                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                    <div class="upload-area" id="uploadArea" style="border-color: #667eea;">
+                                        <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #667eea;"></i>
                                         <h5>Drag & Drop Images Here</h5>
                                         <p class="text-muted mb-3">or click to browse (Max 2 images)</p>
                                         <input type="file" id="imageInput" accept="image/*" multiple hidden>
-                                        <button type="button" class="btn btn-primary" onclick="document.getElementById('imageInput').click()">
+                                        <button type="button" class="btn btn-lg text-white" 
+                                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;"
+                                                onclick="document.getElementById('imageInput').click()">
                                             <i class="fas fa-folder-open me-2"></i>Browse Files
                                         </button>
                                     </div>
                                     <div id="imagePreviewContainer" class="mt-3"></div>
                                 </div>
-                                <div class="col-12">
-                                    <button type="submit" class="btn btn-success btn-lg">
+                                <div class="col-12 mt-4">
+                                    <button type="submit" class="btn btn-lg text-white px-5" 
+                                            style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border: none;">
                                         <i class="fas fa-paper-plane me-2"></i>Create Advertisement
                                     </button>
-                                    <button type="reset" class="btn btn-secondary btn-lg ms-2">
+                                    <button type="button" class="btn btn-secondary btn-lg px-5 ms-2" 
+                                            onclick="document.getElementById('createAdForm').reset(); document.getElementById('imagePreviewContainer').innerHTML = ''; selectedFiles = [];">
                                         <i class="fas fa-times me-2"></i>Clear Form
                                     </button>
                                 </div>
