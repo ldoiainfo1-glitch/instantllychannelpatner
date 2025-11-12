@@ -352,17 +352,17 @@
         });
 
         function checkAuth() {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken');
             if (!token) {
-                window.location.href = 'index.html';
+                window.location.href = 'profile.html';
                 return;
             }
         }
 
         function logout() {
-            localStorage.removeItem('token');
+            localStorage.removeItem('authToken');
             localStorage.removeItem('user');
-            window.location.href = 'index.html';
+            window.location.href = 'profile.html';
         }
 
         function setupUploadArea() {
@@ -430,12 +430,33 @@
             displayImagePreviews();
         }
 
-        function setupFormSubmit() {
-            document.getElementById('adUploadForm').addEventListener('submit', async (e) => {
+        async function setupFormSubmit() {
+            const form = document.getElementById('adUploadForm');
+            
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                await uploadAd();
-            });
-        }
+
+                if (selectedImages.length === 0) {
+                    alert('Please select at least one image');
+                    return;
+                }
+
+                const submitBtn = form.querySelector('button[type="submit"]');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+
+                const formData = new FormData();
+                formData.append('title', document.getElementById('adTitle').value);
+                formData.append('phoneNumber', document.getElementById('phoneNumber').value);
+                formData.append('startDate', document.getElementById('startDate').value);
+                formData.append('endDate', document.getElementById('endDate').value);
+
+                selectedImages.forEach(image => {
+                    formData.append('images', image);
+                });
+
+                const token = localStorage.getItem('authToken');
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
 
         async function uploadAd() {
             const title = document.getElementById('adTitle').value.trim();
@@ -500,7 +521,7 @@
         }
 
         async function loadMyAds() {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken');
             const tableBody = document.getElementById('adsTableBody');
             const emptyState = document.getElementById('emptyState');
 
@@ -609,7 +630,7 @@
                 return;
             }
 
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken');
 
             try {
                 const response = await fetch(`${API_BASE_URL}/channel-partner/ads/${adId}`, {
