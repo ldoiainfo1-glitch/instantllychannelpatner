@@ -781,14 +781,31 @@
                     <tr>
                         <td>${index + 1}</td>
                         <td>
-                            ${ad.bottomImageId ? `<img src="${getImageUrl(ad.bottomImageId)}" 
-                                class="ad-image" onclick="showImageModal('${ad.bottomImageId}')" 
-                                title="Bottom Banner">` : ''}
-                            ${ad.fullscreenImageId ? `<img src="${getImageUrl(ad.fullscreenImageId)}" 
-                                class="ad-image ms-1" onclick="showImageModal('${ad.fullscreenImageId}')" 
-                                title="Fullscreen">` : ''}
+                            <div class="d-flex flex-column gap-2">
+                                <div>
+                                    <small class="text-muted d-block">Bottom</small>
+                                    <img src="${getImageUrl(ad._id, 'bottom')}" 
+                                        class="ad-image" onclick="showImageModal('${ad._id}', 'bottom')" 
+                                        title="Bottom Banner"
+                                        onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22><rect fill=%22%23ddd%22 width=%22100%22 height=%2280%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22>No Image</text></svg>'">
+                                </div>
+                                ${ad.fullscreenImageGridFS ? `
+                                    <div>
+                                        <small class="text-muted d-block">Full</small>
+                                        <img src="${getImageUrl(ad._id, 'fullscreen')}" 
+                                            class="ad-image" onclick="showImageModal('${ad._id}', 'fullscreen')" 
+                                            title="Fullscreen"
+                                            onerror="this.style.display='none'">
+                                    </div>
+                                ` : ''}
+                            </div>
                         </td>
-                        <td>${ad.title}</td>
+                        <td>
+                            <div>${ad.title}</div>
+                            ${ad.fullscreenImageGridFS ? 
+                                '<span class="badge bg-primary mt-1">With Fullscreen</span>' : 
+                                '<span class="badge bg-secondary mt-1">Banner Only</span>'}
+                        </td>
                         <td>
                             <div>${ad.uploaderName || 'Admin'}</div>
                             <small class="text-muted">${ad.uploadedBy || 'admin'}</small>
@@ -807,14 +824,14 @@
                         <td>${ad.priority || 5}</td>
                         <td class="action-buttons">
                             ${ad.status === 'pending' ? `
-                                <button class="btn btn-success btn-sm" onclick="showApproveModal('${ad.id}', '${ad.title}')">
+                                <button class="btn btn-success btn-sm" onclick="showApproveModal('${ad._id}', '${ad.title.replace(/'/g, "\\'")}')">
                                     <i class="fas fa-check"></i>
                                 </button>
-                                <button class="btn btn-danger btn-sm" onclick="showRejectModal('${ad.id}', '${ad.title}')">
+                                <button class="btn btn-danger btn-sm" onclick="showRejectModal('${ad._id}', '${ad.title.replace(/'/g, "\\'")}')">
                                     <i class="fas fa-times"></i>
                                 </button>
                             ` : ''}
-                            <button class="btn btn-danger btn-sm" onclick="showDeleteModal('${ad.id}', '${ad.title}')">
+                            <button class="btn btn-danger btn-sm" onclick="showDeleteModal('${ad._id}', '${ad.title.replace(/'/g, "\\'")}')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
@@ -843,14 +860,31 @@
                 <tr>
                     <td>${index + 1}</td>
                     <td>
-                        ${ad.bottomImageId ? `<img src="${getImageUrl(ad.bottomImageId)}" 
-                            class="ad-image" onclick="showImageModal('${ad.bottomImageId}')" 
-                            title="Bottom Banner">` : ''}
-                        ${ad.fullscreenImageId ? `<img src="${getImageUrl(ad.fullscreenImageId)}" 
-                            class="ad-image ms-1" onclick="showImageModal('${ad.fullscreenImageId}')" 
-                            title="Fullscreen">` : ''}
+                        <div class="d-flex flex-column gap-2">
+                            <div>
+                                <small class="text-muted d-block">Bottom</small>
+                                <img src="${getImageUrl(ad._id, 'bottom')}" 
+                                    class="ad-image" onclick="showImageModal('${ad._id}', 'bottom')" 
+                                    title="Bottom Banner"
+                                    onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22><rect fill=%22%23ddd%22 width=%22100%22 height=%2280%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22>No Image</text></svg>'">
+                            </div>
+                            ${ad.fullscreenImageGridFS ? `
+                                <div>
+                                    <small class="text-muted d-block">Full</small>
+                                    <img src="${getImageUrl(ad._id, 'fullscreen')}" 
+                                        class="ad-image" onclick="showImageModal('${ad._id}', 'fullscreen')" 
+                                        title="Fullscreen"
+                                        onerror="this.style.display='none'">
+                                </div>
+                            ` : ''}
+                        </div>
                     </td>
-                    <td>${ad.title}</td>
+                    <td>
+                        <div>${ad.title}</div>
+                        ${ad.fullscreenImageGridFS ? 
+                            '<span class="badge bg-primary mt-1">With Fullscreen</span>' : 
+                            '<span class="badge bg-secondary mt-1">Banner Only</span>'}
+                    </td>
                     <td>
                         <div>${ad.uploaderName}</div>
                         <small class="text-muted">${ad.uploadedBy}</small>
@@ -863,10 +897,10 @@
                     </td>
                     <td><small>${formatDateTime(ad.createdAt)}</small></td>
                     <td class="action-buttons">
-                        <button class="btn btn-success btn-sm" onclick="showApproveModal('${ad.id}', '${ad.title}')">
+                        <button class="btn btn-success btn-sm" onclick="showApproveModal('${ad._id}', '${ad.title.replace(/'/g, "\\'")}')">
                             <i class="fas fa-check me-1"></i>Approve
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="showRejectModal('${ad.id}', '${ad.title}')">
+                        <button class="btn btn-danger btn-sm" onclick="showRejectModal('${ad._id}', '${ad.title.replace(/'/g, "\\'")}')">
                             <i class="fas fa-times me-1"></i>Reject
                         </button>
                     </td>
@@ -1082,12 +1116,13 @@
         });
 
         // Utility functions
-        function getImageUrl(imageId) {
-            return `${BACKEND_URL}/api/ads/images/${imageId}`;
+        function getImageUrl(adId, type) {
+            // Match InstantllyAds format exactly
+            return `${BACKEND_URL}/api/ads/image/${adId}/${type}`;
         }
 
-        function showImageModal(imageId) {
-            document.getElementById('modalImage').src = getImageUrl(imageId);
+        function showImageModal(adId, type) {
+            document.getElementById('modalImage').src = getImageUrl(adId, type);
             new bootstrap.Modal(document.getElementById('imageModal')).show();
         }
 
