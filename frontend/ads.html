@@ -11,35 +11,176 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css">
-    
     <style>
         body {
-            padding-top: 76px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        .page-header {
+        .navbar {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .container {
+            margin-top: 100px;
+            margin-bottom: 40px;
+        }
+
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
             margin-bottom: 2rem;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            border: none;
+            padding: 1rem 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: #667eea;
+            border-color: transparent;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: #667eea;
+            background-color: transparent;
+            border: none;
+            border-bottom: 3px solid #667eea;
         }
 
         .card {
             border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
             margin-bottom: 2rem;
         }
 
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px 15px 0 0 !important;
+            background-color: white;
+            border-bottom: 1px solid #e9ecef;
             padding: 1.5rem;
+            border-radius: 12px 12px 0 0 !important;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            background-color: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-area:hover {
+            background-color: #f0f2ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background-color: #e8ebff;
+            border-color: #5568d3;
+            transform: scale(1.01);
+        }
+
+        .image-preview-container {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        .image-preview {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-preview .remove-image {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .image-preview .remove-image:hover {
+            background: #dc3545;
+            transform: scale(1.1);
+        }
+
+        .image-preview .image-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 0.3rem;
+            font-size: 0.75rem;
+            text-align: center;
+        }
+
+        .table {
+            background-color: white;
+        }
+
+        .table thead th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+            font-weight: 600;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            padding: 1rem;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
+
+        .ad-image {
+            max-width: 80px;
+            max-height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .ad-image:hover {
+            transform: scale(1.5);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
         .status-badge {
@@ -47,267 +188,272 @@
             border-radius: 20px;
             font-weight: 600;
             font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .status-pending {
-            background: #fff3cd;
+            background-color: #fff3cd;
             color: #856404;
         }
 
         .status-approved {
-            background: #d4edda;
+            background-color: #d4edda;
             color: #155724;
         }
 
         .status-rejected {
-            background: #f8d7da;
+            background-color: #f8d7da;
             color: #721c24;
         }
 
-        .ad-image {
-            max-width: 100px;
-            max-height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.3s;
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.875rem;
         }
 
-        .ad-image:hover {
-            transform: scale(1.1);
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
         }
 
-        .upload-area {
-            border: 3px dashed #667eea;
-            border-radius: 15px;
-            padding: 3rem 2rem;
-            text-align: center;
-            background: #f8f9fa;
-            cursor: pointer;
-            transition: all 0.3s;
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
         }
 
-        .upload-area:hover {
-            background: #e9ecef;
-            border-color: #764ba2;
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
 
-        .upload-area.dragover {
-            background: #dee2e6;
-            border-color: #764ba2;
+        .modal-header {
+            border-bottom: none;
+            padding: 1.5rem;
         }
 
-        .image-preview {
-            position: relative;
-            display: inline-block;
-            margin: 10px;
-        }
-
-        .image-preview img {
-            max-width: 150px;
-            max-height: 150px;
-            border-radius: 8px;
-            border: 2px solid #667eea;
-        }
-
-        .image-preview .remove-btn {
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            cursor: pointer;
-        }
-
-        .table thead {
-            background: #f8f9fa;
-        }
-
-        .action-buttons .btn {
-            margin: 0 2px;
-            padding: 0.375rem 0.75rem;
+        .modal-footer {
+            border-top: none;
+            padding: 1.5rem;
         }
 
         .empty-state {
             text-align: center;
-            padding: 4rem 2rem;
+            padding: 3rem 1rem;
         }
 
         .empty-state i {
-            font-size: 5rem;
+            font-size: 4rem;
             color: #dee2e6;
             margin-bottom: 1rem;
+        }
+
+        .empty-state p {
+            color: #6c757d;
+            font-size: 1.1rem;
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-        <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="index.html">
-                <img src="images/logo.jpeg" alt="Instantly Cards Logo" height="45" class="me-3 navbar-logo">
-                Instantly Cards
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="profile.html">
+                <img src="img/logo.png" alt="Logo" height="40" class="me-2" onerror="this.style.display='none'">
+                <span>Instantly Cards</span>
             </a>
+            
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="profile.html">
-                            <i class="fas fa-user me-2"></i>Profile
+                            <i class="fas fa-user-circle me-1"></i>Profile
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" href="ads.html">
-                            <i class="fas fa-bullhorn me-2"></i>My Ads
+                            <i class="fas fa-bullhorn me-1"></i>My Ads
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="logout()">
-                            <i class="fas fa-sign-out-alt me-2"></i>Logout
-                        </a>
+                        <button class="btn btn-outline-light btn-sm ms-2" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </button>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container my-5">
-        <!-- Page Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <h2 class="text-white mb-3">
-                    <i class="fas fa-bullhorn me-3"></i>My Advertisements
-                </h2>
-                <p class="text-white-50">Upload and manage your advertisements. All ads require admin approval before becoming active.</p>
-            </div>
-        </div>
+    <!-- Main Content -->
+    <div class="container">
+        <h2 class="mb-4">
+            <i class="fas fa-bullhorn me-2 text-primary"></i>My Advertisements
+        </h2>
 
-        <!-- Upload Form Card -->
-        <div class="card" id="uploadCard">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-upload me-2"></i>Upload New Advertisement
-                </h5>
-            </div>
-            <div class="card-body">
-                <form id="adUploadForm">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="adTitle" class="form-label fw-bold">
-                                Ad Title <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="adTitle" required 
-                                   placeholder="Enter advertisement title">
-                        </div>
+        <!-- Tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#myAdsTab">
+                    <i class="fas fa-list me-2"></i>My Ads
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#createTab">
+                    <i class="fas fa-plus-circle me-2"></i>Create New Ad
+                </button>
+            </li>
+        </ul>
 
-                        <div class="col-md-6 mb-3">
-                            <label for="phoneNumber" class="form-label fw-bold">
-                                Contact Phone Number <span class="text-danger">*</span>
-                            </label>
-                            <input type="tel" class="form-control" id="phoneNumber" required 
-                                   placeholder="Enter phone number">
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="startDate" class="form-label fw-bold">
-                                Start Date <span class="text-danger">*</span>
-                            </label>
-                            <input type="date" class="form-control" id="startDate" required>
-                        </div>
-
-                        <div class="col-md-6 mb-3">
-                            <label for="endDate" class="form-label fw-bold">
-                                End Date <span class="text-danger">*</span>
-                            </label>
-                            <input type="date" class="form-control" id="endDate" required>
-                        </div>
-
-                        <div class="col-12 mb-3">
-                            <label class="form-label fw-bold">
-                                Images <span class="text-danger">*</span>
-                                <small class="text-muted">(Bottom Banner: Required, Fullscreen: Optional)</small>
-                            </label>
-                            <div class="upload-area" id="uploadArea">
-                                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
-                                <h5>Drag & Drop Images Here</h5>
-                                <p class="text-muted mb-3">or click to browse (Max 2 images: Bottom Banner + Fullscreen)</p>
-                                <input type="file" id="imageInput" accept="image/*" multiple hidden>
-                                <button type="button" class="btn btn-primary" onclick="document.getElementById('imageInput').click()">
-                                    <i class="fas fa-folder-open me-2"></i>Browse Files
-                                </button>
-                            </div>
-                            <div id="imagePreviewContainer" class="mt-3"></div>
-                        </div>
-
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-success btn-lg">
-                                <i class="fas fa-paper-plane me-2"></i>Upload Advertisement
-                            </button>
-                            <button type="reset" class="btn btn-secondary btn-lg ms-2">
-                                <i class="fas fa-times me-2"></i>Clear Form
-                            </button>
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- My Ads Tab -->
+            <div class="tab-pane fade" id="myAdsTab">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-ad me-2"></i>All My Advertisements
+                        </h5>
+                        <button class="btn btn-primary btn-sm" onclick="loadMyAds()">
+                            <i class="fas fa-sync-alt me-1"></i>Refresh
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Sr</th>
+                                        <th>Images</th>
+                                        <th>Title</th>
+                                        <th>Phone</th>
+                                        <th>Schedule</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adsTableBody">
+                                    <tr>
+                                        <td colspan="7">
+                                            <div class="empty-state">
+                                                <i class="fas fa-spinner fa-spin"></i>
+                                                <p>Loading your advertisements...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Ads Status Table Card -->
-        <div class="card" id="adsTableCard">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-list me-2"></i>My Ads Status
-                </h5>
-                <button class="btn btn-light btn-sm" onclick="loadMyAds()">
-                    <i class="fas fa-sync-alt me-2"></i>Refresh
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle" id="adsTable">
-                        <thead>
-                            <tr>
-                                <th>Sr</th>
-                                <th>Images</th>
-                                <th>Title</th>
-                                <th>Phone</th>
-                                <th>Schedule</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="adsTableBody">
-                            <!-- Ads will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Empty State -->
-                <div id="emptyState" class="empty-state" style="display: none;">
-                    <i class="fas fa-inbox"></i>
-                    <h4>No Advertisements Yet</h4>
-                    <p class="text-muted">Upload your first advertisement using the form above.</p>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Image Modal -->
-    <div class="modal fade" id="imageModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Advertisement Image</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <img id="modalImage" src="" alt="Ad Image" class="img-fluid">
+            <!-- Create Ad Tab -->
+            <div class="tab-pane fade show active" id="createTab">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0 text-primary">
+                            <i class="fas fa-plus-circle me-2"></i>Create New Advertisement
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="adUploadForm">
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">
+                                        Advertisement Title <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="adTitle" 
+                                           placeholder="e.g., Summer Sale 2024" required>
+                                </div>
+
+                                <div class="col-12 mb-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-mobile-alt me-1"></i>Bottom Banner Image (Required)
+                                    </label>
+                                    <p class="text-muted small mb-2">
+                                        This image appears in the bottom carousel. Recommended size: <strong>624 × 174 pixels</strong>
+                                    </p>
+                                    <div class="upload-area" id="bottomBannerArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                        <h5>Drag & Drop Bottom Banner Here</h5>
+                                        <p class="text-muted mb-3">or click to browse</p>
+                                        <input type="file" id="bottomBannerInput" accept="image/*" hidden>
+                                        <button type="button" class="btn btn-primary" 
+                                                onclick="document.getElementById('bottomBannerInput').click()">
+                                            <i class="fas fa-folder-open me-2"></i>Choose File
+                                        </button>
+                                    </div>
+                                    <div id="bottomBannerPreview"></div>
+                                </div>
+
+                                <div class="col-12 mb-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-expand me-1"></i>Fullscreen Image (Optional)
+                                    </label>
+                                    <p class="text-muted small mb-2">
+                                        This image appears when user taps the bottom banner. Recommended size: <strong>624 × 1000 pixels</strong>
+                                    </p>
+                                    <div class="alert alert-warning py-2 px-3 d-flex align-items-center" style="font-size: 0.9rem;">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        If not provided, users will see Call/Message/Cancel buttons when they tap the banner.
+                                    </div>
+                                    <div class="upload-area" id="fullscreenArea">
+                                        <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                                        <h5>Drag & Drop Fullscreen Image Here</h5>
+                                        <p class="text-muted mb-3">or click to browse</p>
+                                        <input type="file" id="fullscreenInput" accept="image/*" hidden>
+                                        <button type="button" class="btn btn-primary" 
+                                                onclick="document.getElementById('fullscreenInput').click()">
+                                            <i class="fas fa-folder-open me-2"></i>Choose File
+                                        </button>
+                                    </div>
+                                    <div id="fullscreenPreview"></div>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-phone me-1"></i>Phone Number (for Call/Message buttons) <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="tel" class="form-control" id="phoneNumber" 
+                                           placeholder="+919876543210" required>
+                                    <small class="text-muted">Used for Call/Message buttons in the mobile app</small>
+                                </div>
+
+                                <div class="col-12 mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-calendar me-1"></i>Schedule
+                                    </label>
+                                    <p class="text-muted small">Ad will automatically become active between these dates</p>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="startDate" required>
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">End Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" id="endDate" required>
+                                </div>
+
+                                <div class="col-12 mt-3">
+                                    <button type="submit" class="btn btn-success btn-lg px-5">
+                                        <i class="fas fa-paper-plane me-2"></i>Upload Advertisement
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-lg px-4 ms-2" onclick="clearForm()">
+                                        <i class="fas fa-times me-2"></i>Clear Form
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -319,7 +465,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title">
-                        <i class="fas fa-times-circle me-2"></i>Rejection Reason
+                        <i class="fas fa-exclamation-circle me-2"></i>Rejection Reason
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -333,22 +479,43 @@
         </div>
     </div>
 
+    <!-- Image Preview Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Advertisement Image</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="img-fluid" alt="Advertisement">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
-        const API_BASE_URL = 'https://instantlly-cards-backend.onrender.com/api';
         const BACKEND_URL = 'https://instantlly-cards-backend.onrender.com';
-        
-        let selectedFiles = [];
+        const API_BASE_URL = `${BACKEND_URL}/api`;
+
         let myAds = [];
+        let bottomBannerFile = null;
+        let fullscreenFile = null;
 
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
             checkAuth();
             loadMyAds();
-            setupUploadArea();
+            setupUploadAreas();
             setupFormSubmit();
+            
+            // Set minimum dates to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').min = today;
+            document.getElementById('endDate').min = today;
         });
 
         function checkAuth() {
@@ -365,83 +532,97 @@
             window.location.href = 'profile.html';
         }
 
-        function setupUploadArea() {
-            const uploadArea = document.getElementById('uploadArea');
-            const imageInput = document.getElementById('imageInput');
+        function setupUploadAreas() {
+            // Bottom Banner Setup
+            setupUploadArea(
+                'bottomBannerArea',
+                'bottomBannerInput',
+                'bottomBannerPreview',
+                (file) => { bottomBannerFile = file; },
+                'Bottom Banner'
+            );
 
-            uploadArea.addEventListener('click', () => imageInput.click());
+            // Fullscreen Setup
+            setupUploadArea(
+                'fullscreenArea',
+                'fullscreenInput',
+                'fullscreenPreview',
+                (file) => { fullscreenFile = file; },
+                'Fullscreen'
+            );
+        }
 
-            uploadArea.addEventListener('dragover', (e) => {
+        function setupUploadArea(areaId, inputId, previewId, setFileCallback, label) {
+            const area = document.getElementById(areaId);
+            const input = document.getElementById(inputId);
+            const preview = document.getElementById(previewId);
+
+            area.addEventListener('click', () => input.click());
+
+            area.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                uploadArea.classList.add('dragover');
+                area.classList.add('dragover');
             });
 
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('dragover');
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
             });
 
-            uploadArea.addEventListener('drop', (e) => {
+            area.addEventListener('drop', (e) => {
                 e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                handleFiles(e.dataTransfer.files);
+                area.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    setFileCallback(file);
+                    displayPreview(file, preview, label, () => {
+                        setFileCallback(null);
+                    });
+                }
             });
 
-            imageInput.addEventListener('change', (e) => {
-                handleFiles(e.target.files);
+            input.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    setFileCallback(file);
+                    displayPreview(file, preview, label, () => {
+                        setFileCallback(null);
+                        input.value = '';
+                    });
+                }
             });
         }
 
-        function handleFiles(files) {
-            if (files.length > 2) {
-                alert('Maximum 2 images allowed (Bottom Banner + Fullscreen)');
-                return;
-            }
-
-            selectedFiles = Array.from(files);
-            displayImagePreviews();
-        }
-
-        function displayImagePreviews() {
-            const container = document.getElementById('imagePreviewContainer');
-            container.innerHTML = '';
-
-            selectedFiles.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const preview = document.createElement('div');
-                    preview.className = 'image-preview';
-                    preview.innerHTML = `
-                        <img src="${e.target.result}" alt="Preview ${index + 1}">
-                        <button type="button" class="remove-btn" onclick="removeImage(${index})">
-                            <i class="fas fa-times"></i>
-                        </button>
-                        <div class="text-center mt-2">
-                            <small class="badge bg-primary">${index === 0 ? 'Bottom Banner' : 'Fullscreen'}</small>
+        function displayPreview(file, previewElement, label, onRemove) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewElement.innerHTML = `
+                    <div class="image-preview-container">
+                        <div class="image-preview">
+                            <img src="${e.target.result}" alt="${label}">
+                            <div class="image-label">${label}</div>
+                            <button type="button" class="remove-image" onclick="event.stopPropagation(); this.parentElement.parentElement.remove(); (${onRemove})()">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-                    `;
-                    container.appendChild(preview);
-                };
-                reader.readAsDataURL(file);
-            });
+                    </div>
+                `;
+            };
+            reader.readAsDataURL(file);
         }
 
-        function removeImage(index) {
-            selectedFiles.splice(index, 1);
-            displayImagePreviews();
-        }
-
-        async function setupFormSubmit() {
+        function setupFormSubmit() {
             const form = document.getElementById('adUploadForm');
             
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                if (selectedImages.length === 0) {
-                    alert('Please select at least one image');
+                if (!bottomBannerFile) {
+                    alert('Please select at least the bottom banner image (required)');
                     return;
                 }
 
                 const submitBtn = form.querySelector('button[type="submit"]');
+                const originalHTML = submitBtn.innerHTML;
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
 
@@ -451,79 +632,56 @@
                 formData.append('startDate', document.getElementById('startDate').value);
                 formData.append('endDate', document.getElementById('endDate').value);
 
-                selectedImages.forEach(image => {
-                    formData.append('images', image);
-                });
+                if (bottomBannerFile) {
+                    formData.append('images', bottomBannerFile);
+                }
+                if (fullscreenFile) {
+                    formData.append('images', fullscreenFile);
+                }
 
                 const token = localStorage.getItem('authToken');
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-        async function uploadAd() {
-            const title = document.getElementById('adTitle').value.trim();
-            const phoneNumber = document.getElementById('phoneNumber').value.trim();
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
+                try {
+                    const response = await fetch(`${API_BASE_URL}/channel-partner/ads`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
 
-            // Validation
-            if (!title || !phoneNumber || !startDate || !endDate) {
-                alert('Please fill in all required fields');
-                return;
-            }
+                    const data = await response.json();
 
-            if (selectedFiles.length === 0) {
-                alert('Please select at least one image (Bottom Banner)');
-                return;
-            }
-
-            if (new Date(endDate) <= new Date(startDate)) {
-                alert('End date must be after start date');
-                return;
-            }
-
-            const token = localStorage.getItem('token');
-            const user = JSON.parse(localStorage.getItem('user') || '{}');
-
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('phoneNumber', phoneNumber);
-            formData.append('startDate', startDate);
-            formData.append('endDate', endDate);
-            formData.append('uploaderName', user.name || 'Channel Partner');
-
-            selectedFiles.forEach(file => {
-                formData.append('images', file);
-            });
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/channel-partner/ads`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert('Advertisement uploaded successfully! Awaiting admin approval.');
-                    document.getElementById('adUploadForm').reset();
-                    selectedFiles = [];
-                    displayImagePreviews();
-                    loadMyAds();
-                } else {
-                    alert(`Error: ${data.message || 'Failed to upload advertisement'}`);
+                    if (response.ok) {
+                        alert('Advertisement uploaded successfully! Awaiting admin approval.');
+                        clearForm();
+                        loadMyAds();
+                        // Switch to My Ads tab
+                        document.querySelector('[data-bs-target="#myAdsTab"]').click();
+                    } else {
+                        alert(`Error: ${data.message || 'Failed to upload advertisement'}`);
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    alert('Failed to upload advertisement. Please try again.');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalHTML;
                 }
-            } catch (error) {
-                console.error('Upload error:', error);
-                alert('Failed to upload advertisement. Please try again.');
-            }
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('adUploadForm').reset();
+            document.getElementById('bottomBannerPreview').innerHTML = '';
+            document.getElementById('fullscreenPreview').innerHTML = '';
+            bottomBannerFile = null;
+            fullscreenFile = null;
         }
 
         async function loadMyAds() {
             const token = localStorage.getItem('authToken');
             const tableBody = document.getElementById('adsTableBody');
-            const emptyState = document.getElementById('emptyState');
 
             try {
                 const response = await fetch(`${API_BASE_URL}/channel-partner/ads`, {
@@ -538,28 +696,50 @@
                     myAds = data.ads || [];
                     
                     if (myAds.length === 0) {
-                        tableBody.innerHTML = '';
-                        emptyState.style.display = 'block';
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <i class="fas fa-inbox"></i>
+                                        <p>No advertisements yet. Create your first ad!</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
                     } else {
-                        emptyState.style.display = 'none';
                         renderAdsTable();
                     }
                 } else {
-                    alert(`Error: ${data.message || 'Failed to load advertisements'}`);
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="7">
+                                <div class="empty-state">
+                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                    <p>Error loading advertisements</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
                 }
             } catch (error) {
-                console.error('Load ads error:', error);
-                alert('Failed to load advertisements. Please try again.');
+                console.error('Load error:', error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-exclamation-triangle text-danger"></i>
+                                <p>Network error. Please try again.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             }
         }
 
         function renderAdsTable() {
             const tableBody = document.getElementById('adsTableBody');
-            tableBody.innerHTML = '';
-
-            myAds.forEach((ad, index) => {
-                const row = document.createElement('tr');
-                
+            
+            tableBody.innerHTML = myAds.map((ad, index) => {
                 const statusClass = ad.status === 'approved' ? 'status-approved' : 
                                    ad.status === 'rejected' ? 'status-rejected' : 'status-pending';
                 const statusIcon = ad.status === 'approved' ? 'check-circle' : 
@@ -568,50 +748,52 @@
                 const startDate = new Date(ad.startDate).toLocaleDateString();
                 const endDate = new Date(ad.endDate).toLocaleDateString();
 
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>
-                        ${ad.bottomImageId ? `<img src="${BACKEND_URL}/api/ads/images/${ad.bottomImageId}" 
-                            class="ad-image" onclick="showImageModal('${ad.bottomImageId}')" 
-                            title="Bottom Banner">` : ''}
-                        ${ad.fullscreenImageId ? `<img src="${BACKEND_URL}/api/ads/images/${ad.fullscreenImageId}" 
-                            class="ad-image ms-1" onclick="showImageModal('${ad.fullscreenImageId}')" 
-                            title="Fullscreen">` : ''}
-                    </td>
-                    <td>${ad.title}</td>
-                    <td>${ad.phoneNumber}</td>
-                    <td>
-                        <small>
-                            <i class="fas fa-calendar-plus me-1"></i>${startDate}<br>
-                            <i class="fas fa-calendar-minus me-1"></i>${endDate}
-                        </small>
-                    </td>
-                    <td>
-                        <span class="status-badge ${statusClass}">
-                            <i class="fas fa-${statusIcon} me-1"></i>${ad.status.toUpperCase()}
-                        </span>
-                        ${ad.status === 'rejected' ? `
-                            <button class="btn btn-sm btn-link text-danger p-0 d-block mt-1" 
-                                    onclick="showRejectionReason('${ad.rejectionReason || 'No reason provided'}')">
-                                <i class="fas fa-info-circle me-1"></i>View Reason
-                            </button>
-                        ` : ''}
-                    </td>
-                    <td class="action-buttons">
-                        ${ad.status === 'pending' ? `
-                            <button class="btn btn-danger btn-sm" onclick="deleteAd('${ad.id}')">
-                                <i class="fas fa-trash me-1"></i>Delete
-                            </button>
-                        ` : `
-                            <span class="text-muted">
-                                <i class="fas fa-lock me-1"></i>Locked
+                return `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>
+                            ${ad.bottomImageId ? `<img src="${BACKEND_URL}/api/ads/images/${ad.bottomImageId}" 
+                                class="ad-image me-1" onclick="showImageModal('${ad.bottomImageId}')" 
+                                title="Bottom Banner">` : ''}
+                            ${ad.fullscreenImageId ? `<img src="${BACKEND_URL}/api/ads/images/${ad.fullscreenImageId}" 
+                                class="ad-image" onclick="showImageModal('${ad.fullscreenImageId}')" 
+                                title="Fullscreen">` : ''}
+                        </td>
+                        <td><strong>${ad.title}</strong></td>
+                        <td>${ad.phoneNumber}</td>
+                        <td>
+                            <small>
+                                <i class="fas fa-calendar-plus me-1 text-success"></i>${startDate}<br>
+                                <i class="fas fa-calendar-minus me-1 text-danger"></i>${endDate}
+                            </small>
+                        </td>
+                        <td>
+                            <span class="status-badge ${statusClass}">
+                                <i class="fas fa-${statusIcon}"></i>${ad.status.toUpperCase()}
                             </span>
-                        `}
-                    </td>
+                            ${ad.status === 'rejected' ? `
+                                <button class="btn btn-link text-danger p-0 d-block mt-1 text-decoration-none" 
+                                        onclick="showRejectionReason('${(ad.rejectionReason || 'No reason provided').replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-info-circle me-1"></i>View Reason
+                                </button>
+                            ` : ''}
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                ${ad.status === 'pending' ? `
+                                    <button class="btn btn-danger btn-sm" onclick="deleteAd('${ad.id}')">
+                                        <i class="fas fa-trash me-1"></i>Delete
+                                    </button>
+                                ` : `
+                                    <span class="text-muted">
+                                        <i class="fas fa-lock me-1"></i>Locked
+                                    </span>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
                 `;
-
-                tableBody.appendChild(row);
-            });
+            }).join('');
         }
 
         function showImageModal(imageId) {
@@ -653,10 +835,6 @@
                 alert('Failed to delete advertisement. Please try again.');
             }
         }
-
-        // Set minimum date to today
-        document.getElementById('startDate').min = new Date().toISOString().split('T')[0];
-        document.getElementById('endDate').min = new Date().toISOString().split('T')[0];
     </script>
 </body>
 </html>
