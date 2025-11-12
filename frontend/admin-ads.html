@@ -203,7 +203,7 @@
     <div class="container-fluid mb-5">
         <!-- Statistics Cards -->
         <div class="row mb-4" id="statsContainer">
-            <div class="col-md-3 mb-3">
+            <div class="col-md-4 mb-3">
                 <div class="card stat-card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
@@ -216,41 +216,30 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-4 mb-3">
                 <div class="card stat-card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="text-muted mb-2">Pending</h6>
-                                <h3 class="mb-0 text-warning" id="pendingAds">0</h3>
+                                <h6 class="text-muted mb-2">Currently Active</h6>
+                                <h3 class="mb-0 text-success" id="activeAds">0</h3>
+                                <small class="text-muted">Live right now</small>
                             </div>
-                            <i class="fas fa-clock fa-2x text-warning"></i>
+                            <i class="fas fa-calendar-check fa-2x text-success"></i>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
+            <div class="col-md-4 mb-3">
                 <div class="card stat-card">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <h6 class="text-muted mb-2">Approved</h6>
-                                <h3 class="mb-0 text-success" id="approvedAds">0</h3>
+                                <h6 class="text-muted mb-2">Expired Ads</h6>
+                                <h3 class="mb-0 text-danger" id="expiredAds">0</h3>
+                                <small class="text-muted">Past end date</small>
                             </div>
-                            <i class="fas fa-check-circle fa-2x text-success"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="card stat-card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="text-muted mb-2">Rejected</h6>
-                                <h3 class="mb-0 text-danger" id="rejectedAds">0</h3>
-                            </div>
-                            <i class="fas fa-times-circle fa-2x text-danger"></i>
+                            <i class="fas fa-calendar-times fa-2x text-danger"></i>
                         </div>
                     </div>
                 </div>
@@ -291,13 +280,32 @@
                 </div>
                 
                 <div class="card mt-3">
-                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h6 class="mb-0 text-dark fw-semibold">All Advertisements</h6>
-                        <button class="btn btn-sm text-white" 
-                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;"
-                                onclick="loadAllAds()">
-                            <i class="fas fa-sync-alt me-1"></i>Refresh
-                        </button>
+                    <div class="card-header bg-white py-3">
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-3">
+                                <h6 class="mb-0 text-dark fw-semibold">All Advertisements</h6>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="d-flex gap-2 justify-content-md-end">
+                                    <select class="form-select form-select-sm" style="max-width: 150px;" id="statusFilter" onchange="applyFilters()">
+                                        <option value="all">All Status</option>
+                                        <option value="active">Active</option>
+                                        <option value="expired">Expired</option>
+                                        <option value="scheduled">Scheduled</option>
+                                    </select>
+                                    <input type="text" class="form-control form-control-sm" 
+                                           style="max-width: 300px;" 
+                                           id="searchQuery" 
+                                           placeholder="Search by title or phone..."
+                                           oninput="applyFilters()">
+                                    <button class="btn btn-sm text-white" 
+                                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; white-space: nowrap;"
+                                            onclick="loadAllAds()">
+                                        <i class="fas fa-sync-alt me-1"></i>Refresh
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
@@ -326,6 +334,12 @@
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top" id="paginationContainer" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-sm text-gray-700" id="paginationInfo"></div>
+                            <div class="d-flex gap-2" id="paginationButtons"></div>
                         </div>
                     </div>
                 </div>
@@ -602,6 +616,9 @@
         const API_BASE_URL = `${BACKEND_URL}/api`;
         
         let allAds = [];
+        let filteredAds = [];
+        let currentPage = 1;
+        const adsPerPage = 20;
         let selectedAdId = null;
         let selectedFiles = [];
 
@@ -711,6 +728,7 @@
 
                 const data = await response.json();
                 allAds = data.ads || [];
+                filteredAds = allAds; // Initialize filtered ads
                 updateStats();
                 renderAllAdsTable();
             } catch (error) {
@@ -745,21 +763,84 @@
         // Update statistics
         function updateStats() {
             const total = allAds.length;
-            const pending = allAds.filter(ad => ad.status === 'pending').length;
-            const approved = allAds.filter(ad => ad.status === 'approved').length;
-            const rejected = allAds.filter(ad => ad.status === 'rejected').length;
+            const active = allAds.filter(ad => isAdActive(ad)).length;
+            const expired = allAds.filter(ad => isAdExpired(ad)).length;
 
             document.getElementById('totalAds').textContent = total;
-            document.getElementById('pendingAds').textContent = pending;
-            document.getElementById('approvedAds').textContent = approved;
-            document.getElementById('rejectedAds').textContent = rejected;
+            document.getElementById('activeAds').textContent = active;
+            document.getElementById('expiredAds').textContent = expired;
         }
 
-        // Render all ads table
+        // Check if ad is currently active based on date range
+        function isAdActive(ad) {
+            const now = new Date();
+            const start = new Date(ad.startDate);
+            const end = new Date(ad.endDate);
+            return now >= start && now <= end;
+        }
+
+        // Check if ad is expired
+        function isAdExpired(ad) {
+            const now = new Date();
+            const end = new Date(ad.endDate);
+            return now > end;
+        }
+
+        // Check if ad is scheduled (not started yet)
+        function isAdScheduled(ad) {
+            const now = new Date();
+            const start = new Date(ad.startDate);
+            return now < start;
+        }
+
+        // Get ad status for display
+        function getAdStatus(ad) {
+            if (isAdActive(ad)) {
+                return { label: '✓ Active', color: 'bg-success text-white', badgeClass: 'status-approved' };
+            } else if (isAdExpired(ad)) {
+                return { label: '⏰ Expired', color: 'bg-danger text-white', badgeClass: 'status-rejected' };
+            } else {
+                return { label: '⏸ Scheduled', color: 'bg-secondary text-white', badgeClass: 'status-pending' };
+            }
+        }
+
+        // Apply filters and pagination
+        function applyFilters() {
+            const searchQuery = document.getElementById('searchQuery').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            // Filter ads
+            filteredAds = allAds.filter(ad => {
+                // Search filter
+                if (searchQuery.trim()) {
+                    const matchesSearch = ad.title.toLowerCase().includes(searchQuery) || 
+                                        ad.phoneNumber.toLowerCase().includes(searchQuery);
+                    if (!matchesSearch) return false;
+                }
+                
+                // Status filter
+                if (statusFilter === 'all') return true;
+                if (statusFilter === 'active') return isAdActive(ad);
+                if (statusFilter === 'expired') return isAdExpired(ad);
+                if (statusFilter === 'scheduled') return isAdScheduled(ad);
+                
+                return true;
+            });
+            
+            // Reset to page 1 when filters change
+            currentPage = 1;
+            renderAllAdsTable();
+        }
+
+        // Render all ads table with pagination
         function renderAllAdsTable() {
             const tbody = document.getElementById('allAdsTableBody');
             
-            if (allAds.length === 0) {
+            // Use filtered ads if filters are applied, otherwise use all ads
+            const displayAds = filteredAds.length > 0 || document.getElementById('searchQuery').value || 
+                             document.getElementById('statusFilter').value !== 'all' ? filteredAds : allAds;
+            
+            if (displayAds.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="9" class="text-center py-5">
@@ -768,18 +849,27 @@
                         </td>
                     </tr>
                 `;
+                document.getElementById('paginationContainer').style.display = 'none';
                 return;
             }
 
-            tbody.innerHTML = allAds.map((ad, index) => {
-                const statusClass = ad.status === 'approved' ? 'status-approved' : 
-                                   ad.status === 'rejected' ? 'status-rejected' : 'status-pending';
-                const statusIcon = ad.status === 'approved' ? 'check-circle' : 
-                                  ad.status === 'rejected' ? 'times-circle' : 'clock';
+            // Pagination
+            const totalPages = Math.ceil(displayAds.length / adsPerPage);
+            const startIndex = (currentPage - 1) * adsPerPage;
+            const endIndex = startIndex + adsPerPage;
+            const paginatedAds = displayAds.slice(startIndex, endIndex);
+
+            tbody.innerHTML = paginatedAds.map((ad, index) => {
+                const adStatus = getAdStatus(ad);
+                const approvalStatusClass = ad.status === 'approved' ? 'status-approved' : 
+                                           ad.status === 'rejected' ? 'status-rejected' : 'status-pending';
+                const approvalStatusIcon = ad.status === 'approved' ? 'check-circle' : 
+                                          ad.status === 'rejected' ? 'times-circle' : 'clock';
+                const globalIndex = startIndex + index + 1;
 
                 return `
                     <tr>
-                        <td>${index + 1}</td>
+                        <td>${globalIndex}</td>
                         <td>
                             <div class="d-flex flex-column gap-2">
                                 <div>
@@ -805,6 +895,8 @@
                             ${ad.fullscreenImageGridFS ? 
                                 '<span class="badge bg-primary mt-1">With Fullscreen</span>' : 
                                 '<span class="badge bg-secondary mt-1">Banner Only</span>'}
+                            <br>
+                            <span class="badge ${adStatus.color} mt-1">${adStatus.label}</span>
                         </td>
                         <td>
                             <div>${ad.uploaderName || 'Admin'}</div>
@@ -817,8 +909,8 @@
                             </small>
                         </td>
                         <td>
-                            <span class="status-badge ${statusClass}">
-                                <i class="fas fa-${statusIcon} me-1"></i>${ad.status.toUpperCase()}
+                            <span class="status-badge ${approvalStatusClass}">
+                                <i class="fas fa-${approvalStatusIcon} me-1"></i>${ad.status.toUpperCase()}
                             </span>
                         </td>
                         <td>${ad.priority || 5}</td>
@@ -838,6 +930,59 @@
                     </tr>
                 `;
             }).join('');
+
+            // Update pagination
+            if (totalPages > 1) {
+                document.getElementById('paginationContainer').style.display = 'block';
+                document.getElementById('paginationInfo').textContent = 
+                    `Showing ${startIndex + 1} to ${Math.min(endIndex, displayAds.length)} of ${displayAds.length} ads`;
+                
+                let paginationHTML = '';
+                paginationHTML += `
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            onclick="changePage(${currentPage - 1})" 
+                            ${currentPage === 1 ? 'disabled' : ''}>
+                        Previous
+                    </button>
+                `;
+                
+                // Page numbers
+                for (let i = 1; i <= Math.min(totalPages, 5); i++) {
+                    const page = i <= 3 ? i : totalPages - (5 - i);
+                    if (page > 0 && page <= totalPages) {
+                        paginationHTML += `
+                            <button class="btn btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline-secondary'}" 
+                                    onclick="changePage(${page})">
+                                ${page}
+                            </button>
+                        `;
+                    }
+                }
+                
+                paginationHTML += `
+                    <button class="btn btn-sm btn-outline-secondary" 
+                            onclick="changePage(${currentPage + 1})" 
+                            ${currentPage === totalPages ? 'disabled' : ''}>
+                        Next
+                    </button>
+                `;
+                
+                document.getElementById('paginationButtons').innerHTML = paginationHTML;
+            } else {
+                document.getElementById('paginationContainer').style.display = 'none';
+            }
+        }
+
+        // Change page
+        function changePage(page) {
+            const displayAds = filteredAds.length > 0 || document.getElementById('searchQuery').value || 
+                             document.getElementById('statusFilter').value !== 'all' ? filteredAds : allAds;
+            const totalPages = Math.ceil(displayAds.length / adsPerPage);
+            
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderAllAdsTable();
+            }
         }
 
         // Render pending ads table
