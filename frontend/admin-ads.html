@@ -528,6 +528,42 @@
         </div>
     </div>
 
+    <!-- Admin Login Modal -->
+    <div class="modal fade" id="adminLoginModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title">
+                        <i class="fas fa-shield-alt me-2"></i>Admin Login Required
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div id="loginError" class="alert alert-danger" style="display: none;"></div>
+                    <form onsubmit="adminLogin(event)" id="adminLoginForm">
+                        <div class="mb-3">
+                            <label for="adminUsername" class="form-label fw-bold">
+                                <i class="fas fa-user me-2"></i>Username
+                            </label>
+                            <input type="text" class="form-control" id="adminUsername" required 
+                                   placeholder="Enter admin username">
+                        </div>
+                        <div class="mb-3">
+                            <label for="adminPassword" class="form-label fw-bold">
+                                <i class="fas fa-lock me-2"></i>Password
+                            </label>
+                            <input type="password" class="form-control" id="adminPassword" required
+                                   placeholder="Enter password">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" 
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const BACKEND_URL = 'https://instantlly-cards-backend.onrender.com';
@@ -537,28 +573,109 @@
         let selectedAdId = null;
         let selectedFiles = [];
 
+        // Check admin authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAdminAuth();
+        });
+
         // Check admin authentication
-        function checkAdminAuth() {
-            // TODO: Implement proper admin authentication check
-            // For now, assume admin is logged in if they reach this page
-            return true;
+        async function checkAdminAuth() {
+            const token = localStorage.getItem('adminToken');
+            
+            if (!token) {
+                showLoginModal();
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin-auth/verify`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    localStorage.removeItem('adminToken');
+                    showLoginModal();
+                    return false;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    // Admin is authenticated, load data
+                    await Promise.all([loadAllAds(), loadPendingAds()]);
+                    setupUploadArea();
+                    return true;
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+                showLoginModal();
+                return false;
+            }
+        }
+
+        // Show login modal
+        function showLoginModal() {
+            const loginModal = new bootstrap.Modal(document.getElementById('adminLoginModal'));
+            loginModal.show();
+        }
+
+        // Admin login
+        async function adminLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('adminUsername').value;
+            const password = document.getElementById('adminPassword').value;
+            const errorDiv = document.getElementById('loginError');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin-auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.data.token) {
+                    localStorage.setItem('adminToken', data.data.token);
+                    bootstrap.Modal.getInstance(document.getElementById('adminLoginModal')).hide();
+                    await Promise.all([loadAllAds(), loadPendingAds()]);
+                    setupUploadArea();
+                } else {
+                    errorDiv.textContent = data.message || 'Login failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.textContent = 'Server error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
         }
 
         function logout() {
-            // TODO: Implement proper logout
-            window.location.href = 'index.html';
+            localStorage.removeItem('adminToken');
+            window.location.reload();
         }
 
         // Load all ads
         async function loadAllAds() {
             try {
+                const token = localStorage.getItem('adminToken');
                 const response = await fetch(`${API_BASE_URL}/admin/ads/all`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (!response.ok) throw new Error('Failed to load ads');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showLoginModal();
+                    }
+                    throw new Error('Failed to load ads');
+                }
 
                 const data = await response.json();
                 allAds = data.ads || [];
@@ -566,26 +683,30 @@
                 renderAllAdsTable();
             } catch (error) {
                 console.error('Error loading ads:', error);
-                alert('Failed to load advertisements');
             }
         }
 
         // Load pending ads
         async function loadPendingAds() {
             try {
+                const token = localStorage.getItem('adminToken');
                 const response = await fetch(`${API_BASE_URL}/admin/ads/pending`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (!response.ok) throw new Error('Failed to load pending ads');
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showLoginModal();
+                    }
+                    throw new Error('Failed to load pending ads');
+                }
 
                 const data = await response.json();
                 renderPendingAdsTable(data.ads || []);
             } catch (error) {
                 console.error('Error loading pending ads:', error);
-                alert('Failed to load pending advertisements');
             }
         }
 
@@ -743,13 +864,14 @@
 
         async function confirmApprove() {
             const priority = document.getElementById('approvePriority').value;
+            const token = localStorage.getItem('adminToken');
 
             try {
                 const response = await fetch(`${API_BASE_URL}/admin/ads/${selectedAdId}/approve`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ priority: parseInt(priority) })
                 });
@@ -768,6 +890,7 @@
 
         async function confirmReject() {
             const reason = document.getElementById('rejectionReason').value.trim();
+            const token = localStorage.getItem('adminToken');
 
             if (!reason) {
                 alert('Please provide a rejection reason');
@@ -779,7 +902,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ reason })
                 });
