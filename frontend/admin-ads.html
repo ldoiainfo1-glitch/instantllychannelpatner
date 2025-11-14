@@ -879,7 +879,7 @@
                                         title="Bottom Banner"
                                         onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22><rect fill=%22%23ddd%22 width=%22100%22 height=%2280%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22>No Image</text></svg>'">
                                 </div>
-                                ${ad.fullscreenImageGridFS ? `
+                                ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? `
                                     <div>
                                         <small class="text-muted d-block">Full</small>
                                         <img src="${getImageUrl(ad._id, 'fullscreen')}" 
@@ -892,7 +892,7 @@
                         </td>
                         <td>
                             <div>${ad.title}</div>
-                            ${ad.fullscreenImageGridFS ? 
+                            ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? 
                                 '<span class="badge bg-primary mt-1">With Fullscreen</span>' : 
                                 '<span class="badge bg-secondary mt-1">Banner Only</span>'}
                             <br>
@@ -1013,7 +1013,7 @@
                                     title="Bottom Banner"
                                     onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%2280%22><rect fill=%22%23ddd%22 width=%22100%22 height=%2280%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22>No Image</text></svg>'">
                             </div>
-                            ${ad.fullscreenImageGridFS ? `
+                            ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? `
                                 <div>
                                     <small class="text-muted d-block">Full</small>
                                     <img src="${getImageUrl(ad._id, 'fullscreen')}" 
@@ -1026,7 +1026,7 @@
                     </td>
                     <td>
                         <div>${ad.title}</div>
-                        ${ad.fullscreenImageGridFS ? 
+                        ${(ad.fullscreenImage || ad.fullscreenImageGridFS) ? 
                             '<span class="badge bg-primary mt-1">With Fullscreen</span>' : 
                             '<span class="badge bg-secondary mt-1">Banner Only</span>'}
                     </td>
