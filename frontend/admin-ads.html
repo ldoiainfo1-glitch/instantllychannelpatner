@@ -574,6 +574,71 @@
         </div>
     </div>
 
+    <!-- Edit Ad Modal -->
+    <div class="modal fade" id="editAdModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Edit Advertisement
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editAdForm">
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">Advertisement Title</label>
+                                <input type="text" class="form-control" id="editTitle" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Phone Number</label>
+                                <input type="tel" class="form-control" id="editPhoneNumber" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Priority (1-10)</label>
+                                <input type="number" class="form-control" id="editPriority" min="1" max="10" value="5" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Start Date</label>
+                                <input type="date" class="form-control" id="editStartDate" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">End Date</label>
+                                <input type="date" class="form-control" id="editEndDate" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Bottom Banner Image</label>
+                                <input type="file" class="form-control" id="editBottomImage" accept="image/*">
+                                <small class="text-muted">Leave empty to keep current image</small>
+                                <div id="editCurrentBottomImage" class="mt-2"></div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Fullscreen Image (Optional)</label>
+                                <input type="file" class="form-control" id="editFullscreenImage" accept="image/*">
+                                <small class="text-muted">Leave empty to keep current image</small>
+                                <div id="editCurrentFullscreenImage" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedAd()" 
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Admin Login Modal -->
     <div class="modal fade" id="adminLoginModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
@@ -915,6 +980,9 @@
                         </td>
                         <td>${ad.priority || 5}</td>
                         <td class="action-buttons">
+                            <button class="btn btn-primary btn-sm" onclick="handleEdit('${ad._id}', '${ad.title.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
                             ${ad.status === 'pending' ? `
                                 <button class="btn btn-success btn-sm" onclick="showApproveModal('${ad._id}', '${ad.title.replace(/'/g, "\\'")}')">
                                     <i class="fas fa-check"></i>
@@ -1071,6 +1139,125 @@
             selectedAdId = id;
             document.getElementById('deleteAdTitle').textContent = title;
             new bootstrap.Modal(document.getElementById('deleteModal')).show();
+        }
+
+        // Edit ad functionality
+        let editingAdId = null;
+
+        async function handleEdit(adId, title) {
+            try {
+                editingAdId = adId;
+                
+                // Fetch complete ad data
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_BASE_URL}/ads/${adId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to fetch ad details');
+
+                const data = await response.json();
+                const ad = data.data;
+
+                // Populate form
+                document.getElementById('editTitle').value = ad.title;
+                document.getElementById('editPhoneNumber').value = ad.phoneNumber;
+                document.getElementById('editPriority').value = ad.priority || 5;
+                document.getElementById('editStartDate').value = ad.startDate.split('T')[0];
+                document.getElementById('editEndDate').value = ad.endDate.split('T')[0];
+
+                // Show current images
+                const bottomImageDiv = document.getElementById('editCurrentBottomImage');
+                const fullscreenImageDiv = document.getElementById('editCurrentFullscreenImage');
+
+                if (ad.bottomImageGridFS || ad.bottomImage) {
+                    bottomImageDiv.innerHTML = `
+                        <img src="${getImageUrl(adId, 'bottom')}" 
+                             class="img-thumbnail" style="max-width: 200px;" 
+                             alt="Current bottom image">
+                        <p class="text-muted small mt-1">Current bottom image</p>
+                    `;
+                } else {
+                    bottomImageDiv.innerHTML = '<p class="text-muted small">No current image</p>';
+                }
+
+                if (ad.fullscreenImageGridFS || ad.fullscreenImage) {
+                    fullscreenImageDiv.innerHTML = `
+                        <img src="${getImageUrl(adId, 'fullscreen')}" 
+                             class="img-thumbnail" style="max-width: 200px;" 
+                             alt="Current fullscreen image">
+                        <p class="text-muted small mt-1">Current fullscreen image</p>
+                    `;
+                } else {
+                    fullscreenImageDiv.innerHTML = '<p class="text-muted small">No current image</p>';
+                }
+
+                // Show modal
+                new bootstrap.Modal(document.getElementById('editAdModal')).show();
+            } catch (error) {
+                console.error('Error loading ad details:', error);
+                alert('Failed to load advertisement details. Please try again.');
+            }
+        }
+
+        async function saveEditedAd() {
+            try {
+                const title = document.getElementById('editTitle').value;
+                const phoneNumber = document.getElementById('editPhoneNumber').value;
+                const priority = document.getElementById('editPriority').value;
+                const startDate = document.getElementById('editStartDate').value;
+                const endDate = document.getElementById('editEndDate').value;
+                const bottomImageFile = document.getElementById('editBottomImage').files[0];
+                const fullscreenImageFile = document.getElementById('editFullscreenImage').files[0];
+
+                if (!title || !phoneNumber || !startDate || !endDate) {
+                    alert('Please fill all required fields');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('phoneNumber', phoneNumber);
+                formData.append('startDate', startDate);
+                formData.append('endDate', endDate);
+                formData.append('priority', priority);
+
+                // Only append images if new ones are selected
+                if (bottomImageFile) {
+                    formData.append('images', bottomImageFile);
+                }
+                if (fullscreenImageFile) {
+                    formData.append('images', fullscreenImageFile);
+                }
+
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_BASE_URL}/admin/ads/${editingAdId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Failed to update ad');
+
+                alert('Advertisement updated successfully!');
+                bootstrap.Modal.getInstance(document.getElementById('editAdModal')).hide();
+                
+                // Clear form
+                document.getElementById('editAdForm').reset();
+                document.getElementById('editCurrentBottomImage').innerHTML = '';
+                document.getElementById('editCurrentFullscreenImage').innerHTML = '';
+                editingAdId = null;
+
+                // Reload ads
+                await loadAllAds();
+            } catch (error) {
+                console.error('Error updating ad:', error);
+                alert('Failed to update advertisement. Please try again.');
+            }
         }
 
         async function confirmApprove() {
