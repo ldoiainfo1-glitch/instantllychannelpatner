@@ -403,73 +403,104 @@
                             <i class="fas fa-plus-circle me-3"></i>
                             Create New Advertisement
                         </h5>
+                        <p class="mb-0 mt-1 small">Add a new advertisement to the InstantllyCards mobile app</p>
                     </div>
                 </div>
                 
                 <div class="card mt-3">
                     <div class="card-body p-4">
-                        <form id="createAdForm">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label text-dark fw-semibold">
-                                        Ad Title <span class="text-danger">*</span>
+                        <form id="createAdForm" onsubmit="handleCreateAd(event)">
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold">
+                                        Advertisement Title <span class="text-danger">*</span>
                                     </label>
-                                    <input type="text" class="form-control form-control-lg" id="adTitle" required 
-                                           placeholder="Enter advertisement title">
+                                    <input type="text" class="form-control" id="adTitle" required
+                                           placeholder="e.g., Summer Sale 2024">
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label text-dark fw-semibold">
-                                        Contact Phone <span class="text-danger">*</span>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold">
+                                        📱 Bottom Banner Image (Required)
                                     </label>
-                                    <input type="tel" class="form-control form-control-lg" id="phoneNumber" required
-                                           placeholder="Enter contact number">
+                                    <p class="text-muted small mb-2">This image appears in the bottom carousel. Recommended size: <strong>624 × 174 pixels</strong></p>
+                                    <input type="file" class="form-control" id="bottomImageInput" accept="image/*" required
+                                           onchange="handleBottomImageUpload(event)">
+                                    <div id="bottomImagePreview" class="mt-2"></div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label text-dark fw-semibold">
-                                        Start Date <span class="text-danger">*</span>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold">
+                                        🖼️ Fullscreen Image (Optional)
                                     </label>
-                                    <input type="date" class="form-control form-control-lg" id="startDate" required>
+                                    <p class="text-muted small mb-2">This image appears when user taps the bottom banner. Recommended size: <strong>624 × 1000 pixels</strong></p>
+                                    <p class="text-warning small mb-2">
+                                        <i class="fas fa-info-circle"></i> If not provided, users will see Call/Message/Cancel buttons when they tap the banner.
+                                    </p>
+                                    <input type="file" class="form-control" id="fullscreenImageInput" accept="image/*"
+                                           onchange="handleFullscreenImageUpload(event)">
+                                    <div id="fullscreenImagePreview" class="mt-2"></div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label text-dark fw-semibold">
-                                        End Date <span class="text-danger">*</span>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold">
+                                        📞 Phone Number (for Call/Message buttons) <span class="text-danger">*</span>
                                     </label>
-                                    <input type="date" class="form-control form-control-lg" id="endDate" required>
+                                    <input type="tel" class="form-control" id="phoneNumber" required
+                                           placeholder="+919876543210">
+                                    <small class="text-muted">Used for Call/Message buttons in the mobile app</small>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label text-dark fw-semibold">
-                                        Priority (1-10)
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <label class="form-label fw-bold">
+                                        📅 Schedule
                                     </label>
-                                    <input type="number" class="form-control form-control-lg" id="priority" min="1" max="10" value="5">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label text-dark fw-semibold">
-                                        Images <span class="text-danger">*</span>
-                                        <span class="text-muted fw-normal">(Bottom Banner: Required, Fullscreen: Optional)</span>
-                                    </label>
-                                    <div class="upload-area" id="uploadArea" style="border-color: #667eea;">
-                                        <i class="fas fa-cloud-upload-alt fa-3x mb-3" style="color: #667eea;"></i>
-                                        <h5>Drag & Drop Images Here</h5>
-                                        <p class="text-muted mb-3">or click to browse (Max 2 images)</p>
-                                        <input type="file" id="imageInput" accept="image/*" multiple hidden>
-                                        <button type="button" class="btn btn-lg text-white" 
-                                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;"
-                                                onclick="document.getElementById('imageInput').click()">
-                                            <i class="fas fa-folder-open me-2"></i>Browse Files
-                                        </button>
+                                    <p class="text-muted small mb-2">Ad will automatically become active between these dates</p>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label small">Start Date</label>
+                                            <input type="date" class="form-control" id="startDate" required>
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label class="form-label small">End Date</label>
+                                            <input type="date" class="form-control" id="endDate" required>
+                                        </div>
                                     </div>
-                                    <div id="imagePreviewContainer" class="mt-3"></div>
                                 </div>
-                                <div class="col-12 mt-4">
-                                    <button type="submit" class="btn btn-lg text-white px-5" 
-                                            style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); border: none;">
-                                        <i class="fas fa-paper-plane me-2"></i>Create Advertisement
-                                    </button>
-                                    <button type="button" class="btn btn-secondary btn-lg px-5 ms-2" 
-                                            onclick="document.getElementById('createAdForm').reset(); document.getElementById('imagePreviewContainer').innerHTML = ''; selectedFiles = [];">
-                                        <i class="fas fa-times me-2"></i>Clear Form
-                                    </button>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Priority (1-10)</label>
+                                    <input type="number" class="form-control" id="priority" min="1" max="10" value="5">
+                                    <small class="text-muted">Higher priority ads appear more frequently</small>
                                 </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary" id="createBtn"
+                                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                                    <i class="fas fa-plus-circle me-2"></i>Create Advertisement
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="clearCreateForm()">
+                                    <i class="fas fa-times me-2"></i>Clear Form
+                                </button>
+                            </div>
+
+                            <div id="uploadProgress" class="mt-3" style="display: none;">
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         role="progressbar" style="width: 0%;" id="progressBar"></div>
+                                </div>
+                                <p class="text-center mt-2 text-muted" id="progressText">Uploading...</p>
                             </div>
                         </form>
                     </div>
@@ -1409,56 +1440,113 @@
             displayImagePreviews();
         }
 
-        // Create ad form submit
-        document.getElementById('createAdForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // Create ad form handling - Match InstantllyAds exactly
+        let bottomImageBase64 = '';
+        let fullscreenImageBase64 = '';
 
-            const title = document.getElementById('adTitle').value;
-            const phoneNumber = document.getElementById('phoneNumber').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            const priority = document.getElementById('priority').value;
+        function handleBottomImageUpload(event) {
+            const file = event.target.files?.[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    bottomImageBase64 = reader.result;
+                    document.getElementById('bottomImagePreview').innerHTML = `
+                        <img src="${bottomImageBase64}" class="img-thumbnail" style="max-width: 300px;" alt="Bottom banner preview">
+                        <p class="text-success small mt-1"><i class="fas fa-check-circle"></i> Bottom image loaded</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
 
-            if (selectedFiles.length === 0) {
-                alert('Please select at least one image');
+        function handleFullscreenImageUpload(event) {
+            const file = event.target.files?.[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    fullscreenImageBase64 = reader.result;
+                    document.getElementById('fullscreenImagePreview').innerHTML = `
+                        <img src="${fullscreenImageBase64}" class="img-thumbnail" style="max-width: 300px;" alt="Fullscreen preview">
+                        <p class="text-success small mt-1"><i class="fas fa-check-circle"></i> Fullscreen image loaded</p>
+                    `;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function clearCreateForm() {
+            document.getElementById('createAdForm').reset();
+            bottomImageBase64 = '';
+            fullscreenImageBase64 = '';
+            document.getElementById('bottomImagePreview').innerHTML = '';
+            document.getElementById('fullscreenImagePreview').innerHTML = '';
+        }
+
+        async function handleCreateAd(event) {
+            event.preventDefault();
+
+            if (!bottomImageBase64) {
+                alert('Please select a bottom banner image');
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('phoneNumber', phoneNumber);
-            formData.append('startDate', startDate);
-            formData.append('endDate', endDate);
-            formData.append('priority', priority);
-            formData.append('uploaderName', 'Admin');
-
-            selectedFiles.forEach(file => {
-                formData.append('images', file);
-            });
+            const data = {
+                title: document.getElementById('adTitle').value,
+                bottomImage: bottomImageBase64,
+                fullscreenImage: fullscreenImageBase64 || '',
+                phoneNumber: document.getElementById('phoneNumber').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                priority: parseInt(document.getElementById('priority').value) || 5
+            };
 
             try {
-                // For admin-created ads, use admin endpoint (TODO: create this endpoint)
-                // For now, use channel partner endpoint
-                const response = await fetch(`${API_BASE_URL}/channel-partner/ads`, {
+                // Show progress
+                document.getElementById('uploadProgress').style.display = 'block';
+                document.getElementById('createBtn').disabled = true;
+                
+                const progressBar = document.getElementById('progressBar');
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    if (progress <= 90) {
+                        progressBar.style.width = progress + '%';
+                    }
+                }, 200);
+
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_BASE_URL}/ads`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     },
-                    body: formData
+                    body: JSON.stringify(data)
                 });
 
-                if (!response.ok) throw new Error('Failed to create ad');
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
 
-                alert('Advertisement created successfully!');
-                document.getElementById('createAdForm').reset();
-                selectedFiles = [];
-                displayImagePreviews();
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to create ad');
+                }
+
+                alert('✅ Advertisement created successfully!');
+                clearCreateForm();
                 await loadAllAds();
+                
+                // Switch to All Ads tab
+                document.querySelector('[data-bs-target="#allAdsTab"]').click();
             } catch (error) {
                 console.error('Error creating ad:', error);
-                alert('Failed to create advertisement');
+                alert('❌ Failed to create advertisement. Please try again.\n\nError: ' + error.message);
+            } finally {
+                document.getElementById('uploadProgress').style.display = 'none';
+                document.getElementById('createBtn').disabled = false;
+                document.getElementById('progressBar').style.width = '0%';
             }
-        });
+        }
 
         // Utility functions
         function getImageUrl(adId, type) {
