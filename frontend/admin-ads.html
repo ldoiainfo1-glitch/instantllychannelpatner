@@ -1319,12 +1319,25 @@
 
         async function confirmDelete() {
             try {
-                // TODO: Implement delete endpoint
-                alert('Delete functionality coming soon');
+                const token = localStorage.getItem('adminToken');
+                const response = await fetch(`${API_BASE_URL}/ads/${selectedAdId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to delete ad');
+
+                alert('Advertisement deleted successfully!');
                 bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                
+                // Reload ads
+                await loadAllAds();
+                await loadPendingAds();
             } catch (error) {
                 console.error('Error deleting ad:', error);
-                alert('Failed to delete advertisement');
+                alert('Failed to delete advertisement. Please try again.');
             }
         }
 
