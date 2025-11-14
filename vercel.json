@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://instantllychannelpatner.onrender.com/api/$1"
+      "destination": "https://instantlly-cards-backend-6ki0.onrender.com/api/$1"
     }
   ]
 }
