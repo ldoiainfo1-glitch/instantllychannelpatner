@@ -10,15 +10,15 @@
     <link href="css/style.css" rel="stylesheet">
     <style>
         body {
-            background: #f8f9fa;
+            background: #f5f7fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
         }
 
         .navbar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .navbar-brand {
@@ -27,7 +27,7 @@
         }
 
         .admin-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
             padding: 2.5rem 0 3rem 0;
             margin-bottom: 2rem;
@@ -81,7 +81,7 @@
 
         .card-header {
             border-radius: 12px 12px 0 0 !important;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important;
         }
 
         .table thead th {
@@ -272,8 +272,16 @@
         const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
         let isAdmin = false;
 
-        // Check admin access on page load
+        // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if user is logged in
+            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                // Redirect to login page
+                window.location.href = 'login.html';
+                return;
+            }
+            
             checkAdminAccess();
             setupTabAutoReload();
         });
@@ -783,8 +791,10 @@
         document.getElementById('logoutBtn').addEventListener('click', function(e) {
             e.preventDefault();
             if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('adminPassword');
-                window.location.href = 'index.html';
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUsername');
+                localStorage.removeItem('rememberAdmin');
+                window.location.href = 'login.html';
             }
         });
     </script>
