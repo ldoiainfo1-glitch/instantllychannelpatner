@@ -294,6 +294,11 @@
                     </button>
                 </li>
                 <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transferTab">
+                        <i class="fas fa-exchange-alt me-2"></i>Transfer Credits
+                    </button>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#securityTab">
                         <i class="fas fa-lock me-2"></i>Security
                     </button>
@@ -404,6 +409,95 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transfer Credits Tab -->
+                <div class="tab-pane fade" id="transferTab">
+                    <div class="info-card">
+                        <h4 class="mb-4">
+                            <i class="fas fa-exchange-alt me-2"></i>Transfer Credits
+                        </h4>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Available Balance:</strong> <span id="transferAvailableCredits" class="fw-bold">0</span> credits
+                        </div>
+
+                        <form id="transferForm" onsubmit="handleTransferCredits(event)">
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-phone me-2"></i>Recipient Phone Number
+                                    </label>
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        id="transferPhone" 
+                                        placeholder="Start typing with 88..." 
+                                        autocomplete="off"
+                                        required>
+                                    <small class="text-muted">Type phone number starting with 88 to search users</small>
+                                    
+                                    <!-- User dropdown -->
+                                    <div id="userDropdown" class="list-group mt-2" style="display: none; max-height: 300px; overflow-y: auto;"></div>
+                                </div>
+
+                                <!-- Selected user display -->
+                                <div class="col-md-12 mb-3" id="selectedUserCard" style="display: none;">
+                                    <div class="card border-primary">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-center">
+                                                <img id="selectedUserPhoto" src="" alt="User" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                <div>
+                                                    <h6 class="mb-0" id="selectedUserName"></h6>
+                                                    <small class="text-muted" id="selectedUserPhone"></small>
+                                                </div>
+                                                <button type="button" class="btn-close ms-auto" onclick="clearSelectedUser()"></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-coins me-2"></i>Amount to Transfer
+                                    </label>
+                                    <input 
+                                        type="number" 
+                                        class="form-control" 
+                                        id="transferAmount" 
+                                        placeholder="Enter amount" 
+                                        min="1"
+                                        required>
+                                    <small class="text-muted">Minimum: 1 credit</small>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-comment me-2"></i>Description (Optional)
+                                    </label>
+                                    <textarea 
+                                        class="form-control" 
+                                        id="transferDescription" 
+                                        rows="2" 
+                                        placeholder="Add a note about this transfer"></textarea>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100" id="transferBtn">
+                                <i class="fas fa-paper-plane me-2"></i>Transfer Credits
+                            </button>
+                        </form>
+
+                        <hr class="my-4">
+
+                        <h5 class="mb-3">
+                            <i class="fas fa-clock me-2"></i>Recent Transfers
+                        </h5>
+                        <div id="recentTransfers">
+                            <p class="text-muted text-center">No recent transfers</p>
                         </div>
                     </div>
                 </div>
@@ -1212,6 +1306,221 @@
                 toastElement.remove();
             });
         }
+
+        // =============== CREDITS TRANSFER FUNCTIONALITY ===============
+        let selectedUser = null;
+        let searchTimeout = null;
+
+        // Phone number input listener for user search
+        document.getElementById('transferPhone').addEventListener('input', async (e) => {
+            const phonePrefix = e.target.value.trim();
+            
+            // Clear previous timeout
+            if (searchTimeout) clearTimeout(searchTimeout);
+            
+            // Hide dropdown if input is empty or too short
+            if (phonePrefix.length < 2) {
+                document.getElementById('userDropdown').style.display = 'none';
+                return;
+            }
+
+            // Only search if starts with 88
+            if (!phonePrefix.startsWith('88')) {
+                document.getElementById('userDropdown').style.display = 'none';
+                return;
+            }
+
+            // Debounce search
+            searchTimeout = setTimeout(async () => {
+                await searchUsers(phonePrefix);
+            }, 500);
+        });
+
+        async function searchUsers(phonePrefix) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/credits/search-users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ phonePrefix })
+                });
+
+                const data = await response.json();
+                
+                if (data.success && data.users.length > 0) {
+                    displayUserDropdown(data.users);
+                } else {
+                    document.getElementById('userDropdown').innerHTML = `
+                        <div class="list-group-item text-center text-muted">
+                            <i class="fas fa-search me-2"></i>No users found
+                        </div>
+                    `;
+                    document.getElementById('userDropdown').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('User search error:', error);
+                showNotification('Failed to search users', 'error');
+            }
+        }
+
+        function displayUserDropdown(users) {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.innerHTML = users.map(user => `
+                <button type="button" class="list-group-item list-group-item-action" onclick='selectUser(${JSON.stringify(user)})'>
+                    <div class="d-flex align-items-center">
+                        <img src="${user.profilePicture || 'images/default-avatar.png'}" 
+                             class="rounded-circle me-3" 
+                             style="width: 40px; height: 40px; object-fit: cover;"
+                             onerror="this.src='images/default-avatar.png'">
+                        <div>
+                            <div class="fw-bold">${user.name}</div>
+                            <small class="text-muted">${user.displayPhone}</small>
+                        </div>
+                    </div>
+                </button>
+            `).join('');
+            dropdown.style.display = 'block';
+        }
+
+        function selectUser(user) {
+            selectedUser = user;
+            
+            // Hide dropdown
+            document.getElementById('userDropdown').style.display = 'none';
+            
+            // Clear phone input
+            document.getElementById('transferPhone').value = '';
+            
+            // Show selected user card
+            document.getElementById('selectedUserCard').style.display = 'block';
+            document.getElementById('selectedUserPhoto').src = user.profilePicture || 'images/default-avatar.png';
+            document.getElementById('selectedUserName').textContent = user.name;
+            document.getElementById('selectedUserPhone').textContent = user.phone;
+        }
+
+        function clearSelectedUser() {
+            selectedUser = null;
+            document.getElementById('selectedUserCard').style.display = 'none';
+            document.getElementById('transferPhone').value = '';
+        }
+
+        async function handleTransferCredits(event) {
+            event.preventDefault();
+            
+            if (!selectedUser) {
+                showNotification('Please select a recipient', 'error');
+                return;
+            }
+
+            const amount = parseInt(document.getElementById('transferAmount').value);
+            const description = document.getElementById('transferDescription').value;
+
+            if (amount <= 0) {
+                showNotification('Amount must be greater than 0', 'error');
+                return;
+            }
+
+            // Disable button
+            const btn = document.getElementById('transferBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/credits/transfer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({
+                        toUserId: selectedUser._id,
+                        amount: amount,
+                        description: description
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`Successfully transferred ${amount} credits to ${selectedUser.name}`, 'success');
+                    
+                    // Reset form
+                    document.getElementById('transferForm').reset();
+                    clearSelectedUser();
+                    
+                    // Reload data
+                    await loadUserProfile();
+                    await loadRecentTransfers();
+                } else {
+                    showNotification(data.message || 'Transfer failed', 'error');
+                }
+            } catch (error) {
+                console.error('Transfer error:', error);
+                showNotification('Network error. Please try again.', 'error');
+            } finally {
+                // Re-enable button
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Transfer Credits';
+            }
+        }
+
+        async function loadRecentTransfers() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/credits/transactions?limit=5`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.transactions.length > 0) {
+                    const container = document.getElementById('recentTransfers');
+                    container.innerHTML = data.transactions.map(t => {
+                        const isReceived = t.type === 'transfer_received';
+                        const isSent = t.type === 'transfer_sent';
+                        
+                        if (!isReceived && !isSent) return '';
+
+                        const otherUser = isReceived ? t.fromUser : t.toUser;
+                        const icon = isReceived ? 'arrow-down' : 'arrow-up';
+                        const colorClass = isReceived ? 'success' : 'danger';
+                        const sign = isReceived ? '+' : '-';
+
+                        return `
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fas fa-${icon} text-${colorClass} me-2"></i>
+                                        <strong>${t.description}</strong>
+                                        <br>
+                                        <small class="text-muted">${otherUser?.name || 'Unknown'} - ${new Date(t.createdAt).toLocaleString()}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h6 class="mb-0 text-${colorClass}">${sign}${t.amount}</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    document.getElementById('recentTransfers').innerHTML = 
+                        '<p class="text-muted text-center">No recent transfers</p>';
+                }
+            } catch (error) {
+                console.error('Load transfers error:', error);
+            }
+        }
+
+        // Load recent transfers when transfer tab is shown
+        document.querySelector('[data-bs-target="#transferTab"]').addEventListener('click', () => {
+            loadRecentTransfers();
+            // Update available credits display
+            const credits = document.getElementById('userCredits')?.textContent || '0';
+            document.getElementById('transferAvailableCredits').textContent = credits;
+        });
     </script>
 </body>
 </html>
