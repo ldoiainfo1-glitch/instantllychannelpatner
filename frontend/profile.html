@@ -656,16 +656,6 @@
 
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', () => {
-            // Clear any old cached data on page load
-            const cachedCredits = localStorage.getItem('currentUserCredits');
-            if (cachedCredits && parseInt(cachedCredits) < 100000) {
-                console.warn('⚠️ Detected old cached credits, forcing logout to refresh...');
-                localStorage.removeItem('authToken');
-                localStorage.removeItem('currentUserCredits');
-                sessionStorage.clear();
-                authToken = null;
-            }
-            
             if (!authToken) {
                 // Show login section
                 document.getElementById('loginSection').style.display = 'block';
@@ -755,18 +745,20 @@
                     
                     console.log('✅ Profile loaded:', currentUser);
                     console.log('💰 Credits from API:', currentUser.credits);
+                    console.log('📅 Credits expiry:', currentUser.creditsExpiryDate);
                     
-                    // Check if we got old data (less than 100,000 credits)
-                    if (currentUser.credits < 100000) {
-                        console.error('⚠️ WARNING: Backend returned old credits:', currentUser.credits);
-                        console.error('⚠️ This means database migration didn\'t work or cache issue');
-                        console.error('⚠️ Forcing logout and asking user to login again...');
+                    // Check if credits are expired
+                    if (currentUser.creditsExpiryDate) {
+                        const expiryDate = new Date(currentUser.creditsExpiryDate);
+                        const now = new Date();
+                        const isExpired = now > expiryDate;
                         
-                        alert('Your account data needs to be refreshed. Please login again.');
-                        localStorage.removeItem('authToken');
-                        sessionStorage.clear();
-                        window.location.reload();
-                        return;
+                        if (isExpired) {
+                            console.log('⏰ Credits expired on:', expiryDate.toLocaleDateString());
+                        } else {
+                            const daysLeft = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                            console.log('✅ Credits valid for', daysLeft, 'more days');
+                        }
                     }
                     
                     // Store fresh data in sessionStorage for this session
