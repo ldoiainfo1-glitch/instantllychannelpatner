@@ -337,7 +337,14 @@
         // Check auth on page load
         document.addEventListener('DOMContentLoaded', function() {
             const token = getAuthToken();
+            console.log('🔍 Transfer page loaded');
+            console.log('📱 authToken:', localStorage.getItem('authToken') ? 'EXISTS' : 'MISSING');
+            console.log('🔑 channelPartnerToken:', localStorage.getItem('channelPartnerToken') ? 'EXISTS' : 'MISSING');
+            console.log('✅ Using token:', token ? 'FOUND' : 'NOT FOUND');
+            
             if (!token) {
+                console.warn('⚠️ No token found, redirecting to login...');
+                alert('Please login first to access the Transfer Credits page.');
                 window.location.href = 'login.html';
                 return;
             }
@@ -367,17 +374,29 @@
         async function loadBalance() {
             try {
                 const token = getAuthToken();
+                console.log('💰 Loading balance with token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+                
                 const response = await fetch(`${API_BASE_URL}/credits/balance`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
+                console.log('📊 Balance API response:', response.status);
+
                 if (response.ok) {
                     const data = await response.json();
                     currentBalance = data.credits || 0;
+                    console.log('✅ Balance loaded:', currentBalance);
                     document.getElementById('currentBalance').textContent = currentBalance.toLocaleString('en-IN') + ' Credits';
                 } else {
+                    if (response.status === 401) {
+                        console.error('❌ 401 Unauthorized - Token invalid or expired');
+                        alert('Your session has expired. Please login again.');
+                        localStorage.clear();
+                        window.location.href = 'login.html';
+                        return;
+                    }
                     console.error('Balance API error:', response.status, response.statusText);
                     document.getElementById('currentBalance').textContent = 'Error loading balance';
                 }
