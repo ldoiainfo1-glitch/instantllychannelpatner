@@ -672,6 +672,14 @@
             loadUserProfile();
             loadUserApplications();
             loadCreditsHistory();
+            
+            // Auto-refresh credits every 30 seconds
+            setInterval(() => {
+                if (authToken && currentUser) {
+                    console.log('🔄 Auto-refreshing credits...');
+                    fetchAndUpdateCredits();
+                }
+            }, 30000);
         });
 
         // Login form handler
@@ -765,6 +773,9 @@
                     sessionStorage.setItem('userProfile', JSON.stringify(currentUser));
                     
                     displayUserProfile(currentUser);
+                    
+                    // IMPORTANT: Fetch real-time credits from credits API
+                    await fetchAndUpdateCredits();
                 } else {
                     throw new Error('Failed to load profile');
                 }
@@ -775,6 +786,50 @@
                     localStorage.removeItem('authToken');
                     window.location.href = 'index.html';
                 }, 2000);
+            }
+        }
+
+        // Fetch real-time credits from credits API
+        async function fetchAndUpdateCredits() {
+            try {
+                console.log('💰 Fetching real-time credits from API...');
+                const response = await fetch(`${API_BASE_URL}/api/credits/balance`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Credits API response:', data);
+                    
+                    // Update credits in UI
+                    const userCreditsEl = document.getElementById('userCredits');
+                    if (userCreditsEl) {
+                        userCreditsEl.textContent = (data.credits || 0).toLocaleString('en-IN');
+                    }
+                    
+                    // Update in currentUser object
+                    if (currentUser) {
+                        currentUser.credits = data.credits || 0;
+                        currentUser.creditsExpiryDate = data.creditsExpiryDate;
+                        
+                        // Store updated data
+                        localStorage.setItem('currentUserCredits', currentUser.credits);
+                        sessionStorage.setItem('userProfile', JSON.stringify(currentUser));
+                    }
+                    
+                    // Log expiry info
+                    if (data.isExpired) {
+                        console.log('⏰ Credits are EXPIRED');
+                    } else if (data.daysRemaining !== undefined) {
+                        console.log(`✅ Credits valid for ${data.daysRemaining} more days`);
+                    }
+                } else {
+                    console.error('❌ Failed to fetch credits:', response.status);
+                }
+            } catch (error) {
+                console.error('❌ Error fetching credits:', error);
             }
         }
 
