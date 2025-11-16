@@ -769,7 +769,16 @@
             if (userNameEl) userNameEl.textContent = user.name;
             if (userPhoneEl) userPhoneEl.textContent = user.phone;
             if (userEmailEl) userEmailEl.textContent = user.email || 'Not provided';
-            if (userCreditsEl) userCreditsEl.textContent = user.credits || 0;
+            if (userCreditsEl) {
+                userCreditsEl.textContent = (user.credits || 0).toLocaleString('en-IN');
+                
+                // Store credits in localStorage for cross-page sync
+                localStorage.setItem('currentUserCredits', user.credits || 0);
+                localStorage.setItem('currentUserName', user.name || '');
+                localStorage.setItem('currentUserPhone', user.phone || '');
+                
+                console.log('💰 Profile credits updated:', user.credits);
+            }
 
             // Stats
             const introducedCountEl = document.getElementById('introducedCount');

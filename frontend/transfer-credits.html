@@ -410,6 +410,12 @@
                     console.log('💰 Full API response:', data);
                     document.getElementById('currentBalance').textContent = currentBalance.toLocaleString('en-IN') + ' Credits';
                     document.getElementById('currentBalance').className = 'text-white fw-bold';
+                    
+                    // Sync credits to localStorage for profile page
+                    localStorage.setItem('currentUserCredits', currentBalance);
+                    
+                    // Trigger storage event for cross-page sync
+                    window.dispatchEvent(new Event('creditsUpdated'));
                 } else {
                     const errorText = await response.text();
                     console.error('❌ API Error Response:', errorText);
@@ -575,6 +581,12 @@
                     currentBalance = data.newBalance;
                     document.getElementById('currentBalance').textContent = currentBalance.toLocaleString('en-IN') + ' Credits';
                     
+                    // Sync credits with profile page via localStorage
+                    localStorage.setItem('currentUserCredits', currentBalance);
+                    window.dispatchEvent(new Event('creditsUpdated'));
+                    
+                    console.log('💰 Credits updated after transfer:', currentBalance);
+                    
                     // Reload transactions
                     loadRecentTransactions();
                 } else {
@@ -616,9 +628,6 @@
                         'Authorization': `Bearer ${token}`,
                         'Cache-Control': 'no-cache, no-store, must-revalidate',
                         'Pragma': 'no-cache'
-                    }
-                });
-                        'Authorization': `Bearer ${token}`
                     }
                 });
 
