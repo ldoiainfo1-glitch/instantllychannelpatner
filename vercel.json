@@ -4,6 +4,14 @@
     {
       "source": "/api/(.*)",
       "destination": "https://instantlly-cards-backend-6ki0.onrender.com/api/$1"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/admin/index.html"
     }
   ]
 }
