@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Debugger - Instantly Cards</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .debug-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .token-display {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            word-break: break-all;
+            font-size: 0.85rem;
+        }
+        .test-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="debug-card">
+            <h2 class="mb-4">🔍 Authentication Debugger</h2>
+            
+            <div class="mb-4">
+                <h5>📱 User Token (authToken)</h5>
+                <div class="token-display" id="authTokenDisplay">Loading...</div>
+            </div>
+
+            <div class="mb-4">
+                <h5>🔑 Admin Token (channelPartnerToken)</h5>
+                <div class="token-display" id="adminTokenDisplay">Loading...</div>
+            </div>
+
+            <div class="mb-4">
+                <h5>✅ Active Token</h5>
+                <div class="token-display" id="activeTokenDisplay">Loading...</div>
+            </div>
+
+            <hr>
+
+            <div class="mb-3">
+                <button class="btn btn-primary btn-lg w-100" onclick="testProfile()">
+                    <i class="fas fa-user"></i> Test GET /api/auth/profile
+                </button>
+            </div>
+
+            <div class="mb-3">
+                <button class="btn btn-success btn-lg w-100" onclick="testBalance()">
+                    <i class="fas fa-coins"></i> Test GET /api/credits/balance
+                </button>
+            </div>
+
+            <div class="mb-3">
+                <button class="btn btn-warning btn-lg w-100" onclick="clearTokens()">
+                    <i class="fas fa-trash"></i> Clear All Tokens
+                </button>
+            </div>
+
+            <div id="testResults"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
+
+        function getAuthToken() {
+            return localStorage.getItem('authToken') || localStorage.getItem('channelPartnerToken');
+        }
+
+        function displayTokens() {
+            const authToken = localStorage.getItem('authToken');
+            const adminToken = localStorage.getItem('channelPartnerToken');
+            const activeToken = getAuthToken();
+
+            document.getElementById('authTokenDisplay').textContent = authToken || '❌ Not found';
+            document.getElementById('adminTokenDisplay').textContent = adminToken || '❌ Not found';
+            document.getElementById('activeTokenDisplay').textContent = activeToken || '❌ Not found';
+        }
+
+        async function testProfile() {
+            const resultsDiv = document.getElementById('testResults');
+            const token = getAuthToken();
+
+            if (!token) {
+                resultsDiv.innerHTML = '<div class="test-result error">❌ No token found! Please login first.</div>';
+                return;
+            }
+
+            try {
+                resultsDiv.innerHTML = '<div class="test-result info">⏳ Testing /api/auth/profile...</div>';
+
+                const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result success">
+                            <h5>✅ Profile API Success!</h5>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result error">
+                            <h5>❌ Profile API Error (${response.status})</h5>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <h5>💥 Network Error</h5>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testBalance() {
+            const resultsDiv = document.getElementById('testResults');
+            const token = getAuthToken();
+
+            if (!token) {
+                resultsDiv.innerHTML = '<div class="test-result error">❌ No token found! Please login first.</div>';
+                return;
+            }
+
+            try {
+                resultsDiv.innerHTML = '<div class="test-result info">⏳ Testing /api/credits/balance...</div>';
+
+                const response = await fetch(`${API_BASE_URL}/credits/balance`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result success">
+                            <h5>✅ Balance API Success!</h5>
+                            <p><strong>Credits:</strong> ${(data.credits || 0).toLocaleString('en-IN')}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-result error">
+                            <h5>❌ Balance API Error (${response.status})</h5>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="test-result error">
+                        <h5>💥 Network Error</h5>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function clearTokens() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('channelPartnerToken');
+            displayTokens();
+            document.getElementById('testResults').innerHTML = '<div class="test-result info">🗑️ All tokens cleared. Please login again.</div>';
+        }
+
+        // Display tokens on load
+        displayTokens();
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</body>
+</html>

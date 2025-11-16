@@ -374,7 +374,10 @@
         async function loadBalance() {
             try {
                 const token = getAuthToken();
-                console.log('💰 Loading balance with token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
+                console.log('💰 Loading balance...');
+                console.log('🔑 Token exists:', !!token);
+                console.log('📏 Token length:', token ? token.length : 0);
+                console.log('🔍 Token preview:', token ? token.substring(0, 50) + '...' : 'NO TOKEN');
                 
                 if (!token) {
                     console.error('❌ No token available');
@@ -383,33 +386,42 @@
                     return;
                 }
                 
+                console.log('📡 Calling API:', `${API_BASE_URL}/credits/balance`);
                 const response = await fetch(`${API_BASE_URL}/credits/balance`, {
                     headers: {
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
-                console.log('📊 Balance API response:', response.status);
+                console.log('📊 Balance API response status:', response.status);
+                console.log('📊 Balance API response ok:', response.ok);
 
                 if (response.ok) {
                     const data = await response.json();
                     currentBalance = data.credits || 0;
-                    console.log('✅ Balance loaded:', currentBalance);
+                    console.log('✅ Balance loaded successfully:', currentBalance);
+                    console.log('💰 Full API response:', data);
                     document.getElementById('currentBalance').textContent = currentBalance.toLocaleString('en-IN') + ' Credits';
+                    document.getElementById('currentBalance').className = 'text-white fw-bold';
                 } else {
+                    const errorText = await response.text();
+                    console.error('❌ API Error Response:', errorText);
+                    
                     if (response.status === 401) {
                         console.error('❌ 401 Unauthorized - Token invalid or expired');
-                        console.error('Token value:', token ? token.substring(0, 30) + '...' : 'NONE');
-                        console.error('This usually means you need to logout and login again');
-                        document.getElementById('currentBalance').innerHTML = '<span class="text-danger">Session Expired - <a href="profile.html">Login Again</a></span>';
+                        console.error('🔑 Token used:', token.substring(0, 50) + '...');
+                        console.error('💡 Try logging out and logging in again from profile.html');
+                        document.getElementById('currentBalance').innerHTML = '<span class="text-danger">Session Expired - <a href="profile.html" class="text-white text-decoration-underline">Login Again</a></span>';
                         return;
                     }
                     console.error('Balance API error:', response.status, response.statusText);
-                    document.getElementById('currentBalance').textContent = 'Error loading balance';
+                    document.getElementById('currentBalance').innerHTML = `<span class="text-warning">Error: ${response.status}</span>`;
                 }
             } catch (error) {
-                console.error('Load balance error:', error);
-                document.getElementById('currentBalance').textContent = 'Error loading balance';
+                console.error('💥 Load balance exception:', error);
+                console.error('💥 Error details:', error.message, error.stack);
+                document.getElementById('currentBalance').innerHTML = '<span class="text-warning">Network error</span>';
             }
         }
 
