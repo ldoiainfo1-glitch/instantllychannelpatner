@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Credits - Instantly Cards</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        body {
+            padding-top: 76px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .transfer-container {
+            max-width: 600px;
+            margin: 2rem auto;
+        }
+        
+        .transfer-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .transfer-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .balance-display {
+            background: rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .search-results {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            margin-top: 0.5rem;
+        }
+        
+        .user-item {
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .user-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .user-item.selected {
+            background: #e7f1ff;
+            border-left: 4px solid #667eea;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: #e9ecef;
+        }
+        
+        .transfer-form {
+            padding: 2rem;
+        }
+        
+        .amount-input {
+            font-size: 2rem;
+            text-align: center;
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 1rem;
+        }
+        
+        .quick-amounts {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .quick-amount-btn {
+            flex: 1;
+            min-width: 80px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .quick-amount-btn:hover {
+            background: #e7f1ff;
+            border-color: #667eea;
+        }
+        
+        .transfer-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 15px;
+            width: 100%;
+            color: white;
+            transition: all 0.3s;
+        }
+        
+        .transfer-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .transfer-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .selected-user-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+        }
+        
+        .transaction-success {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: #28a745;
+            border-radius: 50%;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="images/logo.png" alt="Logo" height="40" class="me-2">
+                <span>Instantly Cards</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html"><i class="fas fa-home me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="profile.html"><i class="fas fa-user me-1"></i> Profile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="transfer-credits.html"><i class="fas fa-exchange-alt me-1"></i> Transfer</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i> Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container transfer-container">
+        <div class="transfer-card">
+            <!-- Header -->
+            <div class="transfer-header">
+                <h2><i class="fas fa-exchange-alt me-2"></i> Transfer Credits</h2>
+                <div class="balance-display">
+                    <small>Available Balance</small>
+                    <h3 class="mb-0" id="currentBalance">Loading...</h3>
+                </div>
+            </div>
+
+            <!-- Transfer Form -->
+            <div class="transfer-form" id="transferForm">
+                <!-- Search User -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-search me-2"></i>Search User by Phone
+                    </label>
+                    <input 
+                        type="text" 
+                        class="form-control form-control-lg" 
+                        id="phoneSearch" 
+                        placeholder="Type phone number (e.g., 88, 9768...)"
+                        autocomplete="off"
+                    >
+                    <small class="text-muted">Start typing to see matching users</small>
+                    
+                    <!-- Search Results -->
+                    <div class="search-results d-none" id="searchResults"></div>
+                </div>
+
+                <!-- Selected User -->
+                <div class="selected-user-card d-none" id="selectedUserCard">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
+                            <img src="" alt="User" class="user-avatar" id="selectedUserAvatar">
+                            <div>
+                                <h6 class="mb-0" id="selectedUserName">-</h6>
+                                <small class="text-muted" id="selectedUserPhone">-</small>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearSelection()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Amount -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-coins me-2"></i>Transfer Amount
+                    </label>
+                    <input 
+                        type="number" 
+                        class="form-control amount-input" 
+                        id="transferAmount" 
+                        placeholder="0"
+                        min="1"
+                        step="1"
+                    >
+                    
+                    <!-- Quick Amount Buttons -->
+                    <div class="quick-amounts">
+                        <div class="quick-amount-btn" onclick="setAmount(1000)">1,000</div>
+                        <div class="quick-amount-btn" onclick="setAmount(5000)">5,000</div>
+                        <div class="quick-amount-btn" onclick="setAmount(10000)">10,000</div>
+                        <div class="quick-amount-btn" onclick="setAmount(50000)">50,000</div>
+                        <div class="quick-amount-btn" onclick="setAmount(100000)">1,00,000</div>
+                    </div>
+                </div>
+
+                <!-- Description (Optional) -->
+                <div class="mb-4">
+                    <label class="form-label fw-bold">
+                        <i class="fas fa-comment me-2"></i>Note (Optional)
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="transferNote" 
+                        rows="2" 
+                        placeholder="Add a note for this transfer..."
+                    ></textarea>
+                </div>
+
+                <!-- Transfer Button -->
+                <button class="transfer-btn" id="transferBtn" onclick="executeTransfer()" disabled>
+                    <i class="fas fa-paper-plane me-2"></i>Transfer Credits
+                </button>
+            </div>
+
+            <!-- Success State (Hidden by default) -->
+            <div class="transaction-success d-none" id="successState">
+                <div class="success-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h3 class="text-success mb-3">Transfer Successful!</h3>
+                <p class="text-muted mb-4" id="successMessage">-</p>
+                <button class="btn btn-primary btn-lg" onclick="resetForm()">
+                    <i class="fas fa-plus me-2"></i>Make Another Transfer
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="transfer-card mt-4">
+            <div class="p-4">
+                <h5 class="mb-3"><i class="fas fa-history me-2"></i>Recent Transactions</h5>
+                <div id="recentTransactions">
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                        <p>Loading transactions...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const API_BASE_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
+        let currentBalance = 0;
+        let selectedUser = null;
+        let searchTimeout = null;
+
+        // Check auth on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('channelPartnerToken');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            loadBalance();
+            loadRecentTransactions();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Phone search with debounce
+            document.getElementById('phoneSearch').addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                const query = e.target.value.trim();
+                
+                if (query.length > 0) {
+                    searchTimeout = setTimeout(() => searchUsers(query), 300);
+                } else {
+                    document.getElementById('searchResults').classList.add('d-none');
+                }
+            });
+
+            // Amount input validation
+            document.getElementById('transferAmount').addEventListener('input', validateForm);
+        }
+
+        async function loadBalance() {
+            try {
+                const token = localStorage.getItem('channelPartnerToken');
+                const response = await fetch(`${API_BASE_URL}/credits/balance`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentBalance = data.credits || 0;
+                    document.getElementById('currentBalance').textContent = currentBalance.toLocaleString('en-IN') + ' Credits';
+                } else {
+                    document.getElementById('currentBalance').textContent = 'Error loading balance';
+                }
+            } catch (error) {
+                console.error('Load balance error:', error);
+                document.getElementById('currentBalance').textContent = 'Error loading balance';
+            }
+        }
+
+        async function searchUsers(query) {
+            try {
+                const token = localStorage.getItem('channelPartnerToken');
+                const response = await fetch(`${API_BASE_URL}/credits/search-users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ phonePrefix: query })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displaySearchResults(data.users || []);
+                } else {
+                    console.error('Search failed');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }
+
+        function displaySearchResults(users) {
+            const resultsDiv = document.getElementById('searchResults');
+            
+            if (users.length === 0) {
+                resultsDiv.innerHTML = '<div class="empty-state p-3"><i class="fas fa-user-slash fa-2x mb-2"></i><p class="mb-0">No users found</p></div>';
+                resultsDiv.classList.remove('d-none');
+                return;
+            }
+
+            resultsDiv.innerHTML = users.map(user => `
+                <div class="user-item" onclick='selectUser(${JSON.stringify(user)})'>
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="${user.profilePicture || 'images/default-avatar.png'}" 
+                             alt="${user.name}" 
+                             class="user-avatar"
+                             onerror="this.src='images/default-avatar.png'">
+                        <div>
+                            <h6 class="mb-0">${user.name}</h6>
+                            <small class="text-muted">${user.displayPhone}</small>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            resultsDiv.classList.remove('d-none');
+        }
+
+        function selectUser(user) {
+            selectedUser = user;
+            
+            // Hide search results
+            document.getElementById('searchResults').classList.add('d-none');
+            document.getElementById('phoneSearch').value = user.displayPhone;
+            
+            // Show selected user card
+            document.getElementById('selectedUserCard').classList.remove('d-none');
+            document.getElementById('selectedUserAvatar').src = user.profilePicture || 'images/default-avatar.png';
+            document.getElementById('selectedUserName').textContent = user.name;
+            document.getElementById('selectedUserPhone').textContent = user.displayPhone;
+            
+            validateForm();
+        }
+
+        function clearSelection() {
+            selectedUser = null;
+            document.getElementById('selectedUserCard').classList.add('d-none');
+            document.getElementById('phoneSearch').value = '';
+            validateForm();
+        }
+
+        function setAmount(amount) {
+            document.getElementById('transferAmount').value = amount;
+            validateForm();
+        }
+
+        function validateForm() {
+            const amount = parseInt(document.getElementById('transferAmount').value) || 0;
+            const transferBtn = document.getElementById('transferBtn');
+            
+            const isValid = selectedUser && amount > 0 && amount <= currentBalance;
+            transferBtn.disabled = !isValid;
+        }
+
+        async function executeTransfer() {
+            if (!selectedUser) {
+                alert('Please select a user');
+                return;
+            }
+
+            const amount = parseInt(document.getElementById('transferAmount').value);
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            if (amount > currentBalance) {
+                alert('Insufficient balance');
+                return;
+            }
+
+            const note = document.getElementById('transferNote').value.trim();
+            const transferBtn = document.getElementById('transferBtn');
+            
+            // Disable button and show loading
+            transferBtn.disabled = true;
+            transferBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+
+            try {
+                const token = localStorage.getItem('channelPartnerToken');
+                const response = await fetch(`${API_BASE_URL}/credits/transfer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        toUserId: selectedUser._id,
+                        amount: amount,
+                        description: note || undefined
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show success state
+                    document.getElementById('transferForm').classList.add('d-none');
+                    document.getElementById('successState').classList.remove('d-none');
+                    document.getElementById('successMessage').textContent = 
+                        `Successfully transferred ${amount.toLocaleString('en-IN')} credits to ${selectedUser.name}`;
+                    
+                    // Update balance
+                    currentBalance = data.newBalance;
+                    document.getElementById('currentBalance').textContent = currentBalance.toLocaleString('en-IN') + ' Credits';
+                    
+                    // Reload transactions
+                    loadRecentTransactions();
+                } else {
+                    alert(data.message || 'Transfer failed');
+                    transferBtn.disabled = false;
+                    transferBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Transfer Credits';
+                }
+            } catch (error) {
+                console.error('Transfer error:', error);
+                alert('Transfer failed. Please try again.');
+                transferBtn.disabled = false;
+                transferBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Transfer Credits';
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('successState').classList.add('d-none');
+            document.getElementById('transferForm').classList.remove('d-none');
+            
+            selectedUser = null;
+            document.getElementById('phoneSearch').value = '';
+            document.getElementById('transferAmount').value = '';
+            document.getElementById('transferNote').value = '';
+            document.getElementById('selectedUserCard').classList.add('d-none');
+            
+            validateForm();
+        }
+
+        async function loadRecentTransactions() {
+            try {
+                const token = localStorage.getItem('channelPartnerToken');
+                const response = await fetch(`${API_BASE_URL}/credits/transactions?limit=10`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayTransactions(data.transactions || []);
+                } else {
+                    document.getElementById('recentTransactions').innerHTML = 
+                        '<div class="empty-state"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p>Failed to load transactions</p></div>';
+                }
+            } catch (error) {
+                console.error('Load transactions error:', error);
+                document.getElementById('recentTransactions').innerHTML = 
+                    '<div class="empty-state"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p>Error loading transactions</p></div>';
+            }
+        }
+
+        function displayTransactions(transactions) {
+            const container = document.getElementById('recentTransactions');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox fa-2x mb-2"></i><p>No transactions yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = transactions.map(tx => {
+                const isReceived = tx.type === 'transfer_received' || tx.type === 'referral_bonus' || tx.type === 'signup_bonus';
+                const icon = isReceived ? 'fa-arrow-down text-success' : 'fa-arrow-up text-danger';
+                const sign = isReceived ? '+' : '-';
+                const date = new Date(tx.createdAt).toLocaleDateString('en-IN', { 
+                    day: 'numeric', 
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="d-flex align-items-center justify-content-between p-3 border-bottom">
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="fas ${icon} fa-2x"></i>
+                            <div>
+                                <h6 class="mb-0">${tx.description}</h6>
+                                <small class="text-muted">${date}</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <h6 class="mb-0 ${isReceived ? 'text-success' : 'text-danger'}">
+                                ${sign}${tx.amount.toLocaleString('en-IN')}
+                            </h6>
+                            <small class="text-muted">Balance: ${tx.balanceAfter.toLocaleString('en-IN')}</small>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('channelPartnerToken');
+                localStorage.removeItem('channelPartnerName');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+</html>
