@@ -698,6 +698,9 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Clear all cached data before storing new login
+                    sessionStorage.clear();
+                    
                     // Store token
                     authToken = data.token;
                     localStorage.setItem('authToken', authToken);
@@ -706,8 +709,8 @@
                     // Hide error
                     errorDiv.classList.add('d-none');
 
-                    // Reload page to show profile
-                    window.location.reload();
+                    // Force reload with cache clear
+                    window.location.reload(true);
                 } else {
                     errorDiv.textContent = data.error || 'Login failed';
                     errorDiv.classList.remove('d-none');
@@ -722,15 +725,25 @@
         // Load user profile
         async function loadUserProfile() {
             try {
-                const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                // Add cache-busting parameter to force fresh data
+                const cacheBuster = Date.now();
+                const response = await fetch(`${API_BASE_URL}/auth/profile?_=${cacheBuster}`, {
+                    method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${authToken}`
+                        'Authorization': `Bearer ${authToken}`,
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
                     }
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    currentUser = data.user;
+                    currentUser = data.user || data; // Support both formats
+                    
+                    // Store fresh data in sessionStorage for this session
+                    sessionStorage.setItem('userProfile', JSON.stringify(currentUser));
+                    
                     displayUserProfile(currentUser);
                 } else {
                     throw new Error('Failed to load profile');
