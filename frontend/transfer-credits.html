@@ -403,9 +403,25 @@
                 if (response.ok) {
                     const data = await response.json();
                     currentBalance = data.credits || 0;
+                    const expiryDate = data.creditsExpiryDate;
+                    const daysRemaining = data.daysRemaining;
+                    const isExpired = data.isExpired;
+                    
                     console.log('✅ Balance loaded successfully:', currentBalance);
+                    console.log('📅 Expiry date:', expiryDate);
+                    console.log('⏰ Days remaining:', daysRemaining);
                     console.log('💰 Full API response:', data);
-                    document.getElementById('currentBalance').textContent = currentBalance.toLocaleString('en-IN') + ' Credits';
+                    
+                    if (isExpired) {
+                        document.getElementById('currentBalance').innerHTML = '<span class="text-danger">Expired (valid for 1 month)</span>';
+                    } else {
+                        let balanceText = currentBalance.toLocaleString('en-IN') + ' Credits';
+                        if (daysRemaining !== null && daysRemaining <= 7) {
+                            balanceText += ` <small class="text-warning">(${daysRemaining} days left)</small>`;
+                        }
+                        document.getElementById('currentBalance').innerHTML = balanceText;
+                    }
+                    
                     document.getElementById('currentBalance').className = 'text-white fw-bold';
                     
                     // Sync credits to localStorage for profile page
