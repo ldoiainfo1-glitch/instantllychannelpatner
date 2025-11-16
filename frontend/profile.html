@@ -715,6 +715,11 @@
                     authToken = data.token;
                     localStorage.setItem('authToken', authToken);
                     currentUser = data.user;
+                    
+                    console.log('✅ Login successful');
+                    console.log('🔑 Token stored:', authToken.substring(0, 30) + '...');
+                    console.log('👤 User:', currentUser.name, currentUser.phone);
+                    console.log('💰 Credits:', currentUser.credits);
 
                     // Hide error
                     errorDiv.classList.add('d-none');
