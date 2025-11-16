@@ -343,9 +343,9 @@
             console.log('✅ Using token:', token ? 'FOUND' : 'NOT FOUND');
             
             if (!token) {
-                console.warn('⚠️ No token found, redirecting to login...');
-                // Immediate redirect, no alert
-                window.location.replace('profile.html');
+                console.warn('⚠️ No token found - please login first');
+                document.getElementById('currentBalance').textContent = 'Please login first';
+                document.getElementById('currentBalance').className = 'text-danger fw-bold';
                 return;
             }
             
@@ -378,9 +378,8 @@
                 
                 if (!token) {
                     console.error('❌ No token available');
-                    document.getElementById('currentBalance').textContent = 'Error loading balance';
-                    // Immediate redirect, no alert
-                    window.location.replace('profile.html');
+                    document.getElementById('currentBalance').textContent = 'Please login first';
+                    document.getElementById('currentBalance').className = 'text-danger fw-bold';
                     return;
                 }
                 
@@ -400,12 +399,9 @@
                 } else {
                     if (response.status === 401) {
                         console.error('❌ 401 Unauthorized - Token invalid or expired');
+                        console.error('Token value:', token ? token.substring(0, 30) + '...' : 'NONE');
                         console.error('This usually means you need to logout and login again');
-                        // Clear ALL tokens to force fresh login
-                        localStorage.removeItem('authToken');
-                        localStorage.removeItem('channelPartnerToken');
-                        // Immediate redirect, no alert
-                        window.location.replace('profile.html');
+                        document.getElementById('currentBalance').innerHTML = '<span class="text-danger">Session Expired - <a href="profile.html">Login Again</a></span>';
                         return;
                     }
                     console.error('Balance API error:', response.status, response.statusText);
