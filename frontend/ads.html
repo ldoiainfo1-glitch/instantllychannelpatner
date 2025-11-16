@@ -752,12 +752,28 @@
                     <tr>
                         <td>${index + 1}</td>
                         <td>
-                            ${ad.bottomImageId ? `<img src="${BACKEND_URL}/api/ads/images/${ad.bottomImageId}" 
-                                class="ad-image me-1" onclick="showImageModal('${ad.bottomImageId}')" 
-                                title="Bottom Banner">` : ''}
-                            ${ad.fullscreenImageId ? `<img src="${BACKEND_URL}/api/ads/images/${ad.fullscreenImageId}" 
-                                class="ad-image" onclick="showImageModal('${ad.fullscreenImageId}')" 
-                                title="Fullscreen">` : ''}
+                            <div class="d-flex flex-column gap-1">
+                                ${ad.bottomImageId || ad.bottomImageGridFS ? `
+                                    <div>
+                                        <small class="text-muted d-block">Bottom</small>
+                                        <img src="${BACKEND_URL}/api/ads/image/${ad.id}/bottom" 
+                                            class="ad-image" 
+                                            onclick="showImageModal('${ad.id}', 'bottom')" 
+                                            title="Bottom Banner"
+                                            style="height: 50px; width: auto; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
+                                    </div>
+                                ` : ''}
+                                ${ad.fullscreenImageId || ad.fullscreenImageGridFS ? `
+                                    <div>
+                                        <small class="text-muted d-block">Fullscreen</small>
+                                        <img src="${BACKEND_URL}/api/ads/image/${ad.id}/fullscreen" 
+                                            class="ad-image" 
+                                            onclick="showImageModal('${ad.id}', 'fullscreen')" 
+                                            title="Fullscreen"
+                                            style="height: 50px; width: auto; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
+                                    </div>
+                                ` : ''}
+                            </div>
                         </td>
                         <td><strong>${ad.title}</strong></td>
                         <td>${ad.phoneNumber}</td>
@@ -796,9 +812,9 @@
             }).join('');
         }
 
-        function showImageModal(imageId) {
+        function showImageModal(adId, type) {
             const modalImage = document.getElementById('modalImage');
-            modalImage.src = `${BACKEND_URL}/api/ads/images/${imageId}`;
+            modalImage.src = `${BACKEND_URL}/api/ads/image/${adId}/${type}`;
             new bootstrap.Modal(document.getElementById('imageModal')).show();
         }
 

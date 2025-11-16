@@ -329,9 +329,14 @@
         let selectedUser = null;
         let searchTimeout = null;
 
+        // Get auth token - support both user and admin tokens
+        function getAuthToken() {
+            return localStorage.getItem('authToken') || localStorage.getItem('channelPartnerToken');
+        }
+
         // Check auth on page load
         document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('channelPartnerToken');
+            const token = getAuthToken();
             if (!token) {
                 window.location.href = 'login.html';
                 return;
@@ -361,7 +366,7 @@
 
         async function loadBalance() {
             try {
-                const token = localStorage.getItem('channelPartnerToken');
+                const token = getAuthToken();
                 const response = await fetch(`${API_BASE_URL}/credits/balance`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -373,6 +378,7 @@
                     currentBalance = data.credits || 0;
                     document.getElementById('currentBalance').textContent = currentBalance.toLocaleString('en-IN') + ' Credits';
                 } else {
+                    console.error('Balance API error:', response.status, response.statusText);
                     document.getElementById('currentBalance').textContent = 'Error loading balance';
                 }
             } catch (error) {
@@ -383,7 +389,7 @@
 
         async function searchUsers(query) {
             try {
-                const token = localStorage.getItem('channelPartnerToken');
+                const token = getAuthToken();
                 const response = await fetch(`${API_BASE_URL}/credits/search-users`, {
                     method: 'POST',
                     headers: {
@@ -479,6 +485,12 @@
                 return;
             }
 
+            // Check if user has sufficient balance
+            if (amount > currentBalance) {
+                alert(`Insufficient balance! You have ${currentBalance.toLocaleString('en-IN')} credits available.`);
+                return;
+            }
+
             if (amount > currentBalance) {
                 alert('Insufficient balance');
                 return;
@@ -492,7 +504,7 @@
             transferBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
 
             try {
-                const token = localStorage.getItem('channelPartnerToken');
+                const token = getAuthToken();
                 const response = await fetch(`${API_BASE_URL}/credits/transfer`, {
                     method: 'POST',
                     headers: {
@@ -549,7 +561,7 @@
 
         async function loadRecentTransactions() {
             try {
-                const token = localStorage.getItem('channelPartnerToken');
+                const token = getAuthToken();
                 const response = await fetch(`${API_BASE_URL}/credits/transactions?limit=10`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
