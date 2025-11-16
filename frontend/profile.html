@@ -656,6 +656,16 @@
 
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Clear any old cached data on page load
+            const cachedCredits = localStorage.getItem('currentUserCredits');
+            if (cachedCredits && parseInt(cachedCredits) < 100000) {
+                console.warn('⚠️ Detected old cached credits, forcing logout to refresh...');
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('currentUserCredits');
+                sessionStorage.clear();
+                authToken = null;
+            }
+            
             if (!authToken) {
                 // Show login section
                 document.getElementById('loginSection').style.display = 'block';
@@ -730,16 +740,29 @@
                 const response = await fetch(`${API_BASE_URL}/auth/profile?_=${cacheBuster}`, {
                     method: 'GET',
                     headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
+                        'Authorization': `Bearer ${authToken}`
                     }
                 });
 
                 if (response.ok) {
                     const data = await response.json();
                     currentUser = data.user || data; // Support both formats
+                    
+                    console.log('✅ Profile loaded:', currentUser);
+                    console.log('💰 Credits from API:', currentUser.credits);
+                    
+                    // Check if we got old data (less than 100,000 credits)
+                    if (currentUser.credits < 100000) {
+                        console.error('⚠️ WARNING: Backend returned old credits:', currentUser.credits);
+                        console.error('⚠️ This means database migration didn\'t work or cache issue');
+                        console.error('⚠️ Forcing logout and asking user to login again...');
+                        
+                        alert('Your account data needs to be refreshed. Please login again.');
+                        localStorage.removeItem('authToken');
+                        sessionStorage.clear();
+                        window.location.reload();
+                        return;
+                    }
                     
                     // Store fresh data in sessionStorage for this session
                     sessionStorage.setItem('userProfile', JSON.stringify(currentUser));

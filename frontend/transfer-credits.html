@@ -386,17 +386,14 @@
                     return;
                 }
                 
-                // Add cache-busting and no-cache headers
+                // Add cache-busting (no Cache-Control headers to avoid CORS issues)
                 const cacheBuster = Date.now();
                 console.log('📡 Calling API:', `${API_BASE_URL}/credits/balance?_=${cacheBuster}`);
                 const response = await fetch(`${API_BASE_URL}/credits/balance?_=${cacheBuster}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
+                        'Content-Type': 'application/json'
                     }
                 });
 
@@ -620,14 +617,13 @@
                 const token = getAuthToken();
                 if (!token) return;
 
-                // Add cache-busting
+                // Add cache-busting (no Cache-Control headers to avoid CORS)
                 const cacheBuster = Date.now();
                 const response = await fetch(`${API_BASE_URL}/credits/transactions?limit=10&_=${cacheBuster}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache'
+                        'Content-Type': 'application/json'
                     }
                 });
 
