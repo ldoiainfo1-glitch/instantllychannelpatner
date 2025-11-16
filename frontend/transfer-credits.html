@@ -329,7 +329,7 @@
         let selectedUser = null;
         let searchTimeout = null;
 
-        // Get auth token - support both user and admin tokens
+        // Get auth token - support both user and admin tokens (PRIORITIZE authToken for users)
         function getAuthToken() {
             return localStorage.getItem('authToken') || localStorage.getItem('channelPartnerToken');
         }
@@ -345,7 +345,7 @@
             if (!token) {
                 console.warn('⚠️ No token found, redirecting to login...');
                 alert('Please login first to access the Transfer Credits page.');
-                window.location.href = 'login.html';
+                window.location.href = 'profile.html';  // Changed to profile.html for user login
                 return;
             }
             
@@ -394,7 +394,7 @@
                         console.error('❌ 401 Unauthorized - Token invalid or expired');
                         alert('Your session has expired. Please login again.');
                         localStorage.clear();
-                        window.location.href = 'login.html';
+                        window.location.href = 'profile.html';  // Changed to profile.html for user login
                         return;
                     }
                     console.error('Balance API error:', response.status, response.statusText);
