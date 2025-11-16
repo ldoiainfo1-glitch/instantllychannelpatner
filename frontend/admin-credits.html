@@ -400,7 +400,6 @@
 
     <script>
         const API_BASE_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
-        const ADMIN_API_KEY = 'your-super-secret-admin-key-2024';
         
         let allTransactions = [];
         let filteredTransactions = [];
@@ -412,7 +411,7 @@
 
         // Check admin auth
         document.addEventListener('DOMContentLoaded', function() {
-            const token = localStorage.getItem('adminToken');
+            const token = localStorage.getItem('channelPartnerToken');
             if (!token) {
                 window.location.href = 'login.html';
                 return;
@@ -442,13 +441,12 @@
 
         async function loadStats() {
             try {
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 
                 // Load user stats
                 const usersRes = await fetch(`${API_BASE_URL}/admin/users-stats`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'x-admin-key': ADMIN_API_KEY
                     }
                 });
                 
@@ -466,11 +464,10 @@
             try {
                 itemsPerPage = parseInt(document.getElementById('limitFilter').value);
                 
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/admin/all-transactions?limit=1000`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'x-admin-key': ADMIN_API_KEY
                     }
                 });
 
@@ -699,7 +696,7 @@
         // Modal Functions
         async function searchModalUsers(query) {
             try {
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/credits/search-users`, {
                     method: 'POST',
                     headers: {
@@ -756,11 +753,10 @@
 
         async function loadUserBalance(userId) {
             try {
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/admin/user/${userId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'x-admin-key': ADMIN_API_KEY
                     }
                 });
 
@@ -813,13 +809,12 @@
             transferBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
 
             try {
-                const token = localStorage.getItem('adminToken');
+                const token = localStorage.getItem('channelPartnerToken');
                 const response = await fetch(`${API_BASE_URL}/admin/transfer-credits`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`,
-                        'x-admin-key': ADMIN_API_KEY
                     },
                     body: JSON.stringify({
                         toUserId: selectedModalUser._id,
@@ -870,7 +865,7 @@
 
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                localStorage.removeItem('adminToken');
+                localStorage.removeItem('channelPartnerToken');
                 window.location.href = 'login.html';
             }
         }
