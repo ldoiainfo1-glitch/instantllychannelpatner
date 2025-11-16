@@ -376,6 +376,14 @@
                 const token = getAuthToken();
                 console.log('💰 Loading balance with token:', token ? token.substring(0, 20) + '...' : 'NO TOKEN');
                 
+                if (!token) {
+                    console.error('❌ No token available');
+                    document.getElementById('currentBalance').textContent = 'Error loading balance';
+                    alert('Please login to view your balance.');
+                    window.location.href = 'profile.html';
+                    return;
+                }
+                
                 const response = await fetch(`${API_BASE_URL}/credits/balance`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -392,9 +400,12 @@
                 } else {
                     if (response.status === 401) {
                         console.error('❌ 401 Unauthorized - Token invalid or expired');
-                        alert('Your session has expired. Please login again.');
-                        localStorage.clear();
-                        window.location.href = 'profile.html';  // Changed to profile.html for user login
+                        console.error('This usually means you need to logout and login again');
+                        // Clear ALL tokens to force fresh login
+                        localStorage.removeItem('authToken');
+                        localStorage.removeItem('channelPartnerToken');
+                        alert('Your login session has expired. Please login again to continue.');
+                        window.location.href = 'profile.html';
                         return;
                     }
                     console.error('Balance API error:', response.status, response.statusText);
