@@ -6,7 +6,7 @@
   "scripts": {
     "start": "live-server --host=localhost --port=3000 --open=/",
     "dev": "live-server --host=localhost --port=3000 --open=/ --watch=.",
-    "build": "mkdir -p dist && cp -r *.html css js images dist/ 2>/dev/null || (if not exist dist mkdir dist && xcopy /E /I /Y *.html dist\ && xcopy /E /I /Y css dist\css && xcopy /E /I /Y js dist\js && xcopy /E /I /Y images dist\images)",
+    "build": "node -e \"const fs=require('fs');const path=require('path');const dist='dist';if(!fs.existsSync(dist))fs.mkdirSync(dist);['css','js','images'].forEach(d=>{const src=path.join(d);const dst=path.join(dist,d);if(fs.existsSync(src)){fs.cpSync(src,dst,{recursive:true})}});fs.readdirSync('.').filter(f=>f.endsWith('.html')).forEach(f=>fs.copyFileSync(f,path.join(dist,f)))\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
