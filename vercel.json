@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "buildCommand": "npm install --prefix frontend",
   "outputDirectory": "frontend",
   "rewrites": [
     {
