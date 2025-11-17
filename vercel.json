@@ -1,6 +1,8 @@
 {
   "version": 2,
+  "buildCommand": "echo 'No build needed for static site'",
   "outputDirectory": "frontend",
+  "installCommand": "echo 'No install needed'",
   "rewrites": [
     {
       "source": "/api/(.*)",
