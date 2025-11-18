@@ -73,12 +73,18 @@ router.get('/', async (req, res) => {
           displayStatus = 'Rejected';
         }
         
+        // Get photo from User model if available (user may have updated it), otherwise from application
+        let userPhoto = application.applicantInfo.photo; // Default from application
+        if (application.userId && application.userId.photo) {
+          userPhoto = application.userId.photo; // Use updated photo from User model
+        }
+        
         positionObj.status = displayStatus;
         positionObj.applicantDetails = {
           name: application.applicantInfo.name,
           phone: application.applicantInfo.phone,
           email: application.applicantInfo.email,
-          photo: application.applicantInfo.photo,
+          photo: userPhoto, // Use photo from User model if available
           address: application.applicantInfo.address,
           companyName: application.applicantInfo.companyName,
           businessName: application.applicantInfo.businessName,
