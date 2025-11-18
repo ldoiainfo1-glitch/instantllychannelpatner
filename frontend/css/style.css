@@ -130,16 +130,16 @@ html {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .hero-main-logo {
-    max-height: 200px;
-    max-width: 300px;
+    max-height: 80px;
+    max-width: 150px;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -151,8 +151,8 @@ html {
 }
 
 .hero-main-logo:hover {
-    transform: scale(1.03);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
 .nav-link {
