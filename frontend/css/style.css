@@ -473,88 +473,101 @@ html {
     
     /* Positions table responsive on small screens */
     #positionsTable {
-        font-size: 0.65rem !important;
+        font-size: 0.6rem !important;
     }
     
     #positionsTable th,
     #positionsTable td {
-        padding: 0.3rem 0.15rem !important;
+        padding: 0.2rem 0.1rem !important;
         white-space: nowrap;
         vertical-align: middle;
     }
     
     #positionsTable th:first-child,
     #positionsTable td:first-child {
-        width: 25px;
+        width: 20px;
+        padding: 0.2rem 0.05rem !important;
     }
     
     #positionsTable th:nth-child(2),
     #positionsTable td:nth-child(2) {
-        max-width: 60px;
+        max-width: 50px;
         overflow: hidden;
         text-overflow: ellipsis;
+        padding: 0.2rem 0.1rem !important;
     }
     
     #positionsTable th:nth-child(3),
     #positionsTable td:nth-child(3) {
-        max-width: 80px;
+        max-width: 65px;
         white-space: normal;
-        line-height: 1.2;
+        line-height: 1.1;
+        padding: 0.2rem 0.1rem !important;
     }
     
     #positionsTable th:nth-child(4),
     #positionsTable td:nth-child(4) {
-        width: 35px;
-        padding: 0.2rem !important;
+        width: 30px;
+        padding: 0.15rem 0.05rem !important;
     }
     
     #positionsTable th:nth-child(5),
     #positionsTable td:nth-child(5) {
-        max-width: 70px;
+        max-width: 60px;
+        padding: 0.2rem 0.1rem !important;
     }
     
     #positionsTable th:nth-child(6),
     #positionsTable td:nth-child(6) {
-        max-width: 60px;
+        max-width: 50px;
         overflow: hidden;
         text-overflow: ellipsis;
+        padding: 0.2rem 0.1rem !important;
     }
     
     #positionsTable th:nth-child(7),
     #positionsTable td:nth-child(7) {
-        width: 30px;
+        width: 25px;
+        padding: 0.2rem 0.05rem !important;
     }
     
     #positionsTable th:nth-child(8),
     #positionsTable td:nth-child(8) {
-        width: 45px;
+        width: 40px;
+        padding: 0.2rem 0.1rem !important;
     }
     
     #positionsTable th:nth-child(9),
     #positionsTable td:nth-child(9) {
-        width: 40px;
-        padding: 0.2rem !important;
+        width: 35px;
+        padding: 0.15rem 0.05rem !important;
     }
     
     #positionsTable img.user-profile-img {
-        width: 25px !important;
-        height: 25px !important;
+        width: 22px !important;
+        height: 22px !important;
     }
     
     #positionsTable .btn {
-        font-size: 0.55rem !important;
-        padding: 0.1rem 0.25rem !important;
+        font-size: 0.5rem !important;
+        padding: 0.15rem 0.2rem !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
     }
     
     #positionsTable .btn-success {
-        font-size: 0.6rem !important;
-        padding: 0.25rem 0.4rem !important;
+        font-size: 0.5rem !important;
+        padding: 0.2rem 0.25rem !important;
+        line-height: 1.2 !important;
+        display: block !important;
+        width: auto !important;
+        min-width: 45px !important;
     }
     
     #positionsTable .btn .fas,
     #positionsTable .btn .me-1 {
-        font-size: 0.55rem !important;
-        margin-right: 0.15rem !important;
+        font-size: 0.45rem !important;
+        margin-right: 0.1rem !important;
     }
     
     #positionsTable .badge {
