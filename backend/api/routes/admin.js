@@ -819,11 +819,43 @@ router.get('/all-transactions', async (req, res) => {
       .select('name phone personCode creditsHistory')
       .lean();
     
-    // Create a map for quick user lookup by name
-    const userMap = new Map();
+    // Create multiple maps for quick user lookup
+    const userByName = new Map();
+    const userByPhone = new Map();
+    const userByNameLower = new Map();
+    
     users.forEach(user => {
-      userMap.set(user.name, user);
+      userByName.set(user.name, user);
+      if (user.phone) {
+        userByPhone.set(user.phone, user);
+      }
+      // Store by lowercase name for case-insensitive lookup
+      userByNameLower.set(user.name.toLowerCase().trim(), user);
     });
+    
+    // Helper function to find user by name (case-insensitive, handles slight variations)
+    const findUserByName = (name) => {
+      if (!name) return null;
+      
+      // Try exact match first
+      let user = userByName.get(name);
+      if (user) return user;
+      
+      // Try case-insensitive match
+      user = userByNameLower.get(name.toLowerCase().trim());
+      if (user) return user;
+      
+      // Try partial match (for slight spelling variations)
+      const nameLower = name.toLowerCase().trim();
+      for (const [key, value] of userByNameLower.entries()) {
+        // Check if names are very similar (allowing for minor differences)
+        if (key.includes(nameLower) || nameLower.includes(key)) {
+          return value;
+        }
+      }
+      
+      return null;
+    };
     
     // Aggregate all transactions from all users
     const allTransactions = [];
@@ -851,7 +883,7 @@ router.get('/all-transactions', async (req, res) => {
           // Extract receiver name and try to find their full info
           const receiverName = historyItem.description.split('Transferred to ')[1]?.trim();
           if (receiverName) {
-            const receiverUser = userMap.get(receiverName);
+            const receiverUser = findUserByName(receiverName);
             if (receiverUser) {
               toUser = {
                 _id: receiverUser._id,
@@ -874,7 +906,7 @@ router.get('/all-transactions', async (req, res) => {
           // Extract sender name and try to find their full info
           const senderName = historyItem.description.split('Received from ')[1]?.trim();
           if (senderName) {
-            const senderUser = userMap.get(senderName);
+            const senderUser = findUserByName(senderName);
             if (senderUser) {
               fromUser = {
                 _id: senderUser._id,
@@ -896,7 +928,7 @@ router.get('/all-transactions', async (req, res) => {
           // Try to find the referred user
           const referredName = historyItem.referredUser;
           if (referredName) {
-            const referredUser = userMap.get(referredName);
+            const referredUser = findUserByName(referredName);
             if (referredUser) {
               fromUser = {
                 _id: referredUser._id,
