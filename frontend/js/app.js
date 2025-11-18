@@ -1677,32 +1677,42 @@ function setupSearchableFilters() {
                 e.preventDefault();
                 clearSingleFilter(filter.id, filter.clear);
             });
-
-            // Close dropdown when clicking/touching outside
-            document.addEventListener('click', (e) => {
-                const searchInput = dropdown.querySelector('.filter-search-input');
-                // Don't close if clicking on the dropdown or search input
-                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-                    hideFilterDropdown(filter.dropdown);
-                }
-            });
-            
-            document.addEventListener('touchstart', (e) => {
-                const searchInput = dropdown.querySelector('.filter-search-input');
-                // Don't close if touching the dropdown or search input
-                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-                    hideFilterDropdown(filter.dropdown);
-                }
-            }, { passive: true });
-
-            // Close dropdown on scroll to prevent positioning issues
-            window.addEventListener('scroll', () => {
-                if (dropdown.classList.contains('show')) {
-                    hideFilterDropdown(filter.dropdown);
-                }
-            });
         }
     });
+
+    // Add document-level click/touch handlers ONCE (outside loop)
+    // Close dropdowns when clicking/touching outside
+    document.addEventListener('click', (e) => {
+        // Check all dropdowns
+        filters.forEach(filter => {
+            const input = document.getElementById(filter.id);
+            const dropdown = document.getElementById(filter.dropdown);
+            
+            if (dropdown && dropdown.classList.contains('show')) {
+                const searchInput = dropdown.querySelector('.filter-search-input');
+                // Don't close if clicking on the filter input, dropdown, or search input
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    hideFilterDropdown(filter.dropdown);
+                }
+            }
+        });
+    });
+    
+    document.addEventListener('touchend', (e) => {
+        // Check all dropdowns
+        filters.forEach(filter => {
+            const input = document.getElementById(filter.id);
+            const dropdown = document.getElementById(filter.dropdown);
+            
+            if (dropdown && dropdown.classList.contains('show')) {
+                const searchInput = dropdown.querySelector('.filter-search-input');
+                // Don't close if touching the filter input, dropdown, or search input
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    hideFilterDropdown(filter.dropdown);
+                }
+            }
+        });
+    }, { passive: true });
 }
 
 // Get filtered data based on parent filter selections (cascading filters)
