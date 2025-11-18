@@ -783,6 +783,191 @@ router.get('/all-users', async (req, res) => {
   }
 });
 
+// GET USERS STATS - for admin dashboard/credits page
+router.get('/users-stats', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Count total users
+    const totalUsers = await User.countDocuments();
+    
+    // Calculate total credits across all users
+    const users = await User.find({}).select('credits').lean();
+    const totalCredits = users.reduce((sum, user) => sum + (user.credits || 0), 0);
+    
+    res.json({
+      success: true,
+      totalUsers,
+      totalCredits
+    });
+  } catch (error) {
+    console.error('❌ Get users stats error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET ALL TRANSACTIONS - for admin credits page
+router.get('/all-transactions', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const limit = parseInt(req.query.limit) || 1000;
+    
+    console.log('📊 Fetching all transactions from channel partner backend...');
+    
+    // Get all users with their credits history
+    const users = await User.find({})
+      .select('name phone personCode creditsHistory')
+      .lean();
+    
+    // Create a map for quick user lookup by name
+    const userMap = new Map();
+    users.forEach(user => {
+      userMap.set(user.name, user);
+    });
+    
+    // Aggregate all transactions from all users
+    const allTransactions = [];
+    
+    for (const user of users) {
+      if (!user.creditsHistory || user.creditsHistory.length === 0) {
+        continue;
+      }
+      
+      for (const historyItem of user.creditsHistory) {
+        // Determine transaction type
+        let type = 'other';
+        let fromUser = null;
+        let toUser = null;
+        
+        if (historyItem.description?.includes('Transferred to')) {
+          // This user sent credits to someone
+          type = 'transfer_sent';
+          fromUser = {
+            _id: user._id,
+            name: user.name,
+            phone: user.phone
+          };
+          
+          // Extract receiver name and try to find their full info
+          const receiverName = historyItem.description.split('Transferred to ')[1]?.trim();
+          if (receiverName) {
+            const receiverUser = userMap.get(receiverName);
+            if (receiverUser) {
+              toUser = {
+                _id: receiverUser._id,
+                name: receiverUser.name,
+                phone: receiverUser.phone
+              };
+            } else {
+              toUser = { name: receiverName };
+            }
+          }
+        } else if (historyItem.description?.includes('Received from')) {
+          // This user received credits from someone
+          type = 'transfer_received';
+          toUser = {
+            _id: user._id,
+            name: user.name,
+            phone: user.phone
+          };
+          
+          // Extract sender name and try to find their full info
+          const senderName = historyItem.description.split('Received from ')[1]?.trim();
+          if (senderName) {
+            const senderUser = userMap.get(senderName);
+            if (senderUser) {
+              fromUser = {
+                _id: senderUser._id,
+                name: senderUser.name,
+                phone: senderUser.phone
+              };
+            } else {
+              fromUser = { name: senderName };
+            }
+          }
+        } else if (historyItem.type === 'referral') {
+          type = 'referral_bonus';
+          toUser = {
+            _id: user._id,
+            name: user.name,
+            phone: user.phone
+          };
+          
+          // Try to find the referred user
+          const referredName = historyItem.referredUser;
+          if (referredName) {
+            const referredUser = userMap.get(referredName);
+            if (referredUser) {
+              fromUser = {
+                _id: referredUser._id,
+                name: referredUser.name,
+                phone: referredUser.phone
+              };
+            } else {
+              fromUser = { name: `Referral - ${referredName}` };
+            }
+          } else {
+            fromUser = { name: 'System - Referral' };
+          }
+        } else if (historyItem.type === 'initial') {
+          type = 'signup_bonus';
+          toUser = {
+            _id: user._id,
+            name: user.name,
+            phone: user.phone
+          };
+          fromUser = { name: 'System - Welcome Bonus' };
+        } else if (historyItem.type === 'bonus') {
+          type = 'admin_adjustment';
+          toUser = {
+            _id: user._id,
+            name: user.name,
+            phone: user.phone
+          };
+          fromUser = { name: 'Admin' };
+        } else if (historyItem.type === 'deduction') {
+          type = 'admin_adjustment';
+          fromUser = {
+            _id: user._id,
+            name: user.name,
+            phone: user.phone
+          };
+          toUser = { name: 'Admin Deduction' };
+        }
+        
+        // Create transaction object
+        const transaction = {
+          _id: historyItem._id || `${user._id}_${historyItem.date}`,
+          type: type,
+          amount: Math.abs(historyItem.amount || 0),
+          description: historyItem.description || 'Credit transaction',
+          createdAt: historyItem.date,
+          fromUser: fromUser,
+          toUser: toUser,
+          status: 'completed'
+        };
+        
+        allTransactions.push(transaction);
+      }
+    }
+    
+    // Sort by date (newest first) and limit
+    allTransactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const limitedTransactions = allTransactions.slice(0, limit);
+    
+    console.log(`✅ Fetched ${limitedTransactions.length} transactions (total: ${allTransactions.length})`);
+    
+    res.json({
+      success: true,
+      transactions: limitedTransactions,
+      total: allTransactions.length
+    });
+  } catch (error) {
+    console.error('❌ Get all transactions error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // FIX ENDPOINT: Recalculate all introducedCount values
 router.post('/fix-introduced-counts', async (req, res) => {
   try {
