@@ -934,4 +934,112 @@ router.post('/fix-introduced-by', async (req, res) => {
   }
 });
 
+// Edit Application - Update name and phone
+router.put('/applications/:id/edit', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, phone } = req.body;
+
+    console.log(`📝 Editing application ${id}:`, { name, phone });
+
+    // Find the application
+    const application = await Application.findById(id);
+    
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // Update application info
+    if (name) application.applicantInfo.name = name;
+    if (phone) application.applicantInfo.phone = phone;
+    await application.save();
+
+    // If application is approved, also update the User record
+    if (application.status === 'approved' && application.userId) {
+      const User = require('../models/User');
+      const user = await User.findById(application.userId);
+      
+      if (user) {
+        if (name) user.name = name;
+        if (phone) user.phone = phone;
+        await user.save();
+        console.log(`✅ Updated user: ${user.name} (${user.phone})`);
+      }
+    }
+
+    console.log(`✅ Updated application: ${application.applicantInfo.name}`);
+
+    res.json({
+      success: true,
+      message: "Application updated successfully",
+      application
+    });
+  } catch (error) {
+    console.error('❌ Edit application error:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Transfer Position - Move application to different position
+router.put('/applications/:id/transfer', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPositionId } = req.body;
+
+    console.log(`🔄 Transferring application ${id} to position:`, newPositionId);
+
+    // Find the application
+    const application = await Application.findById(id);
+    
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    const oldPositionId = application.positionId;
+
+    // Check if new position already has an applicant
+    const existingApplication = await Application.findOne({
+      positionId: newPositionId,
+      status: { $in: ['pending', 'approved'] },
+      _id: { $ne: id } // Exclude current application
+    });
+
+    if (existingApplication) {
+      return res.status(400).json({ 
+        message: "This position is already occupied",
+        occupiedBy: existingApplication.applicantInfo.name
+      });
+    }
+
+    // Update application's position
+    application.positionId = newPositionId;
+    await application.save();
+
+    // If application is approved, also update the User record
+    if (application.status === 'approved' && application.userId) {
+      const User = require('../models/User');
+      const user = await User.findById(application.userId);
+      
+      if (user) {
+        user.positionId = newPositionId;
+        await user.save();
+        console.log(`✅ Updated user position: ${user.name} -> ${newPositionId}`);
+      }
+    }
+
+    console.log(`✅ Transferred ${application.applicantInfo.name} from ${oldPositionId} to ${newPositionId}`);
+
+    res.json({
+      success: true,
+      message: "Position transferred successfully",
+      application,
+      oldPosition: oldPositionId,
+      newPosition: newPositionId
+    });
+  } catch (error) {
+    console.error('❌ Transfer position error:', error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
