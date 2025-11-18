@@ -1846,7 +1846,7 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     // Only create dropdown content if it doesn't exist or data changed
     if (!dropdown.dataset.initialized || dropdown.dataset.dataKey !== dataKey) {
         dropdown.innerHTML = `
-            <input type="text" class="filter-search-input" placeholder="Type to search..." id="search_${inputId}" autocomplete="off">
+            <input type="text" class="filter-search-input" placeholder="Type to search..." id="search_${inputId}" autocomplete="off" inputmode="text">
             <div class="filter-options" id="options_${inputId}"></div>
         `;
         dropdown.dataset.initialized = 'true';
@@ -1867,19 +1867,31 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     searchInput.parentNode.replaceChild(newSearchInput, searchInput);
     
     // Prevent search input from being affected by parent events
+    newSearchInput.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        // Don't prevent default - allow normal touch behavior for input focus
+    });
+    
+    newSearchInput.addEventListener('touchend', (e) => {
+        e.stopPropagation();
+        // Allow the input to receive focus
+    });
+    
     newSearchInput.addEventListener('focus', (e) => {
         e.stopPropagation();
         // Keep dropdown open when search input is focused
+        console.log('Search input focused - keyboard should appear');
     });
     
-    newSearchInput.addEventListener('touchstart', (e) => {
-        e.stopPropagation();
-        // Allow normal touch behavior for search input
-    }, { passive: true });
+    newSearchInput.addEventListener('blur', (e) => {
+        // Allow blur but log it
+        console.log('Search input blurred');
+    });
     
     newSearchInput.addEventListener('click', (e) => {
         e.stopPropagation();
         // Ensure search input can be clicked and focused
+        newSearchInput.focus();
     });
     
     newSearchInput.addEventListener('input', (e) => {
