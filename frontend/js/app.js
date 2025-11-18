@@ -602,28 +602,29 @@ function createPositionRow(position) {
     // Format location for position display
     const location = formatLocation(position.location);
     
-    // Handle name - show applicant name or Apply button
+    // Handle name - show applicant name or Apply button with Position ID below
     let nameCell = '';
     if (position.status === 'Available') {
-        nameCell = `<button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
-                        <i class="fas fa-plus me-1"></i>Apply Now
-                    </button>
-    `;
+        nameCell = `
+            <div>
+                <button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
+                    <i class="fas fa-plus me-1"></i>Apply Now
+                </button>
+                <div class="mt-2">
+                    <small class="text-muted d-block" style="font-size: 0.75rem;">ID: ${position._id}</small>
+                </div>
+            </div>
+        `;
     } else if (position.applicantDetails && position.applicantDetails.name) {
-        nameCell = `${position.applicantDetails.name}`;
+        nameCell = `
+            <div>
+                <div>${position.applicantDetails.name}</div>
+                <small class="text-muted" style="font-size: 0.75rem;">ID: ${position._id}</small>
+            </div>
+        `;
     } else {
         nameCell = '-';
     }
-    
-    // Position ID cell with copy functionality - always visible for easy reference
-    let positionIdCell = `
-        <div class="d-flex align-items-center">
-            <code class="me-2 text-primary" style="font-size: 0.9em; user-select: all;" id="posId_${position._id}">${position._id}</code>
-            <button class="btn btn-sm btn-outline-secondary" onclick="copyPositionId('${position._id}')" title="Copy Position ID">
-                <i class="fas fa-copy"></i>
-            </button>
-        </div>
-    `;
     
     // Determine Area Head For - show most specific location level
     let areaHeadFor = '-';
@@ -731,7 +732,6 @@ function createPositionRow(position) {
         <td><strong>${position.sNo}</strong></td>
         <td>${nameCell}</td>
         <td>${areaHeadFor}</td>
-        <td>${positionIdCell}</td>
         <td class="text-center">${photoCell}</td>
         <td>${phoneNo}</td>
         <td>${introducedBy}</td>
