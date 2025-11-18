@@ -79,6 +79,7 @@ const videoRoutes = require('../api/routes/video');
 const usersRoutes = require('../api/routes/users');
 const authRoutes = require('../api/routes/auth');
 const creditsRoutes = require('../api/routes/credits');
+const promotionsRoutes = require('../api/routes/promotions');
 
 // Routes
 app.use('/api/dynamic-positions', dynamicPositionsRoutes);
@@ -89,6 +90,7 @@ app.use('/api/video', videoRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/credits', creditsRoutes);
+app.use('/api/promotions', promotionsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

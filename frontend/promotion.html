@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Promotion Cards - InstantllyCards</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .promotion-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .welcome-banner {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-left: 5px solid #ff6b6b;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table thead {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .table thead th {
+            border: none;
+            padding: 1rem;
+            font-weight: 600;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        .table tbody td {
+            vertical-align: middle;
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .download-btn {
+            border: 2px solid #10b981;
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            color: #047857;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, #96e6a1 0%, #d4fc79 100%);
+        }
+        
+        .download-btn-disabled {
+            border: 2px solid #d1d5db;
+            background: #f3f4f6;
+            color: #9ca3af;
+            font-weight: 600;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            cursor: not-allowed;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            opacity: 0.6;
+        }
+        
+        .back-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateX(-5px);
+        }
+        
+        .user-info {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .loader {
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <button onclick="window.history.back()" class="back-btn">
+                <i class="fas fa-arrow-left me-2"></i> Back
+            </button>
+        </div>
+        
+        <!-- Header -->
+        <div class="promotion-header text-center">
+            <h1 class="display-4 fw-bold mb-0">My Promotion Cards</h1>
+        </div>
+        
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <h5><i class="fas fa-hand-wave me-2"></i><strong>Welcome!</strong> Download your personalized promotion cards in different languages.</h5>
+            <p class="mb-0 mt-2">Each row represents a promotion template upload date. Green buttons indicate available languages for that date.</p>
+        </div>
+        
+        <!-- User Info (populated dynamically) -->
+        <div class="user-info d-none" id="userInfoCard">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <img id="userPhoto" src="" alt="User Photo" class="rounded-circle" style="width: 60px; height: 60px; object-fit: cover;">
+                </div>
+                <div class="col">
+                    <h5 class="mb-0" id="userName">-</h5>
+                    <p class="mb-0 text-muted" id="userMobile">-</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Spinner -->
+        <div class="loader" id="loader">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading promotion cards...</p>
+        </div>
+        
+        <!-- Promotions Table -->
+        <div class="table-container d-none" id="promotionsTable">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Sr.No</th>
+                            <th>Name</th>
+                            <th>Mobile No</th>
+                            <th>Date</th>
+                            <th>Hindi</th>
+                            <th>English</th>
+                            <th>Marathi</th>
+                            <th>Gujarati</th>
+                            <th>Tamil</th>
+                            <th>Telugu</th>
+                            <th>Kannada</th>
+                            <th>Bengali</th>
+                            <th>Odia</th>
+                            <th>Urdu</th>
+                        </tr>
+                    </thead>
+                    <tbody id="promotionsTableBody">
+                        <!-- Rows will be populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- No Promotions Message -->
+        <div class="alert alert-info text-center d-none" id="noPromotionsMsg">
+            <i class="fas fa-info-circle fa-2x mb-3"></i>
+            <h5>No Promotions Available Yet</h5>
+            <p class="mb-0">Check back later for new promotion cards!</p>
+        </div>
+    </div>
+    
+    <!-- Canvas for generating promotion cards (hidden) -->
+    <canvas id="promotionCanvas" style="display: none;"></canvas>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('userId');
+        const userName = decodeURIComponent(urlParams.get('name') || 'Member');
+        const userPhone = urlParams.get('phone') || '-';
+        const userPhoto = decodeURIComponent(urlParams.get('photo') || '');
+        
+        // Languages supported
+        const languages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu'];
+        const languageLabels = {
+            'hindi': 'Hindi',
+            'english': 'English',
+            'marathi': 'Marathi',
+            'gujarati': 'Gujarati',
+            'tamil': 'Tamil',
+            'telugu': 'Telugu',
+            'kannada': 'Kannada',
+            'bengali': 'Bengali',
+            'odia': 'Odia',
+            'urdu': 'Urdu'
+        };
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            // Display user info
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userMobile').textContent = userPhone;
+            if (userPhoto) {
+                document.getElementById('userPhoto').src = userPhoto;
+            }
+            document.getElementById('userInfoCard').classList.remove('d-none');
+            
+            // Load promotions
+            loadPromotions();
+        });
+        
+        // Load promotions from backend
+        async function loadPromotions() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/promotions/user-promotions`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load promotions');
+                }
+                
+                const data = await response.json();
+                console.log('Promotions data:', data);
+                
+                // Hide loader
+                document.getElementById('loader').classList.add('d-none');
+                
+                if (!data.promotions || data.promotions.length === 0) {
+                    // Show no promotions message
+                    document.getElementById('noPromotionsMsg').classList.remove('d-none');
+                } else {
+                    // Display promotions table
+                    displayPromotions(data.promotions);
+                    document.getElementById('promotionsTable').classList.remove('d-none');
+                }
+            } catch (error) {
+                console.error('Error loading promotions:', error);
+                document.getElementById('loader').classList.add('d-none');
+                document.getElementById('noPromotionsMsg').classList.remove('d-none');
+                document.getElementById('noPromotionsMsg').innerHTML = `
+                    <i class="fas fa-exclamation-triangle fa-2x mb-3 text-warning"></i>
+                    <h5>Error Loading Promotions</h5>
+                    <p class="mb-0">Please try again later.</p>
+                `;
+            }
+        }
+        
+        // Display promotions in table
+        function displayPromotions(promotions) {
+            const tbody = document.getElementById('promotionsTableBody');
+            tbody.innerHTML = '';
+            
+            // Sort by date (newest first)
+            promotions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            promotions.forEach((promo, index) => {
+                const row = document.createElement('tr');
+                
+                // Format date as DD/MM/YY
+                const date = new Date(promo.date);
+                const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getFullYear()).slice(-2)}`;
+                
+                let rowHTML = `
+                    <td><strong>${index + 1}</strong></td>
+                    <td>${userName}</td>
+                    <td>${userPhone}</td>
+                    <td><strong>${formattedDate}</strong></td>
+                `;
+                
+                // Add download buttons for each language
+                languages.forEach(lang => {
+                    if (promo.languages && promo.languages.includes(lang)) {
+                        // Available - show green download button
+                        rowHTML += `
+                            <td>
+                                <button class="download-btn" onclick="downloadPromotion('${promo._id}', '${lang}', '${formattedDate}')">
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </td>
+                        `;
+                    } else {
+                        // Not available - show disabled button
+                        rowHTML += `
+                            <td>
+                                <button class="download-btn-disabled" disabled>
+                                    <i class="fas fa-download"></i> Download
+                                </button>
+                            </td>
+                        `;
+                    }
+                });
+                
+                row.innerHTML = rowHTML;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Download promotion card
+        async function downloadPromotion(promotionId, language, date) {
+            try {
+                console.log(`Downloading promotion: ${promotionId}, Language: ${language}`);
+                
+                // Show loading state
+                event.target.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+                event.target.disabled = true;
+                
+                // Fetch promotion image from backend
+                const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch promotion image');
+                }
+                
+                const blob = await response.blob();
+                const promotionImageUrl = URL.createObjectURL(blob);
+                
+                // Generate combined card (80% promotion + 20% user details)
+                await generatePromotionCard(promotionImageUrl, language, date);
+                
+                // Reset button
+                event.target.innerHTML = '<i class="fas fa-download"></i> Download';
+                event.target.disabled = false;
+                
+            } catch (error) {
+                console.error('Error downloading promotion:', error);
+                alert('Failed to download promotion. Please try again.');
+                
+                // Reset button
+                event.target.innerHTML = '<i class="fas fa-download"></i> Download';
+                event.target.disabled = false;
+            }
+        }
+        
+        // Generate promotion card with user details
+        async function generatePromotionCard(promotionImageUrl, language, date) {
+            return new Promise((resolve, reject) => {
+                const canvas = document.getElementById('promotionCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Create promotion image element
+                const promotionImg = new Image();
+                promotionImg.crossOrigin = 'anonymous';
+                
+                promotionImg.onload = () => {
+                    // Set canvas dimensions (standard social media size)
+                    const canvasWidth = 1080;
+                    const canvasHeight = 1350; // 80% promo (1080) + 20% user details (270)
+                    
+                    canvas.width = canvasWidth;
+                    canvas.height = canvasHeight;
+                    
+                    // Draw promotion image (80% - top portion)
+                    const promoHeight = 1080;
+                    ctx.drawImage(promotionImg, 0, 0, canvasWidth, promoHeight);
+                    
+                    // Draw user details section (20% - bottom portion)
+                    const detailsStartY = promoHeight;
+                    const detailsHeight = 270;
+                    
+                    // Background for user details
+                    const gradient = ctx.createLinearGradient(0, detailsStartY, 0, detailsStartY + detailsHeight);
+                    gradient.addColorStop(0, '#fef3c7');
+                    gradient.addColorStop(1, '#fcd34d');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, detailsStartY, canvasWidth, detailsHeight);
+                    
+                    // Load user photo
+                    const userPhotoImg = new Image();
+                    userPhotoImg.crossOrigin = 'anonymous';
+                    
+                    userPhotoImg.onload = () => {
+                        // Draw user photo (circular)
+                        const photoSize = 120;
+                        const photoX = 80;
+                        const photoY = detailsStartY + 75;
+                        
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                        ctx.closePath();
+                        ctx.clip();
+                        ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
+                        ctx.restore();
+                        
+                        // Draw photo border
+                        ctx.strokeStyle = '#f59e0b';
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        // Draw user details text
+                        ctx.fillStyle = '#92400e';
+                        ctx.font = 'bold 36px Arial';
+                        ctx.fillText(userName, 240, detailsStartY + 90);
+                        
+                        ctx.font = '30px Arial';
+                        ctx.fillText(`Mobile No.`, 240, detailsStartY + 135);
+                        
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText(userPhone, 240, detailsStartY + 175);
+                        
+                        // Draw Instantlly logo/text
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 40px Arial';
+                        ctx.textAlign = 'right';
+                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
+                        
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.font = 'bold 48px Arial';
+                        ctx.fillText('Instantlly', canvasWidth - 80, detailsStartY + 160);
+                        
+                        // Download the canvas as image
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
+                            link.click();
+                            URL.revokeObjectURL(url);
+                            resolve();
+                        }, 'image/png');
+                    };
+                    
+                    userPhotoImg.onerror = () => {
+                        // Use default avatar if photo fails to load
+                        console.warn('User photo failed to load, using default');
+                        
+                        // Draw default avatar (simple circle with initials)
+                        const photoSize = 120;
+                        const photoX = 80;
+                        const photoY = detailsStartY + 75;
+                        
+                        ctx.fillStyle = '#e2e8f0';
+                        ctx.beginPath();
+                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.fillStyle = '#64748b';
+                        ctx.font = 'bold 48px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(userName.charAt(0).toUpperCase(), photoX + photoSize/2, photoY + photoSize/2 + 15);
+                        
+                        // Continue with rest of the card
+                        ctx.textAlign = 'left';
+                        ctx.fillStyle = '#92400e';
+                        ctx.font = 'bold 36px Arial';
+                        ctx.fillText(userName, 240, detailsStartY + 90);
+                        
+                        ctx.font = '30px Arial';
+                        ctx.fillText(`Mobile No.`, 240, detailsStartY + 135);
+                        
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText(userPhone, 240, detailsStartY + 175);
+                        
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 40px Arial';
+                        ctx.textAlign = 'right';
+                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
+                        
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.font = 'bold 48px Arial';
+                        ctx.fillText('Instantlly', canvasWidth - 80, detailsStartY + 160);
+                        
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
+                            link.click();
+                            URL.revokeObjectURL(url);
+                            resolve();
+                        }, 'image/png');
+                    };
+                    
+                    // Load user photo
+                    if (userPhoto) {
+                        userPhotoImg.src = userPhoto;
+                    } else {
+                        userPhotoImg.onerror();
+                    }
+                };
+                
+                promotionImg.onerror = () => {
+                    reject(new Error('Failed to load promotion image'));
+                };
+                
+                promotionImg.src = promotionImageUrl;
+            });
+        }
+    </script>
+</body>
+</html>

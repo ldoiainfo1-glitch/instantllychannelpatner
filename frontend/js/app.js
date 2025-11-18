@@ -710,6 +710,11 @@ function createPositionRow(position) {
                             <i class="fas fa-id-card me-2"></i>ID Card
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item" href="promotion.html?userId=${position._id}&name=${encodeURIComponent(name)}&phone=${phone}&photo=${encodeURIComponent(photo)}">
+                            <i class="fas fa-bullhorn me-2"></i>Promotion
+                        </a>
+                    </li>
                 </ul>
             </div>
         `;
