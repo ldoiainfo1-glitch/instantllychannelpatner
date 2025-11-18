@@ -1643,8 +1643,14 @@ function setupSearchableFilters() {
         const clearBtn = document.getElementById(filter.clear);
 
         if (input && dropdown && clearBtn) {
-            // Setup input click to show dropdown
+            // Setup input click to show dropdown (with touch support for mobile)
             input.addEventListener('click', (e) => {
+                e.preventDefault();
+                showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
+            });
+            
+            // Add touch event for mobile devices
+            input.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
             });
@@ -1654,7 +1660,7 @@ function setupSearchableFilters() {
                 showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
             });
 
-            // Setup hover to show dropdown
+            // Setup hover to show dropdown (desktop only)
             input.addEventListener('mouseenter', () => {
                 if (!dropdown.classList.contains('show')) {
                     showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
@@ -1666,9 +1672,22 @@ function setupSearchableFilters() {
                 e.stopPropagation();
                 clearSingleFilter(filter.id, filter.clear);
             });
+            
+            // Add touch event for clear button on mobile
+            clearBtn.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                clearSingleFilter(filter.id, filter.clear);
+            });
 
-            // Close dropdown when clicking outside
+            // Close dropdown when clicking/touching outside
             document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    hideFilterDropdown(filter.dropdown);
+                }
+            });
+            
+            document.addEventListener('touchstart', (e) => {
                 if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                     hideFilterDropdown(filter.dropdown);
                 }
@@ -1880,9 +1899,15 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
         `<div class="filter-dropdown-item" data-value="${item}">${item}</div>`
     ).join('') + (hasMore ? `<div class="no-results">Showing ${limitedData.length} of ${displayData.length} results. Type to search...</div>` : '');
 
-    // Setup click handlers for options
+    // Setup click and touch handlers for options (mobile compatibility)
     container.querySelectorAll('.filter-dropdown-item').forEach(item => {
         item.addEventListener('click', () => {
+            selectFilterOption(inputId, dropdownId, item.dataset.value);
+        });
+        
+        // Add touch event for mobile devices
+        item.addEventListener('touchstart', (e) => {
+            e.preventDefault();
             selectFilterOption(inputId, dropdownId, item.dataset.value);
         });
     });

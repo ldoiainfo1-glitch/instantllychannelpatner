@@ -775,6 +775,8 @@ body, .card-body, .container {
     transition: all 0.15s ease-in-out;
     position: relative;
     color: #333 !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .searchable-filter:focus {
@@ -845,6 +847,8 @@ body, .card-body, .container {
     transition: background-color 0.15s ease;
     color: #333 !important;
     background-color: #ffffff !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 123, 255, 0.1);
 }
 
 .filter-dropdown-item:hover {
