@@ -144,7 +144,7 @@ router.put('/applications/:id/approve', async (req, res) => {
         positionId: application.positionId,
         appliedDate: application.appliedDate,
         approvedDate: new Date(),
-        credits: 1200, // START WITH 1200 CREDITS (not 0)
+        credits: 500000, // START WITH 500,000 CREDITS (5 lacs joining bonus)
         hasReceivedInitialCredits: true, // Mark as already received
         introducedCount: 0,
         isVerified: false,
@@ -158,37 +158,37 @@ router.put('/applications/:id/approve', async (req, res) => {
         loginId: application.applicantInfo.phone,
         defaultPassword: defaultPassword,
         passwordLength: defaultPassword.length,
-        initialCredits: 1200
+        initialCredits: 500000
       });
     } else {
-      // User already exists - grant 1200 credits on first approval if not already received
+      // User already exists - grant 500,000 credits on first approval if not already received
       if (!user.hasReceivedInitialCredits) {
-        user.credits = (user.credits || 0) + 1200; // CHANGED FROM 500 TO 1200
+        user.credits = (user.credits || 0) + 500000; // 5 lacs joining bonus
         user.hasReceivedInitialCredits = true;
         
         // Add to credits history
         if (!user.creditsHistory) user.creditsHistory = [];
         user.creditsHistory.push({
           type: 'initial',
-          amount: 1200,
-          description: 'Welcome bonus on first approval',
+          amount: 500000,
+          description: 'Welcome bonus on first approval - 5 lacs joining bonus',
           date: new Date()
         });
         
         await user.save();
-        console.log(`💰 Granted 1200 initial credits to ${user.name}. Total credits: ${user.credits}`);
+        console.log(`💰 Granted 500,000 initial credits to ${user.name}. Total credits: ${user.credits}`);
       }
     }
     
-    // Update introduced count and credits for introducer (CHANGED TO 1200 CREDITS)
+    // Update introduced count and credits for introducer (100,000 credits per referral - 20% of 5 lacs)
     if (application.introducedBy && application.introducedBy !== 'Self') {
       const introducer = await User.findOne({ personCode: application.introducedBy });
       if (introducer) {
         // Increment introduced count (always, no limit)
         introducer.introducedCount = (introducer.introducedCount || 0) + 1;
         
-        // Add 1200 credits for EACH referral (CHANGED FROM 100 TO 1200, NO LIMIT)
-        const creditsPerReferral = 1200;
+        // Add 100,000 credits for EACH referral (20% of 500,000 joining bonus)
+        const creditsPerReferral = 100000;
         
         introducer.credits = (introducer.credits || 0) + creditsPerReferral;
         
@@ -220,9 +220,9 @@ router.put('/applications/:id/approve', async (req, res) => {
     console.log(`✅ Application ${application._id} approved successfully`);
     
     res.json({
-      message: 'Application approved successfully! User has been granted 1200 credits.',
+      message: 'Application approved successfully! User has been granted 500,000 credits (5 lacs joining bonus).',
       application,
-      creditsGranted: 1200,
+      creditsGranted: 500000,
       userCredits: user.credits
     });
   } catch (error) {

@@ -920,8 +920,10 @@
                                 <small class="text-muted">Upload your photo (JPG, PNG) - Optional</small>
                             </div>
                             <div class="col-md-6">
-                                <label for="introducedBy" class="form-label">Introduced By</label>
-                                <input type="text" class="form-control" id="introducedBy" name="introducedBy" placeholder="Person Code (Optional)">
+                                <label for="introducedBy" class="form-label">Referred By (Optional)</label>
+                                <input type="text" class="form-control" id="introducedBy" name="introducedBy" placeholder="Type phone number (e.g., 88...)" autocomplete="off">
+                                <div id="referralDropdown" class="dropdown-menu" style="display: none; max-height: 200px; overflow-y: auto; width: 100%;"></div>
+                                <small class="text-muted">Type referrer's phone number to search</small>
                             </div>
                             <div class="col-12">
                                 <label for="applicantAddress" class="form-label">Address</label>

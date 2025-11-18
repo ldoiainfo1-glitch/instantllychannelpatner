@@ -2181,8 +2181,8 @@ function showLoginCredentials(phone, name) {
     window.location.href = 'profile.html';
 }
 
-// Show referral code with credits info
-async function showReferralCode(positionId, phone) {
+// Show referral info with phone number and credits info
+async function showReferralInfo(positionId, phone, name) {
     try {
         // Fetch user details by phone
         const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
@@ -2196,14 +2196,14 @@ async function showReferralCode(positionId, phone) {
         }
         
         const user = await response.json();
-        const personCode = user.personCode || 'Not assigned yet';
+        const userPhone = phone || 'Not available';
         const introducedCount = user.introducedCount || 0;
-        const creditsPerReferral = 100;
+        const creditsPerReferral = 100000; // 20% of 500,000
         const maxReferrals = 20;
         const remainingReferrals = Math.max(0, maxReferrals - introducedCount);
         const canEarnMore = introducedCount < maxReferrals;
         
-        // Create modern modal for referral code
+        // Create modern modal for referral info
         const modalHTML = `
             <div class="modal fade" id="referralModal" tabindex="-1">
                 <div class="modal-dialog modal-dialog-centered">
@@ -2213,14 +2213,22 @@ async function showReferralCode(positionId, phone) {
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="position: absolute; top: 15px; right: 15px;"></button>
                                 <div style="margin-top: 10px;">
                                     <i class="fas fa-gift" style="font-size: 3rem; color: white; margin-bottom: 10px;"></i>
-                                    <h4 class="text-white fw-bold mb-0">Your Referral Code</h4>
+                                    <h4 class="text-white fw-bold mb-0">Referral Information</h4>
                                 </div>
                             </div>
                             
                             <div style="padding: 30px; background: white;">
-                                <!-- Referral Code Display -->
+                                <!-- Name Display -->
+                                <div class="text-center mb-3">
+                                    <h5 class="fw-bold text-dark">${name || 'Channel Partner'}</h5>
+                                </div>
+                                
+                                <!-- Phone Number Display -->
                                 <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 25px; border-radius: 15px; margin-bottom: 25px;">
-                                    <h1 class="fw-bold text-center mb-0" style="color: #0066cc; font-size: 2.8rem; letter-spacing: 5px;">${personCode}</h1>
+                                    <div class="text-center mb-2">
+                                        <small class="text-muted">Referral Phone Number</small>
+                                    </div>
+                                    <h2 class="fw-bold text-center mb-0" style="color: #0066cc; font-size: 2rem; letter-spacing: 2px;">+91 ${userPhone}</h2>
                                 </div>
                                 
                                 <!-- Stats Row -->
@@ -2233,7 +2241,7 @@ async function showReferralCode(positionId, phone) {
                                     </div>
                                     <div class="col-4">
                                         <div class="p-2">
-                                            <h4 class="mb-1 fw-bold" style="color: #ffa500;">${creditsPerReferral}</h4>
+                                            <h4 class="mb-1 fw-bold" style="color: #ffa500;">1,00,000</h4>
                                             <small class="text-muted" style="font-size: 0.75rem;">Credits/Referral</small>
                                         </div>
                                     </div>
@@ -2249,11 +2257,11 @@ async function showReferralCode(positionId, phone) {
                                 <div style="background: #fff3e0; border-left: 4px solid #ffa500; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                                     <div class="d-flex align-items-start mb-2">
                                         <span style="background: #ffa500; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; margin-right: 10px; flex-shrink: 0;">1</span>
-                                        <small style="color: #666;">Share your referral code with friends to join Instantlly Cards</small>
+                                        <small style="color: #666;">Share your phone number with friends to join Instantlly Cards</small>
                                     </div>
                                     <div class="d-flex align-items-start">
                                         <span style="background: #ffa500; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; margin-right: 10px; flex-shrink: 0;">2</span>
-                                        <small style="color: #666;">Get <strong>${creditsPerReferral} credits</strong> when they apply using your code (up to ${maxReferrals} people)</small>
+                                        <small style="color: #666;">Get <strong>1,00,000 credits</strong> (20% of 5,00,000) when they apply using your phone (up to ${maxReferrals} people)</small>
                                     </div>
                                 </div>
                                 
@@ -2264,8 +2272,8 @@ async function showReferralCode(positionId, phone) {
                                 ` : ''}
                                 
                                 <!-- Copy Button -->
-                                <button type="button" class="btn btn-lg w-100" onclick="copyReferralCode('${personCode}')" style="background: linear-gradient(135deg, #ffa500 0%, #ff7043 100%); border: none; color: white; padding: 15px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3);">
-                                    <i class="fas fa-copy me-2"></i>Copy Code
+                                <button type="button" class="btn btn-lg w-100" onclick="copyReferralPhone('+91${userPhone}')" style="background: linear-gradient(135deg, #ffa500 0%, #ff7043 100%); border: none; color: white; padding: 15px; border-radius: 12px; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 112, 67, 0.3);">
+                                    <i class="fas fa-copy me-2"></i>Copy Phone Number
                                 </button>
                             </div>
                         </div>
@@ -2293,17 +2301,17 @@ async function showReferralCode(positionId, phone) {
     }
 }
 
-// Copy referral code to clipboard
-function copyReferralCode(code) {
-    // Don't copy if code is not valid
-    if (!code || code === 'N/A' || code === 'Not assigned yet') {
-        alert('Referral code not available yet. Please wait for admin approval.');
+// Copy referral phone to clipboard
+function copyReferralPhone(phone) {
+    // Don't copy if phone is not valid
+    if (!phone || phone === 'N/A' || phone === 'Not available') {
+        alert('Phone number not available.');
         return;
     }
     
     // Try clipboard API first
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(code).then(() => {
+        navigator.clipboard.writeText(phone).then(() => {
             // Show success message
             const btn = event.target.closest('button');
             const originalHTML = btn.innerHTML;
@@ -2317,11 +2325,11 @@ function copyReferralCode(code) {
         }).catch(err => {
             console.error('Clipboard write failed:', err);
             // Fallback to manual copy
-            fallbackCopyTextToClipboard(code);
+            fallbackCopyTextToClipboard(phone);
         });
     } else {
         // Fallback for browsers that don't support clipboard API
-        fallbackCopyTextToClipboard(code);
+        fallbackCopyTextToClipboard(phone);
     }
 }
 
@@ -2603,4 +2611,96 @@ async function downloadIDCard(name, phone, photo, personCode) {
     }
 }
 
+// Phone number search for referral dropdown
+let searchTimeout;
+document.addEventListener('DOMContentLoaded', function() {
+    const introducedByInput = document.getElementById('introducedBy');
+    const dropdown = document.getElementById('referralDropdown');
+    
+    if (introducedByInput && dropdown) {
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!introducedByInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+        
+        // Search as user types
+        introducedByInput.addEventListener('input', async function(e) {
+            const searchTerm = e.target.value.trim();
+            
+            // Clear previous timeout
+            clearTimeout(searchTimeout);
+            
+            // Hide dropdown if search is empty or too short
+            if (searchTerm.length < 2) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            
+            // Debounce search
+            searchTimeout = setTimeout(async () => {
+                try {
+                    // Fetch all users and filter by phone containing search term
+                    const response = await fetch(`${API_BASE_URL}/admin/users-stats`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (!response.ok) {
+                        console.error('Failed to fetch users');
+                        return;
+                    }
+                    
+                    const data = await response.json();
+                    const users = data.users || [];
+                    
+                    // Filter users whose phone contains the search term
+                    const matchingUsers = users.filter(user => 
+                        user.phone && user.phone.includes(searchTerm)
+                    ).slice(0, 10); // Limit to 10 results
+                    
+                    if (matchingUsers.length === 0) {
+                        dropdown.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Build dropdown HTML
+                    const dropdownHTML = matchingUsers.map(user => `
+                        <a href="#" class="dropdown-item py-2" onclick="selectReferrer('${user.phone}', '${user.name || 'Unknown'}'); return false;">
+                            <div>
+                                <strong>+91 ${user.phone}</strong>
+                                <div class="text-muted small">${user.name || 'Unknown'}</div>
+                            </div>
+                        </a>
+                    `).join('');
+                    
+                    dropdown.innerHTML = dropdownHTML;
+                    dropdown.style.display = 'block';
+                    dropdown.style.position = 'absolute';
+                    dropdown.style.zIndex = '1000';
+                    
+                } catch (error) {
+                    console.error('Error searching users:', error);
+                    dropdown.style.display = 'none';
+                }
+            }, 300);
+        });
+    }
+});
+
+// Select referrer from dropdown
+function selectReferrer(phone, name) {
+    const introducedByInput = document.getElementById('introducedBy');
+    const dropdown = document.getElementById('referralDropdown');
+    
+    if (introducedByInput) {
+        introducedByInput.value = phone;
+        introducedByInput.setAttribute('data-referrer-name', name);
+    }
+    
+    if (dropdown) {
+        dropdown.style.display = 'none';
+    }
+}
 

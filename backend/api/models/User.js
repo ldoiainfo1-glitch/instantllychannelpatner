@@ -35,7 +35,7 @@ const userSchema = new mongoose.Schema({
   },
   credits: {
     type: Number,
-    default: 0,
+    default: 500000,  // Default 5 lacs joining bonus
     min: 0
   },
   creditsHistory: [{
