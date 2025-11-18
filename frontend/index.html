@@ -147,13 +147,19 @@
                             </div>
                             
                             <!-- Table location Filters with Search -->
-                            <div class="row g-2 mt-2">
+                            <div class="row g-2 mt-2" id="filterRow">
                                 <div class="col-auto" style="width: 120px;">
                                     <label class="form-label fw-bold text-muted mb-1" style="font-size: 0.75rem;">COUNTRY</label>
                                     <select class="form-select" id="filterCountry">
                                         <option value="India">India</option>
                                     </select>
                                 </div>
+                                <div class="col-auto filter-badge-col">
+                                    <div id="countryBadge"></div>
+                                </div>
+                                
+                                <div class="w-100 d-md-none"></div> <!-- Force new line on mobile -->
+                                
                                 <div class="col-auto" style="width: 140px;">
                                     <label class="form-label fw-bold text-muted mb-1" style="font-size: 0.75rem;">ZONE</label>
                                     <div class="filter-container">
@@ -164,6 +170,12 @@
                                         <div class="filter-dropdown" id="zoneDropdown"></div>
                                     </div>
                                 </div>
+                                <div class="col-auto filter-badge-col">
+                                    <div id="zoneBadge"></div>
+                                </div>
+                                
+                                <div class="w-100 d-md-none"></div>
+                                
                                 <div class="col-auto" style="width: 140px;">
                                     <label class="form-label fw-bold text-muted mb-1" style="font-size: 0.75rem;">STATE</label>
                                     <div class="filter-container">
@@ -174,6 +186,12 @@
                                         <div class="filter-dropdown" id="stateDropdown"></div>
                                     </div>
                                 </div>
+                                <div class="col-auto filter-badge-col">
+                                    <div id="stateBadge"></div>
+                                </div>
+                                
+                                <div class="w-100 d-md-none"></div>
+                                
                                 <div class="col-auto" style="width: 140px;">
                                     <label class="form-label fw-bold text-muted mb-1" style="font-size: 0.75rem;">DIVISION</label>
                                     <div class="filter-container">
@@ -184,6 +202,12 @@
                                         <div class="filter-dropdown" id="divisionDropdown"></div>
                                     </div>
                                 </div>
+                                <div class="col-auto filter-badge-col">
+                                    <div id="divisionBadge"></div>
+                                </div>
+                                
+                                <div class="w-100 d-md-none"></div>
+                                
                                 <div class="col-auto" style="width: 140px;">
                                     <label class="form-label fw-bold text-muted mb-1" style="font-size: 0.75rem;">DISTRICT</label>
                                     <div class="filter-container">
@@ -194,6 +218,12 @@
                                         <div class="filter-dropdown" id="districtDropdown"></div>
                                     </div>
                                 </div>
+                                <div class="col-auto filter-badge-col">
+                                    <div id="districtBadge"></div>
+                                </div>
+                                
+                                <div class="w-100 d-md-none"></div>
+                                
                                 <div class="col-auto" style="width: 140px;">
                                     <label class="form-label fw-bold text-muted mb-1" style="font-size: 0.75rem;">TEHSIL</label>
                                     <div class="filter-container">
@@ -204,6 +234,12 @@
                                         <div class="filter-dropdown" id="tehsilDropdown"></div>
                                     </div>
                                 </div>
+                                <div class="col-auto filter-badge-col">
+                                    <div id="tehsilBadge"></div>
+                                </div>
+                                
+                                <div class="w-100 d-md-none"></div>
+                                
                                 <div class="col-auto" style="width: 140px;">
                                     <label class="form-label fw-bold text-muted mb-1" style="font-size: 0.75rem;">PINCODE</label>
                                     <div class="filter-container">
@@ -214,6 +250,12 @@
                                         <div class="filter-dropdown" id="pincodeDropdown"></div>
                                     </div>
                                 </div>
+                                <div class="col-auto filter-badge-col">
+                                    <div id="pincodeBadge"></div>
+                                </div>
+                                
+                                <div class="w-100 d-md-none"></div>
+                                
                                 <div class="col-auto" style="width: 140px;">
                                     <label class="form-label fw-bold text-muted mb-1" style="font-size: 0.75rem;">VILLAGE</label>
                                     <div class="filter-container">
@@ -224,7 +266,13 @@
                                         <div class="filter-dropdown" id="villageDropdown"></div>
                                     </div>
                                 </div>
-                                <div class="col-auto" style="padding-top: 28px;">
+                                <div class="col-auto filter-badge-col">
+                                    <div id="villageBadge"></div>
+                                </div>
+                                
+                                <div class="w-100"></div>
+                                
+                                <div class="col-auto" style="padding-top: 8px;">
                                     <button class="btn btn-outline-secondary" id="clearFilters">
                                         <i class="fas fa-times me-1"></i>
                                         Clear
@@ -232,8 +280,47 @@
                                 </div>
                             </div>
 
-                            <!-- Selected Filters Display -->
-                            <div class="row mt-3" id="selectedFiltersContainer" style="display: none;">
+                            <!-- Mobile Badge Styles -->
+                            <style>
+                                .filter-badge-col {
+                                    padding-top: 28px;
+                                    min-height: 45px;
+                                    display: flex;
+                                    align-items: center;
+                                }
+                                
+                                @media (max-width: 767px) {
+                                    .filter-badge-col {
+                                        flex: 1;
+                                        padding-top: 28px;
+                                        padding-left: 8px;
+                                    }
+                                    
+                                    #filterRow > .col-auto:not(.filter-badge-col):not(.w-100) {
+                                        flex: 0 0 auto;
+                                        width: 50% !important;
+                                        padding-right: 4px;
+                                    }
+                                    
+                                    .filter-badge {
+                                        font-size: 0.75rem;
+                                        padding: 4px 8px;
+                                        white-space: nowrap;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        max-width: 100%;
+                                    }
+                                }
+                                
+                                @media (min-width: 768px) {
+                                    .filter-badge-col {
+                                        display: none !important;
+                                    }
+                                }
+                            </style>
+
+                            <!-- Selected Filters Display (Desktop only) -->
+                            <div class="row mt-3 d-none d-md-block" id="selectedFiltersContainer" style="display: none;">
                                 <div class="col-12">
                                     <div class="d-flex flex-wrap gap-2 align-items-center" id="selectedFiltersBadges">
                                         <!-- Filter badges will be added here dynamically -->
@@ -856,6 +943,65 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="js/video-manager.js"></script>
+    <script>
+        // Mobile filter badge update function
+        function updateMobileBadges() {
+            const filters = {
+                country: { input: document.getElementById('filterCountry'), badge: document.getElementById('countryBadge'), label: 'India:' },
+                zone: { input: document.getElementById('filterZone'), badge: document.getElementById('zoneBadge'), label: 'Zone:' },
+                state: { input: document.getElementById('filterState'), badge: document.getElementById('stateBadge'), label: 'State:' },
+                division: { input: document.getElementById('filterDivision'), badge: document.getElementById('divisionBadge'), label: 'Div:' },
+                district: { input: document.getElementById('filterDistrict'), badge: document.getElementById('districtBadge'), label: 'District:' },
+                tehsil: { input: document.getElementById('filterTehsil'), badge: document.getElementById('tehsilBadge'), label: 'Tehsil:' },
+                pincode: { input: document.getElementById('filterPincode'), badge: document.getElementById('pincodeBadge'), label: 'Pincode:' },
+                village: { input: document.getElementById('filterVillage'), badge: document.getElementById('villageBadge'), label: 'Village:' }
+            };
+
+            Object.keys(filters).forEach(key => {
+                const {input, badge, label} = filters[key];
+                if (!input || !badge) return;
+
+                const value = input.value || input.options?.[input.selectedIndex]?.text;
+                
+                if (value && value.trim() && !value.includes('...')) {
+                    badge.innerHTML = `<span class="badge bg-primary filter-badge" style="font-size: 0.7rem; padding: 4px 8px;">${label} ${value}</span>`;
+                } else {
+                    badge.innerHTML = '';
+                }
+            });
+        }
+
+        // Add listeners when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial update
+            setTimeout(updateMobileBadges, 100);
+
+            // Listen to all filter changes
+            const filterInputs = ['filterCountry', 'filterZone', 'filterState', 'filterDivision', 'filterDistrict', 'filterTehsil', 'filterPincode', 'filterVillage'];
+            filterInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', updateMobileBadges);
+                    el.addEventListener('input', updateMobileBadges);
+                }
+            });
+
+            // Listen to clear button
+            const clearBtn = document.getElementById('clearFilters');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    setTimeout(updateMobileBadges, 100);
+                });
+            }
+
+            // Monitor mutations for dynamic changes
+            const observer = new MutationObserver(updateMobileBadges);
+            filterInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) observer.observe(el, { attributes: true, attributeFilter: ['value'] });
+            });
+        });
+    </script>
     <script src="js/app.js"></script>
 </body>
 </html>

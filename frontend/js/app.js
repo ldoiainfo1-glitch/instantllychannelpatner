@@ -2035,10 +2035,28 @@ function updateSelectedFiltersBadges() {
         if (value && value.trim() !== '') {
             hasActiveFilters = true;
             badges.push(`
-                <span class="badge" style="background-color: ${config.color}; color: #333; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: 500;">
+                <span class="badge filter-badge" style="background-color: ${config.color}; color: #333; padding: 8px 12px; border-radius: 4px; font-size: 14px; font-weight: 500;">
                     ${config.label}: ${value}
                 </span>
             `);
+            
+            // Also update inline badge for mobile
+            const inlineBadgeId = config.id.replace('filter', '').toLowerCase() + 'Badge';
+            const inlineBadge = document.getElementById(inlineBadgeId);
+            if (inlineBadge) {
+                inlineBadge.innerHTML = `
+                    <span class="badge filter-badge" style="background-color: ${config.color}; color: #333; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">
+                        ${config.label}: ${value}
+                    </span>
+                `;
+            }
+        } else {
+            // Clear inline badge if no value
+            const inlineBadgeId = config.id.replace('filter', '').toLowerCase() + 'Badge';
+            const inlineBadge = document.getElementById(inlineBadgeId);
+            if (inlineBadge) {
+                inlineBadge.innerHTML = '';
+            }
         }
     });
     
