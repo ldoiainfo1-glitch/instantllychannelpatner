@@ -1680,16 +1680,20 @@ function setupSearchableFilters() {
 
             // Close dropdown when clicking/touching outside
             document.addEventListener('click', (e) => {
+                const searchInput = dropdown.querySelector('.filter-search-input');
+                // Don't close if clicking on the dropdown or search input
                 if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                     hideFilterDropdown(filter.dropdown);
                 }
             });
             
             document.addEventListener('touchstart', (e) => {
+                const searchInput = dropdown.querySelector('.filter-search-input');
+                // Don't close if touching the dropdown or search input
                 if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                     hideFilterDropdown(filter.dropdown);
                 }
-            });
+            }, { passive: true });
 
             // Close dropdown on scroll to prevent positioning issues
             window.addEventListener('scroll', () => {
@@ -1805,11 +1809,6 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     const dropdown = document.getElementById(dropdownId);
     const container = input.closest('.filter-container');
     
-    // Immediately blur the readonly input to prevent keyboard
-    if (input) {
-        input.blur();
-    }
-    
     // Wait for location data to load if not yet loaded
     if (!locationDataLoaded) {
         console.log('⏳ Waiting for location data to load...');
@@ -1867,6 +1866,22 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     const newSearchInput = searchInput.cloneNode(true);
     searchInput.parentNode.replaceChild(newSearchInput, searchInput);
     
+    // Prevent search input from being affected by parent events
+    newSearchInput.addEventListener('focus', (e) => {
+        e.stopPropagation();
+        // Keep dropdown open when search input is focused
+    });
+    
+    newSearchInput.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        // Allow normal touch behavior for search input
+    }, { passive: true });
+    
+    newSearchInput.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Ensure search input can be clicked and focused
+    });
+    
     newSearchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
         if (searchTerm) {
@@ -1880,11 +1895,8 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
         }
     });
 
-    // Focus on search input only on desktop (not mobile to avoid keyboard flash)
-    const isMobile = window.innerWidth <= 768;
-    if (!isMobile) {
-        setTimeout(() => newSearchInput.focus(), 10);
-    }
+    // Don't auto-focus on mobile - let user tap when they want to search
+    // This prevents unwanted keyboard popup
     
     // Show dropdown (use absolute positioning, not fixed)
     dropdown.classList.add('show');
@@ -1907,17 +1919,40 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
 
     // Setup click and touch handlers for options (mobile compatibility)
     container.querySelectorAll('.filter-dropdown-item').forEach(item => {
-        item.addEventListener('click', () => {
-            selectFilterOption(inputId, dropdownId, item.dataset.value);
-        });
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let isTouching = false;
         
-        // Add touch event for mobile devices - use touchend instead of touchstart
-        // to allow scrolling (touchstart + preventDefault blocks scroll)
-        item.addEventListener('touchend', (e) => {
-            // Only prevent if not scrolling
-            if (e.cancelable) {
-                e.preventDefault();
+        item.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+            isTouching = true;
+        }, { passive: true });
+        
+        item.addEventListener('touchmove', (e) => {
+            // If moved more than 10px, it's a scroll not a tap
+            if (Math.abs(e.touches[0].clientY - touchStartY) > 10) {
+                isTouching = false;
             }
+        }, { passive: true });
+        
+        item.addEventListener('touchend', (e) => {
+            const touchDuration = Date.now() - touchStartTime;
+            const touchDistance = Math.abs(e.changedTouches[0].clientY - touchStartY);
+            
+            // Only select if it was a quick tap (not a scroll)
+            // Tap: < 200ms duration and < 10px movement
+            if (isTouching && touchDuration < 200 && touchDistance < 10) {
+                e.preventDefault();
+                selectFilterOption(inputId, dropdownId, item.dataset.value);
+            }
+            isTouching = false;
+        }, { passive: false });
+        
+        // Desktop click handler
+        item.addEventListener('click', (e) => {
+            // Prevent if this was triggered by touch (already handled above)
+            if (e.detail === 0) return; // detail === 0 means programmatic click
             selectFilterOption(inputId, dropdownId, item.dataset.value);
         });
     });
