@@ -290,25 +290,36 @@
                                 }
                                 
                                 @media (max-width: 767px) {
+                                    /* Hide inline badges on mobile */
                                     .filter-badge-col {
-                                        flex: 1;
-                                        padding-top: 28px;
-                                        padding-left: 8px;
+                                        display: none !important;
                                     }
                                     
+                                    /* Make filter rows full width with label on left, input on right */
                                     #filterRow > .col-auto:not(.filter-badge-col):not(.w-100) {
-                                        flex: 0 0 auto;
-                                        width: 50% !important;
-                                        padding-right: 4px;
+                                        width: 100% !important;
+                                        margin-bottom: 12px;
                                     }
                                     
-                                    .filter-badge {
-                                        font-size: 0.75rem;
-                                        padding: 4px 8px;
-                                        white-space: nowrap;
-                                        overflow: hidden;
-                                        text-overflow: ellipsis;
-                                        max-width: 100%;
+                                    #filterRow > .col-auto:not(.filter-badge-col):not(.w-100) > label {
+                                        display: inline-block;
+                                        width: 30%;
+                                        margin-bottom: 0 !important;
+                                        padding-top: 8px;
+                                        font-size: 0.85rem !important;
+                                        vertical-align: top;
+                                    }
+                                    
+                                    #filterRow > .col-auto:not(.filter-badge-col):not(.w-100) > select,
+                                    #filterRow > .col-auto:not(.filter-badge-col):not(.w-100) > .filter-container {
+                                        display: inline-block;
+                                        width: 68%;
+                                        vertical-align: top;
+                                    }
+                                    
+                                    /* Hide the force line breaks on mobile */
+                                    .w-100.d-md-none {
+                                        display: none !important;
                                     }
                                 }
                                 
