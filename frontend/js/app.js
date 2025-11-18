@@ -626,26 +626,26 @@ function createPositionRow(position) {
         nameCell = '-';
     }
     
-    // Determine Area Head For - show most specific location level
+    // Determine Area Head For - show zone or state, matching original layout
     let areaHeadFor = '-';
     if (position.location) {
-        // Priority: pincode > village > tehsil > district > division > state > zone > country
-        if (position.location.pincode) {
+        // Show zone if available, otherwise state, otherwise most specific location
+        if (position.location.zone) {
+            areaHeadFor = position.location.zone + ' India';
+        } else if (position.location.state) {
+            areaHeadFor = position.location.state;
+        } else if (position.location.country) {
+            areaHeadFor = position.location.country;
+        } else if (position.location.division) {
+            areaHeadFor = position.location.division;
+        } else if (position.location.district) {
+            areaHeadFor = position.location.district;
+        } else if (position.location.tehsil) {
+            areaHeadFor = position.location.tehsil;
+        } else if (position.location.pincode) {
             areaHeadFor = position.location.pincode;
         } else if (position.location.village) {
             areaHeadFor = position.location.village;
-        } else if (position.location.tehsil) {
-            areaHeadFor = position.location.tehsil;
-        } else if (position.location.district) {
-            areaHeadFor = position.location.district;
-        } else if (position.location.division) {
-            areaHeadFor = position.location.division;
-        } else if (position.location.state) {
-            areaHeadFor = position.location.state;
-        } else if (position.location.zone) {
-            areaHeadFor = position.location.zone;
-        } else if (position.location.country) {
-            areaHeadFor = position.location.country;
         }
     }
 
