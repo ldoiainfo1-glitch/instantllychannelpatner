@@ -532,31 +532,32 @@
                         ctx.font = 'bold 32px Arial';
                         ctx.fillText(userPhone, 240, detailsStartY + 175);
                         
-                        // Draw Instantly Cards logo/text on right side
-                        ctx.textAlign = 'right';
-                        
-                        // Draw lightning bolt icon (⚡)
-                        ctx.fillStyle = '#3b82f6';
-                        ctx.font = '50px Arial';
-                        ctx.fillText('⚡', canvasWidth - 80, detailsStartY + 85);
-                        
-                        // Draw "Marketed By"
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 130);
-                        
-                        // Draw "Instantly"
-                        ctx.fillStyle = '#3b82f6';
-                        ctx.font = 'bold 50px Arial';
-                        ctx.fillText('Instantly', canvasWidth - 80, detailsStartY + 180);
-                        
-                        // Draw "Cards"
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText('Cards', canvasWidth - 80, detailsStartY + 220);
-                        
-                        // Return as data URL
-                        resolve(canvas.toDataURL('image/png'));
+                        // Draw Instantly Cards logo on right side
+                        const logoImg = new Image();
+                        logoImg.crossOrigin = 'anonymous';
+                        logoImg.onload = () => {
+                            const logoWidth = 200;
+                            const logoHeight = 180;
+                            const logoX = canvasWidth - logoWidth - 40;
+                            const logoY = detailsStartY + 45;
+                            ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
+                            
+                            // Return as data URL
+                            resolve(canvas.toDataURL('image/png'));
+                        };
+                        logoImg.onerror = () => {
+                            console.warn('Logo failed to load, using text fallback');
+                            // Fallback to text if logo fails
+                            ctx.textAlign = 'right';
+                            ctx.fillStyle = '#1e3a8a';
+                            ctx.font = 'bold 28px Arial';
+                            ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
+                            ctx.fillStyle = '#3b82f6';
+                            ctx.font = 'bold 44px Arial';
+                            ctx.fillText('Instantly Cards', canvasWidth - 80, detailsStartY + 150);
+                            resolve(canvas.toDataURL('image/png'));
+                        };
+                        logoImg.src = 'Instantlly Logo.jpg';
                     };
                     
                     userPhotoImg.onerror = () => {
@@ -590,30 +591,29 @@
                         ctx.font = 'bold 32px Arial';
                         ctx.fillText(userPhone, 240, detailsStartY + 175);
                         
-                        // Draw Instantly Cards logo/text on right side
-                        ctx.textAlign = 'right';
-                        
-                        // Draw lightning bolt icon (⚡)
-                        ctx.fillStyle = '#3b82f6';
-                        ctx.font = '50px Arial';
-                        ctx.fillText('⚡', canvasWidth - 80, detailsStartY + 85);
-                        
-                        // Draw "Marketed By"
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 130);
-                        
-                        // Draw "Instantly"
-                        ctx.fillStyle = '#3b82f6';
-                        ctx.font = 'bold 50px Arial';
-                        ctx.fillText('Instantly', canvasWidth - 80, detailsStartY + 180);
-                        
-                        // Draw "Cards"
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText('Cards', canvasWidth - 80, detailsStartY + 220);
-                        
-                        resolve(canvas.toDataURL('image/png'));
+                        // Draw Instantly Cards logo on right side
+                        const logoImg2 = new Image();
+                        logoImg2.crossOrigin = 'anonymous';
+                        logoImg2.onload = () => {
+                            const logoWidth = 200;
+                            const logoHeight = 180;
+                            const logoX = canvasWidth - logoWidth - 40;
+                            const logoY = detailsStartY + 45;
+                            ctx.drawImage(logoImg2, logoX, logoY, logoWidth, logoHeight);
+                            resolve(canvas.toDataURL('image/png'));
+                        };
+                        logoImg2.onerror = () => {
+                            console.warn('Logo failed to load, using text fallback');
+                            ctx.textAlign = 'right';
+                            ctx.fillStyle = '#1e3a8a';
+                            ctx.font = 'bold 28px Arial';
+                            ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
+                            ctx.fillStyle = '#3b82f6';
+                            ctx.font = 'bold 44px Arial';
+                            ctx.fillText('Instantly Cards', canvasWidth - 80, detailsStartY + 150);
+                            resolve(canvas.toDataURL('image/png'));
+                        };
+                        logoImg2.src = 'Instantlly Logo.jpg';
                     };
                     
                     // Load user photo
@@ -755,39 +755,50 @@
                         ctx.font = 'bold 32px Arial';
                         ctx.fillText(userPhone, 240, detailsStartY + 175);
                         
-                        // Draw Instantly Cards logo/text on right side
-                        ctx.textAlign = 'right';
-                        
-                        // Draw lightning bolt icon (⚡)
-                        ctx.fillStyle = '#3b82f6';
-                        ctx.font = '50px Arial';
-                        ctx.fillText('⚡', canvasWidth - 80, detailsStartY + 85);
-                        
-                        // Draw "Marketed By"
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 130);
-                        
-                        // Draw "Instantly"
-                        ctx.fillStyle = '#3b82f6';
-                        ctx.font = 'bold 50px Arial';
-                        ctx.fillText('Instantly', canvasWidth - 80, detailsStartY + 180);
-                        
-                        // Draw "Cards"
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText('Cards', canvasWidth - 80, detailsStartY + 220);
-                        
-                        // Download the canvas as image
-                        canvas.toBlob((blob) => {
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
-                            link.click();
-                            URL.revokeObjectURL(url);
-                            resolve();
-                        }, 'image/png');
+                        // Draw Instantly Cards logo on right side
+                        const logoImg3 = new Image();
+                        logoImg3.crossOrigin = 'anonymous';
+                        logoImg3.onload = () => {
+                            const logoWidth = 200;
+                            const logoHeight = 180;
+                            const logoX = canvasWidth - logoWidth - 40;
+                            const logoY = detailsStartY + 45;
+                            ctx.drawImage(logoImg3, logoX, logoY, logoWidth, logoHeight);
+                            
+                            // Download the canvas as image
+                            canvas.toBlob((blob) => {
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
+                                link.click();
+                                URL.revokeObjectURL(url);
+                                resolve();
+                            }, 'image/png');
+                        };
+                        logoImg3.onerror = () => {
+                            console.warn('Logo failed to load, using text fallback');
+                            // Fallback to text
+                            ctx.textAlign = 'right';
+                            ctx.fillStyle = '#1e3a8a';
+                            ctx.font = 'bold 28px Arial';
+                            ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
+                            ctx.fillStyle = '#3b82f6';
+                            ctx.font = 'bold 44px Arial';
+                            ctx.fillText('Instantly Cards', canvasWidth - 80, detailsStartY + 150);
+                            
+                            // Download the canvas as image
+                            canvas.toBlob((blob) => {
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
+                                link.click();
+                                URL.revokeObjectURL(url);
+                                resolve();
+                            }, 'image/png');
+                        };
+                        logoImg3.src = 'Instantlly Logo.jpg';
                     };
                     
                     userPhotoImg.onerror = () => {
@@ -821,38 +832,47 @@
                         ctx.font = 'bold 32px Arial';
                         ctx.fillText(userPhone, 240, detailsStartY + 175);
                         
-                        // Draw Instantly Cards logo/text on right side
-                        ctx.textAlign = 'right';
-                        
-                        // Draw lightning bolt icon (⚡)
-                        ctx.fillStyle = '#3b82f6';
-                        ctx.font = '50px Arial';
-                        ctx.fillText('⚡', canvasWidth - 80, detailsStartY + 85);
-                        
-                        // Draw "Marketed By"
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 130);
-                        
-                        // Draw "Instantly"
-                        ctx.fillStyle = '#3b82f6';
-                        ctx.font = 'bold 50px Arial';
-                        ctx.fillText('Instantly', canvasWidth - 80, detailsStartY + 180);
-                        
-                        // Draw "Cards"
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText('Cards', canvasWidth - 80, detailsStartY + 220);
-                        
-                        canvas.toBlob((blob) => {
-                            const url = URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = url;
-                            link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
-                            link.click();
-                            URL.revokeObjectURL(url);
-                            resolve();
-                        }, 'image/png');
+                        // Draw Instantly Cards logo on right side
+                        const logoImg4 = new Image();
+                        logoImg4.crossOrigin = 'anonymous';
+                        logoImg4.onload = () => {
+                            const logoWidth = 200;
+                            const logoHeight = 180;
+                            const logoX = canvasWidth - logoWidth - 40;
+                            const logoY = detailsStartY + 45;
+                            ctx.drawImage(logoImg4, logoX, logoY, logoWidth, logoHeight);
+                            
+                            canvas.toBlob((blob) => {
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
+                                link.click();
+                                URL.revokeObjectURL(url);
+                                resolve();
+                            }, 'image/png');
+                        };
+                        logoImg4.onerror = () => {
+                            console.warn('Logo failed to load, using text fallback');
+                            ctx.textAlign = 'right';
+                            ctx.fillStyle = '#1e3a8a';
+                            ctx.font = 'bold 28px Arial';
+                            ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
+                            ctx.fillStyle = '#3b82f6';
+                            ctx.font = 'bold 44px Arial';
+                            ctx.fillText('Instantly Cards', canvasWidth - 80, detailsStartY + 150);
+                            
+                            canvas.toBlob((blob) => {
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
+                                link.click();
+                                URL.revokeObjectURL(url);
+                                resolve();
+                            }, 'image/png');
+                        };
+                        logoImg4.src = 'Instantlly Logo.jpg';
                     };
                     
                     // Load user photo
