@@ -1643,20 +1643,24 @@ function setupSearchableFilters() {
         const clearBtn = document.getElementById(filter.clear);
 
         if (input && dropdown && clearBtn) {
+            // Prevent focus and keyboard on mobile
+            input.addEventListener('focus', (e) => {
+                e.preventDefault();
+                input.blur(); // Immediately blur to prevent keyboard
+            });
+            
             // Setup input click to show dropdown (with touch support for mobile)
             input.addEventListener('click', (e) => {
                 e.preventDefault();
+                input.blur(); // Prevent keyboard
                 showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
             });
             
-            // Add touch event for mobile devices
-            input.addEventListener('touchstart', (e) => {
+            // Add touch event for mobile devices (primary interaction on mobile)
+            input.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
-            });
-
-            // Setup input focus to show dropdown
-            input.addEventListener('focus', () => {
+                e.stopPropagation();
+                input.blur(); // Ensure keyboard doesn't show
                 showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
             });
 
@@ -1670,11 +1674,12 @@ function setupSearchableFilters() {
             // Setup clear button
             clearBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 clearSingleFilter(filter.id, filter.clear);
             });
             
             // Add touch event for clear button on mobile
-            clearBtn.addEventListener('touchstart', (e) => {
+            clearBtn.addEventListener('touchend', (e) => {
                 e.stopPropagation();
                 e.preventDefault();
                 clearSingleFilter(filter.id, filter.clear);
