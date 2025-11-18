@@ -449,13 +449,17 @@
                                 <div class="col-md-12 mb-3" id="selectedUserCard" style="display: none;">
                                     <div class="card border-primary">
                                         <div class="card-body">
-                                            <div class="d-flex align-items-center">
-                                                <img id="selectedUserPhoto" src="" alt="User" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
-                                                <div>
-                                                    <h6 class="mb-0" id="selectedUserName"></h6>
-                                                    <small class="text-muted" id="selectedUserPhone"></small>
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <div class="d-flex align-items-center">
+                                                    <img id="selectedUserPhoto" src="" alt="User" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    <div>
+                                                        <h6 class="mb-0" id="selectedUserName"></h6>
+                                                        <small class="text-muted" id="selectedUserPhone"></small>
+                                                    </div>
                                                 </div>
-                                                <button type="button" class="btn-close ms-auto" onclick="clearSelectedUser()"></button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearSelectedUser()">
+                                                    <i class="fas fa-times me-1"></i>Cancel
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
