@@ -610,10 +610,20 @@ function createPositionRow(position) {
                     </button>
     `;
     } else if (position.applicantDetails && position.applicantDetails.name) {
-        nameCell = `${position.applicantDetails.name}<br><small class="text-muted">ID: ${position._id}</small>`;
+        nameCell = `${position.applicantDetails.name}`;
     } else {
         nameCell = '-';
     }
+    
+    // Position ID cell with copy functionality - always visible for easy reference
+    let positionIdCell = `
+        <div class="d-flex align-items-center">
+            <code class="me-2 text-primary" style="font-size: 0.9em; user-select: all;" id="posId_${position._id}">${position._id}</code>
+            <button class="btn btn-sm btn-outline-secondary" onclick="copyPositionId('${position._id}')" title="Copy Position ID">
+                <i class="fas fa-copy"></i>
+            </button>
+        </div>
+    `;
     
     // Determine Area Head For - show most specific location level
     let areaHeadFor = '-';
@@ -721,6 +731,7 @@ function createPositionRow(position) {
         <td><strong>${position.sNo}</strong></td>
         <td>${nameCell}</td>
         <td>${areaHeadFor}</td>
+        <td>${positionIdCell}</td>
         <td class="text-center">${photoCell}</td>
         <td>${phoneNo}</td>
         <td>${introducedBy}</td>
@@ -730,6 +741,31 @@ function createPositionRow(position) {
     `;
     
     return row;
+}
+
+// Copy position ID to clipboard
+function copyPositionId(positionId) {
+    const element = document.getElementById(`posId_${positionId}`);
+    if (element) {
+        // Create a range and select the text
+        const range = document.createRange();
+        range.selectNode(element);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        
+        // Copy to clipboard
+        try {
+            document.execCommand('copy');
+            // Show success feedback
+            alert(`Position ID copied: ${positionId}`);
+        } catch (err) {
+            // Fallback: show the ID in a prompt for manual copy
+            prompt('Copy this Position ID:', positionId);
+        }
+        
+        // Deselect
+        window.getSelection().removeAllRanges();
+    }
 }
 
 // Get status class for badge styling
