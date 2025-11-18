@@ -784,7 +784,7 @@
         async function fetchAndUpdateCredits() {
             try {
                 console.log('💰 Fetching real-time credits from API...');
-                const response = await fetch(`${API_BASE_URL}/api/credits/balance`, {
+                const response = await fetch(`${API_BASE_URL}/credits/balance`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
@@ -1395,16 +1395,17 @@
 
             const toastElement = document.createElement('div');
             toastElement.innerHTML = toastHtml;
-            toastContainer.appendChild(toastElement.firstElementChild);
+            const actualToast = toastElement.firstElementChild;
+            toastContainer.appendChild(actualToast);
 
-            const toast = new bootstrap.Toast(toastElement.firstElementChild, {
+            const toast = new bootstrap.Toast(actualToast, {
                 autohide: true,
                 delay: 3000
             });
             toast.show();
 
-            toastElement.firstElementChild.addEventListener('hidden.bs.toast', () => {
-                toastElement.remove();
+            actualToast.addEventListener('hidden.bs.toast', () => {
+                actualToast.remove();
             });
         }
 
@@ -1428,7 +1429,7 @@
             // Debounce search
             searchTimeout = setTimeout(async () => {
                 await searchUsers(phonePrefix);
-            }, 500);
+            }, 200);
         });
 
         async function searchUsers(phonePrefix) {
