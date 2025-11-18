@@ -436,10 +436,10 @@
                                         type="text" 
                                         class="form-control" 
                                         id="transferPhone" 
-                                        placeholder="Start typing with 88..." 
+                                        placeholder="Type any digits to search (e.g., 700, 88, 996...)" 
                                         autocomplete="off"
                                         required>
-                                    <small class="text-muted">Type phone number starting with 88 to search users</small>
+                                    <small class="text-muted">Search users by typing any part of their phone number</small>
                                     
                                     <!-- User dropdown -->
                                     <div id="userDropdown" class="list-group mt-2" style="display: none; max-height: 300px; overflow-y: auto;"></div>
@@ -1418,12 +1418,6 @@
             
             // Hide dropdown if input is empty or too short
             if (phonePrefix.length < 2) {
-                document.getElementById('userDropdown').style.display = 'none';
-                return;
-            }
-
-            // Only search if starts with 88
-            if (!phonePrefix.startsWith('88')) {
                 document.getElementById('userDropdown').style.display = 'none';
                 return;
             }
