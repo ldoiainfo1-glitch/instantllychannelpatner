@@ -626,26 +626,26 @@ function createPositionRow(position) {
         nameCell = '-';
     }
     
-    // Determine Area Head For - show zone or state, matching original layout
+    // Determine Area Head For - show most specific location area name (district, tehsil, etc.)
     let areaHeadFor = '-';
     if (position.location) {
-        // Show zone if available, otherwise state, otherwise most specific location
-        if (position.location.zone) {
-            areaHeadFor = position.location.zone + ' India';
-        } else if (position.location.state) {
-            areaHeadFor = position.location.state;
-        } else if (position.location.country) {
-            areaHeadFor = position.location.country;
-        } else if (position.location.division) {
-            areaHeadFor = position.location.division;
-        } else if (position.location.district) {
-            areaHeadFor = position.location.district;
-        } else if (position.location.tehsil) {
-            areaHeadFor = position.location.tehsil;
+        // Prioritize most specific location first (village > pincode > tehsil > district > division > state > zone > country)
+        if (position.location.village) {
+            areaHeadFor = position.location.village.toUpperCase();
         } else if (position.location.pincode) {
             areaHeadFor = position.location.pincode;
-        } else if (position.location.village) {
-            areaHeadFor = position.location.village;
+        } else if (position.location.tehsil) {
+            areaHeadFor = position.location.tehsil.toUpperCase();
+        } else if (position.location.district) {
+            areaHeadFor = position.location.district.toUpperCase();
+        } else if (position.location.division) {
+            areaHeadFor = position.location.division.toUpperCase();
+        } else if (position.location.state) {
+            areaHeadFor = position.location.state.toUpperCase();
+        } else if (position.location.zone) {
+            areaHeadFor = position.location.zone.toUpperCase();
+        } else if (position.location.country) {
+            areaHeadFor = position.location.country.toUpperCase();
         }
     }
 
