@@ -419,6 +419,7 @@
         
         // Global variables for modal
         let currentPromotionData = {};
+        let currentPreviewDataUrl = null;
         
         // Show image preview in modal
         async function showImagePreview(event, promotionId, language, date) {
@@ -427,13 +428,208 @@
             // Store current promotion data
             currentPromotionData = { promotionId, language, date };
             
-            // Set preview image
+            // Show loading in preview
             const previewImage = document.getElementById('previewImage');
-            previewImage.src = `${API_BASE_URL}/promotions/image/${promotionId}/${language}`;
+            previewImage.src = '';
+            previewImage.alt = 'Generating preview...';
             
             // Show modal
             const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
             modal.show();
+            
+            try {
+                // Fetch promotion image from backend
+                const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch promotion image');
+                }
+                
+                const blob = await response.blob();
+                const promotionImageUrl = URL.createObjectURL(blob);
+                
+                // Generate complete card preview with user details
+                const previewDataUrl = await generatePromotionCardPreview(promotionImageUrl, language, date);
+                currentPreviewDataUrl = previewDataUrl;
+                
+                // Set preview image to the complete card
+                previewImage.src = previewDataUrl;
+                previewImage.alt = 'Promotion Card Preview';
+                
+            } catch (error) {
+                console.error('Error generating preview:', error);
+                previewImage.alt = 'Failed to load preview';
+                alert('Failed to load preview. Please try again.');
+            }
+        }
+        
+        // Generate promotion card preview (same as download but returns data URL)
+        async function generatePromotionCardPreview(promotionImageUrl, language, date) {
+            return new Promise((resolve, reject) => {
+                const canvas = document.getElementById('promotionCanvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Create promotion image element
+                const promotionImg = new Image();
+                promotionImg.crossOrigin = 'anonymous';
+                
+                promotionImg.onload = () => {
+                    // Set canvas dimensions (standard social media size)
+                    const canvasWidth = 1080;
+                    const canvasHeight = 1350; // 80% promo (1080) + 20% user details (270)
+                    
+                    canvas.width = canvasWidth;
+                    canvas.height = canvasHeight;
+                    
+                    // Draw promotion image (80% - top portion)
+                    const promoHeight = 1080;
+                    ctx.drawImage(promotionImg, 0, 0, canvasWidth, promoHeight);
+                    
+                    // Draw user details section (20% - bottom portion)
+                    const detailsStartY = promoHeight;
+                    const detailsHeight = 270;
+                    
+                    // Background for user details
+                    const gradient = ctx.createLinearGradient(0, detailsStartY, 0, detailsStartY + detailsHeight);
+                    gradient.addColorStop(0, '#fef3c7');
+                    gradient.addColorStop(1, '#fcd34d');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, detailsStartY, canvasWidth, detailsHeight);
+                    
+                    // Load user photo
+                    const userPhotoImg = new Image();
+                    userPhotoImg.crossOrigin = 'anonymous';
+                    
+                    userPhotoImg.onload = () => {
+                        // Draw user photo (circular)
+                        const photoSize = 120;
+                        const photoX = 80;
+                        const photoY = detailsStartY + 75;
+                        
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                        ctx.closePath();
+                        ctx.clip();
+                        ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
+                        ctx.restore();
+                        
+                        // Draw photo border
+                        ctx.strokeStyle = '#f59e0b';
+                        ctx.lineWidth = 4;
+                        ctx.beginPath();
+                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        // Draw user details text
+                        ctx.fillStyle = '#92400e';
+                        ctx.font = 'bold 36px Arial';
+                        ctx.fillText(userName, 240, detailsStartY + 90);
+                        
+                        ctx.font = '30px Arial';
+                        ctx.fillText(`Mobile No.`, 240, detailsStartY + 135);
+                        
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText(userPhone, 240, detailsStartY + 175);
+                        
+                        // Draw Instantly Cards logo/text on right side
+                        ctx.textAlign = 'right';
+                        
+                        // Draw lightning bolt icon (⚡)
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.font = '50px Arial';
+                        ctx.fillText('⚡', canvasWidth - 80, detailsStartY + 85);
+                        
+                        // Draw "Marketed By"
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 130);
+                        
+                        // Draw "Instantly"
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.font = 'bold 50px Arial';
+                        ctx.fillText('Instantly', canvasWidth - 80, detailsStartY + 180);
+                        
+                        // Draw "Cards"
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText('Cards', canvasWidth - 80, detailsStartY + 220);
+                        
+                        // Return as data URL
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    
+                    userPhotoImg.onerror = () => {
+                        // Use default avatar if photo fails to load
+                        console.warn('User photo failed to load, using default');
+                        
+                        // Draw default avatar (simple circle with initials)
+                        const photoSize = 120;
+                        const photoX = 80;
+                        const photoY = detailsStartY + 75;
+                        
+                        ctx.fillStyle = '#e2e8f0';
+                        ctx.beginPath();
+                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.fillStyle = '#64748b';
+                        ctx.font = 'bold 48px Arial';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(userName.charAt(0).toUpperCase(), photoX + photoSize/2, photoY + photoSize/2 + 15);
+                        
+                        // Continue with rest of the card
+                        ctx.textAlign = 'left';
+                        ctx.fillStyle = '#92400e';
+                        ctx.font = 'bold 36px Arial';
+                        ctx.fillText(userName, 240, detailsStartY + 90);
+                        
+                        ctx.font = '30px Arial';
+                        ctx.fillText(`Mobile No.`, 240, detailsStartY + 135);
+                        
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText(userPhone, 240, detailsStartY + 175);
+                        
+                        // Draw Instantly Cards logo/text on right side
+                        ctx.textAlign = 'right';
+                        
+                        // Draw lightning bolt icon (⚡)
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.font = '50px Arial';
+                        ctx.fillText('⚡', canvasWidth - 80, detailsStartY + 85);
+                        
+                        // Draw "Marketed By"
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 130);
+                        
+                        // Draw "Instantly"
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.font = 'bold 50px Arial';
+                        ctx.fillText('Instantly', canvasWidth - 80, detailsStartY + 180);
+                        
+                        // Draw "Cards"
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText('Cards', canvasWidth - 80, detailsStartY + 220);
+                        
+                        resolve(canvas.toDataURL('image/png'));
+                    };
+                    
+                    // Load user photo
+                    if (userPhoto) {
+                        userPhotoImg.src = userPhoto;
+                    } else {
+                        userPhotoImg.onerror();
+                    }
+                };
+                
+                promotionImg.onerror = () => {
+                    reject(new Error('Failed to load promotion image'));
+                };
+                
+                promotionImg.src = promotionImageUrl;
+            });
         }
         
         // Handle confirm download from modal
@@ -448,8 +644,17 @@
             this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Downloading...';
             this.disabled = true;
             
-            // Download the promotion
-            await downloadPromotion(promotionId, language, date);
+            // Download the promotion (use the already generated preview if available)
+            if (currentPreviewDataUrl) {
+                // Download directly from preview
+                const link = document.createElement('a');
+                link.href = currentPreviewDataUrl;
+                link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
+                link.click();
+            } else {
+                // Generate fresh if preview failed
+                await downloadPromotion(promotionId, language, date);
+            }
             
             // Reset button
             this.innerHTML = '<i class="fas fa-download me-2"></i>Download';
