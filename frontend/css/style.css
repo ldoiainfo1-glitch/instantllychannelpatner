@@ -542,8 +542,19 @@ html {
     }
     
     #positionsTable .btn {
+        font-size: 0.55rem !important;
+        padding: 0.1rem 0.25rem !important;
+    }
+    
+    #positionsTable .btn-success {
         font-size: 0.6rem !important;
-        padding: 0.15rem 0.3rem !important;
+        padding: 0.25rem 0.4rem !important;
+    }
+    
+    #positionsTable .btn .fas,
+    #positionsTable .btn .me-1 {
+        font-size: 0.55rem !important;
+        margin-right: 0.15rem !important;
     }
     
     #positionsTable .badge {

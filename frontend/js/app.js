@@ -1643,24 +1643,17 @@ function setupSearchableFilters() {
         const clearBtn = document.getElementById(filter.clear);
 
         if (input && dropdown && clearBtn) {
-            // Prevent focus and keyboard on mobile
-            input.addEventListener('focus', (e) => {
-                e.preventDefault();
-                input.blur(); // Immediately blur to prevent keyboard
-            });
-            
             // Setup input click to show dropdown (with touch support for mobile)
             input.addEventListener('click', (e) => {
                 e.preventDefault();
-                input.blur(); // Prevent keyboard
+                e.stopPropagation();
                 showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
             });
             
             // Add touch event for mobile devices (primary interaction on mobile)
-            input.addEventListener('touchend', (e) => {
+            input.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                input.blur(); // Ensure keyboard doesn't show
                 showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
             });
 
@@ -1812,6 +1805,11 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     const dropdown = document.getElementById(dropdownId);
     const container = input.closest('.filter-container');
     
+    // Immediately blur the readonly input to prevent keyboard
+    if (input) {
+        input.blur();
+    }
+    
     // Wait for location data to load if not yet loaded
     if (!locationDataLoaded) {
         console.log('⏳ Waiting for location data to load...');
@@ -1882,8 +1880,11 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
         }
     });
 
-    // Focus on search input
-    setTimeout(() => newSearchInput.focus(), 10);
+    // Focus on search input only on desktop (not mobile to avoid keyboard flash)
+    const isMobile = window.innerWidth <= 768;
+    if (!isMobile) {
+        setTimeout(() => newSearchInput.focus(), 10);
+    }
     
     // Show dropdown (use absolute positioning, not fixed)
     dropdown.classList.add('show');
