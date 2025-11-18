@@ -1911,9 +1911,13 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
             selectFilterOption(inputId, dropdownId, item.dataset.value);
         });
         
-        // Add touch event for mobile devices
-        item.addEventListener('touchstart', (e) => {
-            e.preventDefault();
+        // Add touch event for mobile devices - use touchend instead of touchstart
+        // to allow scrolling (touchstart + preventDefault blocks scroll)
+        item.addEventListener('touchend', (e) => {
+            // Only prevent if not scrolling
+            if (e.cancelable) {
+                e.preventDefault();
+            }
             selectFilterOption(inputId, dropdownId, item.dataset.value);
         });
     });
