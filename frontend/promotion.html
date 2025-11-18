@@ -490,15 +490,28 @@
                         ctx.font = 'bold 32px Arial';
                         ctx.fillText(userPhone, 240, detailsStartY + 175);
                         
-                        // Draw Instantlly logo/text
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 40px Arial';
+                        // Draw Instantly Cards logo/text on right side
                         ctx.textAlign = 'right';
-                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
                         
+                        // Draw lightning bolt icon (⚡)
                         ctx.fillStyle = '#3b82f6';
-                        ctx.font = 'bold 48px Arial';
-                        ctx.fillText('Instantlly', canvasWidth - 80, detailsStartY + 160);
+                        ctx.font = '50px Arial';
+                        ctx.fillText('⚡', canvasWidth - 80, detailsStartY + 85);
+                        
+                        // Draw "Marketed By"
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 130);
+                        
+                        // Draw "Instantly"
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.font = 'bold 50px Arial';
+                        ctx.fillText('Instantly', canvasWidth - 80, detailsStartY + 180);
+                        
+                        // Draw "Cards"
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText('Cards', canvasWidth - 80, detailsStartY + 220);
                         
                         // Download the canvas as image
                         canvas.toBlob((blob) => {
@@ -543,14 +556,28 @@
                         ctx.font = 'bold 32px Arial';
                         ctx.fillText(userPhone, 240, detailsStartY + 175);
                         
-                        ctx.fillStyle = '#1e3a8a';
-                        ctx.font = 'bold 40px Arial';
+                        // Draw Instantly Cards logo/text on right side
                         ctx.textAlign = 'right';
-                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
                         
+                        // Draw lightning bolt icon (⚡)
                         ctx.fillStyle = '#3b82f6';
-                        ctx.font = 'bold 48px Arial';
-                        ctx.fillText('Instantlly', canvasWidth - 80, detailsStartY + 160);
+                        ctx.font = '50px Arial';
+                        ctx.fillText('⚡', canvasWidth - 80, detailsStartY + 85);
+                        
+                        // Draw "Marketed By"
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 130);
+                        
+                        // Draw "Instantly"
+                        ctx.fillStyle = '#3b82f6';
+                        ctx.font = 'bold 50px Arial';
+                        ctx.fillText('Instantly', canvasWidth - 80, detailsStartY + 180);
+                        
+                        // Draw "Cards"
+                        ctx.fillStyle = '#1e3a8a';
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillText('Cards', canvasWidth - 80, detailsStartY + 220);
                         
                         canvas.toBlob((blob) => {
                             const url = URL.createObjectURL(blob);
