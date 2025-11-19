@@ -303,6 +303,12 @@
         const userName = decodeURIComponent(urlParams.get('name') || 'Member');
         const userPhone = urlParams.get('phone') || '-';
         const userPhoto = decodeURIComponent(urlParams.get('photo') || '');
+        const userCountry = decodeURIComponent(urlParams.get('country') || 'India');
+        const userZone = decodeURIComponent(urlParams.get('zone') || '');
+        const userState = decodeURIComponent(urlParams.get('state') || '');
+        const userDivision = decodeURIComponent(urlParams.get('division') || '');
+        const userDistrict = decodeURIComponent(urlParams.get('district') || '');
+        const userDesignation = decodeURIComponent(urlParams.get('designation') || '');
         
         // Languages supported
         const languages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu'];
@@ -524,13 +530,49 @@
                         // Draw user details text
                         ctx.fillStyle = '#92400e';
                         ctx.font = 'bold 36px Arial';
-                        ctx.fillText(userName, 240, detailsStartY + 90);
+                        ctx.fillText(userName, 240, detailsStartY + 60);
                         
-                        ctx.font = '30px Arial';
-                        ctx.fillText(`Mobile No.`, 240, detailsStartY + 135);
+                        ctx.font = '32px Arial';
+                        ctx.fillText(userPhone, 240, detailsStartY + 105);
                         
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText(userPhone, 240, detailsStartY + 175);
+                        // Build location path
+                        let locationPath = '';
+                        if (userCountry) locationPath += `${userCountry}`;
+                        if (userZone) locationPath += `: ${userZone}`;
+                        if (userState) locationPath += ` State: ${userState}`;
+                        if (userDivision) locationPath += ` Div: ${userDivision}`;
+                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
+                        
+                        // Draw location path - may wrap to 2 lines if too long
+                        if (locationPath) {
+                            ctx.font = '24px Arial';
+                            ctx.fillStyle = '#64748b';
+                            const maxWidth = 800;
+                            const words = locationPath.split(' ');
+                            let line = '';
+                            let y = detailsStartY + 150;
+                            
+                            for (let word of words) {
+                                let testLine = line + word + ' ';
+                                let metrics = ctx.measureText(testLine);
+                                if (metrics.width > maxWidth && line !== '') {
+                                    ctx.fillText(line.trim(), 240, y);
+                                    line = word + ' ';
+                                    y += 32;
+                                } else {
+                                    line = testLine;
+                                }
+                            }
+                            ctx.fillText(line.trim(), 240, y);
+                        }
+                        
+                        // Draw designation in bold
+                        if (userDesignation) {
+                            ctx.font = 'bold 28px Arial';
+                            ctx.fillStyle = '#92400e';
+                            let desigY = locationPath ? detailsStartY + 230 : detailsStartY + 150;
+                            ctx.fillText(`Designation: ${userDesignation}`, 240, desigY);
+                        }
                         
                         // Draw Instantly Cards logo on right side
                         const logoImg = new Image();
@@ -583,13 +625,49 @@
                         ctx.textAlign = 'left';
                         ctx.fillStyle = '#92400e';
                         ctx.font = 'bold 36px Arial';
-                        ctx.fillText(userName, 240, detailsStartY + 90);
+                        ctx.fillText(userName, 240, detailsStartY + 60);
                         
-                        ctx.font = '30px Arial';
-                        ctx.fillText(`Mobile No.`, 240, detailsStartY + 135);
+                        ctx.font = '32px Arial';
+                        ctx.fillText(userPhone, 240, detailsStartY + 105);
                         
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText(userPhone, 240, detailsStartY + 175);
+                        // Build location path
+                        let locationPath = '';
+                        if (userCountry) locationPath += `${userCountry}`;
+                        if (userZone) locationPath += `: ${userZone}`;
+                        if (userState) locationPath += ` State: ${userState}`;
+                        if (userDivision) locationPath += ` Div: ${userDivision}`;
+                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
+                        
+                        // Draw location path - may wrap to 2 lines if too long
+                        if (locationPath) {
+                            ctx.font = '24px Arial';
+                            ctx.fillStyle = '#64748b';
+                            const maxWidth = 800;
+                            const words = locationPath.split(' ');
+                            let line = '';
+                            let y = detailsStartY + 150;
+                            
+                            for (let word of words) {
+                                let testLine = line + word + ' ';
+                                let metrics = ctx.measureText(testLine);
+                                if (metrics.width > maxWidth && line !== '') {
+                                    ctx.fillText(line.trim(), 240, y);
+                                    line = word + ' ';
+                                    y += 32;
+                                } else {
+                                    line = testLine;
+                                }
+                            }
+                            ctx.fillText(line.trim(), 240, y);
+                        }
+                        
+                        // Draw designation in bold
+                        if (userDesignation) {
+                            ctx.font = 'bold 28px Arial';
+                            ctx.fillStyle = '#92400e';
+                            let desigY = locationPath ? detailsStartY + 230 : detailsStartY + 150;
+                            ctx.fillText(`Designation: ${userDesignation}`, 240, desigY);
+                        }
                         
                         // Draw Instantly Cards logo on right side
                         const logoImg2 = new Image();
@@ -747,13 +825,49 @@
                         // Draw user details text
                         ctx.fillStyle = '#92400e';
                         ctx.font = 'bold 36px Arial';
-                        ctx.fillText(userName, 240, detailsStartY + 90);
+                        ctx.fillText(userName, 240, detailsStartY + 60);
                         
-                        ctx.font = '30px Arial';
-                        ctx.fillText(`Mobile No.`, 240, detailsStartY + 135);
+                        ctx.font = '32px Arial';
+                        ctx.fillText(userPhone, 240, detailsStartY + 105);
                         
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText(userPhone, 240, detailsStartY + 175);
+                        // Build location path
+                        let locationPath = '';
+                        if (userCountry) locationPath += `${userCountry}`;
+                        if (userZone) locationPath += `: ${userZone}`;
+                        if (userState) locationPath += ` State: ${userState}`;
+                        if (userDivision) locationPath += ` Div: ${userDivision}`;
+                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
+                        
+                        // Draw location path - may wrap to 2 lines if too long
+                        if (locationPath) {
+                            ctx.font = '24px Arial';
+                            ctx.fillStyle = '#64748b';
+                            const maxWidth = 800;
+                            const words = locationPath.split(' ');
+                            let line = '';
+                            let y = detailsStartY + 150;
+                            
+                            for (let word of words) {
+                                let testLine = line + word + ' ';
+                                let metrics = ctx.measureText(testLine);
+                                if (metrics.width > maxWidth && line !== '') {
+                                    ctx.fillText(line.trim(), 240, y);
+                                    line = word + ' ';
+                                    y += 32;
+                                } else {
+                                    line = testLine;
+                                }
+                            }
+                            ctx.fillText(line.trim(), 240, y);
+                        }
+                        
+                        // Draw designation in bold
+                        if (userDesignation) {
+                            ctx.font = 'bold 28px Arial';
+                            ctx.fillStyle = '#92400e';
+                            let desigY = locationPath ? detailsStartY + 230 : detailsStartY + 150;
+                            ctx.fillText(`Designation: ${userDesignation}`, 240, desigY);
+                        }
                         
                         // Draw Instantly Cards logo on right side
                         const logoImg3 = new Image();
@@ -824,13 +938,49 @@
                         ctx.textAlign = 'left';
                         ctx.fillStyle = '#92400e';
                         ctx.font = 'bold 36px Arial';
-                        ctx.fillText(userName, 240, detailsStartY + 90);
+                        ctx.fillText(userName, 240, detailsStartY + 60);
                         
-                        ctx.font = '30px Arial';
-                        ctx.fillText(`Mobile No.`, 240, detailsStartY + 135);
+                        ctx.font = '32px Arial';
+                        ctx.fillText(userPhone, 240, detailsStartY + 105);
                         
-                        ctx.font = 'bold 32px Arial';
-                        ctx.fillText(userPhone, 240, detailsStartY + 175);
+                        // Build location path
+                        let locationPath = '';
+                        if (userCountry) locationPath += `${userCountry}`;
+                        if (userZone) locationPath += `: ${userZone}`;
+                        if (userState) locationPath += ` State: ${userState}`;
+                        if (userDivision) locationPath += ` Div: ${userDivision}`;
+                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
+                        
+                        // Draw location path - may wrap to 2 lines if too long
+                        if (locationPath) {
+                            ctx.font = '24px Arial';
+                            ctx.fillStyle = '#64748b';
+                            const maxWidth = 800;
+                            const words = locationPath.split(' ');
+                            let line = '';
+                            let y = detailsStartY + 150;
+                            
+                            for (let word of words) {
+                                let testLine = line + word + ' ';
+                                let metrics = ctx.measureText(testLine);
+                                if (metrics.width > maxWidth && line !== '') {
+                                    ctx.fillText(line.trim(), 240, y);
+                                    line = word + ' ';
+                                    y += 32;
+                                } else {
+                                    line = testLine;
+                                }
+                            }
+                            ctx.fillText(line.trim(), 240, y);
+                        }
+                        
+                        // Draw designation in bold
+                        if (userDesignation) {
+                            ctx.font = 'bold 28px Arial';
+                            ctx.fillStyle = '#92400e';
+                            let desigY = locationPath ? detailsStartY + 230 : detailsStartY + 150;
+                            ctx.fillText(`Designation: ${userDesignation}`, 240, desigY);
+                        }
                         
                         // Draw Instantly Cards logo on right side
                         const logoImg4 = new Image();
