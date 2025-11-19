@@ -502,38 +502,19 @@
                     ctx.fillStyle = gradient;
                     ctx.fillRect(0, detailsStartY, canvasWidth, detailsHeight);
                     
-                    // Load user photo
-                    const userPhotoImg = new Image();
-                    userPhotoImg.crossOrigin = 'anonymous';
-                    
-                    userPhotoImg.onload = () => {
-                        // Draw user photo (circular)
-                        const photoSize = 120;
-                        const photoX = 80;
-                        const photoY = detailsStartY + 75;
-                        
-                        ctx.save();
-                        ctx.beginPath();
-                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-                        ctx.closePath();
-                        ctx.clip();
-                        ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
-                        ctx.restore();
-                        
-                        // Draw photo border
-                        ctx.strokeStyle = '#f59e0b';
-                        ctx.lineWidth = 4;
-                        ctx.beginPath();
-                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-                        ctx.stroke();
+                    // Function to draw user details and logo
+                    const drawUserDetailsAndLogo = () => {
+                        // Determine text starting position based on photo availability
+                        const textStartX = userPhoto ? 240 : 80;
+                        const textStartY = detailsStartY + 60;
                         
                         // Draw user details text
                         ctx.fillStyle = '#92400e';
                         ctx.font = 'bold 36px Arial';
-                        ctx.fillText(userName, 240, detailsStartY + 60);
+                        ctx.fillText(userName, textStartX, textStartY);
                         
                         ctx.font = '32px Arial';
-                        ctx.fillText(userPhone, 240, detailsStartY + 105);
+                        ctx.fillText(userPhone, textStartX, textStartY + 45);
                         
                         // Build location path
                         let locationPath = '';
@@ -550,28 +531,28 @@
                             const maxWidth = 800;
                             const words = locationPath.split(' ');
                             let line = '';
-                            let y = detailsStartY + 150;
+                            let y = textStartY + 90;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
                                 let metrics = ctx.measureText(testLine);
                                 if (metrics.width > maxWidth && line !== '') {
-                                    ctx.fillText(line.trim(), 240, y);
+                                    ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
                                     y += 32;
                                 } else {
                                     line = testLine;
                                 }
                             }
-                            ctx.fillText(line.trim(), 240, y);
+                            ctx.fillText(line.trim(), textStartX, y);
                         }
                         
                         // Draw designation in bold
                         if (userDesignation) {
                             ctx.font = 'bold 28px Arial';
                             ctx.fillStyle = '#92400e';
-                            let desigY = locationPath ? detailsStartY + 230 : detailsStartY + 150;
-                            ctx.fillText(`Designation: ${userDesignation}`, 240, desigY);
+                            let desigY = locationPath ? textStartY + 170 : textStartY + 90;
+                            ctx.fillText(`Designation: ${userDesignation}`, textStartX, desigY);
                         }
                         
                         // Draw Instantly Cards logo on right side
@@ -602,103 +583,47 @@
                         logoImg.src = 'Instantlly Logo.jpg';
                     };
                     
-                    userPhotoImg.onerror = () => {
-                        // Use default avatar if photo fails to load
-                        console.warn('User photo failed to load, using default');
+                    // Check if user has a photo
+                    if (userPhoto && userPhoto.trim()) {
+                        // Load user photo
+                        const userPhotoImg = new Image();
+                        userPhotoImg.crossOrigin = 'anonymous';
                         
-                        // Draw default avatar (simple circle with initials)
-                        const photoSize = 120;
-                        const photoX = 80;
-                        const photoY = detailsStartY + 75;
-                        
-                        ctx.fillStyle = '#e2e8f0';
-                        ctx.beginPath();
-                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-                        ctx.fill();
-                        
-                        ctx.fillStyle = '#64748b';
-                        ctx.font = 'bold 48px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillText(userName.charAt(0).toUpperCase(), photoX + photoSize/2, photoY + photoSize/2 + 15);
-                        
-                        // Continue with rest of the card
-                        ctx.textAlign = 'left';
-                        ctx.fillStyle = '#92400e';
-                        ctx.font = 'bold 36px Arial';
-                        ctx.fillText(userName, 240, detailsStartY + 60);
-                        
-                        ctx.font = '32px Arial';
-                        ctx.fillText(userPhone, 240, detailsStartY + 105);
-                        
-                        // Build location path
-                        let locationPath = '';
-                        if (userCountry) locationPath += `${userCountry}`;
-                        if (userZone) locationPath += `: ${userZone}`;
-                        if (userState) locationPath += ` State: ${userState}`;
-                        if (userDivision) locationPath += ` Div: ${userDivision}`;
-                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
-                        
-                        // Draw location path - may wrap to 2 lines if too long
-                        if (locationPath) {
-                            ctx.font = '24px Arial';
-                            ctx.fillStyle = '#64748b';
-                            const maxWidth = 800;
-                            const words = locationPath.split(' ');
-                            let line = '';
-                            let y = detailsStartY + 150;
+                        userPhotoImg.onload = () => {
+                            // Draw user photo (circular)
+                            const photoSize = 120;
+                            const photoX = 80;
+                            const photoY = detailsStartY + 75;
                             
-                            for (let word of words) {
-                                let testLine = line + word + ' ';
-                                let metrics = ctx.measureText(testLine);
-                                if (metrics.width > maxWidth && line !== '') {
-                                    ctx.fillText(line.trim(), 240, y);
-                                    line = word + ' ';
-                                    y += 32;
-                                } else {
-                                    line = testLine;
-                                }
-                            }
-                            ctx.fillText(line.trim(), 240, y);
-                        }
-                        
-                        // Draw designation in bold
-                        if (userDesignation) {
-                            ctx.font = 'bold 28px Arial';
-                            ctx.fillStyle = '#92400e';
-                            let desigY = locationPath ? detailsStartY + 230 : detailsStartY + 150;
-                            ctx.fillText(`Designation: ${userDesignation}`, 240, desigY);
-                        }
-                        
-                        // Draw Instantly Cards logo on right side
-                        const logoImg2 = new Image();
-                        logoImg2.crossOrigin = 'anonymous';
-                        logoImg2.onload = () => {
-                            const logoWidth = 200;
-                            const logoHeight = 180;
-                            const logoX = canvasWidth - logoWidth - 40;
-                            const logoY = detailsStartY + 45;
-                            ctx.drawImage(logoImg2, logoX, logoY, logoWidth, logoHeight);
-                            resolve(canvas.toDataURL('image/png'));
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                            ctx.closePath();
+                            ctx.clip();
+                            ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
+                            ctx.restore();
+                            
+                            // Draw photo border
+                            ctx.strokeStyle = '#f59e0b';
+                            ctx.lineWidth = 4;
+                            ctx.beginPath();
+                            ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                            ctx.stroke();
+                            
+                            // Draw user details and logo
+                            drawUserDetailsAndLogo();
                         };
-                        logoImg2.onerror = () => {
-                            console.warn('Logo failed to load, using text fallback');
-                            ctx.textAlign = 'right';
-                            ctx.fillStyle = '#1e3a8a';
-                            ctx.font = 'bold 28px Arial';
-                            ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
-                            ctx.fillStyle = '#3b82f6';
-                            ctx.font = 'bold 44px Arial';
-                            ctx.fillText('Instantly Cards', canvasWidth - 80, detailsStartY + 150);
-                            resolve(canvas.toDataURL('image/png'));
+                        
+                        userPhotoImg.onerror = () => {
+                            // If photo fails to load, skip photo and draw details only
+                            console.warn('User photo failed to load, drawing without photo');
+                            drawUserDetailsAndLogo();
                         };
-                        logoImg2.src = 'Instantlly Logo.jpg';
-                    };
-                    
-                    // Load user photo
-                    if (userPhoto) {
+                        
                         userPhotoImg.src = userPhoto;
                     } else {
-                        userPhotoImg.onerror();
+                        // No photo provided, draw details only
+                        drawUserDetailsAndLogo();
                     }
                 };
                 
@@ -797,38 +722,19 @@
                     ctx.fillStyle = gradient;
                     ctx.fillRect(0, detailsStartY, canvasWidth, detailsHeight);
                     
-                    // Load user photo
-                    const userPhotoImg = new Image();
-                    userPhotoImg.crossOrigin = 'anonymous';
-                    
-                    userPhotoImg.onload = () => {
-                        // Draw user photo (circular)
-                        const photoSize = 120;
-                        const photoX = 80;
-                        const photoY = detailsStartY + 75;
-                        
-                        ctx.save();
-                        ctx.beginPath();
-                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-                        ctx.closePath();
-                        ctx.clip();
-                        ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
-                        ctx.restore();
-                        
-                        // Draw photo border
-                        ctx.strokeStyle = '#f59e0b';
-                        ctx.lineWidth = 4;
-                        ctx.beginPath();
-                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-                        ctx.stroke();
+                    // Function to draw user details, download, and resolve
+                    const drawDetailsAndDownload = () => {
+                        // Determine text starting position based on photo availability
+                        const textStartX = userPhoto ? 240 : 80;
+                        const textStartY = detailsStartY + 60;
                         
                         // Draw user details text
                         ctx.fillStyle = '#92400e';
                         ctx.font = 'bold 36px Arial';
-                        ctx.fillText(userName, 240, detailsStartY + 60);
+                        ctx.fillText(userName, textStartX, textStartY);
                         
                         ctx.font = '32px Arial';
-                        ctx.fillText(userPhone, 240, detailsStartY + 105);
+                        ctx.fillText(userPhone, textStartX, textStartY + 45);
                         
                         // Build location path
                         let locationPath = '';
@@ -845,28 +751,28 @@
                             const maxWidth = 800;
                             const words = locationPath.split(' ');
                             let line = '';
-                            let y = detailsStartY + 150;
+                            let y = textStartY + 90;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
                                 let metrics = ctx.measureText(testLine);
                                 if (metrics.width > maxWidth && line !== '') {
-                                    ctx.fillText(line.trim(), 240, y);
+                                    ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
                                     y += 32;
                                 } else {
                                     line = testLine;
                                 }
                             }
-                            ctx.fillText(line.trim(), 240, y);
+                            ctx.fillText(line.trim(), textStartX, y);
                         }
                         
                         // Draw designation in bold
                         if (userDesignation) {
                             ctx.font = 'bold 28px Arial';
                             ctx.fillStyle = '#92400e';
-                            let desigY = locationPath ? detailsStartY + 230 : detailsStartY + 150;
-                            ctx.fillText(`Designation: ${userDesignation}`, 240, desigY);
+                            let desigY = locationPath ? textStartY + 170 : textStartY + 90;
+                            ctx.fillText(`Designation: ${userDesignation}`, textStartX, desigY);
                         }
                         
                         // Draw Instantly Cards logo on right side
@@ -915,121 +821,47 @@
                         logoImg3.src = 'Instantlly Logo.jpg';
                     };
                     
-                    userPhotoImg.onerror = () => {
-                        // Use default avatar if photo fails to load
-                        console.warn('User photo failed to load, using default');
+                    // Check if user has a photo
+                    if (userPhoto && userPhoto.trim()) {
+                        // Load user photo
+                        const userPhotoImg = new Image();
+                        userPhotoImg.crossOrigin = 'anonymous';
                         
-                        // Draw default avatar (simple circle with initials)
-                        const photoSize = 120;
-                        const photoX = 80;
-                        const photoY = detailsStartY + 75;
-                        
-                        ctx.fillStyle = '#e2e8f0';
-                        ctx.beginPath();
-                        ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-                        ctx.fill();
-                        
-                        ctx.fillStyle = '#64748b';
-                        ctx.font = 'bold 48px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillText(userName.charAt(0).toUpperCase(), photoX + photoSize/2, photoY + photoSize/2 + 15);
-                        
-                        // Continue with rest of the card
-                        ctx.textAlign = 'left';
-                        ctx.fillStyle = '#92400e';
-                        ctx.font = 'bold 36px Arial';
-                        ctx.fillText(userName, 240, detailsStartY + 60);
-                        
-                        ctx.font = '32px Arial';
-                        ctx.fillText(userPhone, 240, detailsStartY + 105);
-                        
-                        // Build location path
-                        let locationPath = '';
-                        if (userCountry) locationPath += `${userCountry}`;
-                        if (userZone) locationPath += `: ${userZone}`;
-                        if (userState) locationPath += ` State: ${userState}`;
-                        if (userDivision) locationPath += ` Div: ${userDivision}`;
-                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
-                        
-                        // Draw location path - may wrap to 2 lines if too long
-                        if (locationPath) {
-                            ctx.font = '24px Arial';
-                            ctx.fillStyle = '#64748b';
-                            const maxWidth = 800;
-                            const words = locationPath.split(' ');
-                            let line = '';
-                            let y = detailsStartY + 150;
+                        userPhotoImg.onload = () => {
+                            // Draw user photo (circular)
+                            const photoSize = 120;
+                            const photoX = 80;
+                            const photoY = detailsStartY + 75;
                             
-                            for (let word of words) {
-                                let testLine = line + word + ' ';
-                                let metrics = ctx.measureText(testLine);
-                                if (metrics.width > maxWidth && line !== '') {
-                                    ctx.fillText(line.trim(), 240, y);
-                                    line = word + ' ';
-                                    y += 32;
-                                } else {
-                                    line = testLine;
-                                }
-                            }
-                            ctx.fillText(line.trim(), 240, y);
-                        }
-                        
-                        // Draw designation in bold
-                        if (userDesignation) {
-                            ctx.font = 'bold 28px Arial';
-                            ctx.fillStyle = '#92400e';
-                            let desigY = locationPath ? detailsStartY + 230 : detailsStartY + 150;
-                            ctx.fillText(`Designation: ${userDesignation}`, 240, desigY);
-                        }
-                        
-                        // Draw Instantly Cards logo on right side
-                        const logoImg4 = new Image();
-                        logoImg4.crossOrigin = 'anonymous';
-                        logoImg4.onload = () => {
-                            const logoWidth = 200;
-                            const logoHeight = 180;
-                            const logoX = canvasWidth - logoWidth - 40;
-                            const logoY = detailsStartY + 45;
-                            ctx.drawImage(logoImg4, logoX, logoY, logoWidth, logoHeight);
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                            ctx.closePath();
+                            ctx.clip();
+                            ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
+                            ctx.restore();
                             
-                            canvas.toBlob((blob) => {
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
-                                link.click();
-                                URL.revokeObjectURL(url);
-                                resolve();
-                            }, 'image/png');
+                            // Draw photo border
+                            ctx.strokeStyle = '#f59e0b';
+                            ctx.lineWidth = 4;
+                            ctx.beginPath();
+                            ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                            ctx.stroke();
+                            
+                            // Draw details and download
+                            drawDetailsAndDownload();
                         };
-                        logoImg4.onerror = () => {
-                            console.warn('Logo failed to load, using text fallback');
-                            ctx.textAlign = 'right';
-                            ctx.fillStyle = '#1e3a8a';
-                            ctx.font = 'bold 28px Arial';
-                            ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
-                            ctx.fillStyle = '#3b82f6';
-                            ctx.font = 'bold 44px Arial';
-                            ctx.fillText('Instantly Cards', canvasWidth - 80, detailsStartY + 150);
-                            
-                            canvas.toBlob((blob) => {
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
-                                link.click();
-                                URL.revokeObjectURL(url);
-                                resolve();
-                            }, 'image/png');
+                        
+                        userPhotoImg.onerror = () => {
+                            // If photo fails to load, skip photo and draw details only
+                            console.warn('User photo failed to load, drawing without photo');
+                            drawDetailsAndDownload();
                         };
-                        logoImg4.src = 'Instantlly Logo.jpg';
-                    };
-                    
-                    // Load user photo
-                    if (userPhoto) {
+                        
                         userPhotoImg.src = userPhoto;
                     } else {
-                        userPhotoImg.onerror();
+                        // No photo provided, draw details only
+                        drawDetailsAndDownload();
                     }
                 };
                 

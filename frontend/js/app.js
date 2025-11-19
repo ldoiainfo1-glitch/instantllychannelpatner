@@ -711,7 +711,7 @@ function createPositionRow(position) {
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="promotion.html?userId=${position._id}&name=${encodeURIComponent(name)}&phone=${phone}&photo=${encodeURIComponent(photo)}">
+                        <a class="dropdown-item" href="promotion.html?userId=${position._id}&name=${encodeURIComponent(name)}&phone=${phone}&photo=${encodeURIComponent(photo)}&country=${encodeURIComponent(position.location?.country || 'India')}&zone=${encodeURIComponent(position.location?.zone || '')}&state=${encodeURIComponent(position.location?.state || '')}&division=${encodeURIComponent(position.location?.division || '')}&district=${encodeURIComponent(position.location?.district || '')}&designation=${encodeURIComponent(position.designation || '')}">
                             <i class="fas fa-bullhorn me-2"></i>Promotion
                         </a>
                     </li>
