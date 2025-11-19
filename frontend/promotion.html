@@ -516,10 +516,14 @@
                         ctx.font = '32px Arial';
                         ctx.fillText(userPhone, textStartX, textStartY + 45);
                         
-                        // Build location path
+                        // Build location path - clean zone name by removing "India" suffix
                         let locationPath = '';
                         if (userCountry) locationPath += `${userCountry}`;
-                        if (userZone) locationPath += `: ${userZone}`;
+                        if (userZone) {
+                            // Remove "India" suffix from zone names (e.g., "Western India" -> "Western")
+                            const cleanZone = userZone.replace(/\s*India\s*$/i, '').trim();
+                            locationPath += `: ${cleanZone}`;
+                        }
                         if (userState) locationPath += ` State: ${userState}`;
                         if (userDivision) locationPath += ` Div: ${userDivision}`;
                         if (userDistrict) locationPath += ` District: ${userDistrict}`;
@@ -736,10 +740,14 @@
                         ctx.font = '32px Arial';
                         ctx.fillText(userPhone, textStartX, textStartY + 45);
                         
-                        // Build location path
+                        // Build location path - clean zone name by removing "India" suffix
                         let locationPath = '';
                         if (userCountry) locationPath += `${userCountry}`;
-                        if (userZone) locationPath += `: ${userZone}`;
+                        if (userZone) {
+                            // Remove "India" suffix from zone names (e.g., "Western India" -> "Western")
+                            const cleanZone = userZone.replace(/\s*India\s*$/i, '').trim();
+                            locationPath += `: ${cleanZone}`;
+                        }
                         if (userState) locationPath += ` State: ${userState}`;
                         if (userDivision) locationPath += ` Div: ${userDivision}`;
                         if (userDistrict) locationPath += ` District: ${userDistrict}`;
