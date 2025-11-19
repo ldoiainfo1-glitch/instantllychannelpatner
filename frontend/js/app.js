@@ -643,8 +643,7 @@ function createPositionRow(position) {
         } else if (position.location.state) {
             areaHeadFor = position.location.state.toUpperCase();
         } else if (position.location.zone) {
-            // Remove "INDIA" suffix from zone names
-            areaHeadFor = position.location.zone.toUpperCase().replace(/\s*INDIA\s*$/i, '').trim();
+            areaHeadFor = position.location.zone.toUpperCase();
         } else if (position.location.country) {
             areaHeadFor = position.location.country.toUpperCase();
         }
