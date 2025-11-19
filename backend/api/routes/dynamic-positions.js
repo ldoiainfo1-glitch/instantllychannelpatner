@@ -88,11 +88,12 @@ router.get('/', async (req, res) => {
       } catch (error) {
         console.log('⚠️ Could not load states from Location model, using sample data');
         // Fallback to sample states
-        const sampleStates = zone === 'South India' ? ['Goa', 'Karnataka', 'Tamil Nadu', 'Kerala', 'Andhra Pradesh'] :
-                           zone === 'North India' ? ['Delhi', 'Punjab', 'Haryana', 'Uttar Pradesh', 'Rajasthan'] :
-                           zone === 'East India' ? ['West Bengal', 'Odisha', 'Jharkhand', 'Bihar', 'Assam'] :
-                           zone === 'West India' ? ['Maharashtra', 'Gujarat', 'Madhya Pradesh', 'Rajasthan'] :
-                           zone === 'Central India' ? ['Madhya Pradesh', 'Chhattisgarh', 'Uttar Pradesh'] :
+        const sampleStates = zone === 'South' ? ['Goa', 'Karnataka', 'Tamil Nadu', 'Kerala', 'Andhra Pradesh'] :
+                           zone === 'North' ? ['Delhi', 'Punjab', 'Haryana', 'Uttar Pradesh', 'Rajasthan'] :
+                           zone === 'East' ? ['West Bengal', 'Odisha', 'Jharkhand', 'Bihar', 'Assam'] :
+                           zone === 'Western' ? ['Maharashtra', 'Gujarat', 'Madhya Pradesh', 'Rajasthan'] :
+                           zone === 'Central' ? ['Madhya Pradesh', 'Chhattisgarh', 'Uttar Pradesh'] :
+                           zone === 'North East' ? ['Assam', 'Meghalaya', 'Manipur', 'Tripura', 'Nagaland'] :
                            ['Sample State 1', 'Sample State 2', 'Sample State 3'];
         
         for (const state of sampleStates) {
@@ -103,9 +104,21 @@ router.get('/', async (req, res) => {
       // Country level - show President + all zones
       positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `President of ${country}`, { country }));
       
-      const zones = ['North India', 'South India', 'East India', 'West India', 'Central India', 'Northeast India'];
-      for (const zone of zones) {
-        positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${zone}`, { country, zone }));
+      try {
+        // Get actual zones from location data
+        const zonesFromDB = await Location.distinct('zone', { zone: { $ne: null, $ne: '' } });
+        console.log(`📍 Found ${zonesFromDB.length} zones from database:`, zonesFromDB);
+        
+        for (const zone of zonesFromDB.sort()) {
+          positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${zone}`, { country, zone }));
+        }
+      } catch (error) {
+        console.log('⚠️ Could not load zones from Location model, using fallback');
+        // Fallback zones (without "India" suffix)
+        const zones = ['North', 'South', 'East', 'Western', 'Central', 'North East'];
+        for (const zone of zones) {
+          positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${zone}`, { country, zone }));
+        }
       }
     }
     
@@ -195,9 +208,9 @@ router.get('/applications-by-position', async (req, res) => {
 router.get('/test-position-id', (req, res) => {
   const testCases = [
     { location: { country: 'India' }, designation: 'President of India' },
-    { location: { country: 'India', zone: 'South India' }, designation: 'Head of South India' },
-    { location: { country: 'India', zone: 'South India', state: 'Goa' }, designation: 'Head of Goa' },
-    { location: { country: 'India', zone: 'West India', state: 'Maharashtra', pincode: '400011' }, designation: 'Head of 400011' }
+    { location: { country: 'India', zone: 'South' }, designation: 'Head of South' },
+    { location: { country: 'India', zone: 'South', state: 'Goa' }, designation: 'Head of Goa' },
+    { location: { country: 'India', zone: 'Western', state: 'Maharashtra', pincode: '400011' }, designation: 'Head of 400011' }
   ];
   
   const results = testCases.map(test => ({
