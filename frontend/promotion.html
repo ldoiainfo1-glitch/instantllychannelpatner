@@ -505,7 +505,7 @@
                     // Function to draw user details (no logo)
                     const drawUserDetailsAndLogo = () => {
                         // Determine text starting position based on photo availability
-                        const textStartX = userPhoto ? 200 : 40;
+                        const textStartX = userPhoto ? 230 : 40;
                         const textStartY = detailsStartY + 50;
                         
                         // Draw user details text with larger font sizes
@@ -527,8 +527,8 @@
                         // Draw location path - may wrap to 2 lines if too long
                         if (locationPath) {
                             ctx.font = '28px Arial';
-                            ctx.fillStyle = '#64748b';
-                            const maxWidth = userPhoto ? 840 : 1000;
+                            ctx.fillStyle = '#92400e';
+                            const maxWidth = userPhoto ? 810 : 1000;
                             const words = locationPath.split(' ');
                             let line = '';
                             let y = textStartY + 110;
@@ -701,7 +701,7 @@
                     // Function to draw user details, download, and resolve (no logo)
                     const drawDetailsAndDownload = () => {
                         // Determine text starting position based on photo availability
-                        const textStartX = userPhoto ? 200 : 40;
+                        const textStartX = userPhoto ? 230 : 40;
                         const textStartY = detailsStartY + 50;
                         
                         // Draw user details text with larger font sizes
@@ -723,8 +723,8 @@
                         // Draw location path - may wrap to 2 lines if too long
                         if (locationPath) {
                             ctx.font = '28px Arial';
-                            ctx.fillStyle = '#64748b';
-                            const maxWidth = userPhoto ? 840 : 1000;
+                            ctx.fillStyle = '#92400e';
+                            const maxWidth = userPhoto ? 810 : 1000;
                             const words = locationPath.split(' ');
                             let line = '';
                             let y = textStartY + 110;
