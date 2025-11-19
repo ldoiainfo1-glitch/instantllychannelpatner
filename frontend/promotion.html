@@ -487,13 +487,13 @@
                     canvas.width = canvasWidth;
                     canvas.height = canvasHeight;
                     
-                    // Draw promotion image (80% - top portion)
-                    const promoHeight = 1536; // 80% of 1920
+                    // Draw promotion image (85% - top portion)
+                    const promoHeight = 1632; // 85% of 1920
                     ctx.drawImage(promotionImg, 0, 0, canvasWidth, promoHeight);
                     
-                    // Draw user details section (20% - bottom portion)
+                    // Draw user details section (15% - bottom portion)
                     const detailsStartY = promoHeight;
-                    const detailsHeight = 384; // 20% of 1920
+                    const detailsHeight = 288; // 15% of 1920
                     
                     // Background for user details
                     const gradient = ctx.createLinearGradient(0, detailsStartY, 0, detailsStartY + detailsHeight);
@@ -502,40 +502,36 @@
                     ctx.fillStyle = gradient;
                     ctx.fillRect(0, detailsStartY, canvasWidth, detailsHeight);
                     
-                    // Function to draw user details and logo
+                    // Function to draw user details (no logo)
                     const drawUserDetailsAndLogo = () => {
                         // Determine text starting position based on photo availability
-                        const textStartX = userPhoto ? 240 : 80;
-                        const textStartY = detailsStartY + 60;
+                        const textStartX = userPhoto ? 200 : 40;
+                        const textStartY = detailsStartY + 50;
                         
-                        // Draw user details text
+                        // Draw user details text with larger font sizes
                         ctx.fillStyle = '#92400e';
-                        ctx.font = 'bold 36px Arial';
+                        ctx.font = 'bold 42px Arial';
                         ctx.fillText(userName, textStartX, textStartY);
                         
-                        ctx.font = '32px Arial';
-                        ctx.fillText(userPhone, textStartX, textStartY + 45);
+                        ctx.font = '38px Arial';
+                        ctx.fillText(userPhone, textStartX, textStartY + 52);
                         
-                        // Build location path - clean zone name by removing "India" suffix
+                        // Build location path
                         let locationPath = '';
                         if (userCountry) locationPath += `${userCountry}`;
-                        if (userZone) {
-                            // Remove "India" suffix from zone names (e.g., "Western India" -> "Western")
-                            const cleanZone = userZone.replace(/\s*India\s*$/i, '').trim();
-                            locationPath += `: ${cleanZone}`;
-                        }
+                        if (userZone) locationPath += `: ${userZone}`;
                         if (userState) locationPath += ` State: ${userState}`;
                         if (userDivision) locationPath += ` Div: ${userDivision}`;
                         if (userDistrict) locationPath += ` District: ${userDistrict}`;
                         
                         // Draw location path - may wrap to 2 lines if too long
                         if (locationPath) {
-                            ctx.font = '24px Arial';
+                            ctx.font = '28px Arial';
                             ctx.fillStyle = '#64748b';
-                            const maxWidth = 800;
+                            const maxWidth = userPhoto ? 840 : 1000;
                             const words = locationPath.split(' ');
                             let line = '';
-                            let y = textStartY + 90;
+                            let y = textStartY + 110;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
@@ -543,7 +539,7 @@
                                 if (metrics.width > maxWidth && line !== '') {
                                     ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
-                                    y += 32;
+                                    y += 36;
                                 } else {
                                     line = testLine;
                                 }
@@ -553,38 +549,14 @@
                         
                         // Draw designation in bold
                         if (userDesignation) {
-                            ctx.font = 'bold 28px Arial';
+                            ctx.font = 'bold 34px Arial';
                             ctx.fillStyle = '#92400e';
-                            let desigY = locationPath ? textStartY + 170 : textStartY + 90;
+                            let desigY = locationPath ? textStartY + 190 : textStartY + 110;
                             ctx.fillText(`Designation: ${userDesignation}`, textStartX, desigY);
                         }
                         
-                        // Draw Instantly Cards logo on right side
-                        const logoImg = new Image();
-                        logoImg.crossOrigin = 'anonymous';
-                        logoImg.onload = () => {
-                            const logoWidth = 200;
-                            const logoHeight = 180;
-                            const logoX = canvasWidth - logoWidth - 40;
-                            const logoY = detailsStartY + 45;
-                            ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
-                            
-                            // Return as data URL
-                            resolve(canvas.toDataURL('image/png'));
-                        };
-                        logoImg.onerror = () => {
-                            console.warn('Logo failed to load, using text fallback');
-                            // Fallback to text if logo fails
-                            ctx.textAlign = 'right';
-                            ctx.fillStyle = '#1e3a8a';
-                            ctx.font = 'bold 28px Arial';
-                            ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
-                            ctx.fillStyle = '#3b82f6';
-                            ctx.font = 'bold 44px Arial';
-                            ctx.fillText('Instantly Cards', canvasWidth - 80, detailsStartY + 150);
-                            resolve(canvas.toDataURL('image/png'));
-                        };
-                        logoImg.src = 'Instantlly Logo.jpg';
+                        // Return as data URL (no logo)
+                        resolve(canvas.toDataURL('image/png'));
                     };
                     
                     // Check if user has a photo
@@ -711,13 +683,13 @@
                     canvas.width = canvasWidth;
                     canvas.height = canvasHeight;
                     
-                    // Draw promotion image (80% - top portion)
-                    const promoHeight = 1536; // 80% of 1920
+                    // Draw promotion image (85% - top portion)
+                    const promoHeight = 1632; // 85% of 1920
                     ctx.drawImage(promotionImg, 0, 0, canvasWidth, promoHeight);
                     
-                    // Draw user details section (20% - bottom portion)
+                    // Draw user details section (15% - bottom portion)
                     const detailsStartY = promoHeight;
-                    const detailsHeight = 384; // 20% of 1920
+                    const detailsHeight = 288; // 15% of 1920
                     
                     // Background for user details
                     const gradient = ctx.createLinearGradient(0, detailsStartY, 0, detailsStartY + detailsHeight);
@@ -726,40 +698,36 @@
                     ctx.fillStyle = gradient;
                     ctx.fillRect(0, detailsStartY, canvasWidth, detailsHeight);
                     
-                    // Function to draw user details, download, and resolve
+                    // Function to draw user details, download, and resolve (no logo)
                     const drawDetailsAndDownload = () => {
                         // Determine text starting position based on photo availability
-                        const textStartX = userPhoto ? 240 : 80;
-                        const textStartY = detailsStartY + 60;
+                        const textStartX = userPhoto ? 200 : 40;
+                        const textStartY = detailsStartY + 50;
                         
-                        // Draw user details text
+                        // Draw user details text with larger font sizes
                         ctx.fillStyle = '#92400e';
-                        ctx.font = 'bold 36px Arial';
+                        ctx.font = 'bold 42px Arial';
                         ctx.fillText(userName, textStartX, textStartY);
                         
-                        ctx.font = '32px Arial';
-                        ctx.fillText(userPhone, textStartX, textStartY + 45);
+                        ctx.font = '38px Arial';
+                        ctx.fillText(userPhone, textStartX, textStartY + 52);
                         
-                        // Build location path - clean zone name by removing "India" suffix
+                        // Build location path
                         let locationPath = '';
                         if (userCountry) locationPath += `${userCountry}`;
-                        if (userZone) {
-                            // Remove "India" suffix from zone names (e.g., "Western India" -> "Western")
-                            const cleanZone = userZone.replace(/\s*India\s*$/i, '').trim();
-                            locationPath += `: ${cleanZone}`;
-                        }
+                        if (userZone) locationPath += `: ${userZone}`;
                         if (userState) locationPath += ` State: ${userState}`;
                         if (userDivision) locationPath += ` Div: ${userDivision}`;
                         if (userDistrict) locationPath += ` District: ${userDistrict}`;
                         
                         // Draw location path - may wrap to 2 lines if too long
                         if (locationPath) {
-                            ctx.font = '24px Arial';
+                            ctx.font = '28px Arial';
                             ctx.fillStyle = '#64748b';
-                            const maxWidth = 800;
+                            const maxWidth = userPhoto ? 840 : 1000;
                             const words = locationPath.split(' ');
                             let line = '';
-                            let y = textStartY + 90;
+                            let y = textStartY + 110;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
@@ -767,7 +735,7 @@
                                 if (metrics.width > maxWidth && line !== '') {
                                     ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
-                                    y += 32;
+                                    y += 36;
                                 } else {
                                     line = testLine;
                                 }
@@ -777,56 +745,22 @@
                         
                         // Draw designation in bold
                         if (userDesignation) {
-                            ctx.font = 'bold 28px Arial';
+                            ctx.font = 'bold 34px Arial';
                             ctx.fillStyle = '#92400e';
-                            let desigY = locationPath ? textStartY + 170 : textStartY + 90;
+                            let desigY = locationPath ? textStartY + 190 : textStartY + 110;
                             ctx.fillText(`Designation: ${userDesignation}`, textStartX, desigY);
                         }
                         
-                        // Draw Instantly Cards logo on right side
-                        const logoImg3 = new Image();
-                        logoImg3.crossOrigin = 'anonymous';
-                        logoImg3.onload = () => {
-                            const logoWidth = 200;
-                            const logoHeight = 180;
-                            const logoX = canvasWidth - logoWidth - 40;
-                            const logoY = detailsStartY + 45;
-                            ctx.drawImage(logoImg3, logoX, logoY, logoWidth, logoHeight);
-                            
-                            // Download the canvas as image
-                            canvas.toBlob((blob) => {
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
-                                link.click();
-                                URL.revokeObjectURL(url);
-                                resolve();
-                            }, 'image/png');
-                        };
-                        logoImg3.onerror = () => {
-                            console.warn('Logo failed to load, using text fallback');
-                            // Fallback to text
-                            ctx.textAlign = 'right';
-                            ctx.fillStyle = '#1e3a8a';
-                            ctx.font = 'bold 28px Arial';
-                            ctx.fillText('Marketed By', canvasWidth - 80, detailsStartY + 100);
-                            ctx.fillStyle = '#3b82f6';
-                            ctx.font = 'bold 44px Arial';
-                            ctx.fillText('Instantly Cards', canvasWidth - 80, detailsStartY + 150);
-                            
-                            // Download the canvas as image
-                            canvas.toBlob((blob) => {
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                link.href = url;
-                                link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
-                                link.click();
-                                URL.revokeObjectURL(url);
-                                resolve();
-                            }, 'image/png');
-                        };
-                        logoImg3.src = 'Instantlly Logo.jpg';
+                        // Download the canvas as image (no logo)
+                        canvas.toBlob((blob) => {
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = `${userName}_${language}_${date.replace(/\//g, '-')}.png`;
+                            link.click();
+                            URL.revokeObjectURL(url);
+                            resolve();
+                        }, 'image/png');
                     };
                     
                     // Check if user has a photo
@@ -837,9 +771,9 @@
                         
                         userPhotoImg.onload = () => {
                             // Draw user photo (circular)
-                            const photoSize = 120;
-                            const photoX = 80;
-                            const photoY = detailsStartY + 75;
+                            const photoSize = 140;
+                            const photoX = 40;
+                            const photoY = detailsStartY + 70;
                             
                             ctx.save();
                             ctx.beginPath();
