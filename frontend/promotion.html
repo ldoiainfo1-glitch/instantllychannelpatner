@@ -474,20 +474,20 @@
                 promotionImg.crossOrigin = 'anonymous';
                 
                 promotionImg.onload = () => {
-                    // Set canvas dimensions (standard social media size)
+                    // Set canvas dimensions (1080x1920 pixels)
                     const canvasWidth = 1080;
-                    const canvasHeight = 1350; // 80% promo (1080) + 20% user details (270)
+                    const canvasHeight = 1920;
                     
                     canvas.width = canvasWidth;
                     canvas.height = canvasHeight;
                     
                     // Draw promotion image (80% - top portion)
-                    const promoHeight = 1080;
+                    const promoHeight = 1536; // 80% of 1920
                     ctx.drawImage(promotionImg, 0, 0, canvasWidth, promoHeight);
                     
                     // Draw user details section (20% - bottom portion)
                     const detailsStartY = promoHeight;
-                    const detailsHeight = 270;
+                    const detailsHeight = 384; // 20% of 1920
                     
                     // Background for user details
                     const gradient = ctx.createLinearGradient(0, detailsStartY, 0, detailsStartY + detailsHeight);
@@ -697,20 +697,20 @@
                 promotionImg.crossOrigin = 'anonymous';
                 
                 promotionImg.onload = () => {
-                    // Set canvas dimensions (standard social media size)
+                    // Set canvas dimensions (1080x1920 pixels)
                     const canvasWidth = 1080;
-                    const canvasHeight = 1350; // 80% promo (1080) + 20% user details (270)
+                    const canvasHeight = 1920;
                     
                     canvas.width = canvasWidth;
                     canvas.height = canvasHeight;
                     
                     // Draw promotion image (80% - top portion)
-                    const promoHeight = 1080;
+                    const promoHeight = 1536; // 80% of 1920
                     ctx.drawImage(promotionImg, 0, 0, canvasWidth, promoHeight);
                     
                     // Draw user details section (20% - bottom portion)
                     const detailsStartY = promoHeight;
-                    const detailsHeight = 270;
+                    const detailsHeight = 384; // 20% of 1920
                     
                     // Background for user details
                     const gradient = ctx.createLinearGradient(0, detailsStartY, 0, detailsStartY + detailsHeight);
