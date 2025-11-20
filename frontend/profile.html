@@ -1402,6 +1402,9 @@
             // Get location from application if available
             const location = currentApplication?.location || {};
             
+            console.log('📍 Current Application:', currentApplication);
+            console.log('📍 Location Data:', location);
+            
             // Build URL with parameters
             const params = new URLSearchParams({
                 userId: currentUser._id || '',
@@ -1413,8 +1416,10 @@
                 state: location.state || '',
                 division: location.division || '',
                 district: location.district || '',
-                designation: currentUser.positionId || currentApplication?.positionId || ''
+                designation: currentApplication?.positionId || currentUser.positionId || ''
             });
+            
+            console.log('🔗 Promotion URL:', `promotion.html?${params.toString()}`);
             
             window.location.href = `promotion.html?${params.toString()}`;
         }
