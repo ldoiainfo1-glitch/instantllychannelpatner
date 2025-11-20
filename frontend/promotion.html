@@ -505,33 +505,33 @@
                     // Function to draw user details (no logo)
                     const drawUserDetailsAndLogo = () => {
                         // Determine text starting position based on photo availability
-                        const textStartX = userPhoto ? 230 : 40;
-                        const textStartY = detailsStartY + 50;
+                        const textStartX = userPhoto ? 250 : 60;
+                        const textStartY = detailsStartY + 60;
                         
                         // Draw user details text with larger font sizes
-                        ctx.fillStyle = '#92400e';
-                        ctx.font = 'bold 42px Arial';
+                        ctx.fillStyle = '#7c2d12';
+                        ctx.font = 'bold 52px Arial';
                         ctx.fillText(userName, textStartX, textStartY);
                         
-                        ctx.font = '38px Arial';
-                        ctx.fillText(userPhone, textStartX, textStartY + 52);
+                        ctx.font = 'bold 46px Arial';
+                        ctx.fillText(userPhone, textStartX, textStartY + 65);
                         
                         // Build location path
                         let locationPath = '';
                         if (userCountry) locationPath += `${userCountry}`;
                         if (userZone) locationPath += `: ${userZone}`;
-                        if (userState) locationPath += ` State: ${userState}`;
-                        if (userDivision) locationPath += ` Div: ${userDivision}`;
-                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
+                        if (userState) locationPath += `, ${userState}`;
+                        if (userDivision) locationPath += `, ${userDivision}`;
+                        if (userDistrict) locationPath += `, ${userDistrict}`;
                         
                         // Draw location path - may wrap to 2 lines if too long
                         if (locationPath) {
-                            ctx.font = '28px Arial';
+                            ctx.font = '36px Arial';
                             ctx.fillStyle = '#92400e';
-                            const maxWidth = userPhoto ? 810 : 1000;
+                            const maxWidth = userPhoto ? 780 : 960;
                             const words = locationPath.split(' ');
                             let line = '';
-                            let y = textStartY + 110;
+                            let y = textStartY + 130;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
@@ -539,7 +539,7 @@
                                 if (metrics.width > maxWidth && line !== '') {
                                     ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
-                                    y += 36;
+                                    y += 45;
                                 } else {
                                     line = testLine;
                                 }
@@ -549,9 +549,9 @@
                         
                         // Draw designation in bold
                         if (userDesignation) {
-                            ctx.font = 'bold 34px Arial';
-                            ctx.fillStyle = '#92400e';
-                            let desigY = locationPath ? textStartY + 190 : textStartY + 110;
+                            ctx.font = 'bold 42px Arial';
+                            ctx.fillStyle = '#7c2d12';
+                            let desigY = locationPath ? textStartY + 215 : textStartY + 130;
                             ctx.fillText(`Designation: ${userDesignation}`, textStartX, desigY);
                         }
                         
@@ -566,12 +566,18 @@
                         userPhotoImg.crossOrigin = 'anonymous';
                         
                         userPhotoImg.onload = () => {
-                            // Draw user photo (circular)
-                            const photoSize = 120;
-                            const photoX = 80;
-                            const photoY = detailsStartY + 75;
+                            // Draw user photo (circular) with professional styling
+                            const photoSize = 160;
+                            const photoX = 60;
+                            const photoY = detailsStartY + 60;
                             
+                            // Draw shadow
                             ctx.save();
+                            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                            ctx.shadowBlur = 15;
+                            ctx.shadowOffsetX = 0;
+                            ctx.shadowOffsetY = 5;
+                            
                             ctx.beginPath();
                             ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
                             ctx.closePath();
@@ -579,9 +585,12 @@
                             ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
                             ctx.restore();
                             
-                            // Draw photo border
-                            ctx.strokeStyle = '#f59e0b';
-                            ctx.lineWidth = 4;
+                            // Draw photo border with gradient
+                            const borderGradient = ctx.createLinearGradient(photoX, photoY, photoX, photoY + photoSize);
+                            borderGradient.addColorStop(0, '#f59e0b');
+                            borderGradient.addColorStop(1, '#d97706');
+                            ctx.strokeStyle = borderGradient;
+                            ctx.lineWidth = 6;
                             ctx.beginPath();
                             ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
                             ctx.stroke();
@@ -701,33 +710,33 @@
                     // Function to draw user details, download, and resolve (no logo)
                     const drawDetailsAndDownload = () => {
                         // Determine text starting position based on photo availability
-                        const textStartX = userPhoto ? 230 : 40;
-                        const textStartY = detailsStartY + 50;
+                        const textStartX = userPhoto ? 250 : 60;
+                        const textStartY = detailsStartY + 60;
                         
                         // Draw user details text with larger font sizes
-                        ctx.fillStyle = '#92400e';
-                        ctx.font = 'bold 42px Arial';
+                        ctx.fillStyle = '#7c2d12';
+                        ctx.font = 'bold 52px Arial';
                         ctx.fillText(userName, textStartX, textStartY);
                         
-                        ctx.font = '38px Arial';
-                        ctx.fillText(userPhone, textStartX, textStartY + 52);
+                        ctx.font = 'bold 46px Arial';
+                        ctx.fillText(userPhone, textStartX, textStartY + 65);
                         
                         // Build location path
                         let locationPath = '';
                         if (userCountry) locationPath += `${userCountry}`;
                         if (userZone) locationPath += `: ${userZone}`;
-                        if (userState) locationPath += ` State: ${userState}`;
-                        if (userDivision) locationPath += ` Div: ${userDivision}`;
-                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
+                        if (userState) locationPath += `, ${userState}`;
+                        if (userDivision) locationPath += `, ${userDivision}`;
+                        if (userDistrict) locationPath += `, ${userDistrict}`;
                         
                         // Draw location path - may wrap to 2 lines if too long
                         if (locationPath) {
-                            ctx.font = '28px Arial';
+                            ctx.font = '36px Arial';
                             ctx.fillStyle = '#92400e';
-                            const maxWidth = userPhoto ? 810 : 1000;
+                            const maxWidth = userPhoto ? 780 : 960;
                             const words = locationPath.split(' ');
                             let line = '';
-                            let y = textStartY + 110;
+                            let y = textStartY + 130;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
@@ -735,7 +744,7 @@
                                 if (metrics.width > maxWidth && line !== '') {
                                     ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
-                                    y += 36;
+                                    y += 45;
                                 } else {
                                     line = testLine;
                                 }
@@ -745,9 +754,9 @@
                         
                         // Draw designation in bold
                         if (userDesignation) {
-                            ctx.font = 'bold 34px Arial';
-                            ctx.fillStyle = '#92400e';
-                            let desigY = locationPath ? textStartY + 190 : textStartY + 110;
+                            ctx.font = 'bold 42px Arial';
+                            ctx.fillStyle = '#7c2d12';
+                            let desigY = locationPath ? textStartY + 215 : textStartY + 130;
                             ctx.fillText(`Designation: ${userDesignation}`, textStartX, desigY);
                         }
                         
@@ -770,12 +779,18 @@
                         userPhotoImg.crossOrigin = 'anonymous';
                         
                         userPhotoImg.onload = () => {
-                            // Draw user photo (circular)
-                            const photoSize = 140;
-                            const photoX = 40;
-                            const photoY = detailsStartY + 70;
+                            // Draw user photo (circular) with professional styling
+                            const photoSize = 160;
+                            const photoX = 60;
+                            const photoY = detailsStartY + 60;
                             
+                            // Draw shadow
                             ctx.save();
+                            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                            ctx.shadowBlur = 15;
+                            ctx.shadowOffsetX = 0;
+                            ctx.shadowOffsetY = 5;
+                            
                             ctx.beginPath();
                             ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
                             ctx.closePath();
@@ -783,9 +798,12 @@
                             ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
                             ctx.restore();
                             
-                            // Draw photo border
-                            ctx.strokeStyle = '#f59e0b';
-                            ctx.lineWidth = 4;
+                            // Draw photo border with gradient
+                            const borderGradient = ctx.createLinearGradient(photoX, photoY, photoX, photoY + photoSize);
+                            borderGradient.addColorStop(0, '#f59e0b');
+                            borderGradient.addColorStop(1, '#d97706');
+                            ctx.strokeStyle = borderGradient;
+                            ctx.lineWidth = 6;
                             ctx.beginPath();
                             ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
                             ctx.stroke();
