@@ -1392,6 +1392,47 @@
             }
         }
 
+        // Parse location from positionId
+        function parseLocationFromPositionId(positionId) {
+            if (!positionId) return {};
+            
+            // Position ID format: pos_<role>_<country>_<location_parts>
+            // Examples:
+            // pos_district-head_india_mumbai
+            // pos_zone-head_india_west
+            // pos_state-head_india_maharashtra
+            
+            const parts = positionId.split('_');
+            if (parts.length < 3) return {};
+            
+            const role = parts[1]; // district-head, zone-head, etc.
+            const country = parts[2]; // india
+            const locationPart = parts.slice(3).join('_'); // mumbai, west, maharashtra, etc.
+            
+            const location = {
+                country: country.charAt(0).toUpperCase() + country.slice(1)
+            };
+            
+            // Parse based on role
+            if (role.includes('district-head')) {
+                location.district = locationPart.toUpperCase();
+                // For Mumbai district, we know the details
+                if (locationPart === 'mumbai') {
+                    location.zone = 'Western';
+                    location.state = 'MAHARASHTRA';
+                    location.division = 'South Mumbai';
+                }
+            } else if (role.includes('zone-head')) {
+                location.zone = locationPart.charAt(0).toUpperCase() + locationPart.slice(1);
+            } else if (role.includes('state-head')) {
+                location.state = locationPart.toUpperCase();
+            } else if (role.includes('division-head') || role.includes('tehsil-head')) {
+                location.division = locationPart.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            }
+            
+            return location;
+        }
+
         // Go to promotions page with user data
         function goToPromotions() {
             if (!currentUser) {
@@ -1399,11 +1440,18 @@
                 return;
             }
             
-            // Get location from application if available
-            const location = currentApplication?.location || {};
+            // Get location from application if available, otherwise parse from positionId
+            let location = currentApplication?.location || {};
+            
+            // If location is empty, try to parse from positionId
+            if (!location.zone && !location.state && !location.district) {
+                const positionId = currentApplication?.positionId || currentUser.positionId;
+                location = parseLocationFromPositionId(positionId);
+            }
             
             console.log('📍 Current Application:', currentApplication);
             console.log('📍 Location Data:', location);
+            console.log('📍 Position ID:', currentApplication?.positionId || currentUser.positionId);
             
             // Build URL with parameters
             const params = new URLSearchParams({
