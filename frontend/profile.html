@@ -151,7 +151,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="promotion.html" style="color: #374151;">
+                        <a class="nav-link" href="#" onclick="goToPromotions(); return false;" style="color: #374151;">
                             <i class="fas fa-bullhorn me-1"></i>Promotions
                         </a>
                     </li>
@@ -666,6 +666,7 @@
 
         let authToken = localStorage.getItem('authToken');
         let currentUser = null;
+        let currentApplication = null;  // Store user's approved application
         let isEditMode = false;
 
         // Check authentication on page load
@@ -939,6 +940,10 @@
 
                 if (response.ok) {
                     const applications = await response.json();
+                    
+                    // Store the approved application for later use
+                    currentApplication = applications.find(app => app.status === 'approved');
+                    
                     displayApplications(applications);
                     
                     // Update stats
@@ -1385,6 +1390,33 @@
                 console.error('Document removal error:', error);
                 showNotification('Network error. Please try again.', 'error');
             }
+        }
+
+        // Go to promotions page with user data
+        function goToPromotions() {
+            if (!currentUser) {
+                alert('Please wait while we load your profile data');
+                return;
+            }
+            
+            // Get location from application if available
+            const location = currentApplication?.location || {};
+            
+            // Build URL with parameters
+            const params = new URLSearchParams({
+                userId: currentUser._id || '',
+                name: currentUser.name || '',
+                phone: currentUser.phone || '',
+                photo: currentUser.photo || '',
+                country: location.country || 'India',
+                zone: location.zone || '',
+                state: location.state || '',
+                division: location.division || '',
+                district: location.district || '',
+                designation: currentUser.positionId || currentApplication?.positionId || ''
+            });
+            
+            window.location.href = `promotion.html?${params.toString()}`;
         }
 
         // Logout
