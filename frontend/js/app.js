@@ -779,7 +779,9 @@ function createPositionRow(position) {
                         </a>
                     </li>
                     <li>
-                        <!-- Old ID Card modal trigger removed: now handled by new integrated design -->
+                        <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', '${position._id}'); return false;">
+                            <i class="fas fa-id-card me-2"></i>ID Card
+                        </a>
                     </li>
                     <li>
                         <a class="dropdown-item" href="promotion.html?userId=${position._id}&name=${encodeURIComponent(name)}&phone=${phone}&photo=${encodeURIComponent(photo)}&country=${encodeURIComponent(position.location?.country || 'India')}&zone=${encodeURIComponent(position.location?.zone || '')}&state=${encodeURIComponent(position.location?.state || '')}&division=${encodeURIComponent(position.location?.division || '')}&district=${encodeURIComponent(position.location?.district || '')}&designation=${encodeURIComponent(position.designation || '')}">
@@ -2530,6 +2532,128 @@ function fallbackCopyTextToClipboard(text) {
 }
 
 // Show ID Card with download option
+async function showIDCard(name, phone, photo, positionId) {
+    try {
+        // Fetch user details
+        const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) {
+            alert('User details not found.');
+            return;
+        }
+        
+        const user = await response.json();
+        // Use personCode if available, otherwise use applicationId
+        const partnerId = user.personCode || user.applicationId || 'N/A';
+        
+        // Create modal with ID card
+        const modalHTML = `
+            <div class="modal fade" id="idCardModal" tabindex="-1">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-id-card me-2"></i>Channel Partner ID Card
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <!-- Standard ID Card Size: 90mm × 54mm (850px × 510px for display) -->
+                            <div id="idCardContent" style="background: linear-gradient(135deg, #0066cc 0%, #00a8ff 50%, #ffa500 100%); padding: 20px; width: 850px; height: 510px; margin: 0 auto;">
+                                <!-- Landscape ID Card Design - 2 SECTIONS ONLY -->
+                                <div style="background: white; border-radius: 15px; padding: 20px; width: 100%; height: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); display: flex; align-items: stretch; gap: 25px;">
+                                    
+                                    <!-- LEFT SECTION: Logo (Top) + Photo (Middle) + Company Name (Bottom) -->
+                                    <div style="flex: 0 0 220px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0;">
+                                        <!-- Logo at Top -->
+                                        <img src="images/logo.jpeg" alt="Instantlly Cards Logo" style="width: 140px; height: 140px; object-fit: contain; border-radius: 15px;">
+                                        
+                                        <!-- Photo in Middle -->
+                                        <img src="${photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4='}" 
+                                             alt="${name}" 
+                                             style="width: 150px; height: 170px; object-fit: cover; border-radius: 15px; border: 4px solid #0066cc;">
+                                        
+                                        <!-- Company Name at Bottom -->
+                                        <div style="width: 100%;">
+                                            <h6 style="margin: 0; margin-bottom: 5px; color: #0066cc; font-weight: bold; font-size: 1.1rem; line-height: 1.2;">INSTANTLLY CARDS</h6>
+                                            <small style="color: #ffa500; font-size: 0.9rem; font-weight: 600;">Channel Partner</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- RIGHT SECTION: User Details -->
+                                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+                                        <!-- Name -->
+                                        <h3 style="color: #333; font-weight: bold; margin: 0 0 25px 0; font-size: 1.8rem; line-height: 1.2;">${name}</h3>
+                                        
+                                        <!-- Details List -->
+                                        <div style="margin-bottom: 15px;">
+                                            <i class="fas fa-phone" style="color: #0066cc; width: 25px; font-size: 1rem;"></i>
+                                            <strong style="font-size: 1rem;">Phone:</strong> <span style="font-size: 1rem;">${phone}</span>
+                                        </div>
+                                        <div style="margin-bottom: 15px;">
+                                            <i class="fas fa-id-badge" style="color: #ffa500; width: 25px; font-size: 1rem;"></i>
+                                            <strong style="font-size: 1rem;">Partner ID:</strong> <span style="font-size: 1rem;">${partnerId}</span>
+                                        </div>
+                                        <div style="margin-bottom: 20px;">
+                                            <i class="fas fa-calendar" style="color: #00a8ff; width: 25px; font-size: 1rem;"></i>
+                                            <strong style="font-size: 1rem;">Joined:</strong> <span style="font-size: 1rem;">${new Date().toLocaleDateString()}</span>
+                                        </div>
+                                        
+                                        <!-- Authorized Badge -->
+                                        <div style="background: linear-gradient(135deg, #0066cc 0%, #ffa500 100%); color: white; padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                                            <strong style="font-size: 1rem; letter-spacing: 0.5px;">AUTHORIZED CHANNEL PARTNER</strong>
+                                        </div>
+                                        
+                                        <!-- Footer -->
+                                        <div style="padding-top: 15px; border-top: 2px solid #0066cc;">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                                <small style="color: #666; font-size: 0.8rem;">
+                                                    <i class="fas fa-globe me-1"></i>
+                                                    www.instantllycards.com
+                                                </small>
+                                                <small style="color: #666; font-size: 0.8rem;">
+                                                    <i class="fas fa-envelope me-1"></i>
+                                                    instantllycardsonlinemeeting@gmail.com
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="downloadIDCard('${name}', '${phone}', '${photo}', '${partnerId}')">
+                                <i class="fas fa-download me-2"></i>Download as PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('idCardModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('idCardModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('Error showing ID card:', error);
+        alert('Error loading ID card. Please try again.');
+    }
+}
 
 // Download ID Card as PDF (landscape)
 async function downloadIDCard(name, phone, photo, personCode) {
