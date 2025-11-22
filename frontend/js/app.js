@@ -31,7 +31,80 @@ document.addEventListener('DOMContentLoaded', function() {
     if (authToken) {
         verifyToken();
     }
+        // Fetch and render Channel Partner ID Card for logged-in user
+        fetchAndRenderChannelPartnerIDCard();
 });
+
+    // Fetch user details from backend and render the ID card
+    async function fetchAndRenderChannelPartnerIDCard() {
+        try {
+            // Example: fetch current user profile (adjust endpoint as needed)
+            const res = await fetch(`${API_BASE_URL}/user/profile`, {
+                headers: authToken ? { 'Authorization': `Bearer ${authToken}` } : {}
+            });
+            if (!res.ok) throw new Error('Failed to fetch user profile');
+            const user = await res.json();
+            // Map backend fields to card fields (adjust as per your API response)
+            const cardData = {
+                photo: user.photoUrl || '',
+                name: user.name || '',
+                mob: user.mobile || user.phone || '',
+                country: user.country || 'India',
+                zone: user.zone || 'Western',
+                state: user.state || 'Maharashtra',
+                division: user.division || 'Konkan',
+                district: user.district || '',
+                taluka: user.taluka || '',
+                pincode: user.pincode || '',
+                village: user.village || ''
+            };
+            renderChannelPartnerIDCard(cardData);
+        } catch (err) {
+            // Fallback: show blank card if not logged in or error
+            renderChannelPartnerIDCard({
+                photo: '',
+                name: '',
+                mob: '',
+                country: 'India',
+                zone: 'Western',
+                state: 'Maharashtra',
+                division: 'Konkan',
+                district: '',
+                taluka: '',
+                pincode: '',
+                village: ''
+            });
+        }
+    }
+
+// Render the dynamic right side of the Channel Partner ID card
+function renderChannelPartnerIDCard(data) {
+        const right = document.getElementById('id-card-right-dynamic');
+        if (!right) return;
+        // Highlight district if present
+        function highlight(text, value) {
+                if (!value) return text;
+                return text.replace(value, `<span style="background:#fff;color:#e53935;padding:2px 6px;border-radius:4px;">${value}</span>`);
+        }
+        right.innerHTML = `
+            <div style="display:flex;flex-direction:column;align-items:center;">
+                <div style="width:140px;height:140px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;overflow:hidden;">
+                    ${data.photo ? `<img src="${data.photo}" alt="Photo" style="width:100%;height:100%;object-fit:cover;">` : '<span style="color:#bbb;font-size:1.3rem;">Photo</span>'}
+                </div>
+                <div style="width:100%;margin-bottom:10px;font-size:1.1rem;"><b>Name:</b> ${data.name || ''}</div>
+                <div style="width:100%;margin-bottom:10px;font-size:1.1rem;"><b>Mob:</b> ${data.mob || ''}</div>
+                <div style="width:100%;margin-bottom:10px;font-size:1.2rem;font-weight:600;">Area Head For</div>
+                <div style="width:100%;margin-bottom:6px;font-size:1.05rem;"><b>Country:</b> ${data.country || ''}</div>
+                <div style="width:100%;margin-bottom:6px;font-size:1.05rem;"><b>Zone:</b> ${data.zone || ''}</div>
+                <div style="width:100%;margin-bottom:6px;font-size:1.05rem;"><b>State:</b> ${data.state || ''}</div>
+                <div style="width:100%;margin-bottom:6px;font-size:1.05rem;"><b>Division:</b> ${data.division || ''}</div>
+                <div style="width:100%;margin-bottom:6px;font-size:1.05rem;"><b>District:</b> ${data.district ? highlight('District: ' + data.district, data.district) : ''}</div>
+                <div style="width:100%;margin-bottom:6px;font-size:1.05rem;"><b>Taluka:</b> ${data.taluka || ''}</div>
+                <div style="width:100%;margin-bottom:6px;font-size:1.05rem;"><b>Pincode:</b> ${data.pincode || ''}</div>
+                <div style="width:100%;margin-bottom:6px;font-size:1.05rem;"><b>Village:</b> ${data.village || ''}</div>
+            </div>
+        `;
+}
 
 // Initialize the application
 function initializeApp() {
