@@ -14,19 +14,19 @@ let authToken = localStorage.getItem('authToken');
 let currentUser = null;
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initializeApp();
     setupEventListeners();
-    
+
     // Load table data immediately for fast initial display
     loadApplications();
-    
+
     // Load location data in background (lazy loading - only when filters are used)
     // This prevents blocking the initial table load
     setTimeout(() => {
         loadLocationData();
     }, 500); // Load after 500ms delay
-    
+
     // Check if user is logged in on page load
     if (authToken) {
         verifyToken();
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize the application
 function initializeApp() {
     console.log('Instantly Cards Channel Partner System Initialized');
-    
+
     // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
@@ -48,22 +48,22 @@ function initializeApp() {
 function setupEventListeners() {
     // Navigation
     setupNavigation();
-    
+
     // Search and filters
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
-    
+
     // Setup searchable filters
     setupSearchableFilters();
-    
+
     // Application form
     document.getElementById('submitApplication').addEventListener('click', submitApplication);
-    
+
     // Feedback form (now using dummy content, no form needed)
-    
+
     // Rating stars
     setupRatingStars();
-    
+
     // Login form handler
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
@@ -97,16 +97,16 @@ async function loadLocationData() {
         console.log('✅ Location data already loaded (using cache)');
         return;
     }
-    
+
     try {
         console.log('⚡ Loading location data in background...');
-        
+
         // Try new optimized endpoint first
         let response = await fetch(`${API_BASE_URL}/locations/all`);
-        
+
         if (response.ok) {
             const data = await response.json();
-            
+
             // Store all options
             locationData = {
                 zones: data.zones || [],
@@ -120,7 +120,7 @@ async function loadLocationData() {
         } else {
             // Fallback to individual endpoints if /all doesn't exist
             console.log('⚠️ Using fallback: loading from individual endpoints...');
-            
+
             const [zonesRes, statesRes, divisionsRes, districtsRes, tehsilsRes, pincodesRes, villagesRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/locations/zones`),
                 fetch(`${API_BASE_URL}/locations/states`),
@@ -130,7 +130,7 @@ async function loadLocationData() {
                 fetch(`${API_BASE_URL}/locations/pincodes`),
                 fetch(`${API_BASE_URL}/locations/villages`)
             ]);
-            
+
             const [zones, states, divisions, districts, tehsils, pincodes, villages] = await Promise.all([
                 zonesRes.json(),
                 statesRes.json(),
@@ -140,7 +140,7 @@ async function loadLocationData() {
                 pincodesRes.json(),
                 villagesRes.json()
             ]);
-            
+
             locationData = {
                 zones: zones || [],
                 states: states || [],
@@ -151,9 +151,9 @@ async function loadLocationData() {
                 villages: villages || []
             };
         }
-        
+
         locationDataLoaded = true; // Mark as loaded
-        
+
         console.log('✅ Location data loaded in background');
         console.log('📊 Loaded:', {
             zones: locationData.zones.length,
@@ -164,7 +164,7 @@ async function loadLocationData() {
             pincodes: locationData.pincodes.length,
             villages: locationData.villages.length
         });
-        
+
         console.log('🎯 Searchable filters ready with location data loaded');
     } catch (error) {
         console.error('❌ Error loading location data:', error);
@@ -184,49 +184,49 @@ function buildLocationHierarchy(positions) {
         villages: new Map(), // pincode -> villages
         reverseMap: {} // for reverse lookup: pincode -> {country, zone, state, etc}
     };
-    
+
     positions.forEach(position => {
         const loc = position.location;
         if (!loc) return;
-        
+
         // Forward mapping
         if (loc.zone) hierarchy.zones.add(loc.zone);
-        
+
         if (loc.zone && loc.state) {
             if (!hierarchy.states.has(loc.zone)) hierarchy.states.set(loc.zone, new Set());
             hierarchy.states.get(loc.zone).add(loc.state);
         }
-        
+
         if (loc.state && loc.division) {
             const stateKey = `${loc.zone}|${loc.state}`;
             if (!hierarchy.divisions.has(stateKey)) hierarchy.divisions.set(stateKey, new Set());
             hierarchy.divisions.get(stateKey).add(loc.division);
         }
-        
+
         if (loc.division && loc.district) {
             const divisionKey = `${loc.zone}|${loc.state}|${loc.division}`;
             if (!hierarchy.districts.has(divisionKey)) hierarchy.districts.set(divisionKey, new Set());
             hierarchy.districts.get(divisionKey).add(loc.district);
         }
-        
+
         if (loc.district && loc.tehsil) {
             const districtKey = `${loc.zone}|${loc.state}|${loc.division}|${loc.district}`;
             if (!hierarchy.tehsils.has(districtKey)) hierarchy.tehsils.set(districtKey, new Set());
             hierarchy.tehsils.get(districtKey).add(loc.tehsil);
         }
-        
+
         if (loc.tehsil && loc.pincode) {
             const tehsilKey = `${loc.zone}|${loc.state}|${loc.division}|${loc.district}|${loc.tehsil}`;
             if (!hierarchy.pincodes.has(tehsilKey)) hierarchy.pincodes.set(tehsilKey, new Set());
             hierarchy.pincodes.get(tehsilKey).add(loc.pincode);
         }
-        
+
         if (loc.pincode && loc.village) {
             const pincodeKey = `${loc.zone}|${loc.state}|${loc.division}|${loc.district}|${loc.tehsil}|${loc.pincode}`;
             if (!hierarchy.villages.has(pincodeKey)) hierarchy.villages.set(pincodeKey, new Set());
             hierarchy.villages.get(pincodeKey).add(loc.village);
         }
-        
+
         // Reverse mapping for each level
         if (loc.pincode) {
             hierarchy.reverseMap[loc.pincode] = {
@@ -285,10 +285,10 @@ function buildLocationHierarchy(positions) {
             };
         }
     });
-    
+
     // Convert Sets to Arrays
     hierarchy.zones = Array.from(hierarchy.zones);
-    
+
     return hierarchy;
 }
 
@@ -307,7 +307,7 @@ async function autoUpdateParentFilters(selectedValue, level) {
         console.log('No selected value for reverse mapping');
         return;
     }
-    
+
     try {
         // Get location details from reverse lookup API
         const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(selectedValue)}`);
@@ -316,35 +316,35 @@ async function autoUpdateParentFilters(selectedValue, level) {
             await loadApplications(); // Still reload with current selection
             return;
         }
-        
+
         const parentData = await response.json();
         console.log('Auto-updating parent filters for:', selectedValue, 'Data:', parentData);
-        
+
         // Update parent filters based on the reverse mapping
         if (parentData.zone) {
             document.getElementById('filterZone').value = parentData.zone;
         }
-        
+
         if (parentData.state) {
             document.getElementById('filterState').value = parentData.state;
         }
-        
+
         if (parentData.division) {
             document.getElementById('filterDivision').value = parentData.division;
         }
-        
+
         if (parentData.district) {
             document.getElementById('filterDistrict').value = parentData.district;
         }
-        
+
         if (parentData.tehsil) {
             document.getElementById('filterTehsil').value = parentData.tehsil;
         }
-        
+
         if (parentData.pincode && level === 'village') {
             document.getElementById('filterPincode').value = parentData.pincode;
         }
-        
+
         // Reload applications with updated filters
         await loadApplications();
     } catch (error) {
@@ -357,9 +357,9 @@ async function autoUpdateParentFilters(selectedValue, level) {
 function populateDropdown(selectId, options) {
     const select = document.getElementById(selectId);
     const defaultText = select.querySelector('option[value=""]')?.textContent || 'All';
-    
+
     select.innerHTML = `<option value="">${defaultText}</option>`;
-    
+
     if (Array.isArray(options)) {
         options.forEach(option => {
             const optionElement = document.createElement('option');
@@ -373,7 +373,7 @@ function populateDropdown(selectId, options) {
 // Handle zone change
 async function handleZoneChange() {
     const selectedZone = document.getElementById('filterZone').value;
-    
+
     // Don't clear dependent selects - all options are already loaded
     // Just reload applications for this zone level  
     await loadApplications();
@@ -383,13 +383,13 @@ async function handleZoneChange() {
 async function handleStateChange() {
     const selectedZone = document.getElementById('filterZone').value;
     const selectedState = document.getElementById('filterState').value;
-    
+
     // Auto-update parent filters if state was selected directly (reverse mapping)
     if (selectedState && !selectedZone) {
         await autoUpdateParentFilters(selectedState, 'state');
         return; // autoUpdateParentFilters will reload positions
     }
-    
+
     // Reload applications for this state level
     await loadApplications();
 }
@@ -399,13 +399,13 @@ async function handleDivisionChange() {
     const selectedZone = document.getElementById('filterZone').value;
     const selectedState = document.getElementById('filterState').value;
     const selectedDivision = document.getElementById('filterDivision').value;
-    
+
     // Auto-update parent filters if division was selected directly (reverse mapping)
     if (selectedDivision && (!selectedZone || !selectedState)) {
         await autoUpdateParentFilters(selectedDivision, 'division');
         return; // autoUpdateParentFilters will reload positions
     }
-    
+
     // Reload applications for this division level
     await loadApplications();
 }
@@ -413,13 +413,13 @@ async function handleDivisionChange() {
 // Handle district change
 async function handleDistrictChange() {
     const selectedDistrict = document.getElementById('filterDistrict').value;
-    
+
     // Auto-update parent filters if district was selected directly
     if (selectedDistrict) {
         await autoUpdateParentFilters(selectedDistrict, 'district');
         return;
     }
-    
+
     // Reload applications for this district level
     await loadApplications();
 }
@@ -427,13 +427,13 @@ async function handleDistrictChange() {
 // Handle tehsil change
 async function handleTehsilChange() {
     const selectedTehsil = document.getElementById('filterTehsil').value;
-    
+
     // Auto-update parent filters if tehsil was selected directly
     if (selectedTehsil) {
         await autoUpdateParentFilters(selectedTehsil, 'tehsil');
         return;
     }
-    
+
     // Reload applications for this tehsil level
     await loadApplications();
 }
@@ -441,13 +441,13 @@ async function handleTehsilChange() {
 // Handle pincode change
 async function handlePincodeChange() {
     const selectedPincode = document.getElementById('filterPincode').value;
-    
+
     // Auto-update parent filters if pincode was selected directly (REVERSE MAPPING)
     if (selectedPincode) {
         await autoUpdateParentFilters(selectedPincode, 'pincode');
         return;
     }
-    
+
     // Reload applications for this pincode level
     await loadApplications();
 }
@@ -455,13 +455,13 @@ async function handlePincodeChange() {
 // Handle village change
 async function handleVillageChange() {
     const selectedVillage = document.getElementById('filterVillage').value;
-    
+
     // Auto-update parent filters if village was selected directly
     if (selectedVillage) {
         await autoUpdateParentFilters(selectedVillage, 'village');
         return;
     }
-    
+
     // Reload applications for this village level
     await loadApplications();
 }
@@ -478,7 +478,7 @@ function clearDependentSelects(selectIds) {
 async function loadApplications() {
     try {
         const tbody = document.getElementById('positionsTableBody');
-        
+
         // Show minimal loading state (don't block UI)
         tbody.innerHTML = `
             <tr>
@@ -490,7 +490,7 @@ async function loadApplications() {
                 </td>
             </tr>
         `;
-        
+
         // Get all filter values
         const country = document.getElementById('filterCountry').value || 'India';
         const zone = document.getElementById('filterZone').value;
@@ -500,7 +500,7 @@ async function loadApplications() {
         const tehsil = document.getElementById('filterTehsil').value;
         const pincode = document.getElementById('filterPincode').value;
         const village = document.getElementById('filterVillage').value;
-        
+
         // Build query params for dynamic positions endpoint
         const params = new URLSearchParams({ country });
         if (zone) params.append('zone', zone);
@@ -510,30 +510,30 @@ async function loadApplications() {
         if (tehsil) params.append('tehsil', tehsil);
         if (pincode) params.append('pincode', pincode);
         if (village) params.append('village', village);
-        
+
         const url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
-        
+
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-        
+
         const positions = await response.json();
-        
+
         // Store positions directly - they are already formatted with application data
         currentPositions = positions.map((pos, index) => ({
             ...pos,
             sNo: index + 1 // Ensure sequential numbering
         }));
-        
+
         displayPositions(currentPositions);
-        
+
         // Update selected filters display
         updateSelectedFiltersBadges();
     } catch (error) {
         console.error('❌ Error loading applications:', error);
         showNotification('Error loading applications: ' + error.message, 'error');
-        
+
         // Show error in table
         const tbody = document.getElementById('positionsTableBody');
         tbody.innerHTML = `
@@ -550,7 +550,7 @@ async function loadApplications() {
 // Display positions in table
 function displayPositions(positions) {
     const tbody = document.getElementById('positionsTableBody');
-    
+
     if (positions.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -562,19 +562,19 @@ function displayPositions(positions) {
         `;
         return;
     }
-    
+
     // Use DocumentFragment for faster DOM manipulation
     const fragment = document.createDocumentFragment();
-    
+
     positions.forEach(position => {
         const row = createPositionRow(position);
         fragment.appendChild(row);
     });
-    
+
     // Clear and append all at once (much faster than individual appends)
     tbody.innerHTML = '';
     tbody.appendChild(fragment);
-    
+
     // Skip animations for faster rendering
     // Animation removed for performance
 }
@@ -582,9 +582,9 @@ function displayPositions(positions) {
 // Create position table row
 function createPositionRow(position) {
     const row = document.createElement('tr');
-    
+
     const statusClass = getStatusClass(position.status);
-    
+
     // Determine status text based on application workflow
     let statusText = position.status;
     if (position.applicantDetails) {
@@ -598,10 +598,10 @@ function createPositionRow(position) {
             statusText = position.status;
         }
     }
-    
+
     // Format location for position display
     const location = formatLocation(position.location);
-    
+
     // Handle name - show applicant name or Apply button with Position ID below
     let nameCell = '';
     if (position.status === 'Available') {
@@ -625,7 +625,7 @@ function createPositionRow(position) {
     } else {
         nameCell = '-';
     }
-    
+
     // Determine Area Head For - show most specific location area name (district, tehsil, etc.)
     let areaHeadFor = '-';
     if (position.location) {
@@ -661,25 +661,25 @@ function createPositionRow(position) {
     } else {
         photoCell = '<i class="fas fa-user-circle fa-3x text-muted"></i>';
     }
-    
+
     // Handle phone number
-    const phoneNo = position.applicantDetails && position.applicantDetails.phone 
-        ? position.applicantDetails.phone 
+    const phoneNo = position.applicantDetails && position.applicantDetails.phone
+        ? position.applicantDetails.phone
         : '-';
-    
+
     // Handle introduced count - show how many people joined using this person's referral code
     const introducedBy = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
         ? position.applicantDetails.introducedCount
         : (position.applicantDetails ? 0 : '-');
-    
+
     // Handle days since application
-    const days = position.applicantDetails && position.applicantDetails.days !== undefined 
-        ? position.applicantDetails.days 
+    const days = position.applicantDetails && position.applicantDetails.days !== undefined
+        ? position.applicantDetails.days
         : '-';
-    
+
     // Others column - Actions dropdown
     let othersCell = '';
-    
+
     // Show action button IMMEDIATELY when status is Approved (no payment required)
     // Status can be: "Available", "Pending", "Approved", "Verified", "Rejected"
     if (position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')) {
@@ -687,7 +687,7 @@ function createPositionRow(position) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
-        
+
         othersCell = `
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
@@ -706,7 +706,7 @@ function createPositionRow(position) {
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', '${position._id}'); return false;">
+                        <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})" return false;">
                             <i class="fas fa-id-card me-2"></i>ID Card
                         </a>
                     </li>
@@ -732,7 +732,7 @@ function createPositionRow(position) {
             </div>
         `;
     }
-    
+
     row.innerHTML = `
         <td><strong>${position.sNo}</strong></td>
         <td>${nameCell}</td>
@@ -744,7 +744,7 @@ function createPositionRow(position) {
         <td><span class="badge ${statusClass}">${statusText}</span></td>
         <td>${othersCell}</td>
     `;
-    
+
     return row;
 }
 
@@ -757,7 +757,7 @@ function copyPositionId(positionId) {
         range.selectNode(element);
         window.getSelection().removeAllRanges();
         window.getSelection().addRange(range);
-        
+
         // Copy to clipboard
         try {
             document.execCommand('copy');
@@ -767,7 +767,7 @@ function copyPositionId(positionId) {
             // Fallback: show the ID in a prompt for manual copy
             prompt('Copy this Position ID:', positionId);
         }
-        
+
         // Deselect
         window.getSelection().removeAllRanges();
     }
@@ -798,7 +798,7 @@ function formatLocation(location) {
     if (location.state) parts.push(location.state);
     if (location.zone) parts.push(location.zone);
     if (location.country) parts.push(location.country);
-    
+
     return parts.length > 0 ? parts.join(', ') : 'India';
 }
 
@@ -824,10 +824,10 @@ async function handleSearch() {
     const tehsil = document.getElementById('filterTehsil').value;
     const pincode = document.getElementById('filterPincode').value;
     const village = document.getElementById('filterVillage').value;
-    
+
     try {
         showLoading(true);
-        
+
         // Build query params
         let queryParams = [`country=${country}`];
         if (zone) queryParams.push(`zone=${zone}`);
@@ -837,33 +837,33 @@ async function handleSearch() {
         if (tehsil) queryParams.push(`tehsil=${tehsil}`);
         if (pincode) queryParams.push(`pincode=${pincode}`);
         if (village) queryParams.push(`village=${village}`);
-        
+
         const url = `${API_BASE_URL}/positions?${queryParams.join('&')}`;
         const response = await fetch(url);
         currentPositions = await response.json();
-        
+
         // Client-side filter for name and phone
         let filteredPositions = currentPositions;
         if (searchName || searchPhone) {
             filteredPositions = currentPositions.filter(position => {
                 // Name search
-                if (searchName && position.applicantDetails && 
+                if (searchName && position.applicantDetails &&
                     !position.applicantDetails.name.toLowerCase().includes(searchName)) {
                     return false;
                 }
-                
+
                 // Phone search
-                if (searchPhone && position.applicantDetails && 
+                if (searchPhone && position.applicantDetails &&
                     !position.applicantDetails.phone.includes(searchPhone)) {
                     return false;
                 }
-                
+
                 return true;
             });
         }
-        
+
         displayPositions(filteredPositions);
-        
+
         // Show search results count
         showNotification(`Found ${filteredPositions.length} positions`, 'info');
     } catch (error) {
@@ -879,37 +879,37 @@ function clearFilters() {
     // Clear search inputs
     document.getElementById('searchName').value = '';
     document.getElementById('searchPhone').value = '';
-    
+
     // Clear all location filters
     const filters = ['filterZone', 'filterState', 'filterDivision', 'filterDistrict', 'filterTehsil', 'filterPincode', 'filterVillage'];
     filters.forEach(filterId => {
         const input = document.getElementById(filterId);
         const clearBtn = document.getElementById(filterId.replace('filter', 'clear'));
-        
+
         if (input) {
             input.value = '';
             input.classList.remove('has-value');
         }
-        
+
         if (clearBtn) {
             clearBtn.style.display = 'none';
         }
     });
-    
+
     // Hide all dropdowns
     const dropdowns = ['zoneDropdown', 'stateDropdown', 'divisionDropdown', 'districtDropdown', 'tehsilDropdown', 'pincodeDropdown', 'villageDropdown'];
     dropdowns.forEach(dropdownId => {
         hideFilterDropdown(dropdownId);
     });
-    
+
     // Remove active classes from all filter containers
     document.querySelectorAll('.filter-container.active').forEach(container => {
         container.classList.remove('active');
     });
-    
+
     // Update selected filters display
     updateSelectedFiltersBadges();
-    
+
     // Reload applications with default India filter
     loadApplications();
     showNotification('Filters cleared', 'info');
@@ -918,20 +918,20 @@ function clearFilters() {
 // Open application modal for applying to positions
 function openApplicationModal(positionId, positionTitle, location) {
     console.log('🎯 Opening application modal for position ID:', positionId, 'Title:', positionTitle);
-    
+
     // Store current position details for form submission
     window.currentPosition = {
         id: positionId, // This is the unique position ID from dynamic-positions
         title: positionTitle,
         location: location
     };
-    
+
     // Update modal title
     document.querySelector('#applicationModal .modal-title').textContent = `Apply for: ${positionTitle}`;
-    
+
     // Reset and show the application form
     document.getElementById('applicationForm').reset();
-    
+
     // Show the modal
     const modal = new bootstrap.Modal(document.getElementById('applicationModal'));
     modal.show();
@@ -944,35 +944,35 @@ async function submitApplication(event) {
         event.preventDefault();
         event.stopPropagation();
     }
-    
+
     const form = document.getElementById('applicationForm');
     const submitBtn = document.getElementById('submitApplication');
-    
+
     // Check if position information is available
     if (!window.currentPosition) {
         showNotification('Position information not found. Please try again.', 'error');
         return;
     }
-    
+
     // Set position ID in the hidden form field BEFORE creating FormData
     document.getElementById('positionId').value = window.currentPosition.id;
-    
+
     // Now create FormData with the correct position ID
     const formData = new FormData(form);
-    
+
     // Validate form
     if (!form.checkValidity()) {
         form.reportValidity();
         return;
     }
-    
+
     try {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
-        
+
         // Add additional fields that aren't in the form
         formData.append('positionTitle', window.currentPosition.title);
-        
+
         // Add location data from the position
         const location = window.currentPosition.location;
         if (location.country) formData.append('country', location.country);
@@ -983,21 +983,21 @@ async function submitApplication(event) {
         if (location.tehsil) formData.append('tehsil', location.tehsil);
         if (location.pincode) formData.append('pincode', location.pincode);
         if (location.village) formData.append('village', location.village);
-        
+
         console.log('📝 Submitting application with location data:', location);
         console.log('📝 Position ID being sent:', window.currentPosition.id);
         console.log('📝 FormData entries:');
         for (let [key, value] of formData.entries()) {
             console.log(`   ${key}: ${value instanceof File ? `File: ${value.name}` : value}`);
         }
-        
+
         const response = await fetch(`${API_BASE_URL}/applications`, {
             method: 'POST',
             body: formData
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok) {
             // Close modal immediately
             const modalElement = document.getElementById('applicationModal');
@@ -1005,16 +1005,16 @@ async function submitApplication(event) {
             if (modal) {
                 modal.hide();
             }
-            
+
             // Reset form
             form.reset();
-            
+
             // Show success notification
             showNotification('✅ Application submitted successfully! Reloading page...', 'success');
-            
+
             // Clear current position
             window.currentPosition = null;
-            
+
             // Force reload the entire page after a short delay (hard reload to bypass cache)
             setTimeout(() => {
                 window.location.reload(true);
@@ -1025,7 +1025,7 @@ async function submitApplication(event) {
     } catch (error) {
         console.error('❌ Error submitting application:', error);
         showNotification(error.message || 'Error submitting application', 'error');
-        
+
         // Re-enable submit button on error
         if (submitBtn) {
             submitBtn.disabled = false;
@@ -1041,20 +1041,20 @@ function setupRatingStars() {
         console.log('ℹ️ Rating stars not found on this page');
         return;
     }
-    
+
     const stars = document.querySelectorAll('.star');
     const ratingInput = document.getElementById('feedbackRating');
-    
+
     if (!ratingInput || stars.length === 0) {
         console.log('ℹ️ Rating elements not found');
         return;
     }
-    
+
     stars.forEach((star, index) => {
-        star.addEventListener('click', function() {
+        star.addEventListener('click', function () {
             const rating = this.getAttribute('data-rating');
             ratingInput.value = rating;
-            
+
             // Update star display
             stars.forEach((s, i) => {
                 if (i < rating) {
@@ -1066,8 +1066,8 @@ function setupRatingStars() {
                 }
             });
         });
-        
-        star.addEventListener('mouseover', function() {
+
+        star.addEventListener('mouseover', function () {
             const rating = this.getAttribute('data-rating');
             stars.forEach((s, i) => {
                 if (i < rating) {
@@ -1078,10 +1078,10 @@ function setupRatingStars() {
             });
         });
     });
-    
+
     // Reset on mouse leave
     if (ratingStarsContainer) {
-        ratingStarsContainer.addEventListener('mouseleave', function() {
+        ratingStarsContainer.addEventListener('mouseleave', function () {
             const currentRating = ratingInput.value;
             stars.forEach((s, i) => {
                 if (i < currentRating) {
@@ -1099,23 +1099,23 @@ function setupRatingStars() {
 // Submit feedback
 function submitFeedback(e) {
     e.preventDefault();
-    
+
     const name = document.getElementById('feedbackName').value;
     const email = document.getElementById('feedbackEmail').value;
     const rating = document.getElementById('feedbackRating').value;
     const message = document.getElementById('feedbackMessage').value;
-    
+
     if (rating === '0') {
         showNotification('Please select a rating', 'warning');
         return;
     }
-    
+
     // Here you would typically send the feedback to your server
     console.log('Feedback submitted:', { name, email, rating, message });
-    
+
     showNotification('Thank you for your feedback!', 'success');
     document.getElementById('feedbackForm').reset();
-    
+
     // Reset stars
     document.querySelectorAll('.star').forEach(star => {
         star.innerHTML = '<i class="far fa-star"></i>';
@@ -1132,7 +1132,7 @@ function editProfile(positionId) {
         window.location.href = 'profile.html';
         return;
     }
-    
+
     // User is logged in, go to profile page
     window.location.href = 'profile.html';
 }
@@ -1163,20 +1163,20 @@ function showChangePasswordForm() {
             </div>
         </div>
     `;
-    
+
     document.querySelector('#profileModal .modal-body').insertAdjacentHTML('beforeend', formHTML);
-    
+
     document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const currentPassword = document.getElementById('currentPassword').value;
         const newPassword = document.getElementById('newPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
-        
+
         if (newPassword !== confirmPassword) {
             showNotification('Passwords do not match', 'error');
             return;
         }
-        
+
         // Call API to change password
         showNotification('Password changed successfully!', 'success');
         bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
@@ -1226,16 +1226,16 @@ function showForgotPasswordForm(phone) {
             </div>
         </div>
     `;
-    
+
     // Remove existing modal if any
     const existingModal = document.getElementById('forgotPasswordModal');
     if (existingModal) {
         existingModal.remove();
     }
-    
+
     // Add modal to body
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
+
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
     modal.show();
@@ -1251,9 +1251,9 @@ async function requestOTP(phone) {
             },
             body: JSON.stringify({ phone })
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok) {
             showNotification('OTP sent to your phone!', 'success');
             document.getElementById('otpRequestSection').style.display = 'none';
@@ -1270,7 +1270,7 @@ async function requestOTP(phone) {
 function showPaymentOptions(positionId) {
     const position = currentPositions.find(p => p._id === positionId);
     if (!position) return;
-    
+
     const modalHTML = `
         <div class="modal fade" id="paymentModal" tabindex="-1">
             <div class="modal-dialog">
@@ -1304,16 +1304,16 @@ function showPaymentOptions(positionId) {
             </div>
         </div>
     `;
-    
+
     // Remove existing modal if any
     const existingModal = document.getElementById('paymentModal');
     if (existingModal) {
         existingModal.remove();
     }
-    
+
     // Add modal to body
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    
+
     // Show modal
     const modal = new bootstrap.Modal(document.getElementById('paymentModal'));
     modal.show();
@@ -1324,7 +1324,7 @@ async function processPayment(positionId) {
     try {
         // In production, integrate with payment gateway (Razorpay, Paytm, etc.)
         showNotification('Opening payment gateway...', 'info');
-        
+
         // Simulate payment success
         setTimeout(async () => {
             const position = currentPositions.find(p => p._id === positionId);
@@ -1336,7 +1336,7 @@ async function processPayment(positionId) {
                     },
                     body: JSON.stringify({ amount: 10000 })
                 });
-                
+
                 if (response.ok) {
                     showNotification('Payment successful! 60,000 credits added to your account.', 'success');
                     bootstrap.Modal.getInstance(document.getElementById('paymentModal')).hide();
@@ -1446,7 +1446,7 @@ function updateAuthUI() {
         // Hide login, show profile
         loginNavItem.classList.add('d-none');
         profileNavItem.classList.remove('d-none');
-        
+
         // Update user info
         userNameSpan.textContent = currentUser.name;
         userCreditsSpan.textContent = currentUser.credits || 0;
@@ -1550,7 +1550,7 @@ async function changePassword() {
 
         if (response.ok) {
             showNotification('Password changed successfully', 'success');
-            
+
             // Close profile modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('profileModal'));
             if (modal) modal.hide();
@@ -1649,7 +1649,7 @@ function setupSearchableFilters() {
                 e.stopPropagation();
                 showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
             });
-            
+
             // Add touch event for mobile devices (primary interaction on mobile)
             input.addEventListener('touchstart', (e) => {
                 e.preventDefault();
@@ -1670,7 +1670,7 @@ function setupSearchableFilters() {
                 e.preventDefault();
                 clearSingleFilter(filter.id, filter.clear);
             });
-            
+
             // Add touch event for clear button on mobile
             clearBtn.addEventListener('touchend', (e) => {
                 e.stopPropagation();
@@ -1687,7 +1687,7 @@ function setupSearchableFilters() {
         filters.forEach(filter => {
             const input = document.getElementById(filter.id);
             const dropdown = document.getElementById(filter.dropdown);
-            
+
             if (dropdown && dropdown.classList.contains('show')) {
                 const searchInput = dropdown.querySelector('.filter-search-input');
                 // Don't close if clicking on the filter input, dropdown, or search input
@@ -1697,13 +1697,13 @@ function setupSearchableFilters() {
             }
         });
     });
-    
+
     document.addEventListener('touchend', (e) => {
         // Check all dropdowns
         filters.forEach(filter => {
             const input = document.getElementById(filter.id);
             const dropdown = document.getElementById(filter.dropdown);
-            
+
             if (dropdown && dropdown.classList.contains('show')) {
                 const searchInput = dropdown.querySelector('.filter-search-input');
                 // Don't close if touching the filter input, dropdown, or search input
@@ -1743,35 +1743,35 @@ function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
         } else if (inputId === 'filterDivision') {
             // Division filter: filter by zone and state
             return (!selectedZone || loc.zone === selectedZone) &&
-                   (!selectedState || loc.state === selectedState);
+                (!selectedState || loc.state === selectedState);
         } else if (inputId === 'filterDistrict') {
             // District filter: filter by zone, state, and division
             return (!selectedZone || loc.zone === selectedZone) &&
-                   (!selectedState || loc.state === selectedState) &&
-                   (!selectedDivision || loc.division === selectedDivision);
+                (!selectedState || loc.state === selectedState) &&
+                (!selectedDivision || loc.division === selectedDivision);
         } else if (inputId === 'filterTehsil') {
             // Tehsil filter: filter by zone, state, division, and district
             return (!selectedZone || loc.zone === selectedZone) &&
-                   (!selectedState || loc.state === selectedState) &&
-                   (!selectedDivision || loc.division === selectedDivision) &&
-                   (!selectedDistrict || loc.district === selectedDistrict);
+                (!selectedState || loc.state === selectedState) &&
+                (!selectedDivision || loc.division === selectedDivision) &&
+                (!selectedDistrict || loc.district === selectedDistrict);
         } else if (inputId === 'filterPincode') {
             // Pincode filter: filter by all parent filters
             return (!selectedZone || loc.zone === selectedZone) &&
-                   (!selectedState || loc.state === selectedState) &&
-                   (!selectedDivision || loc.division === selectedDivision) &&
-                   (!selectedDistrict || loc.district === selectedDistrict) &&
-                   (!selectedTehsil || loc.tehsil === selectedTehsil);
+                (!selectedState || loc.state === selectedState) &&
+                (!selectedDivision || loc.division === selectedDivision) &&
+                (!selectedDistrict || loc.district === selectedDistrict) &&
+                (!selectedTehsil || loc.tehsil === selectedTehsil);
         } else if (inputId === 'filterVillage') {
             // Village filter: filter by all parent filters including pincode
             return (!selectedZone || loc.zone === selectedZone) &&
-                   (!selectedState || loc.state === selectedState) &&
-                   (!selectedDivision || loc.division === selectedDivision) &&
-                   (!selectedDistrict || loc.district === selectedDistrict) &&
-                   (!selectedTehsil || loc.tehsil === selectedTehsil) &&
-                   (!selectedPincode || loc.pincode === selectedPincode);
+                (!selectedState || loc.state === selectedState) &&
+                (!selectedDivision || loc.division === selectedDivision) &&
+                (!selectedDistrict || loc.district === selectedDistrict) &&
+                (!selectedTehsil || loc.tehsil === selectedTehsil) &&
+                (!selectedPincode || loc.pincode === selectedPincode);
         }
-        
+
         return true; // Zone filter shows all zones
     });
 
@@ -1799,9 +1799,9 @@ function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
 
     // Convert Set to Array and sort
     const filteredData = Array.from(uniqueValues).sort();
-    
+
     console.log(`🔍 Cascading filter for ${inputId}: ${filteredData.length} options (from ${filteredPositions.length} matching positions)`);
-    
+
     // Important: If filtering resulted in matches but no unique values for this specific field,
     // that means the data exists but this field might not be populated for those positions
     // In that case, return all data as fallback
@@ -1809,7 +1809,7 @@ function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
         console.log(`  ⚠️ ${filteredPositions.length} positions match parents but have no ${fieldName} data, showing all options`);
         return allData;
     }
-    
+
     return filteredData.length > 0 ? filteredData : allData;
 }
 
@@ -1818,18 +1818,18 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
     const container = input.closest('.filter-container');
-    
+
     // Wait for location data to load if not yet loaded
     if (!locationDataLoaded) {
         console.log('⏳ Waiting for location data to load...');
         dropdown.innerHTML = '<div class="no-results">Loading...</div>';
         dropdown.classList.add('show');
         container?.classList.add('active');
-        
+
         // Wait for location data
         await loadLocationData();
     }
-    
+
     if (!locationData[dataKey] || !Array.isArray(locationData[dataKey]) || locationData[dataKey].length === 0) {
         console.log('⚠️ No data available for', dataKey);
         dropdown.innerHTML = '<div class="no-results">No data available</div>';
@@ -1852,7 +1852,7 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     // Get filtered data based on parent selections (cascading filters)
     let data = getFilteredDataBasedOnParents(inputId, dataKey, locationData[dataKey]);
     console.log(`✅ Showing dropdown for ${dataKey}:`, data.length, 'items (filtered by parent selections)');
-    
+
     // Only create dropdown content if it doesn't exist or data changed
     if (!dropdown.dataset.initialized || dropdown.dataset.dataKey !== dataKey) {
         dropdown.innerHTML = `
@@ -1875,39 +1875,39 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     // Setup search functionality (remove old listeners first)
     const newSearchInput = searchInput.cloneNode(true);
     searchInput.parentNode.replaceChild(newSearchInput, searchInput);
-    
+
     // Prevent search input from being affected by parent events
     newSearchInput.addEventListener('touchstart', (e) => {
         e.stopPropagation();
         // Don't prevent default - allow normal touch behavior for input focus
     });
-    
+
     newSearchInput.addEventListener('touchend', (e) => {
         e.stopPropagation();
         // Allow the input to receive focus
     });
-    
+
     newSearchInput.addEventListener('focus', (e) => {
         e.stopPropagation();
         // Keep dropdown open when search input is focused
         console.log('Search input focused - keyboard should appear');
     });
-    
+
     newSearchInput.addEventListener('blur', (e) => {
         // Allow blur but log it
         console.log('Search input blurred');
     });
-    
+
     newSearchInput.addEventListener('click', (e) => {
         e.stopPropagation();
         // Ensure search input can be clicked and focused
         newSearchInput.focus();
     });
-    
+
     newSearchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
         if (searchTerm) {
-            const filteredData = data.filter(item => 
+            const filteredData = data.filter(item =>
                 item.toLowerCase().includes(searchTerm)
             );
             displayFilterOptions(optionsContainer, filteredData, data, inputId, dropdownId);
@@ -1919,7 +1919,7 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
 
     // Don't auto-focus on mobile - let user tap when they want to search
     // This prevents unwanted keyboard popup
-    
+
     // Show dropdown (use absolute positioning, not fixed)
     dropdown.classList.add('show');
 }
@@ -1935,7 +1935,7 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
     const limitedData = displayData.slice(0, 100);
     const hasMore = displayData.length > 100;
 
-    container.innerHTML = limitedData.map(item => 
+    container.innerHTML = limitedData.map(item =>
         `<div class="filter-dropdown-item" data-value="${item}">${item}</div>`
     ).join('') + (hasMore ? `<div class="no-results">Showing ${limitedData.length} of ${displayData.length} results. Type to search...</div>` : '');
 
@@ -1944,24 +1944,24 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
         let touchStartY = 0;
         let touchStartTime = 0;
         let isTouching = false;
-        
+
         item.addEventListener('touchstart', (e) => {
             touchStartY = e.touches[0].clientY;
             touchStartTime = Date.now();
             isTouching = true;
         }, { passive: true });
-        
+
         item.addEventListener('touchmove', (e) => {
             // If moved more than 10px, it's a scroll not a tap
             if (Math.abs(e.touches[0].clientY - touchStartY) > 10) {
                 isTouching = false;
             }
         }, { passive: true });
-        
+
         item.addEventListener('touchend', (e) => {
             const touchDuration = Date.now() - touchStartTime;
             const touchDistance = Math.abs(e.changedTouches[0].clientY - touchStartY);
-            
+
             // Only select if it was a quick tap (not a scroll)
             // Tap: < 200ms duration and < 10px movement
             if (isTouching && touchDuration < 200 && touchDistance < 10) {
@@ -1970,7 +1970,7 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
             }
             isTouching = false;
         }, { passive: false });
-        
+
         // Desktop click handler
         item.addEventListener('click', (e) => {
             // Prevent if this was triggered by touch (already handled above)
@@ -1984,28 +1984,28 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
 function selectFilterOption(inputId, dropdownId, value) {
     const input = document.getElementById(inputId);
     const clearBtn = document.getElementById(inputId.replace('filter', 'clear'));
-    
+
     // Set the input value
     input.value = value;
     input.classList.add('has-value');
-    
+
     // Show clear button
     if (clearBtn) {
         clearBtn.style.display = 'flex';
     }
-    
+
     // Hide dropdown
     hideFilterDropdown(dropdownId);
-    
+
     // Clear child filters when parent filter changes (cascading behavior)
     clearChildFilters(inputId);
-    
+
     // Perform reverse mapping to auto-populate parent fields
     performReverseMapping(inputId, value);
-    
+
     // Update selected filters display
     updateSelectedFiltersBadges();
-    
+
     // Trigger filter update
     loadApplications();
 }
@@ -2025,7 +2025,7 @@ function clearChildFilters(inputId) {
 
     // Find the index of the current filter
     const currentIndex = filterHierarchy.indexOf(inputId);
-    
+
     if (currentIndex === -1) return;
 
     // Clear all filters that come after this one
@@ -2033,17 +2033,17 @@ function clearChildFilters(inputId) {
         const childFilterId = filterHierarchy[i];
         const childInput = document.getElementById(childFilterId);
         const childClearBtn = document.getElementById(childFilterId.replace('filter', 'clear'));
-        
+
         if (childInput) {
             childInput.value = '';
             childInput.classList.remove('has-value');
         }
-        
+
         if (childClearBtn) {
             childClearBtn.style.display = 'none';
         }
     }
-    
+
     console.log(`🧹 Cleared child filters after ${inputId}`);
 }
 
@@ -2051,19 +2051,19 @@ function clearChildFilters(inputId) {
 async function performReverseMapping(inputId, value) {
     try {
         console.log('🔍 Reverse mapping triggered for:', { inputId, value });
-        
+
         // Call reverse-lookup API to get full location hierarchy
         const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(value)}`);
-        
+
         console.log('📡 API Response status:', response.status);
-        
+
         if (response.ok) {
             const locationHierarchy = await response.json();
             console.log('📦 Location hierarchy received:', locationHierarchy);
-            
+
             // Auto-populate parent fields based on what was selected
             // Mapping: Village → Pincode → Tehsil → District → Division → State → Zone
-            
+
             if (inputId === 'filterVillage') {
                 console.log('🏘️ Populating from Village...');
                 // Populate all parent fields
@@ -2109,7 +2109,7 @@ async function performReverseMapping(inputId, value) {
                 // Populate parent field (Zone)
                 autoPopulateField('filterZone', 'clearZone', locationHierarchy.zone);
             }
-            
+
             // Update selected filters display after auto-population
             updateSelectedFiltersBadges();
         } else {
@@ -2124,18 +2124,18 @@ async function performReverseMapping(inputId, value) {
 // Helper function to auto-populate a field
 function autoPopulateField(inputId, clearBtnId, value) {
     if (!value || value === 'N/A' || value === '') return;
-    
+
     const input = document.getElementById(inputId);
     const clearBtn = document.getElementById(clearBtnId);
-    
+
     if (input && input.value === '') { // Only populate if field is empty
         input.value = value;
         input.classList.add('has-value');
-        
+
         if (clearBtn) {
             clearBtn.style.display = 'flex';
         }
-        
+
         console.log(`  ✅ Auto-populated ${inputId}: ${value}`);
     }
 }
@@ -2144,9 +2144,9 @@ function autoPopulateField(inputId, clearBtnId, value) {
 function updateSelectedFiltersBadges() {
     const container = document.getElementById('selectedFiltersContainer');
     const badgesDiv = document.getElementById('selectedFiltersBadges');
-    
+
     if (!container || !badgesDiv) return;
-    
+
     // Filter configuration with colors
     const filterConfig = [
         { id: 'filterCountry', label: 'India', color: '#f0e68c', value: 'India' }, // Light yellow
@@ -2158,13 +2158,13 @@ function updateSelectedFiltersBadges() {
         { id: 'filterPincode', label: 'Pincode', color: '#87ceeb' }, // Sky blue
         { id: 'filterVillage', label: 'Post Office', color: '#98fb98' } // Pale green
     ];
-    
+
     let badges = [];
     let hasActiveFilters = false;
-    
+
     filterConfig.forEach(config => {
         let value = config.value || (document.getElementById(config.id)?.value || '');
-        
+
         if (value && value.trim() !== '') {
             hasActiveFilters = true;
             badges.push(`
@@ -2172,7 +2172,7 @@ function updateSelectedFiltersBadges() {
                     ${config.label}: ${value}
                 </span>
             `);
-            
+
             // Also update inline badge for mobile
             const inlineBadgeId = config.id.replace('filter', '').toLowerCase() + 'Badge';
             const inlineBadge = document.getElementById(inlineBadgeId);
@@ -2192,7 +2192,7 @@ function updateSelectedFiltersBadges() {
             }
         }
     });
-    
+
     if (hasActiveFilters) {
         badgesDiv.innerHTML = badges.join('');
         container.style.display = 'block';
@@ -2206,7 +2206,7 @@ function hideFilterDropdown(dropdownId) {
     const dropdown = document.getElementById(dropdownId);
     if (dropdown) {
         dropdown.classList.remove('show');
-        
+
         // Remove active class from container
         const container = dropdown.closest('.filter-container');
         if (container) {
@@ -2219,22 +2219,22 @@ function hideFilterDropdown(dropdownId) {
 function clearSingleFilter(inputId, clearBtnId) {
     const input = document.getElementById(inputId);
     const clearBtn = document.getElementById(clearBtnId);
-    
+
     if (input) {
         input.value = '';
         input.classList.remove('has-value');
     }
-    
+
     if (clearBtn) {
         clearBtn.style.display = 'none';
     }
-    
+
     // Clear all child filters (cascading clear)
     clearChildFilters(inputId);
-    
+
     // Update selected filters display
     updateSelectedFiltersBadges();
-    
+
     // Trigger filter update
     loadApplications();
 }
@@ -2250,22 +2250,22 @@ function clearChildFilters(parentFilterId) {
         'filterTehsil': ['filterPincode', 'filterVillage'],
         'filterPincode': ['filterVillage']
     };
-    
+
     const childFilters = filterHierarchy[parentFilterId];
-    
+
     if (childFilters) {
         childFilters.forEach(childId => {
             const childInput = document.getElementById(childId);
             const childClearBtn = document.getElementById(childId.replace('filter', 'clear'));
-            
+
             if (childInput && childInput.value) {
                 childInput.value = '';
                 childInput.classList.remove('has-value');
-                
+
                 if (childClearBtn) {
                     childClearBtn.style.display = 'none';
                 }
-                
+
                 console.log(`🧹 Cleared child filter: ${childId}`);
             }
         });
@@ -2286,12 +2286,12 @@ async function showReferralInfo(positionId, phone, name) {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' }
         });
-        
+
         if (!response.ok) {
             alert('User details not found. Please contact admin.');
             return;
         }
-        
+
         const user = await response.json();
         const userPhone = phone || 'Not available';
         const introducedCount = user.introducedCount || 0;
@@ -2299,7 +2299,7 @@ async function showReferralInfo(positionId, phone, name) {
         const maxReferrals = 20;
         const remainingReferrals = Math.max(0, maxReferrals - introducedCount);
         const canEarnMore = introducedCount < maxReferrals;
-        
+
         // Create modern modal for referral info
         const modalHTML = `
             <div class="modal fade" id="referralModal" tabindex="-1">
@@ -2378,20 +2378,20 @@ async function showReferralInfo(positionId, phone, name) {
                 </div>
             </div>
         `;
-        
+
         // Remove existing modal if any
         const existingModal = document.getElementById('referralModal');
         if (existingModal) {
             existingModal.remove();
         }
-        
+
         // Add modal to body
         document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
+
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('referralModal'));
         modal.show();
-        
+
     } catch (error) {
         console.error('Error fetching referral code:', error);
         alert('Error loading referral code. Please try again.');
@@ -2405,7 +2405,7 @@ function copyReferralPhone(phone) {
         alert('Phone number not available.');
         return;
     }
-    
+
     // Try clipboard API first
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(phone).then(() => {
@@ -2414,7 +2414,7 @@ function copyReferralPhone(phone) {
             const originalHTML = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
             btn.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-            
+
             setTimeout(() => {
                 btn.innerHTML = originalHTML;
                 btn.style.background = 'linear-gradient(135deg, #ffa500 0%, #ff7043 100%)';
@@ -2441,7 +2441,7 @@ function fallbackCopyTextToClipboard(text) {
     document.body.appendChild(textArea);
     textArea.focus();
     textArea.select();
-    
+
     try {
         const successful = document.execCommand('copy');
         if (successful) {
@@ -2454,287 +2454,942 @@ function fallbackCopyTextToClipboard(text) {
         console.error('Fallback copy failed:', err);
         alert('Failed to copy. Please copy manually: ' + text);
     }
-    
+
     document.body.removeChild(textArea);
 }
 
 // Show ID Card with download option
-async function showIDCard(name, phone, photo, positionId) {
+// async function showIDCard(name, phone, photo, positionId) {
+//     try {
+//         // Fetch user details
+//         const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' }
+//         });
+
+//         if (!response.ok) {
+//             alert('User details not found.');
+//             return;
+//         }
+
+//         const user = await response.json();
+//         // Use personCode if available, otherwise use applicationId
+//         const partnerId = user.personCode || user.applicationId || 'N/A';
+
+//         // Create modal with ID card
+//         const modalHTML = `
+//             <div class="modal fade" id="idCardModal" tabindex="-1">
+//                 <div class="modal-dialog modal-lg modal-dialog-centered">
+//                     <div class="modal-content">
+//                         <div class="modal-header bg-primary text-white">
+//                             <h5 class="modal-title">
+//                                 <i class="fas fa-id-card me-2"></i>Channel Partner ID Card
+//                             </h5>
+//                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+//                         </div>
+//                         <div class="modal-body p-0">
+//                             <!-- Standard ID Card Size: 90mm × 54mm (850px × 510px for display) -->
+//                             <div id="idCardContent" style="background: linear-gradient(135deg, #0066cc 0%, #00a8ff 50%, #ffa500 100%); padding: 20px; width: 850px; height: 510px; margin: 0 auto;">
+//                                 <!-- Landscape ID Card Design - 2 SECTIONS ONLY -->
+//                                 <div style="background: white; border-radius: 15px; padding: 20px; width: 100%; height: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); display: flex; align-items: stretch; gap: 25px;">
+
+//                                     <!-- LEFT SECTION: Logo (Top) + Photo (Middle) + Company Name (Bottom) -->
+//                                     <div style="flex: 0 0 220px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0;">
+//                                         <!-- Logo at Top -->
+//                                         <img src="images/logo.jpeg" alt="Instantlly Cards Logo" style="width: 140px; height: 140px; object-fit: contain; border-radius: 15px;">
+
+//                                         <!-- Photo in Middle -->
+//                                         <img src="${photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4='}" 
+//                                              alt="${name}" 
+//                                              style="width: 150px; height: 170px; object-fit: cover; border-radius: 15px; border: 4px solid #0066cc;">
+
+//                                         <!-- Company Name at Bottom -->
+//                                         <div style="width: 100%;">
+//                                             <h6 style="margin: 0; margin-bottom: 5px; color: #0066cc; font-weight: bold; font-size: 1.1rem; line-height: 1.2;">INSTANTLLY CARDS</h6>
+//                                             <small style="color: #ffa500; font-size: 0.9rem; font-weight: 600;">Channel Partner</small>
+//                                         </div>
+//                                     </div>
+
+//                                     <!-- RIGHT SECTION: User Details -->
+//                                     <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
+//                                         <!-- Name -->
+//                                         <h3 style="color: #333; font-weight: bold; margin: 0 0 25px 0; font-size: 1.8rem; line-height: 1.2;">${name}</h3>
+
+//                                         <!-- Details List -->
+//                                         <div style="margin-bottom: 15px;">
+//                                             <i class="fas fa-phone" style="color: #0066cc; width: 25px; font-size: 1rem;"></i>
+//                                             <strong style="font-size: 1rem;">Phone:</strong> <span style="font-size: 1rem;">${phone}</span>
+//                                         </div>
+//                                         <div style="margin-bottom: 15px;">
+//                                             <i class="fas fa-id-badge" style="color: #ffa500; width: 25px; font-size: 1rem;"></i>
+//                                             <strong style="font-size: 1rem;">Partner ID:</strong> <span style="font-size: 1rem;">${partnerId}</span>
+//                                         </div>
+//                                         <div style="margin-bottom: 20px;">
+//                                             <i class="fas fa-calendar" style="color: #00a8ff; width: 25px; font-size: 1rem;"></i>
+//                                             <strong style="font-size: 1rem;">Joined:</strong> <span style="font-size: 1rem;">${new Date().toLocaleDateString()}</span>
+//                                         </div>
+
+//                                         <!-- Authorized Badge -->
+//                                         <div style="background: linear-gradient(135deg, #0066cc 0%, #ffa500 100%); color: white; padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+//                                             <strong style="font-size: 1rem; letter-spacing: 0.5px;">AUTHORIZED CHANNEL PARTNER</strong>
+//                                         </div>
+
+//                                         <!-- Footer -->
+//                                         <div style="padding-top: 15px; border-top: 2px solid #0066cc;">
+//                                             <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+//                                                 <small style="color: #666; font-size: 0.8rem;">
+//                                                     <i class="fas fa-globe me-1"></i>
+//                                                     www.instantllycards.com
+//                                                 </small>
+//                                                 <small style="color: #666; font-size: 0.8rem;">
+//                                                     <i class="fas fa-envelope me-1"></i>
+//                                                     instantllycardsonlinemeeting@gmail.com
+//                                                 </small>
+//                                             </div>
+//                                         </div>
+//                                     </div>
+
+//                                 </div>
+//                             </div>
+//                         </div>
+//                         <div class="modal-footer">
+//                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+//                             <button type="button" class="btn btn-primary" onclick="downloadIDCard('${name}', '${phone}', '${photo}', '${partnerId}')">
+//                                 <i class="fas fa-download me-2"></i>Download as PDF
+//                             </button>
+//                         </div>
+//                     </div>
+//                 </div>
+//             </div>
+//         `;
+
+//         // Remove existing modal if any
+//         const existingModal = document.getElementById('idCardModal');
+//         if (existingModal) {
+//             existingModal.remove();
+//         }
+
+//         // Add modal to body
+//         document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+//         // Show modal
+//         const modal = new bootstrap.Modal(document.getElementById('idCardModal'));
+//         modal.show();
+
+//     } catch (error) {
+//         console.error('Error showing ID card:', error);
+//         alert('Error loading ID card. Please try again.');
+//     }
+// }
+// async function showIDCard(name, phone, photo, positionId) {
+//     try {
+//         // Fetch user details
+//         const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' }
+//         });
+
+//         if (!response.ok) {
+//             alert('User details not found.');
+//             return;
+//         }
+
+//         const user = await response.json();
+//         // Use personCode if available, otherwise use applicationId
+//         const partnerId = user.personCode || user.applicationId || 'N/A';
+
+//         // Create modal with ID card
+//         const modalHTML = `
+//             <div class="modal fade" id="idCardModal" tabindex="-1">
+//                 <div class="modal-dialog modal-lg modal-dialog-centered">
+//                     <div class="modal-content">
+//                         <div class="modal-header bg-primary text-white">
+//                             <h5 class="modal-title">
+//                                 <i class="fas fa-id-card me-2"></i>Channel Partner ID Card
+//                             </h5>
+//                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+//                         </div>
+//                         <div class="modal-body p-0">
+//                             <!-- Vertical ID Card Design - Exact Match to Provided Image: 623.62px × 1020.47px -->
+//                             <div id="idCardContent" style="background: white; padding: 0; width: 623.62px; height: 1020.47px; margin: 0 auto; position: relative; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+
+//                                 <!-- LEFT SECTION: Dark background with app benefits, ads, and appointment info -->
+//                                 <div style="position: absolute; left: 0; top: 0; width: 200px; height: 100%; background-color: #000000; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 10px; box-sizing: border-box;">
+
+//                                     <!-- Top: Instantlly Cards Logo -->
+//                                     <div style="text-align: center; margin-bottom: 20px;">
+//                                         <img src="images/Logo.png" alt="Instantlly Cards Logo" style="width: 120px; height: auto; object-fit: contain;">
+//                                     </div>
+
+//                                     <!-- App Benefits -->
+//                                     <div style="color: #ffffff; text-align: center; margin-bottom: 30px;">
+//                                         <div style="font-weight: bold; font-size: 0.85rem; margin-bottom: 10px; color: #00bfff;">App Benefits</div>
+//                                         <div style="font-size: 0.7rem; line-height: 1.3;">Create Send Receive</div>
+//                                         <div style="font-size: 0.7rem; line-height: 1.3; color: #00bfff;">Unlimited Cards</div>
+//                                     </div>
+
+//                                     <!-- Advertisements -->
+//                                     <div style="color: #ffffff; text-align: center; margin-bottom: 30px;">
+//                                         <div style="font-weight: bold; font-size: 0.85rem; margin-bottom: 10px; color: #00bfff;">Advertisements</div>
+//                                         <div style="font-weight: bold; font-size: 0.75rem; margin-bottom: 5px;">Banner</div>
+//                                         <div style="font-weight: bold; font-size: 0.75rem; margin-bottom: 5px;">Display</div>
+//                                         <div style="font-weight: bold; font-size: 0.75rem; margin-bottom: 10px;">Video</div>
+//                                         <div style="font-size: 0.7rem; margin-bottom: 5px;">Download from</div>
+//                                         <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Play Store" style="width: 80px; height: auto; margin: 0 auto;">
+//                                         <div style="font-size: 0.65rem; color: #00bfff; margin-top: 5px;">Playstore</div>
+//                                     </div>
+
+//                                     <!-- Bottom: Appointment Info (White Box) -->
+//                                     <div style="background-color: #ffffff; padding: 15px; border-radius: 5px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+//                                         <div style="color: #000000; font-weight: bold; font-size: 0.8rem; margin-bottom: 10px;">Instantlly Cards</div>
+//                                         <div style="color: #000000; font-size: 0.65rem; line-height: 1.2; margin-bottom: 10px;">We Are Appointing Sole Head</div>
+//                                         <div style="color: #000000; font-size: 0.65rem; line-height: 1.2;">for India, Zone, State, Division,</div>
+//                                         <div style="color: #000000; font-size: 0.65rem; line-height: 1.2;">District, Tehsil, Pincode, Village</div>
+//                                         <div style="color: #000000; font-size: 0.7rem; font-weight: bold; margin-top: 10px;">Mob: ${phone}</div>
+//                                         <div style="color: #000000; font-size: 0.65rem; margin-top: 5px;">Web: instantly.com</div>
+//                                     </div>
+
+//                                 </div>
+
+//                                 <!-- RIGHT SECTION: Red background with photo and details -->
+//                                 <div style="position: absolute; right: 0; top: 0; width: 423.62px; height: 100%; background-color: #ff0000; display: flex; flex-direction: column; padding: 20px 20px; box-sizing: border-box; color: #ffffff; justify-content: flex-start;">
+
+//                                     <!-- Photo Placeholder (Top) -->
+//                                     <div style="text-align: center; margin-bottom: 20px; height: 200px; display: flex; align-items: center; justify-content: center;">
+//                                         <div style="width: 180px; height: 200px; background-color: #ffffff; border: 3px solid #ffffff; border-radius: 5px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+//                                             <img src="${photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDE4MCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2U5ZWFmMCIvPjxjaXJjbGUgY3g9IjkwIiBjeT0iNjAiIHI9IjQwIiBmaWxsPSIjY2NjIi8+PHRleHQgeD0iOTAiIHk9IjEyMCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+dXNlciA8L3RleHQ+PC9zdmc+'}" 
+//                                                  alt="${name}" 
+//                                                  style="width: 100%; height: 100%; object-fit: cover;">
+//                                         </div>
+//                                         <div style="font-size: 0.8rem; margin-top: 5px;">Photo</div>
+//                                     </div>
+
+//                                     <!-- Details Form -->
+//                                     <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; font-size: 0.75rem; line-height: 1.4;">
+//                                         <div style="margin-bottom: 10px;">
+//                                             <strong style="font-size: 0.8rem;">Name:</strong> <span style="font-weight: bold;">${name}</span>
+//                                         </div>
+//                                         <div style="margin-bottom: 10px;">
+//                                             <strong style="font-size: 0.8rem;">Mob:</strong> <span style="font-weight: bold;">${phone}</span>
+//                                         </div>
+//                                         <div style="margin-bottom: 10px; font-weight: bold; font-size: 0.85rem; color: #ffffff;">Area Head For</div>
+//                                         <div style="margin-bottom: 8px;">
+//                                             <strong>Country:</strong> India
+//                                         </div>
+//                                         <div style="margin-bottom: 8px;">
+//                                             <strong>Zone:</strong> Western
+//                                         </div>
+//                                         <div style="margin-bottom: 8px;">
+//                                             <strong>State:</strong> Maharashtra
+//                                         </div>
+//                                         <div style="margin-bottom: 8px;">
+//                                             <strong>Division:</strong> Konkan
+//                                         </div>
+//                                         <div style="margin-bottom: 8px;">
+//                                             <strong>District:</strong> Mumbai
+//                                         </div>
+//                                         <div style="margin-bottom: 8px;">
+//                                             <strong>Taluka:</strong> 
+//                                         </div>
+//                                         <div style="margin-bottom: 8px;">
+//                                             <strong>Pincode:</strong> 
+//                                         </div>
+//                                         <div style="margin-bottom: 8px;">
+//                                             <strong>Village:</strong> 
+//                                         </div>
+//                                     </div>
+
+//                                 </div>
+
+//                             </div>
+//                         </div>
+//                         <div class="modal-footer">
+//                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+//                             <button type="button" class="btn btn-primary" onclick="downloadIDCard('${name}', '${phone}', '${photo}', '${partnerId}')">
+//                                 <i class="fas fa-download me-2"></i>Download as PDF
+//                             </button>
+//                         </div>
+//                     </div>
+//                 </div>
+//             </div>
+//         `;
+
+//         // Remove existing modal if any
+//         const existingModal = document.getElementById('idCardModal');
+//         if (existingModal) {
+//             existingModal.remove();
+//         }
+
+//         // Add modal to body
+//         document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+//         // Show modal
+//         const modal = new bootstrap.Modal(document.getElementById('idCardModal'));
+//         modal.show();
+
+//     } catch (error) {
+//         console.error('Error showing ID card:', error);
+//         alert('Error loading ID card. Please try again.');
+//     }
+// }  
+
+// async function showIDCard(name, phone, photo) {
+//     try {
+//         // Fetch details
+//         const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' }
+//         });
+
+//         if (!response.ok) {
+//             alert("User details not found.");
+//             return;
+//         }
+
+//         const user = await response.json();
+
+//         const modalHTML = `
+//         <div class="modal fade" id="idCardModal" tabindex="-1">
+//             <div class="modal-dialog modal-lg modal-dialog-centered">
+//                 <div class="modal-content">
+
+//                     <div class="modal-header bg-primary text-white">
+//                         <h5 class="modal-title">
+//                             <i class="fas fa-id-card me-2"></i>Channel Partner ID Card
+//                         </h5>
+//                         <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+//                     </div>
+
+//                     <div class="modal-body p-0" style="background:#f5f5f5;">
+//                         <div style="padding: 10px; display:flex; justify-content:center;">
+
+//                             <!-- CARD -->
+//                             <div id="idCardContent" style="
+//                                 width: 720px;
+//                                 height: 1280px;
+//                                 background:white;
+//                                 position:relative;
+//                                 overflow:hidden;
+//                                 font-family: Arial,Helvetica,sans-serif;
+//                                 box-shadow: 0 4px 15px rgba(0,0,0,0.20);
+//                             ">
+
+//                                 <!-- LEFT PANEL (304px exact) -->
+//                                 <div style="
+//                                     position:absolute;
+//                                     left:0; top:0;
+//                                     width:304px;
+//                                     height:100%;
+//                                     background:black;
+//                                     color:white;
+//                                     padding:20px;
+//                                     box-sizing:border-box;
+//                                 ">
+
+//                                     <!-- LOGO -->
+//                                     <div style="text-align:center; margin-bottom:25px;">
+//                                         <img src="images/logo.png"
+//                                              style="width:160px; object-fit:contain;">
+//                                     </div>
+
+//                                     <!-- APP BENEFITS -->
+//                                     <div style="text-align:center; margin-bottom:30px;">
+//                                         <div style="font-size:28px; font-weight:700;">App Benefits</div>
+//                                         <div style="font-size:22px;">Create Send Receive</div>
+//                                         <div style="font-size:28px; color:#00bfff; font-weight:700;">Unlimited Cards</div>
+//                                     </div>
+
+//                                     <!-- ADS -->
+//                                     <div style="text-align:center; margin-bottom:30px;">
+//                                         <div style="font-size:28px; font-weight:700; margin-bottom:10px;">
+//                                             Advertisements
+//                                         </div>
+//                                         <div style="font-size:60px; font-weight:700; line-height:0.9;">Banner</div>
+//                                         <div style="font-size:60px; font-weight:700; line-height:0.9;">Display</div>
+//                                         <div style="font-size:60px; font-weight:700; line-height:0.9; margin-bottom:5px;">
+//                                             Video
+//                                         </div>
+
+//                                         <div style="font-size:20px; margin-bottom:8px;">Download from</div>
+//                                         <img src="images/android.png"
+//                                              style="width:70px; display:block; margin:auto;">
+//                                     </div>
+
+//                                     <!-- FOOTER STATIC -->
+//                                     <div style="
+//                                         background:white;
+//                                         color:black;
+//                                         padding:15px;
+//                                         border-radius:6px;
+//                                         text-align:center;
+//                                         font-size:20px;
+//                                     ">
+//                                         <div style="font-weight:700; font-size:26px;">
+//                                             Instantly Cards
+//                                         </div>
+//                                         <div style="font-size:18px;">We Are Appointing Sole Head</div>
+//                                         <div style="font-size:16px;">
+//                                             for India, Zone, State, Division,<br>
+//                                             District, Tehsil, Pincode, Village
+//                                         </div>
+//                                         <div style="margin-top:10px; font-size:20px; font-weight:700;">
+//                                             Mob: ${phone}
+//                                         </div>
+//                                         <div style="font-size:16px;">Web: instantly.com</div>
+//                                     </div>
+
+//                                 </div>
+
+//                                 <!-- RIGHT PANEL (416px exact) -->
+//                                 <div style="
+//                                     position:absolute;
+//                                     right:0; top:0;
+//                                     width:416px;
+//                                     height:100%;
+//                                     background:#e60000;
+//                                     color:white;
+//                                     padding:25px 40px;
+//                                     box-sizing:border-box;
+//                                     display:flex;
+//                                    flex-direction:column;
+//                                    justify-content:flex-start;
+
+//                                 ">
+
+//                                     <!-- PHOTO -->
+//                                     <div style="text-align:center; margin-bottom:25px;">
+//                                         <div style="font-size:36px; font-weight:700; color:black;">
+//                                             Photo
+//                                         </div>
+
+//                                         <div style="
+//                                             width:260px;
+//                                             height:260px;
+//                                             border-radius:50%;
+//                                             background:white;
+//                                             margin:10px auto 0 auto;
+//                                             overflow:hidden;
+//                                             display:flex;
+//                                             align-items:center;
+//                                             justify-content:center;
+//                                         ">
+//                                             <img src="${photo}"
+//                                                  style="width:100%; height:100%; object-fit:cover;">
+//                                         </div>
+//                                     </div>
+
+//                                     <!-- TEXT DETAILS -->
+//                                     <div style="font-size:30px; line-height:1.3;">
+//                                         <div style="margin-bottom:10px;">
+//                                             <b>Name:</b> ${name}
+//                                         </div>
+//                                         <div style="margin-bottom:25px;">
+//                                             <b>Mob:</b> ${phone}
+//                                         </div>
+
+//                                         <div style="font-size:36px; font-weight:700; margin-bottom:20px;">
+//                                             Area Head For
+//                                         </div>
+
+//                                         <div><b>Country:</b> India</div>
+//                                         <div><b>Zone:</b> Western</div>
+//                                         <div><b>State:</b> Maharashtra</div>
+//                                         <div><b>Division:</b> Konkan</div>
+
+//                                         <div style="
+//                                             background:white;
+//                                             color:black;
+//                                             padding:10px;
+//                                             margin:5px 0 10px 0;
+//                                             font-size:26px;
+//                                             font-weight:700;
+//                                         ">
+//                                             <b>District:</b> Mumbai
+//                                         </div>
+
+//                                         <div><b>Taluka:</b></div>
+//                                         <div><b>Pincode:</b></div>
+//                                         <div><b>Village:</b></div>
+//                                     </div>
+
+//                                 </div>
+
+//                             </div> <!-- card -->
+
+//                         </div>
+//                     </div>
+
+//                     <div class="modal-footer">
+//                         <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+//                         <button class="btn btn-primary" onclick="downloadIDCardAsImage('${name}', '${phone}', '${photo}')">
+//                             <i class="fas fa-download me-2"></i>Download
+//                         </button>
+//                     </div>
+
+//                 </div>
+//             </div>
+//         </div>
+//         `;
+
+//         const oldModal = document.getElementById("idCardModal");
+//         if (oldModal) oldModal.remove();
+
+//         document.body.insertAdjacentHTML("beforeend", modalHTML);
+//         new bootstrap.Modal(document.getElementById("idCardModal")).show();
+
+//     } catch (err) {
+//         alert("Error loading card.");
+//     }
+// }
+
+async function showIDCard(name, phone, photo,positionLocation) {
     try {
-        // Fetch user details
+
+        function getAreaHighlight(loc) {
+            if (loc.village)  return { level: "Village", value: loc.village };
+            if (loc.pincode)  return { level: "Pincode", value: loc.pincode };
+            if (loc.tehsil)   return { level: "Tehsil", value: loc.tehsil };
+            if (loc.district) return { level: "District", value: loc.district };
+            if (loc.division) return { level: "Division", value: loc.division };
+            if (loc.state)    return { level: "State", value: loc.state };
+            if (loc.zone)     return { level: "Zone", value: loc.zone };
+            return { level: "Country", value: loc.country || "India" };
+        }
+
+        const highlight = getAreaHighlight(positionLocation);
+
+        const loc = {
+            country: positionLocation.country || "India",
+            zone: positionLocation.zone || "",
+            state: positionLocation.state || "",
+            division: positionLocation.division || "",
+            district: positionLocation.district || "",
+            tehsil: positionLocation.tehsil || "",
+            pincode: positionLocation.pincode || "",
+            village: positionLocation.village || ""
+        };
+
+        let areaListHTML = "";
+
+        function makeRow(label, value) {
+            if (!value) return "";
+
+            // REPLACE THIS ROW WITH HIGHLIGHT BOX
+            if (highlight.level === label) {
+                return `
+                <div style="
+                    background:white;
+                    color:black;
+                    padding:8px;
+                    font-size:24px;
+                    font-weight:700;
+                    margin:8px 0 10px 0;
+                ">
+                    <b>${highlight.level}:</b> ${highlight.value}
+                </div>`;
+            }
+
+            // Otherwise normal row
+            return `<div style="margin-bottom:6px;"><b>${label}:</b> ${value}</div>`;
+        }
+
+        // Maintain exact order
+        areaListHTML += makeRow("Country", loc.country);
+        areaListHTML += makeRow("Zone", loc.zone);
+        areaListHTML += makeRow("State", loc.state);
+        areaListHTML += makeRow("Division", loc.division);
+        areaListHTML += makeRow("District", loc.district);
+        areaListHTML += makeRow("Tehsil", loc.tehsil);
+        areaListHTML += makeRow("Pincode", loc.pincode);
+        areaListHTML += makeRow("Village", loc.village);
+
         const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
         });
-        
+
         if (!response.ok) {
-            alert('User details not found.');
+            alert("User details not found.");
             return;
         }
-        
+
         const user = await response.json();
-        // Use personCode if available, otherwise use applicationId
-        const partnerId = user.personCode || user.applicationId || 'N/A';
-        
-        // Create modal with ID card
+
         const modalHTML = `
-            <div class="modal fade" id="idCardModal" tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">
-                                <i class="fas fa-id-card me-2"></i>Channel Partner ID Card
-                            </h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body p-0">
-                            <!-- Standard ID Card Size: 90mm × 54mm (850px × 510px for display) -->
-                            <div id="idCardContent" style="background: linear-gradient(135deg, #0066cc 0%, #00a8ff 50%, #ffa500 100%); padding: 20px; width: 850px; height: 510px; margin: 0 auto;">
-                                <!-- Landscape ID Card Design - 2 SECTIONS ONLY -->
-                                <div style="background: white; border-radius: 15px; padding: 20px; width: 100%; height: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); display: flex; align-items: stretch; gap: 25px;">
-                                    
-                                    <!-- LEFT SECTION: Logo (Top) + Photo (Middle) + Company Name (Bottom) -->
-                                    <div style="flex: 0 0 220px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0;">
-                                        <!-- Logo at Top -->
-                                        <img src="images/logo.jpeg" alt="Instantlly Cards Logo" style="width: 140px; height: 140px; object-fit: contain; border-radius: 15px;">
-                                        
-                                        <!-- Photo in Middle -->
-                                        <img src="${photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4='}" 
-                                             alt="${name}" 
-                                             style="width: 150px; height: 170px; object-fit: cover; border-radius: 15px; border: 4px solid #0066cc;">
-                                        
-                                        <!-- Company Name at Bottom -->
-                                        <div style="width: 100%;">
-                                            <h6 style="margin: 0; margin-bottom: 5px; color: #0066cc; font-weight: bold; font-size: 1.1rem; line-height: 1.2;">INSTANTLLY CARDS</h6>
-                                            <small style="color: #ffa500; font-size: 0.9rem; font-weight: 600;">Channel Partner</small>
+        <div class="modal fade" id="idCardModal" tabindex="-1">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-id-card me-2"></i>Channel Partner ID Card
+                        </h5>
+                        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body p-0" style="background:#f5f5f5;">
+                        <div style="padding:10px; display:flex; justify-content:center;">
+
+                            <!-- FULL ID CARD -->
+                            <div id="idCardContent" style="
+                                width:720px;
+                                background:white;
+                                min-height:1180px;
+                                display:flex;
+                                overflow:hidden;
+                                font-family:Arial, Helvetica, sans-serif;
+                                box-shadow:0 4px 15px rgba(0,0,0,0.25);
+                            ">
+
+                                <!-- LEFT SECTION -->
+                                <div style="
+                                    width:304px;
+                                    background:black;
+                                    color:white;
+                                    padding:20px;
+                                    display:flex;
+                                    flex-direction:column;
+                                    align-items:center;
+                                ">
+
+                                    <!-- LOGO -->
+                                    <div style="text-align:center; margin-bottom:25px;">
+                                        <img src="images/logo.png" style="width:165px;">
+                                    </div>
+
+                                    <!-- APP BENEFITS -->
+                                    <div style="text-align:center; margin-bottom:30px;">
+                                        <div style="font-size:32px; font-weight:700;">App Benefits</div>
+                                        <div style="font-size:26px;">Create Send Receive</div>
+                                        <div style="font-size:32px; color:#00bfff; font-weight:700;">Unlimited Cards</div>
+                                    </div>
+
+                                    <!-- ADS -->
+                                    <div style="text-align:center; margin-bottom:30px;">
+                                        <div style="font-size:32px; font-weight:700; margin-bottom:10px;">
+                                            Advertisements
+                                        </div>
+
+                                        <div style="font-size:66px; font-weight:700; line-height:0.9;">Banner</div>
+                                        <div style="font-size:66px; font-weight:700; line-height:0.9;">Display</div>
+                                        <div style="font-size:66px; font-weight:700; line-height:0.9;">Video</div>
+
+                                        <div style="font-size:22px; margin-top:5px;">Download from</div>
+
+                                        <!-- PLAYSTORE INLINE -->
+                                        <div style="display:flex; align-items:center; gap:8px; margin-top:10px; justify-content:center;">
+                                            <span style="font-size:22px;">Playstore</span>
+                                            <img src="images/android.png" style="width:40px;">
                                         </div>
                                     </div>
-                                    
-                                    <!-- RIGHT SECTION: User Details -->
-                                    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center;">
-                                        <!-- Name -->
-                                        <h3 style="color: #333; font-weight: bold; margin: 0 0 25px 0; font-size: 1.8rem; line-height: 1.2;">${name}</h3>
-                                        
-                                        <!-- Details List -->
-                                        <div style="margin-bottom: 15px;">
-                                            <i class="fas fa-phone" style="color: #0066cc; width: 25px; font-size: 1rem;"></i>
-                                            <strong style="font-size: 1rem;">Phone:</strong> <span style="font-size: 1rem;">${phone}</span>
-                                        </div>
-                                        <div style="margin-bottom: 15px;">
-                                            <i class="fas fa-id-badge" style="color: #ffa500; width: 25px; font-size: 1rem;"></i>
-                                            <strong style="font-size: 1rem;">Partner ID:</strong> <span style="font-size: 1rem;">${partnerId}</span>
-                                        </div>
-                                        <div style="margin-bottom: 20px;">
-                                            <i class="fas fa-calendar" style="color: #00a8ff; width: 25px; font-size: 1rem;"></i>
-                                            <strong style="font-size: 1rem;">Joined:</strong> <span style="font-size: 1rem;">${new Date().toLocaleDateString()}</span>
-                                        </div>
-                                        
-                                        <!-- Authorized Badge -->
-                                        <div style="background: linear-gradient(135deg, #0066cc 0%, #ffa500 100%); color: white; padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
-                                            <strong style="font-size: 1rem; letter-spacing: 0.5px;">AUTHORIZED CHANNEL PARTNER</strong>
-                                        </div>
-                                        
-                                        <!-- Footer -->
-                                        <div style="padding-top: 15px; border-top: 2px solid #0066cc;">
-                                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                                                <small style="color: #666; font-size: 0.8rem;">
-                                                    <i class="fas fa-globe me-1"></i>
-                                                    www.instantllycards.com
-                                                </small>
-                                                <small style="color: #666; font-size: 0.8rem;">
-                                                    <i class="fas fa-envelope me-1"></i>
-                                                    instantllycardsonlinemeeting@gmail.com
-                                                </small>
-                                            </div>
-                                        </div>
+
+                                    <!-- HEADING: Instantly Cards -->
+                                    <div style="
+                                        font-size:30px;
+                                        font-weight:700;
+                                        text-align:center;
+                                        margin-bottom:8px;
+                                        letter-spacing:-0.5px;
+                                    ">
+                                        <span style="color:white;">Instan<span style="color:#00bfff;">tlly</span></span>
+                                        <span style="color:white;"> Cards</span>
                                     </div>
-                                    
+
+                                    <!-- WHITE BOX 1 -->
+                                    <div style="
+                                        background:white;
+                                        color:black;
+                                        padding:12px;
+                                        border-radius:6px;
+                                        text-align:center;
+                                        font-size:17px;
+                                        line-height:1.2;
+                                        font-weight:600;
+                                        margin-bottom:10px;
+                                        width:100%;
+                                    ">
+                                        We Are Appointing Sole Head <br>
+                                        for India, Zone, State, Division,<br>
+                                        District, Tehsil, Pincode, Village
+                                    </div>
+
+                                    <!-- WHITE BOX 2 -->
+                                    <div style="
+                                        background:white;
+                                        color:black;
+                                        padding:12px;
+                                        border-radius:6px;
+                                        text-align:center;
+                                        font-size:22px;
+                                        line-height:1.3;
+                                        width:100%;
+                                        margin-bottom:0px;
+                                    ">
+                                        <div style="font-weight:700;">Mob: ${phone}</div>
+                                        <div style="font-size:18px;">Web: instantly.com</div>
+                                    </div>
+
                                 </div>
+
+                                <!-- RIGHT SECTION -->
+                                <div style="
+                                    width:416px;
+                                    background:#e60000;
+                                    color:white;
+                                    padding:25px 35px;
+                                    display:flex;
+                                    flex-direction:column;
+                                    justify-content:flex-start;
+                                ">
+
+                                    <!-- PHOTO -->
+                                    <div style="text-align:center; margin-bottom:20px;">
+                                        <div style="font-size:32px; font-weight:700; color:black; margin-bottom:8px;">
+                                            Photo
+                                        </div>
+
+                                        <div style="
+                                            width:260px;
+                                            height:260px;
+                                            background:white;
+                                            overflow:hidden;
+                                            margin:0 auto;
+                                            border:4px solid white;
+                                        ">
+                                            <img src="${photo}" style="width:100%; height:100%; object-fit:cover;">
+                                        </div>
+                                    </div>
+
+                                    <!-- NAME & MOBILE -->
+                                    <div style="font-size:26px; line-height:1.25;">
+                                        <div style="margin-bottom:8px;">
+                                            <b>Name:</b> ${name}
+                                        </div>
+                                        <div style="margin-bottom:15px;">
+                                            <b>Mob:</b> ${phone}
+                                        </div>
+                                    </div>
+
+                                    <!-- AREA HEAD FOR -->
+                                    <div style="
+                                        font-size:36px;
+                                        font-weight:700;
+                                        margin-bottom:15px;
+                                    ">
+                                        Area Head For
+                                    </div>
+
+                                    <!-- COUNTRY → VILLAGE -->
+                                    <div style="font-size:24px; line-height:1.25;">
+                                        ${areaListHTML}
+                                    </div>
+
+                                </div>
+
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" onclick="downloadIDCard('${name}', '${phone}', '${photo}', '${partnerId}')">
-                                <i class="fas fa-download me-2"></i>Download as PDF
-                            </button>
-                        </div>
                     </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+
+                        <button class="btn btn-primary" onclick="downloadIDCardAsImage('${name}', '${phone}', '${photo}')">
+                            <i class="fas fa-download me-2"></i>Download
+                        </button>
+                    </div>
+
                 </div>
             </div>
+        </div>
         `;
-        
-        // Remove existing modal if any
-        const existingModal = document.getElementById('idCardModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
-        
-        // Add modal to body
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('idCardModal'));
-        modal.show();
-        
-    } catch (error) {
-        console.error('Error showing ID card:', error);
-        alert('Error loading ID card. Please try again.');
+
+        const existing = document.getElementById("idCardModal");
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML("beforeend", modalHTML);
+        new bootstrap.Modal(document.getElementById("idCardModal")).show();
+
+    } catch (err) {
+        alert("Error loading card.");
     }
 }
 
-// Download ID Card as PDF (landscape)
-async function downloadIDCard(name, phone, photo, personCode) {
-    try {
-        const element = document.getElementById('idCardContent');
-        
-        if (!element) {
-            alert('ID Card content not found. Please try again.');
-            return;
-        }
-        
-        // Show loading message
-        const downloadBtn = event.target;
-        const originalText = downloadBtn.innerHTML;
-        downloadBtn.disabled = true;
-        downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
-        
-        console.log('🎨 Starting PDF generation...');
-        console.log('📋 Name:', name, 'Phone:', phone, 'Partner ID:', personCode);
-        
-        // Convert all images to base64 to avoid CORS issues
-        const images = element.querySelectorAll('img');
-        console.log('🖼️ Found', images.length, 'images to process');
-        
-        for (let i = 0; i < images.length; i++) {
-            const img = images[i];
-            console.log(`🔄 Processing image ${i + 1}:`, img.src.substring(0, 50) + '...');
-            
-            try {
-                // If it's already base64, skip
-                if (img.src.startsWith('data:')) {
-                    console.log(`✓ Image ${i + 1} already base64`);
-                    continue;
-                }
-                
-                // Convert to base64
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // Wait for image to load
-                await new Promise((resolve, reject) => {
-                    if (img.complete && img.naturalWidth > 0) {
-                        resolve();
-                    } else {
-                        img.onload = () => resolve();
-                        img.onerror = () => reject(new Error('Image failed to load'));
-                        setTimeout(() => reject(new Error('Image load timeout')), 5000);
-                    }
-                });
-                
-                canvas.width = img.naturalWidth || img.width;
-                canvas.height = img.naturalHeight || img.height;
-                ctx.drawImage(img, 0, 0);
-                
-                // Convert to base64
-                const base64 = canvas.toDataURL('image/jpeg', 0.95);
-                img.src = base64;
-                console.log(`✅ Image ${i + 1} converted to base64 (${base64.length} chars)`);
-                
-            } catch (imgError) {
-                console.warn(`⚠️ Failed to convert image ${i + 1}:`, imgError.message);
-                // Use placeholder for failed images
-                img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4=';
-            }
-        }
-        
-        console.log('⏳ Waiting for DOM to settle...');
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        console.log('📄 Generating PDF with html2pdf...');
-        
-        // Standard ID card size: 90mm × 54mm
-        // At 300 DPI: 1063px × 638px
-        // We'll use half scale for reasonable file size: 850px × 510px
-        const opt = {
-            margin: 0,
-            filename: `ID_Card_${name.replace(/\s+/g, '_')}_${Date.now()}.pdf`,
-            image: { type: 'jpeg', quality: 1.0 },
-            html2canvas: { 
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                logging: true,
-                letterRendering: true,
-                imageTimeout: 0,
-                backgroundColor: null,
-                removeContainer: true,
-                scrollY: 0,
-                scrollX: 0,
-                width: 850,
-                height: 510
-            },
-            jsPDF: { 
-                unit: 'mm',
-                format: [90, 54],
-                orientation: 'landscape'
-            },
-            pagebreak: { mode: 'avoid-all' }
-        };
-        
-        // Generate PDF
-        const worker = html2pdf().set(opt).from(element);
-        await worker.save();
-        
-        console.log('✅ PDF generated and downloaded successfully!');
-        
-        // Restore button
-        downloadBtn.disabled = false;
-        downloadBtn.innerHTML = originalText;
-        
-        // Show success notification
-        showNotification('ID Card PDF downloaded successfully!', 'success');
-        
-    } catch (error) {
-        console.error('❌ Error downloading ID card:', error);
-        console.error('Error stack:', error.stack);
-        
-        alert('❌ Error downloading ID card: ' + error.message + '\n\nPlease check:\n1. Images are loading properly\n2. Browser console for detailed errors\n3. Try again after refreshing the page');
-        
-        // Restore button if error occurs
-        if (event && event.target) {
-            event.target.disabled = false;
-            event.target.innerHTML = '<i class="fas fa-download me-2"></i>Download as PDF';
-        }
-    }
+
+
+async function downloadIDCardAsImage(name) {
+    const element = document.getElementById("idCardContent");
+
+    const canvas = await html2canvas(element, {
+        scale: 2,
+        width: 720,
+        height: 1280,
+        backgroundColor: "#ffffff",
+        useCORS: true
+    });
+
+    const url = canvas.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ID_Card_${name}.png`;
+    link.click();
 }
+
+
+// Download ID Card as PDF (landscape)
+// async function downloadIDCard(name, phone, photo, personCode) {
+//     try {
+//         const element = document.getElementById('idCardContent');
+
+//         if (!element) {
+//             alert('ID Card content not found. Please try again.');
+//             return;
+//         }
+
+//         // Show loading message
+//         const downloadBtn = event.target;
+//         const originalText = downloadBtn.innerHTML;
+//         downloadBtn.disabled = true;
+//         downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
+
+//         console.log('🎨 Starting PDF generation...');
+//         console.log('📋 Name:', name, 'Phone:', phone, 'Partner ID:', personCode);
+
+//         // Convert all images to base64 to avoid CORS issues
+//         const images = element.querySelectorAll('img');
+//         console.log('🖼️ Found', images.length, 'images to process');
+
+//         for (let i = 0; i < images.length; i++) {
+//             const img = images[i];
+//             console.log(`🔄 Processing image ${i + 1}:`, img.src.substring(0, 50) + '...');
+
+//             try {
+//                 // If it's already base64, skip
+//                 if (img.src.startsWith('data:')) {
+//                     console.log(`✓ Image ${i + 1} already base64`);
+//                     continue;
+//                 }
+
+//                 // Convert to base64
+//                 const canvas = document.createElement('canvas');
+//                 const ctx = canvas.getContext('2d');
+
+//                 // Wait for image to load
+//                 await new Promise((resolve, reject) => {
+//                     if (img.complete && img.naturalWidth > 0) {
+//                         resolve();
+//                     } else {
+//                         img.onload = () => resolve();
+//                         img.onerror = () => reject(new Error('Image failed to load'));
+//                         setTimeout(() => reject(new Error('Image load timeout')), 5000);
+//                     }
+//                 });
+
+//                 canvas.width = img.naturalWidth || img.width;
+//                 canvas.height = img.naturalHeight || img.height;
+//                 ctx.drawImage(img, 0, 0);
+
+//                 // Convert to base64
+//                 const base64 = canvas.toDataURL('image/jpeg', 0.95);
+//                 img.src = base64;
+//                 console.log(`✅ Image ${i + 1} converted to base64 (${base64.length} chars)`);
+
+//             } catch (imgError) {
+//                 console.warn(`⚠️ Failed to convert image ${i + 1}:`, imgError.message);
+//                 // Use placeholder for failed images
+//                 img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4=';
+//             }
+//         }
+
+//         console.log('⏳ Waiting for DOM to settle...');
+//         await new Promise(resolve => setTimeout(resolve, 1500));
+
+//         console.log('📄 Generating PDF with html2pdf...');
+
+//         // Standard ID card size: 90mm × 54mm
+//         // At 300 DPI: 1063px × 638px
+//         // We'll use half scale for reasonable file size: 850px × 510px
+//         const opt = {
+//             margin: 0,
+//             filename: `ID_Card_${name.replace(/\s+/g, '_')}_${Date.now()}.pdf`,
+//             image: { type: 'jpeg', quality: 1.0 },
+//             html2canvas: { 
+//                 scale: 2,
+//                 useCORS: true,
+//                 allowTaint: true,
+//                 logging: true,
+//                 letterRendering: true,
+//                 imageTimeout: 0,
+//                 backgroundColor: null,
+//                 removeContainer: true,
+//                 scrollY: 0,
+//                 scrollX: 0,
+//                 width: 850,
+//                 height: 510
+//             },
+//             jsPDF: { 
+//                 unit: 'mm',
+//                 format: [90, 54],
+//                 orientation: 'landscape'
+//             },
+//             pagebreak: { mode: 'avoid-all' }
+//         };
+
+//         // Generate PDF
+//         const worker = html2pdf().set(opt).from(element);
+//         await worker.save();
+
+//         console.log('✅ PDF generated and downloaded successfully!');
+
+//         // Restore button
+//         downloadBtn.disabled = false;
+//         downloadBtn.innerHTML = originalText;
+
+//         // Show success notification
+//         showNotification('ID Card PDF downloaded successfully!', 'success');
+
+//     } catch (error) {
+//         console.error('❌ Error downloading ID card:', error);
+//         console.error('Error stack:', error.stack);
+
+//         alert('❌ Error downloading ID card: ' + error.message + '\n\nPlease check:\n1. Images are loading properly\n2. Browser console for detailed errors\n3. Try again after refreshing the page');
+
+//         // Restore button if error occurs
+//         if (event && event.target) {
+//             event.target.disabled = false;
+//             event.target.innerHTML = '<i class="fas fa-download me-2"></i>Download as PDF';
+//         }
+//     }
+// }
 
 // Phone number search for referral dropdown
 let searchTimeout;
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const introducedByInput = document.getElementById('introducedBy');
     const dropdown = document.getElementById('referralDropdown');
-    
+
     if (introducedByInput && dropdown) {
         // Hide dropdown when clicking outside
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             if (!introducedByInput.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.style.display = 'none';
             }
         });
-        
+
         // Search as user types
-        introducedByInput.addEventListener('input', async function(e) {
+        introducedByInput.addEventListener('input', async function (e) {
             const searchTerm = e.target.value.trim();
-            
+
             // Clear previous timeout
             clearTimeout(searchTimeout);
-            
+
             // Hide dropdown if search is empty or too short
             if (searchTerm.length < 2) {
                 dropdown.style.display = 'none';
                 return;
             }
-            
+
             // Debounce search
             searchTimeout = setTimeout(async () => {
                 try {
@@ -2743,25 +3398,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         method: 'GET',
                         headers: { 'Content-Type': 'application/json' }
                     });
-                    
+
                     if (!response.ok) {
                         console.error('Failed to fetch users');
                         return;
                     }
-                    
+
                     const data = await response.json();
                     const users = data.users || [];
-                    
+
                     // Filter users whose phone contains the search term
-                    const matchingUsers = users.filter(user => 
+                    const matchingUsers = users.filter(user =>
                         user.phone && user.phone.includes(searchTerm)
                     ).slice(0, 10); // Limit to 10 results
-                    
+
                     if (matchingUsers.length === 0) {
                         dropdown.style.display = 'none';
                         return;
                     }
-                    
+
                     // Build dropdown HTML
                     const dropdownHTML = matchingUsers.map(user => `
                         <a href="#" class="dropdown-item py-2" onclick="selectReferrer('${user.phone}', '${user.name || 'Unknown'}'); return false;">
@@ -2771,12 +3426,12 @@ document.addEventListener('DOMContentLoaded', function() {
                             </div>
                         </a>
                     `).join('');
-                    
+
                     dropdown.innerHTML = dropdownHTML;
                     dropdown.style.display = 'block';
                     dropdown.style.position = 'absolute';
                     dropdown.style.zIndex = '1000';
-                    
+
                 } catch (error) {
                     console.error('Error searching users:', error);
                     dropdown.style.display = 'none';
@@ -2790,12 +3445,12 @@ document.addEventListener('DOMContentLoaded', function() {
 function selectReferrer(phone, name) {
     const introducedByInput = document.getElementById('introducedBy');
     const dropdown = document.getElementById('referralDropdown');
-    
+
     if (introducedByInput) {
         introducedByInput.value = phone;
         introducedByInput.setAttribute('data-referrer-name', name);
     }
-    
+
     if (dropdown) {
         dropdown.style.display = 'none';
     }
