@@ -3055,7 +3055,7 @@ async function showIDCard(name, phone, photo,positionLocation) {
 
                                     <!-- LOGO -->
                                     <div style="text-align:center; margin-bottom:25px;">
-                                        <img src="images/logo.png" style="width:165px;">
+                                        <img src="images/mainlogo.png" style="width:165px;">
                                     </div>
 
                                     <!-- APP BENEFITS -->
