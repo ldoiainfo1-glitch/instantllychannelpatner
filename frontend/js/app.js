@@ -53,29 +53,6 @@ function setupEventListeners() {
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
 
-    // Real-time search as you type
-    let searchTimeout;
-    const searchNameInput = document.getElementById('searchName');
-    const searchPhoneInput = document.getElementById('searchPhone');
-    
-    if (searchNameInput) {
-        searchNameInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                handleLiveSearch();
-            }, 300); // Debounce 300ms
-        });
-    }
-    
-    if (searchPhoneInput) {
-        searchPhoneInput.addEventListener('input', () => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                handleLiveSearch();
-            }, 300); // Debounce 300ms
-        });
-    }
-
     // Setup searchable filters
     setupSearchableFilters();
 
@@ -649,38 +626,26 @@ function createPositionRow(position) {
         nameCell = '-';
     }
 
-    // Determine Area Head For based on Position ID (what level they are actually head of)
+    // Determine Area Head For - show most specific location area name (district, tehsil, etc.)
     let areaHeadFor = '-';
-    if (position._id) {
-        const posId = position._id.toLowerCase();
-        
-        // Determine level from position ID
-        if (posId.includes('village-head')) {
-            areaHeadFor = position.location?.village?.toUpperCase() || '-';
-        } else if (posId.includes('pincode-head')) {
-            areaHeadFor = position.location?.pincode || '-';
-        } else if (posId.includes('tehsil-head')) {
-            areaHeadFor = position.location?.tehsil?.toUpperCase() || '-';
-        } else if (posId.includes('district-head')) {
-            areaHeadFor = position.location?.district?.toUpperCase() || '-';
-        } else if (posId.includes('division-head')) {
-            areaHeadFor = position.location?.division?.toUpperCase() || '-';
-        } else if (posId.includes('state-head')) {
-            areaHeadFor = position.location?.state?.toUpperCase() || '-';
-        } else if (posId.includes('zone-head')) {
-            areaHeadFor = position.location?.zone?.toUpperCase() || '-';
-        } else if (posId.includes('president')) {
-            areaHeadFor = 'INDIA';
-        } else {
-            // Fallback: use most specific location
-            if (position.location?.village) areaHeadFor = position.location.village.toUpperCase();
-            else if (position.location?.pincode) areaHeadFor = position.location.pincode;
-            else if (position.location?.tehsil) areaHeadFor = position.location.tehsil.toUpperCase();
-            else if (position.location?.district) areaHeadFor = position.location.district.toUpperCase();
-            else if (position.location?.division) areaHeadFor = position.location.division.toUpperCase();
-            else if (position.location?.state) areaHeadFor = position.location.state.toUpperCase();
-            else if (position.location?.zone) areaHeadFor = position.location.zone.toUpperCase();
-            else if (position.location?.country) areaHeadFor = position.location.country.toUpperCase();
+    if (position.location) {
+        // Prioritize most specific location first (village > pincode > tehsil > district > division > state > zone > country)
+        if (position.location.village) {
+            areaHeadFor = position.location.village.toUpperCase();
+        } else if (position.location.pincode) {
+            areaHeadFor = position.location.pincode;
+        } else if (position.location.tehsil) {
+            areaHeadFor = position.location.tehsil.toUpperCase();
+        } else if (position.location.district) {
+            areaHeadFor = position.location.district.toUpperCase();
+        } else if (position.location.division) {
+            areaHeadFor = position.location.division.toUpperCase();
+        } else if (position.location.state) {
+            areaHeadFor = position.location.state.toUpperCase();
+        } else if (position.location.zone) {
+            areaHeadFor = position.location.zone.toUpperCase();
+        } else if (position.location.country) {
+            areaHeadFor = position.location.country.toUpperCase();
         }
     }
 
@@ -909,49 +874,6 @@ async function handleSearch() {
     }
 }
 
-// Handle live search as user types (uses current loaded positions)
-function handleLiveSearch() {
-    const searchName = document.getElementById('searchName').value.toLowerCase().trim();
-    const searchPhone = document.getElementById('searchPhone').value.trim();
-
-    // If both search fields are empty, show all current positions
-    if (!searchName && !searchPhone) {
-        displayPositions(currentPositions);
-        return;
-    }
-
-    // Filter current positions based on search terms
-    const filteredPositions = currentPositions.filter(position => {
-        // Skip positions without applicant details (Available positions)
-        if (!position.applicantDetails) {
-            return false;
-        }
-
-        let matchesName = true;
-        let matchesPhone = true;
-
-        // Name search - match if name contains the search term
-        if (searchName) {
-            const applicantName = position.applicantDetails.name || '';
-            matchesName = applicantName.toLowerCase().includes(searchName);
-        }
-
-        // Phone search - match if phone contains the search term
-        if (searchPhone) {
-            const applicantPhone = position.applicantDetails.phone || '';
-            matchesPhone = applicantPhone.includes(searchPhone);
-        }
-
-        // Return true only if both conditions match (AND logic)
-        return matchesName && matchesPhone;
-    });
-
-    // Display filtered results
-    displayPositions(filteredPositions);
-    
-    console.log(`🔍 Live search: Found ${filteredPositions.length} matches (Name: "${searchName}", Phone: "${searchPhone}")`);
-}
-
 // Clear all filters
 function clearFilters() {
     // Clear search inputs
@@ -993,7 +915,7 @@ function clearFilters() {
     showNotification('Filters cleared', 'info');
 }
 
-// Open application modal for applying to positions
+// Open application modal for applying to positions .
 function openApplicationModal(positionId, positionTitle, location) {
     console.log('🎯 Opening application modal for position ID:', positionId, 'Title:', positionTitle);
 
@@ -1795,10 +1717,100 @@ function setupSearchableFilters() {
 
 // Get filtered data based on parent filter selections (cascading filters)
 function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
-    // ALWAYS show ALL available data from the location database
-    // This ensures users can see and select any location, not just those with current positions
-    console.log(`✅ Showing ALL ${allData.length} options for ${dataKey}`);
-    return allData;
+    // Get current filter values from parent filters
+    const selectedZone = document.getElementById('filterZone').value;
+    const selectedState = document.getElementById('filterState').value;
+    const selectedDivision = document.getElementById('filterDivision').value;
+    const selectedDistrict = document.getElementById('filterDistrict').value;
+    const selectedTehsil = document.getElementById('filterTehsil').value;
+    const selectedPincode = document.getElementById('filterPincode').value;
+
+    // If no positions data loaded yet, return all data
+    if (!currentPositions || currentPositions.length === 0) {
+        console.log('⚠️ No positions loaded yet, showing all options for', dataKey);
+        return allData;
+    }
+
+    // Filter positions based on parent selections
+    let filteredPositions = currentPositions.filter(position => {
+        const loc = position.location;
+        if (!loc) return false;
+
+        // Apply cascading filter logic based on which filter we're showing
+        if (inputId === 'filterState') {
+            // State filter: only show states from selected zone
+            return !selectedZone || loc.zone === selectedZone;
+        } else if (inputId === 'filterDivision') {
+            // Division filter: filter by zone and state
+            return (!selectedZone || loc.zone === selectedZone) &&
+                (!selectedState || loc.state === selectedState);
+        } else if (inputId === 'filterDistrict') {
+            // District filter: filter by zone, state, and division
+            return (!selectedZone || loc.zone === selectedZone) &&
+                (!selectedState || loc.state === selectedState) &&
+                (!selectedDivision || loc.division === selectedDivision);
+        } else if (inputId === 'filterTehsil') {
+            // Tehsil filter: filter by zone, state, division, and district
+            return (!selectedZone || loc.zone === selectedZone) &&
+                (!selectedState || loc.state === selectedState) &&
+                (!selectedDivision || loc.division === selectedDivision) &&
+                (!selectedDistrict || loc.district === selectedDistrict);
+        } else if (inputId === 'filterPincode') {
+            // Pincode filter: filter by all parent filters
+            return (!selectedZone || loc.zone === selectedZone) &&
+                (!selectedState || loc.state === selectedState) &&
+                (!selectedDivision || loc.division === selectedDivision) &&
+                (!selectedDistrict || loc.district === selectedDistrict) &&
+                (!selectedTehsil || loc.tehsil === selectedTehsil);
+        } else if (inputId === 'filterVillage') {
+            // Village filter: filter by all parent filters including pincode
+            return (!selectedZone || loc.zone === selectedZone) &&
+                (!selectedState || loc.state === selectedState) &&
+                (!selectedDivision || loc.division === selectedDivision) &&
+                (!selectedDistrict || loc.district === selectedDistrict) &&
+                (!selectedTehsil || loc.tehsil === selectedTehsil) &&
+                (!selectedPincode || loc.pincode === selectedPincode);
+        }
+
+        return true; // Zone filter shows all zones
+    });
+
+    // Extract unique values for the current filter from filtered positions
+    const uniqueValues = new Set();
+    const locationFieldMap = {
+        'filterZone': 'zone',
+        'filterState': 'state',
+        'filterDivision': 'division',
+        'filterDistrict': 'district',
+        'filterTehsil': 'tehsil',
+        'filterPincode': 'pincode',
+        'filterVillage': 'village'
+    };
+
+    const fieldName = locationFieldMap[inputId];
+    if (fieldName) {
+        filteredPositions.forEach(position => {
+            const value = position.location?.[fieldName];
+            if (value) {
+                uniqueValues.add(value);
+            }
+        });
+    }
+
+    // Convert Set to Array and sort
+    const filteredData = Array.from(uniqueValues).sort();
+
+    console.log(`🔍 Cascading filter for ${inputId}: ${filteredData.length} options (from ${filteredPositions.length} matching positions)`);
+
+    // Important: If filtering resulted in matches but no unique values for this specific field,
+    // that means the data exists but this field might not be populated for those positions
+    // In that case, return all data as fallback
+    if (filteredPositions.length > 0 && filteredData.length === 0) {
+        console.log(`  ⚠️ ${filteredPositions.length} positions match parents but have no ${fieldName} data, showing all options`);
+        return allData;
+    }
+
+    return filteredData.length > 0 ? filteredData : allData;
 }
 
 // Show filter dropdown with search functionality
@@ -1857,8 +1869,8 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     // Clear previous search
     searchInput.value = '';
 
-    // Initial display - show ALL items (with scrollable container)
-    displayFilterOptions(optionsContainer, data, data, inputId, dropdownId);
+    // Initial display - show first 50 items for performance
+    displayFilterOptions(optionsContainer, data.slice(0, 50), data, inputId, dropdownId);
 
     // Setup search functionality (remove old listeners first)
     const newSearchInput = searchInput.cloneNode(true);
@@ -1900,8 +1912,8 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
             );
             displayFilterOptions(optionsContainer, filteredData, data, inputId, dropdownId);
         } else {
-            // Show ALL items when no search term
-            displayFilterOptions(optionsContainer, data, data, inputId, dropdownId);
+            // Show first 50 when no search term
+            displayFilterOptions(optionsContainer, data.slice(0, 50), data, inputId, dropdownId);
         }
     });
 
@@ -1919,9 +1931,9 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
         return;
     }
 
-    // Show ALL items - dropdown has scrolling and search for performance
-    const limitedData = displayData;
-    const hasMore = false;
+    // Limit to 100 items for performance
+    const limitedData = displayData.slice(0, 100);
+    const hasMore = displayData.length > 100;
 
     container.innerHTML = limitedData.map(item =>
         `<div class="filter-dropdown-item" data-value="${item}">${item}</div>`
@@ -2934,27 +2946,25 @@ function fallbackCopyTextToClipboard(text) {
 async function showIDCard(name, phone, photo,positionLocation) {
     try {
 
-        // Determine which field is the most specific (area head for) - the one to highlight
-        function getAreaHeadLevel(loc) {
-            if (loc.village)  return "Village";
-            if (loc.pincode)  return "Pincode";
-            if (loc.tehsil)   return "Tehsil";
-            if (loc.district) return "District";
-            if (loc.division) return "Div";
-            if (loc.state)    return "State";
-            if (loc.zone)     return "Zone";
-            return "Country";
+        function getAreaHighlight(loc) {
+            if (loc.village)  return { level: "Village", value: loc.village };
+            if (loc.pincode)  return { level: "Pincode", value: loc.pincode };
+            if (loc.tehsil)   return { level: "Tehsil", value: loc.tehsil };
+            if (loc.district) return { level: "District", value: loc.district };
+            if (loc.division) return { level: "Division", value: loc.division };
+            if (loc.state)    return { level: "State", value: loc.state };
+            if (loc.zone)     return { level: "Zone", value: loc.zone };
+            return { level: "Country", value: loc.country || "India" };
         }
 
-        const highlightLevel = getAreaHeadLevel(positionLocation);
+        const highlight = getAreaHighlight(positionLocation);
 
-        // Prepare location data - show complete path with proper formatting
         const loc = {
-            country: "India", // Always India
+            country: positionLocation.country || "India",
             zone: positionLocation.zone || "",
-            state: positionLocation.state ? positionLocation.state.toUpperCase() : "",
+            state: positionLocation.state || "",
             division: positionLocation.division || "",
-            district: positionLocation.district ? positionLocation.district.toUpperCase() : "",
+            district: positionLocation.district || "",
             tehsil: positionLocation.tehsil || "",
             pincode: positionLocation.pincode || "",
             village: positionLocation.village || ""
@@ -2962,11 +2972,11 @@ async function showIDCard(name, phone, photo,positionLocation) {
 
         let areaListHTML = "";
 
-        // Function to create a row - ALWAYS show the field
-        // Highlight only the most specific level (area head for)
         function makeRow(label, value) {
-            // HIGHLIGHT BOX for the area head level (most specific filled field)
-            if (highlightLevel === label) {
+            if (!value) return "";
+
+            // REPLACE THIS ROW WITH HIGHLIGHT BOX
+            if (highlight.level === label) {
                 return `
                 <div style="
                     background:white;
@@ -2976,19 +2986,19 @@ async function showIDCard(name, phone, photo,positionLocation) {
                     font-weight:700;
                     margin:8px 0 10px 0;
                 ">
-                    <b>${label}:</b> ${value}
+                    <b>${highlight.level}:</b> ${highlight.value}
                 </div>`;
             }
 
-            // Normal row - show label and value (or empty if no value)
+            // Otherwise normal row
             return `<div style="margin-bottom:6px;"><b>${label}:</b> ${value}</div>`;
         }
 
-        // ALWAYS show all 8 fields in order
+        // Maintain exact order
         areaListHTML += makeRow("Country", loc.country);
         areaListHTML += makeRow("Zone", loc.zone);
         areaListHTML += makeRow("State", loc.state);
-        areaListHTML += makeRow("Div", loc.division);
+        areaListHTML += makeRow("Division", loc.division);
         areaListHTML += makeRow("District", loc.district);
         areaListHTML += makeRow("Tehsil", loc.tehsil);
         areaListHTML += makeRow("Pincode", loc.pincode);

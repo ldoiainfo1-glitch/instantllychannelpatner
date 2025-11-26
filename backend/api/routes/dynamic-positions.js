@@ -3,7 +3,7 @@ const router = express.Router();
 const Location = require('../models/Location');
 const Application = require('../models/Application');
 
-// Get available positions dynamically based on location filters
+// Get available positions dynamically based on location filters.
 router.get('/', async (req, res) => {
   try {
     const { 
@@ -225,53 +225,11 @@ router.get('/test-position-id', (req, res) => {
 // Helper function to create position with application status check
 async function createPositionWithApplicationStatus(sNo, post, designation, location) {
   try {
-    // ENRICHMENT: Fetch complete location hierarchy from Location model
-    let enrichedLocation = { ...location };
-    
-    // Only enrich if we have a specific location field (not just country)
-    if (location.village || location.pincode || location.tehsil || location.district || location.division || location.state || location.zone) {
-      try {
-        // Build query to find location with most specific match
-        let query = {};
-        if (location.village) query.village = location.village;
-        else if (location.pincode) query.pincode = location.pincode;
-        else if (location.tehsil) query.tehsil = location.tehsil;
-        else if (location.district) query.district = location.district;
-        else if (location.division) query.division = location.division;
-        else if (location.state) query.state = location.state;
-        else if (location.zone) query.zone = location.zone;
-        
-        // Find location document with complete hierarchy
-        const locationDoc = await Location.findOne(query);
-        
-        if (locationDoc) {
-          console.log('📍 Found complete location hierarchy for', designation);
-          // Merge with enriched parent data
-          enrichedLocation = {
-            country: locationDoc.country || 'India',
-            zone: locationDoc.zone || location.zone || '',
-            state: locationDoc.state || location.state || '',
-            division: locationDoc.division || location.division || '',
-            district: locationDoc.district || location.district || '',
-            tehsil: locationDoc.tehsil || location.tehsil || '',
-            pincode: locationDoc.pincode || location.pincode || '',
-            village: locationDoc.village || location.village || ''
-          };
-          console.log('✅ Enriched location:', enrichedLocation);
-        } else {
-          console.log('⚠️ No location document found, using provided location');
-        }
-      } catch (enrichError) {
-        console.error('⚠️ Error enriching location:', enrichError);
-        // Continue with original location if enrichment fails
-      }
-    }
-    
-    // Use enriched location for position ID and display
-    const positionId = generatePositionId(enrichedLocation, designation);
+    // Create a unique, consistent position ID based on location hierarchy
+    const positionId = generatePositionId(location, designation);
     
     console.log('🔍 Generated position ID for', designation, ':', positionId);
-    console.log('🔍 Location used:', JSON.stringify(enrichedLocation));
+    console.log('🔍 Location used:', JSON.stringify(location));
     
     // Validate that we got a proper position ID
     if (!positionId || positionId.includes('_1761') || positionId.startsWith('pos_1_')) {
@@ -335,7 +293,7 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       sNo,
       post,
       designation,
-      location: enrichedLocation, // Use enriched location with complete hierarchy
+      location,
       contribution: 10000,
       credits: 60000,
       isTemplate: true, // Mark as dynamically generated
@@ -402,7 +360,7 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       sNo,
       post,
       designation,
-      location: location,
+      location,
       contribution: 10000,
       credits: 60000,
       status: 'Available',
@@ -413,68 +371,28 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
 }
 
 // Generate consistent position ID based on location hierarchy
-// IMPORTANT: Only include location fields UP TO the level they are head of
 function generatePositionId(location, designation) {
   const parts = [];
   
-  // Determine position type and what level they are head of
-  let positionType = 'president';
-  let stopAtLevel = null;
-  
-  // Determine the most specific level (what they are actually head of)
-  if (location.village) {
-    positionType = 'village-head';
-    stopAtLevel = 'village';
-  } else if (location.pincode) {
-    positionType = 'pincode-head';
-    stopAtLevel = 'pincode';
-  } else if (location.tehsil) {
-    positionType = 'tehsil-head';
-    stopAtLevel = 'tehsil';
-  } else if (location.district) {
-    positionType = 'district-head';
-    stopAtLevel = 'district';
-  } else if (location.division) {
-    positionType = 'division-head';
-    stopAtLevel = 'division';
-  } else if (location.state) {
-    positionType = 'state-head';
-    stopAtLevel = 'state';
-  } else if (location.zone) {
-    positionType = 'zone-head';
-    stopAtLevel = 'zone';
-  }
-  
-  // Build hierarchical position ID - ONLY up to the level they are head of
+  // Build hierarchical position ID
   if (location.country) parts.push(location.country.toLowerCase().replace(/\s+/g, '-'));
-  if (location.zone) {
-    parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
-    if (stopAtLevel === 'zone') return `pos_${positionType}_${parts.join('_')}`;
-  }
-  if (location.state) {
-    parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
-    if (stopAtLevel === 'state') return `pos_${positionType}_${parts.join('_')}`;
-  }
-  if (location.division) {
-    parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
-    if (stopAtLevel === 'division') return `pos_${positionType}_${parts.join('_')}`;
-  }
-  if (location.district) {
-    parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
-    if (stopAtLevel === 'district') return `pos_${positionType}_${parts.join('_')}`;
-  }
-  if (location.tehsil) {
-    parts.push(location.tehsil.toLowerCase().replace(/\s+/g, '-'));
-    if (stopAtLevel === 'tehsil') return `pos_${positionType}_${parts.join('_')}`;
-  }
-  if (location.pincode) {
-    parts.push(location.pincode.toLowerCase().replace(/\s+/g, '-'));
-    if (stopAtLevel === 'pincode') return `pos_${positionType}_${parts.join('_')}`;
-  }
-  if (location.village) {
-    parts.push(location.village.toLowerCase().replace(/\s+/g, '-'));
-    if (stopAtLevel === 'village') return `pos_${positionType}_${parts.join('_')}`;
-  }
+  if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+  if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
+  if (location.division) parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
+  if (location.district) parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
+  if (location.tehsil) parts.push(location.tehsil.toLowerCase().replace(/\s+/g, '-'));
+  if (location.pincode) parts.push(location.pincode.toLowerCase().replace(/\s+/g, '-'));
+  if (location.village) parts.push(location.village.toLowerCase().replace(/\s+/g, '-'));
+  
+  // Determine position type
+  let positionType = 'president';
+  if (location.village) positionType = 'village-head';
+  else if (location.pincode) positionType = 'pincode-head';
+  else if (location.tehsil) positionType = 'tehsil-head';
+  else if (location.district) positionType = 'district-head';
+  else if (location.division) positionType = 'division-head';
+  else if (location.state) positionType = 'state-head';
+  else if (location.zone) positionType = 'zone-head';
   
   // Create unique position ID: pos_type_location-hierarchy
   const locationPath = parts.join('_');
