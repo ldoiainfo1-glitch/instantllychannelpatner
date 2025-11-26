@@ -242,8 +242,9 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       positionId: positionId 
     });
     
-    // If no application found with position ID, try legacy location-based matching (for old applications)
-    if (!existingApplication) {
+    // DISABLED legacy matching - it causes wrong people to show in positions
+    // For example, zone-head would appear in district-head positions
+    if (false && !existingApplication) {
       let matchQuery = {
         'location.country': location.country || 'India'
       };
