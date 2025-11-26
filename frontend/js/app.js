@@ -1869,8 +1869,8 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     // Clear previous search
     searchInput.value = '';
 
-    // Initial display - show first 50 items for performance
-    displayFilterOptions(optionsContainer, data.slice(0, 50), data, inputId, dropdownId);
+    // Initial display - show ALL items (with scrollable container)
+    displayFilterOptions(optionsContainer, data, data, inputId, dropdownId);
 
     // Setup search functionality (remove old listeners first)
     const newSearchInput = searchInput.cloneNode(true);
@@ -1912,8 +1912,8 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
             );
             displayFilterOptions(optionsContainer, filteredData, data, inputId, dropdownId);
         } else {
-            // Show first 50 when no search term
-            displayFilterOptions(optionsContainer, data.slice(0, 50), data, inputId, dropdownId);
+            // Show ALL items when no search term
+            displayFilterOptions(optionsContainer, data, data, inputId, dropdownId);
         }
     });
 
@@ -1931,9 +1931,9 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
         return;
     }
 
-    // Limit to 100 items for performance
-    const limitedData = displayData.slice(0, 100);
-    const hasMore = displayData.length > 100;
+    // Show ALL items - dropdown has scrolling and search for performance
+    const limitedData = displayData;
+    const hasMore = false;
 
     container.innerHTML = limitedData.map(item =>
         `<div class="filter-dropdown-item" data-value="${item}">${item}</div>`
