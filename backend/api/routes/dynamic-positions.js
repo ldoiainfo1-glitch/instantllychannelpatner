@@ -413,28 +413,68 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
 }
 
 // Generate consistent position ID based on location hierarchy
+// IMPORTANT: Only include location fields UP TO the level they are head of
 function generatePositionId(location, designation) {
   const parts = [];
   
-  // Build hierarchical position ID
-  if (location.country) parts.push(location.country.toLowerCase().replace(/\s+/g, '-'));
-  if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
-  if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
-  if (location.division) parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
-  if (location.district) parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
-  if (location.tehsil) parts.push(location.tehsil.toLowerCase().replace(/\s+/g, '-'));
-  if (location.pincode) parts.push(location.pincode.toLowerCase().replace(/\s+/g, '-'));
-  if (location.village) parts.push(location.village.toLowerCase().replace(/\s+/g, '-'));
-  
-  // Determine position type
+  // Determine position type and what level they are head of
   let positionType = 'president';
-  if (location.village) positionType = 'village-head';
-  else if (location.pincode) positionType = 'pincode-head';
-  else if (location.tehsil) positionType = 'tehsil-head';
-  else if (location.district) positionType = 'district-head';
-  else if (location.division) positionType = 'division-head';
-  else if (location.state) positionType = 'state-head';
-  else if (location.zone) positionType = 'zone-head';
+  let stopAtLevel = null;
+  
+  // Determine the most specific level (what they are actually head of)
+  if (location.village) {
+    positionType = 'village-head';
+    stopAtLevel = 'village';
+  } else if (location.pincode) {
+    positionType = 'pincode-head';
+    stopAtLevel = 'pincode';
+  } else if (location.tehsil) {
+    positionType = 'tehsil-head';
+    stopAtLevel = 'tehsil';
+  } else if (location.district) {
+    positionType = 'district-head';
+    stopAtLevel = 'district';
+  } else if (location.division) {
+    positionType = 'division-head';
+    stopAtLevel = 'division';
+  } else if (location.state) {
+    positionType = 'state-head';
+    stopAtLevel = 'state';
+  } else if (location.zone) {
+    positionType = 'zone-head';
+    stopAtLevel = 'zone';
+  }
+  
+  // Build hierarchical position ID - ONLY up to the level they are head of
+  if (location.country) parts.push(location.country.toLowerCase().replace(/\s+/g, '-'));
+  if (location.zone) {
+    parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+    if (stopAtLevel === 'zone') return `pos_${positionType}_${parts.join('_')}`;
+  }
+  if (location.state) {
+    parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
+    if (stopAtLevel === 'state') return `pos_${positionType}_${parts.join('_')}`;
+  }
+  if (location.division) {
+    parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
+    if (stopAtLevel === 'division') return `pos_${positionType}_${parts.join('_')}`;
+  }
+  if (location.district) {
+    parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
+    if (stopAtLevel === 'district') return `pos_${positionType}_${parts.join('_')}`;
+  }
+  if (location.tehsil) {
+    parts.push(location.tehsil.toLowerCase().replace(/\s+/g, '-'));
+    if (stopAtLevel === 'tehsil') return `pos_${positionType}_${parts.join('_')}`;
+  }
+  if (location.pincode) {
+    parts.push(location.pincode.toLowerCase().replace(/\s+/g, '-'));
+    if (stopAtLevel === 'pincode') return `pos_${positionType}_${parts.join('_')}`;
+  }
+  if (location.village) {
+    parts.push(location.village.toLowerCase().replace(/\s+/g, '-'));
+    if (stopAtLevel === 'village') return `pos_${positionType}_${parts.join('_')}`;
+  }
   
   // Create unique position ID: pos_type_location-hierarchy
   const locationPath = parts.join('_');

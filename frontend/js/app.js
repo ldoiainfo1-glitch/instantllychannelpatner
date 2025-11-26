@@ -649,26 +649,38 @@ function createPositionRow(position) {
         nameCell = '-';
     }
 
-    // Determine Area Head For - show most specific location area name (district, tehsil, etc.)
+    // Determine Area Head For based on Position ID (what level they are actually head of)
     let areaHeadFor = '-';
-    if (position.location) {
-        // Prioritize most specific location first (village > pincode > tehsil > district > division > state > zone > country)
-        if (position.location.village) {
-            areaHeadFor = position.location.village.toUpperCase();
-        } else if (position.location.pincode) {
-            areaHeadFor = position.location.pincode;
-        } else if (position.location.tehsil) {
-            areaHeadFor = position.location.tehsil.toUpperCase();
-        } else if (position.location.district) {
-            areaHeadFor = position.location.district.toUpperCase();
-        } else if (position.location.division) {
-            areaHeadFor = position.location.division.toUpperCase();
-        } else if (position.location.state) {
-            areaHeadFor = position.location.state.toUpperCase();
-        } else if (position.location.zone) {
-            areaHeadFor = position.location.zone.toUpperCase();
-        } else if (position.location.country) {
-            areaHeadFor = position.location.country.toUpperCase();
+    if (position._id) {
+        const posId = position._id.toLowerCase();
+        
+        // Determine level from position ID
+        if (posId.includes('village-head')) {
+            areaHeadFor = position.location?.village?.toUpperCase() || '-';
+        } else if (posId.includes('pincode-head')) {
+            areaHeadFor = position.location?.pincode || '-';
+        } else if (posId.includes('tehsil-head')) {
+            areaHeadFor = position.location?.tehsil?.toUpperCase() || '-';
+        } else if (posId.includes('district-head')) {
+            areaHeadFor = position.location?.district?.toUpperCase() || '-';
+        } else if (posId.includes('division-head')) {
+            areaHeadFor = position.location?.division?.toUpperCase() || '-';
+        } else if (posId.includes('state-head')) {
+            areaHeadFor = position.location?.state?.toUpperCase() || '-';
+        } else if (posId.includes('zone-head')) {
+            areaHeadFor = position.location?.zone?.toUpperCase() || '-';
+        } else if (posId.includes('president')) {
+            areaHeadFor = 'INDIA';
+        } else {
+            // Fallback: use most specific location
+            if (position.location?.village) areaHeadFor = position.location.village.toUpperCase();
+            else if (position.location?.pincode) areaHeadFor = position.location.pincode;
+            else if (position.location?.tehsil) areaHeadFor = position.location.tehsil.toUpperCase();
+            else if (position.location?.district) areaHeadFor = position.location.district.toUpperCase();
+            else if (position.location?.division) areaHeadFor = position.location.division.toUpperCase();
+            else if (position.location?.state) areaHeadFor = position.location.state.toUpperCase();
+            else if (position.location?.zone) areaHeadFor = position.location.zone.toUpperCase();
+            else if (position.location?.country) areaHeadFor = position.location.country.toUpperCase();
         }
     }
 
