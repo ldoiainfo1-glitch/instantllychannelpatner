@@ -7,7 +7,34 @@ let locationData = {};
 let locationDataLoaded = false; // Track if location data is loaded
 let isAdmin = false;
 
-console.log('🚀 Instantly Channel Partner App - v1.0.2 - Frontend Ready');
+console.log('🚀 Instantly Channel Partner App - v1.0.3 - Cache Fix Applied');
+
+/**
+ * Utility function to fetch data with cache-busting
+ * Ensures fresh data is always loaded from backend
+ */
+function fetchWithCacheBusting(url, options = {}) {
+    // Add cache-busting timestamp to URL
+    const separator = url.includes('?') ? '&' : '?';
+    const cacheBustedUrl = `${url}${separator}_t=${Date.now()}`;
+    
+    // Add cache control headers
+    const defaultHeaders = {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache'
+    };
+    
+    const mergedOptions = {
+        ...options,
+        cache: 'no-store',
+        headers: {
+            ...defaultHeaders,
+            ...(options.headers || {})
+        }
+    };
+    
+    return fetch(cacheBustedUrl, mergedOptions);
+}
 
 // Store auth token
 let authToken = localStorage.getItem('authToken');
@@ -51,6 +78,7 @@ function setupEventListeners() {
 
     // Search and filters
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
+    document.getElementById('refreshBtn').addEventListener('click', refreshPositionsData);
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
 
     // Setup searchable filters
@@ -99,10 +127,10 @@ async function loadLocationData() {
     }
 
     try {
-        console.log('⚡ Loading location data in background...');
+        console.log('⚡ Loading location data with cache-busting...');
 
-        // Try new optimized endpoint first
-        let response = await fetch(`${API_BASE_URL}/locations/all`);
+        // Try new optimized endpoint first - with cache-busting
+        let response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all`);
 
         if (response.ok) {
             const data = await response.json();
@@ -119,16 +147,16 @@ async function loadLocationData() {
             };
         } else {
             // Fallback to individual endpoints if /all doesn't exist
-            console.log('⚠️ Using fallback: loading from individual endpoints...');
+            console.log('⚠️ Using fallback: loading from individual endpoints with cache-busting...');
 
             const [zonesRes, statesRes, divisionsRes, districtsRes, tehsilsRes, pincodesRes, villagesRes] = await Promise.all([
-                fetch(`${API_BASE_URL}/locations/zones`),
-                fetch(`${API_BASE_URL}/locations/states`),
-                fetch(`${API_BASE_URL}/locations/divisions`),
-                fetch(`${API_BASE_URL}/locations/districts`),
-                fetch(`${API_BASE_URL}/locations/tehsils`),
-                fetch(`${API_BASE_URL}/locations/pincodes`),
-                fetch(`${API_BASE_URL}/locations/villages`)
+                fetchWithCacheBusting(`${API_BASE_URL}/locations/zones`),
+                fetchWithCacheBusting(`${API_BASE_URL}/locations/states`),
+                fetchWithCacheBusting(`${API_BASE_URL}/locations/divisions`),
+                fetchWithCacheBusting(`${API_BASE_URL}/locations/districts`),
+                fetchWithCacheBusting(`${API_BASE_URL}/locations/tehsils`),
+                fetchWithCacheBusting(`${API_BASE_URL}/locations/pincodes`),
+                fetchWithCacheBusting(`${API_BASE_URL}/locations/villages`)
             ]);
 
             const [zones, states, divisions, districts, tehsils, pincodes, villages] = await Promise.all([
@@ -511,9 +539,18 @@ async function loadApplications() {
         if (pincode) params.append('pincode', pincode);
         if (village) params.append('village', village);
 
+        // Add cache-busting timestamp to force fresh data from backend
+        params.append('_t', Date.now());
+
         const url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
 
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            cache: 'no-store', // Don't cache this request
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -875,6 +912,41 @@ async function handleSearch() {
 }
 
 // Clear all filters
+// Refresh positions data - force reload from backend
+async function refreshPositionsData() {
+    try {
+        const refreshBtn = document.getElementById('refreshBtn');
+        const icon = refreshBtn.querySelector('i');
+        
+        // Show spinning animation
+        icon.classList.add('fa-spin');
+        refreshBtn.disabled = true;
+        
+        // Force reload location data (clear cache)
+        locationDataLoaded = false;
+        await loadLocationData();
+        
+        // Reload current positions
+        await loadFilteredData();
+        
+        showNotification('✅ Data refreshed successfully!', 'success');
+        
+        // Stop spinning after delay
+        setTimeout(() => {
+            icon.classList.remove('fa-spin');
+            refreshBtn.disabled = false;
+        }, 1000);
+    } catch (error) {
+        console.error('❌ Error refreshing data:', error);
+        showNotification('Error refreshing data: ' + error.message, 'error');
+        
+        const refreshBtn = document.getElementById('refreshBtn');
+        const icon = refreshBtn.querySelector('i');
+        icon.classList.remove('fa-spin');
+        refreshBtn.disabled = false;
+    }
+}
+
 function clearFilters() {
     // Clear search inputs
     document.getElementById('searchName').value = '';
@@ -2973,10 +3045,8 @@ async function showIDCard(name, phone, photo,positionLocation) {
         let areaListHTML = "";
 
         function makeRow(label, value) {
-            if (!value) return "";
-
-            // REPLACE THIS ROW WITH HIGHLIGHT BOX
-            if (highlight.level === label) {
+            // HIGHLIGHT BOX for the area head level (filled value)
+            if (value && highlight.level === label) {
                 return `
                 <div style="
                     background:white;
@@ -2986,19 +3056,19 @@ async function showIDCard(name, phone, photo,positionLocation) {
                     font-weight:700;
                     margin:8px 0 10px 0;
                 ">
-                    <b>${highlight.level}:</b> ${highlight.value}
+                    <b>${label}:</b> ${value}
                 </div>`;
             }
 
-            // Otherwise normal row
+            // ALWAYS show the row - even if empty
             return `<div style="margin-bottom:6px;"><b>${label}:</b> ${value}</div>`;
         }
 
-        // Maintain exact order
+        // ALWAYS show all 8 fields in order (filled or empty)
         areaListHTML += makeRow("Country", loc.country);
         areaListHTML += makeRow("Zone", loc.zone);
         areaListHTML += makeRow("State", loc.state);
-        areaListHTML += makeRow("Division", loc.division);
+        areaListHTML += makeRow("Div", loc.division);  // Changed to "Div"
         areaListHTML += makeRow("District", loc.district);
         areaListHTML += makeRow("Tehsil", loc.tehsil);
         areaListHTML += makeRow("Pincode", loc.pincode);
