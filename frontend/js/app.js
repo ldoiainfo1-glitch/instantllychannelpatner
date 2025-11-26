@@ -927,7 +927,7 @@ async function refreshPositionsData() {
         await loadLocationData();
         
         // Reload current positions
-        await loadFilteredData();
+        await loadApplications();
         
         showNotification('✅ Data refreshed successfully!', 'success');
         
