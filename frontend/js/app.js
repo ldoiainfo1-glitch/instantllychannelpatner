@@ -1783,100 +1783,10 @@ function setupSearchableFilters() {
 
 // Get filtered data based on parent filter selections (cascading filters)
 function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
-    // Get current filter values from parent filters
-    const selectedZone = document.getElementById('filterZone').value;
-    const selectedState = document.getElementById('filterState').value;
-    const selectedDivision = document.getElementById('filterDivision').value;
-    const selectedDistrict = document.getElementById('filterDistrict').value;
-    const selectedTehsil = document.getElementById('filterTehsil').value;
-    const selectedPincode = document.getElementById('filterPincode').value;
-
-    // If no positions data loaded yet, return all data
-    if (!currentPositions || currentPositions.length === 0) {
-        console.log('⚠️ No positions loaded yet, showing all options for', dataKey);
-        return allData;
-    }
-
-    // Filter positions based on parent selections
-    let filteredPositions = currentPositions.filter(position => {
-        const loc = position.location;
-        if (!loc) return false;
-
-        // Apply cascading filter logic based on which filter we're showing
-        if (inputId === 'filterState') {
-            // State filter: only show states from selected zone
-            return !selectedZone || loc.zone === selectedZone;
-        } else if (inputId === 'filterDivision') {
-            // Division filter: filter by zone and state
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState);
-        } else if (inputId === 'filterDistrict') {
-            // District filter: filter by zone, state, and division
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState) &&
-                (!selectedDivision || loc.division === selectedDivision);
-        } else if (inputId === 'filterTehsil') {
-            // Tehsil filter: filter by zone, state, division, and district
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState) &&
-                (!selectedDivision || loc.division === selectedDivision) &&
-                (!selectedDistrict || loc.district === selectedDistrict);
-        } else if (inputId === 'filterPincode') {
-            // Pincode filter: filter by all parent filters
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState) &&
-                (!selectedDivision || loc.division === selectedDivision) &&
-                (!selectedDistrict || loc.district === selectedDistrict) &&
-                (!selectedTehsil || loc.tehsil === selectedTehsil);
-        } else if (inputId === 'filterVillage') {
-            // Village filter: filter by all parent filters including pincode
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState) &&
-                (!selectedDivision || loc.division === selectedDivision) &&
-                (!selectedDistrict || loc.district === selectedDistrict) &&
-                (!selectedTehsil || loc.tehsil === selectedTehsil) &&
-                (!selectedPincode || loc.pincode === selectedPincode);
-        }
-
-        return true; // Zone filter shows all zones
-    });
-
-    // Extract unique values for the current filter from filtered positions
-    const uniqueValues = new Set();
-    const locationFieldMap = {
-        'filterZone': 'zone',
-        'filterState': 'state',
-        'filterDivision': 'division',
-        'filterDistrict': 'district',
-        'filterTehsil': 'tehsil',
-        'filterPincode': 'pincode',
-        'filterVillage': 'village'
-    };
-
-    const fieldName = locationFieldMap[inputId];
-    if (fieldName) {
-        filteredPositions.forEach(position => {
-            const value = position.location?.[fieldName];
-            if (value) {
-                uniqueValues.add(value);
-            }
-        });
-    }
-
-    // Convert Set to Array and sort
-    const filteredData = Array.from(uniqueValues).sort();
-
-    console.log(`🔍 Cascading filter for ${inputId}: ${filteredData.length} options (from ${filteredPositions.length} matching positions)`);
-
-    // Important: If filtering resulted in matches but no unique values for this specific field,
-    // that means the data exists but this field might not be populated for those positions
-    // In that case, return all data as fallback
-    if (filteredPositions.length > 0 && filteredData.length === 0) {
-        console.log(`  ⚠️ ${filteredPositions.length} positions match parents but have no ${fieldName} data, showing all options`);
-        return allData;
-    }
-
-    return filteredData.length > 0 ? filteredData : allData;
+    // ALWAYS show ALL available data from the location database
+    // This ensures users can see and select any location, not just those with current positions
+    console.log(`✅ Showing ALL ${allData.length} options for ${dataKey}`);
+    return allData;
 }
 
 // Show filter dropdown with search functionality
