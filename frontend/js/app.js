@@ -2946,25 +2946,27 @@ function fallbackCopyTextToClipboard(text) {
 async function showIDCard(name, phone, photo,positionLocation) {
     try {
 
-        function getAreaHighlight(loc) {
-            if (loc.village)  return { level: "Village", value: loc.village };
-            if (loc.pincode)  return { level: "Pincode", value: loc.pincode };
-            if (loc.tehsil)   return { level: "Tehsil", value: loc.tehsil };
-            if (loc.district) return { level: "District", value: loc.district };
-            if (loc.division) return { level: "Division", value: loc.division };
-            if (loc.state)    return { level: "State", value: loc.state };
-            if (loc.zone)     return { level: "Zone", value: loc.zone };
-            return { level: "Country", value: loc.country || "India" };
+        // Determine which field is the most specific (area head for) - the one to highlight
+        function getAreaHeadLevel(loc) {
+            if (loc.village)  return "Village";
+            if (loc.pincode)  return "Pincode";
+            if (loc.tehsil)   return "Tehsil";
+            if (loc.district) return "District";
+            if (loc.division) return "Div";
+            if (loc.state)    return "State";
+            if (loc.zone)     return "Zone";
+            return "Country";
         }
 
-        const highlight = getAreaHighlight(positionLocation);
+        const highlightLevel = getAreaHeadLevel(positionLocation);
 
+        // Prepare location data - show complete path with proper formatting
         const loc = {
-            country: positionLocation.country || "India",
+            country: "India", // Always India
             zone: positionLocation.zone || "",
-            state: positionLocation.state || "",
+            state: positionLocation.state ? positionLocation.state.toUpperCase() : "",
             division: positionLocation.division || "",
-            district: positionLocation.district || "",
+            district: positionLocation.district ? positionLocation.district.toUpperCase() : "",
             tehsil: positionLocation.tehsil || "",
             pincode: positionLocation.pincode || "",
             village: positionLocation.village || ""
@@ -2972,11 +2974,11 @@ async function showIDCard(name, phone, photo,positionLocation) {
 
         let areaListHTML = "";
 
+        // Function to create a row - ALWAYS show the field
+        // Highlight only the most specific level (area head for)
         function makeRow(label, value) {
-            if (!value) return "";
-
-            // REPLACE THIS ROW WITH HIGHLIGHT BOX
-            if (highlight.level === label) {
+            // HIGHLIGHT BOX for the area head level (most specific filled field)
+            if (highlightLevel === label) {
                 return `
                 <div style="
                     background:white;
@@ -2986,19 +2988,19 @@ async function showIDCard(name, phone, photo,positionLocation) {
                     font-weight:700;
                     margin:8px 0 10px 0;
                 ">
-                    <b>${highlight.level}:</b> ${highlight.value}
+                    <b>${label}:</b> ${value}
                 </div>`;
             }
 
-            // Otherwise normal row
+            // Normal row - show label and value (or empty if no value)
             return `<div style="margin-bottom:6px;"><b>${label}:</b> ${value}</div>`;
         }
 
-        // Maintain exact order
+        // ALWAYS show all 8 fields in order
         areaListHTML += makeRow("Country", loc.country);
         areaListHTML += makeRow("Zone", loc.zone);
         areaListHTML += makeRow("State", loc.state);
-        areaListHTML += makeRow("Division", loc.division);
+        areaListHTML += makeRow("Div", loc.division);
         areaListHTML += makeRow("District", loc.district);
         areaListHTML += makeRow("Tehsil", loc.tehsil);
         areaListHTML += makeRow("Pincode", loc.pincode);
@@ -3220,12 +3222,18 @@ async function showIDCard(name, phone, photo,positionLocation) {
 async function downloadIDCardAsImage(name) {
     const element = document.getElementById("idCardContent");
 
+    // Get actual element dimensions to avoid white space
+    const actualHeight = element.scrollHeight || element.offsetHeight;
+    
     const canvas = await html2canvas(element, {
         scale: 2,
         width: 720,
-        height: 1280,
+        height: actualHeight, // Use actual content height instead of fixed 1280
         backgroundColor: "#ffffff",
-        useCORS: true
+        useCORS: true,
+        windowHeight: actualHeight,
+        scrollY: -window.scrollY,
+        scrollX: -window.scrollX
     });
 
     const url = canvas.toDataURL("image/png");

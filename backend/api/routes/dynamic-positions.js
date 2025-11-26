@@ -225,11 +225,53 @@ router.get('/test-position-id', (req, res) => {
 // Helper function to create position with application status check
 async function createPositionWithApplicationStatus(sNo, post, designation, location) {
   try {
-    // Create a unique, consistent position ID based on location hierarchy
-    const positionId = generatePositionId(location, designation);
+    // ENRICHMENT: Fetch complete location hierarchy from Location model
+    let enrichedLocation = { ...location };
+    
+    // Only enrich if we have a specific location field (not just country)
+    if (location.village || location.pincode || location.tehsil || location.district || location.division || location.state || location.zone) {
+      try {
+        // Build query to find location with most specific match
+        let query = {};
+        if (location.village) query.village = location.village;
+        else if (location.pincode) query.pincode = location.pincode;
+        else if (location.tehsil) query.tehsil = location.tehsil;
+        else if (location.district) query.district = location.district;
+        else if (location.division) query.division = location.division;
+        else if (location.state) query.state = location.state;
+        else if (location.zone) query.zone = location.zone;
+        
+        // Find location document with complete hierarchy
+        const locationDoc = await Location.findOne(query);
+        
+        if (locationDoc) {
+          console.log('📍 Found complete location hierarchy for', designation);
+          // Merge with enriched parent data
+          enrichedLocation = {
+            country: locationDoc.country || 'India',
+            zone: locationDoc.zone || location.zone || '',
+            state: locationDoc.state || location.state || '',
+            division: locationDoc.division || location.division || '',
+            district: locationDoc.district || location.district || '',
+            tehsil: locationDoc.tehsil || location.tehsil || '',
+            pincode: locationDoc.pincode || location.pincode || '',
+            village: locationDoc.village || location.village || ''
+          };
+          console.log('✅ Enriched location:', enrichedLocation);
+        } else {
+          console.log('⚠️ No location document found, using provided location');
+        }
+      } catch (enrichError) {
+        console.error('⚠️ Error enriching location:', enrichError);
+        // Continue with original location if enrichment fails
+      }
+    }
+    
+    // Use enriched location for position ID and display
+    const positionId = generatePositionId(enrichedLocation, designation);
     
     console.log('🔍 Generated position ID for', designation, ':', positionId);
-    console.log('🔍 Location used:', JSON.stringify(location));
+    console.log('🔍 Location used:', JSON.stringify(enrichedLocation));
     
     // Validate that we got a proper position ID
     if (!positionId || positionId.includes('_1761') || positionId.startsWith('pos_1_')) {
@@ -293,7 +335,7 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       sNo,
       post,
       designation,
-      location,
+      location: enrichedLocation, // Use enriched location with complete hierarchy
       contribution: 10000,
       credits: 60000,
       isTemplate: true, // Mark as dynamically generated
@@ -360,7 +402,7 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       sNo,
       post,
       designation,
-      location,
+      location: location,
       contribution: 10000,
       credits: 60000,
       status: 'Available',
