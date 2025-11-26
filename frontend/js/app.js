@@ -53,6 +53,29 @@ function setupEventListeners() {
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
 
+    // Real-time search as you type
+    let searchTimeout;
+    const searchNameInput = document.getElementById('searchName');
+    const searchPhoneInput = document.getElementById('searchPhone');
+    
+    if (searchNameInput) {
+        searchNameInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                handleLiveSearch();
+            }, 300); // Debounce 300ms
+        });
+    }
+    
+    if (searchPhoneInput) {
+        searchPhoneInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                handleLiveSearch();
+            }, 300); // Debounce 300ms
+        });
+    }
+
     // Setup searchable filters
     setupSearchableFilters();
 
@@ -872,6 +895,49 @@ async function handleSearch() {
     } finally {
         showLoading(false);
     }
+}
+
+// Handle live search as user types (uses current loaded positions)
+function handleLiveSearch() {
+    const searchName = document.getElementById('searchName').value.toLowerCase().trim();
+    const searchPhone = document.getElementById('searchPhone').value.trim();
+
+    // If both search fields are empty, show all current positions
+    if (!searchName && !searchPhone) {
+        displayPositions(currentPositions);
+        return;
+    }
+
+    // Filter current positions based on search terms
+    const filteredPositions = currentPositions.filter(position => {
+        // Skip positions without applicant details (Available positions)
+        if (!position.applicantDetails) {
+            return false;
+        }
+
+        let matchesName = true;
+        let matchesPhone = true;
+
+        // Name search - match if name contains the search term
+        if (searchName) {
+            const applicantName = position.applicantDetails.name || '';
+            matchesName = applicantName.toLowerCase().includes(searchName);
+        }
+
+        // Phone search - match if phone contains the search term
+        if (searchPhone) {
+            const applicantPhone = position.applicantDetails.phone || '';
+            matchesPhone = applicantPhone.includes(searchPhone);
+        }
+
+        // Return true only if both conditions match (AND logic)
+        return matchesName && matchesPhone;
+    });
+
+    // Display filtered results
+    displayPositions(filteredPositions);
+    
+    console.log(`🔍 Live search: Found ${filteredPositions.length} matches (Name: "${searchName}", Phone: "${searchPhone}")`);
 }
 
 // Clear all filters
