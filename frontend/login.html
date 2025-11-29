@@ -24,102 +24,119 @@
         }
 
         .login-container {
-            max-width: 420px;
+            max-width: 400px;
             width: 100%;
-            padding: 15px;
+            padding: 10px;
         }
 
         .login-card {
             background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
             overflow: hidden;
         }
 
         .login-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 25px 20px;
+            padding: 0;
             text-align: center;
+            display: none; /* Hide the big header */
         }
 
         .login-header img {
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: white;
-            padding: 12px;
-            margin-bottom: 15px;
+            padding: 10px;
+            margin-bottom: 10px;
         }
 
         .login-header h1 {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .login-header p {
-            font-size: 13px;
+            font-size: 12px;
             opacity: 0.95;
             margin: 0;
         }
 
         .login-body {
-            padding: 30px 25px;
+            padding: 30px 30px 25px;
+        }
+        
+        .login-body h2 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        
+        .login-body .subtitle {
+            font-size: 13px;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 24px;
         }
 
         .form-label {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 8px;
-            font-size: 14px;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 6px;
+            font-size: 13px;
         }
 
         .form-control {
-            border: 2px solid #e0e6ed;
-            border-radius: 10px;
-            padding: 12px 15px;
-            font-size: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
             transition: all 0.3s;
         }
 
         .form-control:focus {
-            border-color: #2a5298;
-            box-shadow: 0 0 0 0.2rem rgba(42, 82, 152, 0.15);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
         }
 
         .input-group-text {
             background: white;
-            border: 2px solid #e0e6ed;
+            border: 2px solid #e2e8f0;
             border-right: none;
-            border-radius: 10px 0 0 10px;
+            border-radius: 8px 0 0 8px;
         }
 
         .input-group .form-control {
             border-left: none;
-            border-radius: 0 10px 10px 0;
+            border-radius: 0 8px 8px 0;
         }
 
         .input-group:focus-within .input-group-text {
-            border-color: #2a5298;
+            border-color: #667eea;
         }
 
         .btn-login {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: #3b82f6;
             border: none;
-            border-radius: 10px;
-            padding: 14px;
-            font-size: 16px;
+            border-radius: 8px;
+            padding: 11px;
+            font-size: 15px;
             font-weight: 600;
             color: white;
             width: 100%;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.2s;
         }
 
         .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(42, 82, 152, 0.4);
-            background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
         }
 
         .btn-login:active {
@@ -171,6 +188,9 @@
             </div>
 
             <div class="login-body">
+                <h2 style="text-align: center; margin-bottom: 8px; font-size: 22px; font-weight: 600; color: #1e293b;">Login to Your Profile</h2>
+                <p style="text-align: center; margin-bottom: 25px; font-size: 13px; color: #64748b;">Enter your credentials to continue</p>
+                
                 <div id="loginError" class="alert alert-danger" style="display: none;">
                     <i class="fas fa-exclamation-circle me-2"></i>
                     <span id="errorMessage"></span>
