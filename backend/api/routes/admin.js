@@ -775,7 +775,7 @@ router.post('/fix-user/:phone', async (req, res) => {
 router.get('/all-users', async (req, res) => {
   try {
     const User = require('../models/User');
-    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
+    const users = await User.find({}).select('-password').lean().limit(1000).sort({ createdAt: -1 });
     
     res.json(users);
   } catch (error) {

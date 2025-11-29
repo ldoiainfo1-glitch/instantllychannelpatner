@@ -3,6 +3,7 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const path = require('path');
+const compression = require('compression');
 
 // Load environment variables
 dotenv.config();
@@ -11,6 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
+app.use(compression()); // Enable gzip compression to reduce memory
 app.use(cors({
   origin: [
     'http://localhost:3000', 
@@ -23,8 +25,8 @@ app.use(cors({
   ],
   credentials: true
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -37,7 +39,9 @@ const connectDB = async () => {
       w: 'majority',
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
       socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      maxPoolSize: 10, // Maintain up to 10 socket connections
+      maxPoolSize: 3, // Reduce to 3 connections to save memory
+      minPoolSize: 1,
+      maxIdleTimeMS: 10000, // Close idle connections after 10s
     });
     console.log('✅ Connected to MongoDB Atlas');
     console.log('Database:', conn.connection.name);

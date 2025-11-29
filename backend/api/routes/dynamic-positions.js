@@ -175,7 +175,7 @@ router.get('/applications-by-position', async (req, res) => {
   try {
     console.log('📊 Getting all applications grouped by position ID');
     
-    const applications = await Application.find({}).sort({ appliedDate: -1 });
+    const applications = await Application.find({}).select('positionId applicantInfo status appliedDate').lean().limit(1000).sort({ appliedDate: -1 });
     
     const groupedByPosition = {};
     applications.forEach(app => {

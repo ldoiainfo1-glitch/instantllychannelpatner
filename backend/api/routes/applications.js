@@ -217,6 +217,8 @@ router.get('/', async (req, res) => {
     
     // Get all applications from applications collection (no position population needed)
     const applications = await Application.find(applicationFilter)
+      .lean()
+      .limit(500)
       .sort({ appliedDate: -1 });
     
     console.log(`📊 Found ${applications.length} applications in database`);
