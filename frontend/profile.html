@@ -173,49 +173,49 @@
     <section class="profile-header" id="loginSection">
         <div class="container">
             <div class="row justify-content-center">
-                <div class="col-md-6">
+                <div class="col-md-4 col-lg-3">
                     <div class="card shadow">
-                        <div class="card-body p-5">
-                            <div class="text-center mb-4">
-                                <i class="fas fa-user-circle fa-4x text-primary mb-3"></i>
-                                <h3>Login to Your Profile</h3>
-                                <p class="text-muted">Access your dashboard and manage your account</p>
+                        <div class="card-body p-3">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-user-circle fa-2x text-primary mb-2"></i>
+                                <h5 class="mb-1">Login to Your Profile</h5>
+                                <p class="text-muted" style="font-size: 11px;">Access your dashboard</p>
                             </div>
                             
                             <div id="loginError" class="alert alert-danger d-none"></div>
                             
                             <form id="loginForm">
-                                <div class="mb-3">
-                                    <label for="loginPhone" class="form-label">
-                                        <i class="fas fa-phone me-2"></i>Phone Number
+                                <div class="mb-2">
+                                    <label for="loginPhone" class="form-label" style="font-size: 11px;">
+                                        <i class="fas fa-phone me-1"></i>Phone Number
                                     </label>
-                                    <input type="tel" class="form-control form-control-lg" id="loginPhone" 
-                                           placeholder="Enter your phone number" required>
-                                    <small class="form-text text-muted">Use the phone number you registered with</small>
+                                    <input type="tel" class="form-control form-control-sm" id="loginPhone" 
+                                           placeholder="Enter phone" required style="font-size: 12px;">
+                                    <small class="form-text text-muted" style="font-size: 9px;">Use registered number</small>
                                 </div>
-                                <div class="mb-3">
-                                    <label for="loginPassword" class="form-label">
-                                        <i class="fas fa-lock me-2"></i>Password
+                                <div class="mb-2">
+                                    <label for="loginPassword" class="form-label" style="font-size: 11px;">
+                                        <i class="fas fa-lock me-1"></i>Password
                                     </label>
-                                    <input type="password" class="form-control form-control-lg" id="loginPassword" 
-                                           placeholder="Enter your password" required>
-                                    <small class="form-text text-muted">
-                                        Default password is the first 4 letters of your name in CAPITAL (e.g., "Muskaan Shaikh" → "MUSK")
+                                    <input type="password" class="form-control form-control-sm" id="loginPassword" 
+                                           placeholder="Enter password" required style="font-size: 12px;">
+                                    <small class="form-text text-muted" style="font-size: 9px;">
+                                        Default: First 4 letters (e.g., "MUSK")
                                     </small>
                                 </div>
-                                <button type="submit" class="btn btn-primary btn-lg w-100">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Login to Dashboard
+                                <button type="submit" class="btn btn-primary btn-sm w-100" style="font-size: 12px;">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Login
                                 </button>
                             </form>
                             
-                            <div class="mt-4 text-center">
-                                <small class="text-muted">
+                            <div class="mt-3 text-center">
+                                <small class="text-muted" style="font-size: 9px;">
                                     <i class="fas fa-info-circle me-1"></i>
-                                    Your account is created automatically when your application is approved
+                                    Account created when approved
                                 </small>
-                                <hr>
-                                <a href="index.html" class="btn btn-outline-secondary">
-                                    <i class="fas fa-arrow-left me-2"></i>Back to Home
+                                <hr class="my-2">
+                                <a href="index.html" class="btn btn-outline-secondary btn-sm" style="font-size: 11px;">
+                                    <i class="fas fa-arrow-left me-1"></i>Back
                                 </a>
                             </div>
                         </div>

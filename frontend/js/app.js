@@ -3131,7 +3131,7 @@ async function showIDCard(name, phone, photo,positionLocation) {
                             <div id="idCardContent" style="
                                 width:720px;
                                 background:white;
-                                min-height:1180px;
+                                min-height:auto;
                                 display:flex;
                                 overflow:hidden;
                                 font-family:Arial, Helvetica, sans-serif;
