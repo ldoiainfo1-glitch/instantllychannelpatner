@@ -3087,6 +3087,32 @@ async function showIDCard(name, phone, photo,positionLocation) {
         const user = await response.json();
 
         const modalHTML = `
+        <style>
+            #idCardModal .modal-dialog {
+                max-width: 800px;
+                margin: 1rem auto;
+            }
+            #idCardModal .modal-body {
+                max-height: calc(100vh - 200px);
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+            #idCardContent {
+                transform: scale(0.65);
+                transform-origin: top center;
+                margin: 0 auto;
+            }
+            @media (max-width: 768px) {
+                #idCardContent {
+                    transform: scale(0.45);
+                }
+            }
+            @media (max-width: 480px) {
+                #idCardContent {
+                    transform: scale(0.35);
+                }
+            }
+        </style>
         <div class="modal fade" id="idCardModal" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
                 <div class="modal-content">
