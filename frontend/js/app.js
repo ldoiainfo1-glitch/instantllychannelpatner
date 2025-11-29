@@ -3315,20 +3315,30 @@ async function showIDCard(name, phone, photo,positionLocation) {
 
 async function downloadIDCardAsImage(name) {
     const element = document.getElementById("idCardContent");
+    
+    // Temporarily remove the scale transform to capture full-size image
+    const originalTransform = element.style.transform;
+    element.style.transform = 'none';
+    
+    // Wait for browser to reflow
+    await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Get actual element dimensions to avoid white space
+    // Get actual element dimensions
     const actualHeight = element.scrollHeight || element.offsetHeight;
     
     const canvas = await html2canvas(element, {
         scale: 2,
         width: 720,
-        height: actualHeight, // Use actual content height instead of fixed 1280
+        height: actualHeight,
         backgroundColor: "#ffffff",
         useCORS: true,
         windowHeight: actualHeight,
         scrollY: -window.scrollY,
         scrollX: -window.scrollX
     });
+
+    // Restore the original transform
+    element.style.transform = originalTransform;
 
     const url = canvas.toDataURL("image/png");
 
