@@ -1952,7 +1952,9 @@
             tbody.innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/channel-partner/ads`, {
+                // Use main Instantlly Cards backend for ads
+                const MAIN_BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
+                const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads`, {
                     headers: {
                         'Authorization': `Bearer ${authToken}`
                     }
@@ -2048,7 +2050,9 @@
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/channel-partner/ads`, {
+                // Use main Instantlly Cards backend for ads
+                const MAIN_BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
+                const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${authToken}`
