@@ -297,18 +297,33 @@
     <script>
         const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
         
-        // Get URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('userId');
-        const userName = decodeURIComponent(urlParams.get('name') || 'Member');
-        const userPhone = urlParams.get('phone') || '-';
-        const userPhoto = decodeURIComponent(urlParams.get('photo') || '');
-        const userCountry = decodeURIComponent(urlParams.get('country') || 'India');
-        const userZone = decodeURIComponent(urlParams.get('zone') || '');
-        const userState = decodeURIComponent(urlParams.get('state') || '');
-        const userDivision = decodeURIComponent(urlParams.get('division') || '');
-        const userDistrict = decodeURIComponent(urlParams.get('district') || '');
-        const userDesignation = decodeURIComponent(urlParams.get('designation') || '');
+        // Get user data from sessionStorage (NOT URL - prevents URI_TOO_LONG error)
+        let promotionData;
+        try {
+            const storedData = sessionStorage.getItem('promotionData');
+            if (!storedData) {
+                console.error('❌ No promotion data found in sessionStorage');
+                alert('Error: Promotion data not found. Please try again from profile page.');
+                window.location.href = 'profile.html';
+            }
+            promotionData = JSON.parse(storedData);
+            console.log('✅ Loaded promotion data from sessionStorage:', promotionData);
+        } catch (error) {
+            console.error('❌ Error loading promotion data:', error);
+            alert('Error loading promotion data. Please try again.');
+            window.location.href = 'profile.html';
+        }
+        
+        const userId = promotionData.userId;
+        const userName = promotionData.name || 'Member';
+        const userPhone = promotionData.phone || '-';
+        const userPhoto = promotionData.photo || '';
+        const userCountry = promotionData.country || 'India';
+        const userZone = promotionData.zone || '';
+        const userState = promotionData.state || '';
+        const userDivision = promotionData.division || '';
+        const userDistrict = promotionData.district || '';
+        const userDesignation = promotionData.designation || '';
         
         // Languages supported
         const languages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu'];

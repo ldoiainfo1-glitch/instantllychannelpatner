@@ -748,7 +748,7 @@ function createPositionRow(position) {
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="promotion.html?userId=${position._id}&name=${encodeURIComponent(name)}&phone=${phone}&photo=${encodeURIComponent(photo)}&country=${encodeURIComponent(position.location?.country || 'India')}&zone=${encodeURIComponent(position.location?.zone || '')}&state=${encodeURIComponent(position.location?.state || '')}&division=${encodeURIComponent(position.location?.division || '')}&district=${encodeURIComponent(position.location?.district || '')}&designation=${encodeURIComponent(position.designation || '')}">
+                        <a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}, '${position.designation || ''}'); return false;">
                             <i class="fas fa-bullhorn me-2"></i>Promotion
                         </a>
                     </li>
@@ -3566,5 +3566,26 @@ function selectReferrer(phone, name) {
     if (dropdown) {
         dropdown.style.display = 'none';
     }
+}
+
+// Open Promotion Page with sessionStorage (avoids URI_TOO_LONG error)
+function openPromotion(userId, name, phone, photo, location, designation) {
+    // Store promotion data in sessionStorage (NOT in URL - photos are too large)
+    const promotionData = {
+        userId: userId,
+        name: name,
+        phone: phone,
+        photo: photo,
+        country: location?.country || 'India',
+        zone: location?.zone || '',
+        state: location?.state || '',
+        division: location?.division || '',
+        district: location?.district || '',
+        designation: designation
+    };
+    
+    console.log('📦 Storing promotion data in sessionStorage:', promotionData);
+    sessionStorage.setItem('promotionData', JSON.stringify(promotionData));
+    window.location.href = 'promotion.html';
 }
 

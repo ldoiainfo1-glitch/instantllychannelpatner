@@ -1502,8 +1502,8 @@
             console.log('📍 Location Data:', location);
             console.log('📍 Position ID:', currentApplication?.positionId || currentUser.positionId);
             
-            // Build URL with parameters
-            const params = new URLSearchParams({
+            // Store promotion data in sessionStorage (NOT in URL - photos are too large and cause URI_TOO_LONG error)
+            const promotionData = {
                 userId: currentUser._id || '',
                 name: currentUser.name || '',
                 phone: currentUser.phone || '',
@@ -1514,11 +1514,12 @@
                 division: location.division || '',
                 district: location.district || '',
                 designation: currentApplication?.positionId || currentUser.positionId || ''
-            });
+            };
             
-            console.log('🔗 Promotion URL:', `promotion.html?${params.toString()}`);
+            console.log('📦 Storing promotion data in sessionStorage:', promotionData);
+            sessionStorage.setItem('promotionData', JSON.stringify(promotionData));
             
-            window.location.href = `promotion.html?${params.toString()}`;
+            window.location.href = 'promotion.html';
         }
 
         // Logout
