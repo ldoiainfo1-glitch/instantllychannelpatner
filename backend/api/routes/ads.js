@@ -48,29 +48,45 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     // Get the user's phone (who is creating the ad)
     const userPhone = uploaderPhone || phoneNumber;
     console.log('🔍 Looking for user with phone:', userPhone);
+    console.log('📞 Available data - uploaderPhone:', uploaderPhone, 'phoneNumber:', phoneNumber);
 
     // Find user in Channel Partner database
+    console.log('🔎 Searching in database...');
     let user = await User.findOne({ phone: userPhone });
+    console.log('🎯 Direct match result:', user ? `Found: ${user.name} (${user.phone}) with ${user.credits} credits` : 'Not found');
 
     // Try phone format variations
     if (!user && userPhone.startsWith('+91')) {
       const phoneWithoutPrefix = userPhone.substring(3);
       console.log('🔄 Trying without +91 prefix:', phoneWithoutPrefix);
       user = await User.findOne({ phone: phoneWithoutPrefix });
+      console.log('🎯 Without prefix result:', user ? `Found: ${user.name}` : 'Not found');
     }
 
     if (!user && !userPhone.startsWith('+')) {
       const phoneWithPrefix = '+91' + userPhone;
       console.log('🔄 Trying with +91 prefix:', phoneWithPrefix);
       user = await User.findOne({ phone: phoneWithPrefix });
+      console.log('🎯 With prefix result:', user ? `Found: ${user.name}` : 'Not found');
     }
 
-    console.log('👤 Found user:', user ? `${user.name} (${user.phone}) with ${user.credits} credits` : 'NOT FOUND');
+    console.log('👤 Final user lookup result:', user ? `${user.name} (${user.phone}) with ${user.credits} credits` : 'NOT FOUND');
 
     if (!user) {
+      // Show sample users for debugging
+      const sampleUsers = await User.find({}).limit(3).select('name phone credits');
+      console.log('📋 Sample users in database:', sampleUsers);
+      
       return res.status(404).json({
         message: 'User not found. Please ensure you are logged in.',
         searchedPhone: userPhone,
+        debug: {
+          triedPhones: [
+            userPhone,
+            userPhone.startsWith('+91') ? userPhone.substring(3) : null,
+            !userPhone.startsWith('+') ? '+91' + userPhone : null
+          ].filter(Boolean)
+        }
       });
     }
 
