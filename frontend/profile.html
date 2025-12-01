@@ -1973,7 +1973,7 @@
                                 <td>${endDate}</td>
                                 <td>${statusBadge}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary" onclick="editAd('${ad.id}')" ${ad.status === 'rejected' ? '' : 'disabled'}>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editAd('${ad._id || ad.id}')" title="Edit ad">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                 </td>
@@ -2017,13 +2017,6 @@
                 return;
             }
 
-            // Check credits
-            const currentCredits = parseInt(document.getElementById('userCredits')?.textContent || '0');
-            if (!currentEditingAdId && currentCredits < 1020) {
-                showNotification('Insufficient credits. You need 1020 credits to create an ad.', 'error');
-                return;
-            }
-
             // Create FormData
             const formData = new FormData();
             formData.append('title', title);
@@ -2050,21 +2043,26 @@
             try {
                 // Use main Instantlly Cards backend for ads
                 const MAIN_BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
-                const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    },
+                const url = currentEditingAdId 
+                    ? `${MAIN_BACKEND_URL}/channel-partner/ads/${currentEditingAdId}` 
+                    : `${MAIN_BACKEND_URL}/channel-partner/ads`;
+                const method = currentEditingAdId ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method: method,
                     body: formData
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    showNotification('Ad submitted successfully! Awaiting admin approval.', 'success');
+                    const message = currentEditingAdId 
+                        ? 'Ad updated successfully! Awaiting admin re-approval.' 
+                        : 'Ad submitted successfully! Awaiting admin approval.';
+                    showNotification(message, 'success');
                     modal.hide();
+                    currentEditingAdId = null;
                     loadMyAds();
-                    loadUserProfile(); // Refresh credits
                 } else {
                     showNotification(data.message || 'Failed to submit ad', 'error');
                 }
@@ -2073,14 +2071,76 @@
                 showNotification('Network error. Please try again.', 'error');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Ad (1020 Credits)';
+                submitBtn.innerHTML = currentEditingAdId 
+                    ? '<i class="fas fa-save me-2"></i>Update Ad' 
+                    : '<i class="fas fa-paper-plane me-2"></i>Submit Ad (FREE)';
             }
         }
 
         async function editAd(adId) {
-            // TODO: Implement edit functionality
-            // For now, show message
-            showNotification('Edit functionality coming soon! Rejected ads can be resubmitted.', 'info');
+            currentEditingAdId = adId;
+            
+            try {
+                // Fetch ad details
+                const MAIN_BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
+                const userPhone = currentUser?.phone || '';
+                const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads?phone=${userPhone}`);
+                const data = await response.json();
+                
+                const ad = data.ads?.find(a => (a._id || a.id) === adId);
+                
+                if (!ad) {
+                    showNotification('Ad not found', 'error');
+                    return;
+                }
+                
+                // Populate form
+                document.getElementById('adTitle').value = ad.title;
+                document.getElementById('adPhone').value = ad.phoneNumber;
+                document.getElementById('adStartDate').value = ad.startDate.split('T')[0];
+                document.getElementById('adEndDate').value = ad.endDate.split('T')[0];
+                
+                // Update modal title and button
+                document.getElementById('adModalTitle').textContent = 'Edit Advertisement';
+                const modalElement = document.getElementById('adModal');
+                const submitBtn = modalElement.querySelector('.btn-primary');
+                submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update Ad';
+                
+                // Note about images
+                const imageNote = modalElement.querySelector('.alert-info');
+                if (imageNote) {
+                    imageNote.innerHTML = '<i class="fas fa-info-circle me-2"></i><strong>Note:</strong> Leave images blank to keep existing images, or upload new ones to replace.';
+                }
+                
+                // Show modal
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+                
+            } catch (error) {
+                console.error('Edit ad error:', error);
+                showNotification('Failed to load ad details', 'error');
+            }
+        }
+        
+        function showCreateAdModal() {
+            currentEditingAdId = null;
+            
+            // Reset form
+            document.getElementById('adTitle').value = '';
+            document.getElementById('adPhone').value = currentUser?.phone || '';
+            document.getElementById('adStartDate').value = '';
+            document.getElementById('adEndDate').value = '';
+            document.getElementById('adBottomImage').value = '';
+            document.getElementById('adFullscreenImage').value = '';
+            
+            // Reset modal title and button
+            document.getElementById('adModalTitle').textContent = 'Create New Advertisement';
+            const modalElement = document.getElementById('adModal');
+            const submitBtn = modalElement.querySelector('.btn-primary');
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Ad (FREE)';
+            
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
         }
     </script>
 </body>
