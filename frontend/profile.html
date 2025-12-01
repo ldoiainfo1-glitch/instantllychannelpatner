@@ -716,7 +716,7 @@
                                 <i class="fas fa-ad me-2"></i>My Advertisements
                             </h4>
                             <button class="btn btn-primary" onclick="showCreateAdModal()">
-                                <i class="fas fa-plus me-2"></i>Create New Ad (FREE)
+                                <i class="fas fa-plus me-2"></i>Create New Ad (1020 Credits + ₹180)
                             </button>
                         </div>
 
@@ -2017,6 +2017,32 @@
                 return;
             }
 
+            // Show confirmation dialog for new ads (not edits)
+            if (!currentEditingAdId) {
+                const currentCredits = parseInt(document.getElementById('userCredits')?.textContent || '0');
+                
+                if (currentCredits < 1020) {
+                    showNotification(`Insufficient credits! You have ${currentCredits} credits but need 1020 credits.`, 'error');
+                    return;
+                }
+
+                const confirmed = confirm(
+                    `📢 Ad Submission Cost Breakdown:\n\n` +
+                    `💳 Credits: 1020 (will be deducted now)\n` +
+                    `💵 Cash Payment: ₹180 (after admin approval)\n` +
+                    `📊 Total Cost: 1020 credits + ₹180\n\n` +
+                    `Your current credits: ${currentCredits.toLocaleString()}\n` +
+                    `After submission: ${(currentCredits - 1020).toLocaleString()}\n\n` +
+                    `⚠️ Admin will review your ad. After approval, you will be contacted to pay ₹180.\n\n` +
+                    `Do you want to proceed?`
+                );
+                
+                if (!confirmed) {
+                    showNotification('Ad submission cancelled', 'info');
+                    return;
+                }
+            }
+
             // Create FormData
             const formData = new FormData();
             formData.append('title', title);
@@ -2056,13 +2082,22 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    const message = currentEditingAdId 
-                        ? 'Ad updated successfully! Awaiting admin re-approval.' 
-                        : 'Ad submitted successfully! Awaiting admin approval.';
-                    showNotification(message, 'success');
+                    if (currentEditingAdId) {
+                        showNotification('Ad updated successfully! Awaiting admin re-approval.', 'success');
+                    } else {
+                        showNotification(
+                            `✅ Ad submitted successfully!\n\n` +
+                            `💳 1020 credits deducted\n` +
+                            `📊 Remaining credits: ${data.remainingCredits?.toLocaleString() || 'N/A'}\n\n` +
+                            `⏳ Your ad is now pending admin approval.\n` +
+                            `💵 After approval, admin will contact you for ₹180 payment.`,
+                            'success'
+                        );
+                    }
                     modal.hide();
                     currentEditingAdId = null;
                     loadMyAds();
+                    loadUserProfile(); // Refresh credits display
                 } else {
                     showNotification(data.message || 'Failed to submit ad', 'error');
                 }
@@ -2073,7 +2108,7 @@
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = currentEditingAdId 
                     ? '<i class="fas fa-save me-2"></i>Update Ad' 
-                    : '<i class="fas fa-paper-plane me-2"></i>Submit Ad (FREE)';
+                    : '<i class="fas fa-paper-plane me-2"></i>Submit Ad (1020 Credits)';
             }
         }
 
@@ -2137,7 +2172,13 @@
             document.getElementById('adModalTitle').textContent = 'Create New Advertisement';
             const modalElement = document.getElementById('adModal');
             const submitBtn = modalElement.querySelector('.btn-primary');
-            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Ad (FREE)';
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Ad (1020 Credits + ₹180)';
+            
+            // Show cost info
+            const costInfo = modalElement.querySelector('.alert-info');
+            if (costInfo) {
+                costInfo.innerHTML = '<i class="fas fa-info-circle me-2"></i><strong>Cost:</strong> 1020 credits (deducted now) + ₹180 cash (after admin approval). Total: 1020 credits + ₹180';
+            }
             
             const modal = new bootstrap.Modal(modalElement);
             modal.show();
