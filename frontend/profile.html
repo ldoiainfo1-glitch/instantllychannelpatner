@@ -1952,13 +1952,10 @@
             tbody.innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
 
             try {
-                // Use main Instantlly Cards backend for ads
+                // Use main Instantlly Cards backend for ads - Filter by user's phone
                 const MAIN_BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
-                const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads`, {
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`
-                    }
-                });
+                const userPhone = currentUser?.phone || '';
+                const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads?phone=${userPhone}`);
 
                 const data = await response.json();
 
@@ -2034,6 +2031,7 @@
             formData.append('startDate', startDate);
             formData.append('endDate', endDate);
             formData.append('uploaderName', currentUser?.name || 'Channel Partner');
+            formData.append('uploaderPhone', currentUser?.phone || phone); // Track who uploaded
             
             if (bottomImageFile) {
                 formData.append('images', bottomImageFile);
