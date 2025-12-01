@@ -75,17 +75,24 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     if (!user) {
       // Show sample users for debugging
       const sampleUsers = await User.find({}).limit(3).select('name phone credits');
-      console.log('📋 Sample users in database:', sampleUsers);
+      console.log('📋 Sample users in database:', sampleUsers.map(u => `${u.name}: ${u.phone} (${u.credits} credits)`));
       
-      return res.status(404).json({
-        message: 'User not found. Please ensure you are logged in.',
+      // Count total users
+      const totalUsers = await User.countDocuments();
+      console.log('📊 Total users in database:', totalUsers);
+      
+      return res.status(400).json({
+        message: `User not found with phone ${userPhone}. Please ensure you are logged in.`,
         searchedPhone: userPhone,
+        currentCredits: 0,
+        required: 1020,
         debug: {
           triedPhones: [
             userPhone,
             userPhone.startsWith('+91') ? userPhone.substring(3) : null,
             !userPhone.startsWith('+') ? '+91' + userPhone : null
-          ].filter(Boolean)
+          ].filter(Boolean),
+          sampleUsers: sampleUsers.map(u => ({ name: u.name, phone: u.phone, credits: u.credits }))
         }
       });
     }
