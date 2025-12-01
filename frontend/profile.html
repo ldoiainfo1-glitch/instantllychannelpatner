@@ -1952,7 +1952,7 @@
             tbody.innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
 
             try {
-                // Use main Instantlly Cards backend for ads - Filter by user's phone
+                // Use main Instantlly Cards backend for fetching ads - Filter by user's phone
                 const MAIN_BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
                 const userPhone = currentUser?.phone || '';
                 const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads?phone=${userPhone}`);
@@ -2067,11 +2067,10 @@
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
 
             try {
-                // Use main Instantlly Cards backend for ads
-                const MAIN_BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
+                // Use Channel Partner backend for ads (handles credit deduction)
                 const url = currentEditingAdId 
-                    ? `${MAIN_BACKEND_URL}/channel-partner/ads/${currentEditingAdId}` 
-                    : `${MAIN_BACKEND_URL}/channel-partner/ads`;
+                    ? `https://instantlly-cards-backend-6ki0.onrender.com/api/channel-partner/ads/${currentEditingAdId}` 
+                    : `${API_BASE_URL}/ads`;
                 const method = currentEditingAdId ? 'PUT' : 'POST';
                 
                 const response = await fetch(url, {
