@@ -27,7 +27,7 @@ const upload = multer({
 router.post('/', upload.array('images', 5), async (req, res) => {
   try {
     console.log('📤 Ad creation request received');
-    console.log('Body:', req.body);
+    console.log('Body:', JSON.stringify(req.body, null, 2));
     console.log('Files:', req.files?.length || 0);
 
     const { title, phoneNumber, startDate, endDate, uploaderName, uploaderPhone } = req.body;
@@ -177,9 +177,11 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     }
   } catch (error) {
     console.error('❌ Ad creation error:', error);
+    console.error('Error stack:', error.stack);
     return res.status(500).json({
       message: 'Failed to create ad',
       error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

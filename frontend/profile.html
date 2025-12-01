@@ -2044,6 +2044,9 @@
             }
 
             // Create FormData
+            console.log('📤 Creating ad with currentUser:', currentUser);
+            console.log('📞 uploaderPhone will be:', currentUser?.phone || phone);
+            
             const formData = new FormData();
             formData.append('title', title);
             formData.append('phoneNumber', phone);
