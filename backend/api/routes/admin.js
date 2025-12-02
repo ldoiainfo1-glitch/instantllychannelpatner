@@ -1282,7 +1282,10 @@ router.post('/search-users', async (req, res) => {
 
     // 2. Search Instantlly Cards App users (main database)
     try {
+      console.log('🔄 Attempting to connect to instantlly database...');
       const instantllyDB = mongoose.connection.useDb('instantlly');
+      console.log('✅ Connected to instantlly database');
+      
       const AppUserSchema = new mongoose.Schema({
         name: String,
         phone: String,
@@ -1290,8 +1293,11 @@ router.post('/search-users', async (req, res) => {
         profilePicture: String,
         credits: Number,
         referralCode: String
-      });
+      }, { collection: 'users' }); // Explicitly specify collection name
+      
       const AppUser = instantllyDB.model('User', AppUserSchema);
+      
+      console.log('🔍 Searching app users with phone prefix:', phonePrefix);
 
       const appUsers = await AppUser.find({
         phone: { $regex: phonePrefix, $options: 'i' }
@@ -1317,7 +1323,9 @@ router.post('/search-users', async (req, res) => {
         });
       });
     } catch (appError) {
-      console.error('⚠️ Error searching app users:', appError.message);
+      console.error('❌ Error searching app users:');
+      console.error('  Message:', appError.message);
+      console.error('  Stack:', appError.stack);
       // Continue with just channel partner users if app DB fails
     }
 
