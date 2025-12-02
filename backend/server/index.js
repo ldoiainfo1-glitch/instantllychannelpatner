@@ -6,6 +6,7 @@ const path = require('path');
 const compression = require('compression');
 
 // Load environment variables
+// Updated: 2025-12-02 - Fixed cross-database user search with direct MongoDB queries
 dotenv.config();
 
 const app = express();
