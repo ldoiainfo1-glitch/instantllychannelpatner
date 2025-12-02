@@ -1289,6 +1289,17 @@ router.get('/health-check', async (req, res) => {
     console.log('Main connection:', mongoose.connection.name);
     console.log('Main connection state:', mongoose.connection.readyState);
     
+    // List all databases accessible
+    let allDatabases = [];
+    try {
+      const admin = mongoose.connection.db.admin();
+      const dbList = await admin.listDatabases();
+      allDatabases = dbList.databases.map(db => db.name);
+      console.log('All accessible databases:', allDatabases);
+    } catch (err) {
+      console.log('Could not list databases:', err.message);
+    }
+    
     // Check instantlly database connection
     const instantllyDB = mongoose.connection.useDb('instantlly');
     console.log('Instantlly DB connection created');
@@ -1309,17 +1320,29 @@ router.get('/health-check', async (req, res) => {
       console.log('Sample user name:', sampleUser.name);
     }
     
+    // Check if there's a database named "instantllycards"
+    let cardsDbUserCount = 0;
+    try {
+      const cardsDB = mongoose.connection.useDb('instantllycards');
+      cardsDbUserCount = await cardsDB.db.collection('users').countDocuments();
+      console.log('Users in instantllycards.users:', cardsDbUserCount);
+    } catch (err) {
+      console.log('Could not check instantllycards:', err.message);
+    }
+    
     console.log('=== HEALTH CHECK END ===');
     
     res.json({
       success: true,
       mainDb: mongoose.connection.name,
       mainDbState: mongoose.connection.readyState,
+      allDatabases: allDatabases,
       instantllyCollections: collections.map(c => c.name),
       userCount: userCount,
       hasSampleUser: !!sampleUser,
       sampleUserPhone: sampleUser?.phone,
-      sampleUserName: sampleUser?.name
+      sampleUserName: sampleUser?.name,
+      cardsDbUserCount: cardsDbUserCount
     });
   } catch (error) {
     console.error('Health check error:', error);
