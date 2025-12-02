@@ -186,4 +186,44 @@ router.post('/', upload.array('images', 5), async (req, res) => {
   }
 });
 
+/**
+ * GET /api/ads/image/:id/:type
+ * Proxy endpoint to fetch ad images from Instantlly Cards backend
+ * This serves images for the admin panel
+ */
+router.get('/image/:id/:type', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const { id, type } = req.params;
+    
+    console.log(`🖼️  Proxying image request - Ad: ${id}, Type: ${type}`);
+    
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const url = `${MAIN_BACKEND_URL}/api/ads/image/${id}/${type}`;
+    
+    const response = await fetch(url);
+    
+    if (response.ok) {
+      // Get the content type from the response
+      const contentType = response.headers.get('content-type');
+      
+      // Set appropriate headers for image caching
+      res.setHeader('Content-Type', contentType || 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      
+      // Pipe the image data directly to the response
+      response.body.pipe(res);
+      
+      console.log(`✅ Served image ${id}/${type}`);
+    } else {
+      console.error(`❌ Image not found: ${id}/${type} - Status: ${response.status}`);
+      // Return a 404 with empty response instead of JSON
+      res.status(404).send('Image not found');
+    }
+  } catch (error) {
+    console.error('❌ Image proxy error:', error);
+    res.status(500).send('Failed to load image');
+  }
+});
+
 module.exports = router;

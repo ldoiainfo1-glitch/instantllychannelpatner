@@ -1805,4 +1805,52 @@ router.get('/ads/:id', async (req, res) => {
   }
 });
 
+/**
+ * GET /admin/ads/image/:id/:type
+ * Proxy endpoint to fetch ad images from Instantlly Cards backend
+ * This avoids CORS and serves images directly
+ */
+router.get('/ads/image/:id/:type', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const { id, type } = req.params;
+    
+    console.log(`🖼️  Proxying image request - Ad: ${id}, Type: ${type}`);
+    
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const url = `${MAIN_BACKEND_URL}/api/ads/image/${id}/${type}`;
+    
+    console.log('🌐 Fetching image from:', url);
+    
+    const response = await fetch(url);
+    
+    if (response.ok) {
+      // Get the content type from the response
+      const contentType = response.headers.get('content-type');
+      
+      // Set appropriate headers
+      res.setHeader('Content-Type', contentType || 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      
+      // Pipe the image data directly to the response
+      response.body.pipe(res);
+      
+      console.log(`✅ Served image ${id}/${type}`);
+    } else {
+      console.error('❌ Failed to fetch image:', response.status);
+      res.status(response.status).json({ 
+        message: 'Image not found',
+        adId: id,
+        type: type
+      });
+    }
+  } catch (error) {
+    console.error('❌ Image proxy error:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch image',
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;
