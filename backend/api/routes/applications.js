@@ -108,6 +108,17 @@ router.post('/', upload.single('photo'), async (req, res) => {
     // For now, we'll use the positionId as a reference, but we don't need to validate it exists
     // The application is self-contained with all necessary information
     
+    // Check if this phone number is already registered (check both applications and users)
+    const User = require('../models/User');
+    
+    // Check if user with this phone already exists
+    const existingUser = await User.findOne({ phone: phone.trim() });
+    if (existingUser) {
+      return res.status(400).json({ 
+        error: 'This phone number is already registered. Please login or use a different phone number.' 
+      });
+    }
+    
     // Check if this user has already applied (by phone number)
     const existingApplication = await Application.findOne({ 
       'applicantInfo.phone': phone.trim(),
@@ -130,7 +141,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
     let personCode = generatePersonCode();
     
     // Ensure uniqueness by checking against existing applications and users
-    const User = require('../models/User');
+    // (User model already imported above)
     let isUnique = false;
     let attempts = 0;
     const maxAttempts = 10;
