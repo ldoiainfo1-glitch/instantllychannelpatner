@@ -1336,8 +1336,19 @@ router.post('/search-users', async (req, res) => {
     // 2. Search Instantlly Cards App users (main database)
     try {
       console.log('🔄 Attempting to connect to instantlly database...');
+      console.log('🔗 Current connection:', mongoose.connection.name);
+      console.log('🔗 Connection state:', mongoose.connection.readyState); // 1 = connected
+      
       const instantllyDB = mongoose.connection.useDb('instantlly');
-      console.log('✅ Connected to instantlly database');
+      console.log('✅ Switched to instantlly database');
+      
+      // First, check if users collection exists
+      const collections = await instantllyDB.db.listCollections().toArray();
+      console.log('📚 Collections in instantlly:', collections.map(c => c.name).join(', '));
+      
+      // Count total users
+      const totalUsers = await instantllyDB.db.collection('users').countDocuments();
+      console.log('👥 Total users in instantlly database:', totalUsers);
       
       const AppUserSchema = new mongoose.Schema({
         name: String,
@@ -1351,6 +1362,7 @@ router.post('/search-users', async (req, res) => {
       const AppUser = instantllyDB.model('User', AppUserSchema);
       
       console.log('🔍 Searching app users with regex:', searchRegex);
+      console.log('🔍 Search patterns:', searchPatterns);
 
       const appUsers = await AppUser.find({
         phone: { $regex: searchRegex, $options: 'i' }
@@ -1360,6 +1372,9 @@ router.post('/search-users', async (req, res) => {
       .lean();
 
       console.log(`📱 Found ${appUsers.length} Instantlly Cards App users`);
+      if (appUsers.length > 0) {
+        console.log('📱 Sample app user:', JSON.stringify(appUsers[0], null, 2));
+      }
 
       // Format App users
       appUsers.forEach(user => {
@@ -1379,10 +1394,12 @@ router.post('/search-users', async (req, res) => {
       console.error('❌ Error searching app users:');
       console.error('  Message:', appError.message);
       console.error('  Stack:', appError.stack);
+      console.error('  Full error:', JSON.stringify(appError, null, 2));
       // Continue with just channel partner users if app DB fails
     }
 
     console.log(`✅ Total found: ${allUsers.length} users (${channelPartnerUsers.length} CP + ${allUsers.length - channelPartnerUsers.length} App)`);
+    console.log(`📊 Returning users:`, allUsers.map(u => ({ name: u.name, phone: u.phone, type: u.userType })));
 
     res.json({ success: true, users: allUsers });
   } catch (error) {
