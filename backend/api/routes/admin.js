@@ -1151,6 +1151,142 @@ router.post('/fix-introduced-by', async (req, res) => {
   }
 });
 
+// ADMIN: Get single user details including credits
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const User = require('../models/User');
+
+    console.log('📋 Admin fetching user details:', userId);
+
+    const user = await User.findById(userId)
+      .select('name phone photo personCode credits creditsHistory introducedCount isVerified')
+      .lean();
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log(`✅ Found user: ${user.name} with ${user.credits || 0} credits`);
+
+    res.json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        phone: user.phone,
+        photo: user.photo,
+        personCode: user.personCode,
+        credits: user.credits || 0,
+        creditsHistory: user.creditsHistory || [],
+        introducedCount: user.introducedCount || 0,
+        isVerified: user.isVerified || false
+      }
+    });
+  } catch (error) {
+    console.error('❌ Admin get user error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ADMIN: Search users by phone for credit transfer
+router.post('/search-users', async (req, res) => {
+  try {
+    const { phonePrefix } = req.body;
+    const User = require('../models/User');
+
+    console.log('🔍 Admin searching users by phone prefix:', phonePrefix);
+
+    if (!phonePrefix || phonePrefix.length < 2) {
+      return res.json({ success: true, users: [] });
+    }
+
+    // Find users whose phone contains the search prefix
+    const users = await User.find({
+      phone: { $regex: phonePrefix, $options: 'i' }
+    })
+    .select('name phone photo personCode credits')
+    .limit(20)
+    .lean();
+
+    console.log(`✅ Found ${users.length} matching users`);
+
+    // Format users for display
+    const formattedUsers = users.map(user => ({
+      _id: user._id,
+      name: user.name,
+      phone: user.phone,
+      displayPhone: user.phone,
+      profilePicture: user.photo || null,
+      personCode: user.personCode,
+      credits: user.credits || 0
+    }));
+
+    res.json({ success: true, users: formattedUsers });
+  } catch (error) {
+    console.error('❌ Admin search users error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ADMIN: Transfer credits to any user
+router.post('/transfer-credits', async (req, res) => {
+  try {
+    const { toUserId, amount, description } = req.body;
+    const User = require('../models/User');
+
+    console.log('💸 Admin transferring credits:', { toUserId, amount, description });
+
+    // Validate amount
+    const transferAmount = parseInt(amount);
+    if (!transferAmount || transferAmount < 1) {
+      return res.status(400).json({ error: 'Invalid transfer amount' });
+    }
+
+    // Get receiver
+    const receiver = await User.findById(toUserId);
+    if (!receiver) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Admin can transfer unlimited credits (no balance check)
+    receiver.credits = (receiver.credits || 0) + transferAmount;
+
+    // Add to credits history for receiver
+    if (!receiver.creditsHistory) receiver.creditsHistory = [];
+    receiver.creditsHistory.push({
+      type: 'bonus',
+      amount: transferAmount,
+      description: description || `Admin credit transfer - ${transferAmount.toLocaleString('en-IN')} credits`,
+      date: new Date()
+    });
+
+    // Save receiver
+    await receiver.save();
+
+    console.log(`✅ Admin transfer successful: ${transferAmount} credits → ${receiver.name} (${receiver.phone})`);
+
+    res.json({
+      success: true,
+      message: `Successfully transferred ${transferAmount.toLocaleString('en-IN')} credits to ${receiver.name}`,
+      receiverCredits: receiver.credits,
+      transaction: {
+        toUser: {
+          _id: receiver._id,
+          name: receiver.name,
+          phone: receiver.phone
+        },
+        amount: transferAmount,
+        description: description,
+        createdAt: new Date()
+      }
+    });
+  } catch (error) {
+    console.error('❌ Admin transfer credits error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Edit Application - Update name and phone
 router.put('/applications/:id/edit', async (req, res) => {
   try {
