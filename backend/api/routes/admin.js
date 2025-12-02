@@ -803,7 +803,7 @@ router.get('/users-stats', async (req, res) => {
     let appTotalCredits = 0;
     
     try {
-      const instantllyDB = mongoose.connection.useDb('instantlly');
+      const instantllyDB = mongoose.connection.useDb('instantllycards');
       const AppUserSchema = new mongoose.Schema({
         credits: Number
       }, { collection: 'users' });
@@ -1212,7 +1212,7 @@ router.get('/user/:userId', async (req, res) => {
     if (!user) {
       try {
         console.log('🔍 User not in Channel Partner DB, checking App DB...');
-        const instantllyDB = mongoose.connection.useDb('instantlly');
+        const instantllyDB = mongoose.connection.useDb('instantllycards');
         const AppUserSchema = new mongoose.Schema({
           name: String,
           phone: String,
@@ -1322,7 +1322,7 @@ router.post('/search-users', async (req, res) => {
     // 2. Search Instantlly Cards App users (main database)
     try {
       console.log('🔄 Attempting to connect to instantlly database...');
-      const instantllyDB = mongoose.connection.useDb('instantlly');
+      const instantllyDB = mongoose.connection.useDb('instantllycards');
       console.log('✅ Connected to instantlly database');
       
       const AppUserSchema = new mongoose.Schema({
@@ -1400,7 +1400,7 @@ router.post('/transfer-credits', async (req, res) => {
       isAppUser = true;
       console.log('📱 Transferring to App User in instantlly database');
       
-      const instantllyDB = mongoose.connection.useDb('instantlly');
+      const instantllyDB = mongoose.connection.useDb('instantllycards');
       const AppUserSchema = new mongoose.Schema({
         name: String,
         phone: String,
