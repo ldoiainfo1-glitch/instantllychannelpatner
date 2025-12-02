@@ -1293,11 +1293,15 @@ router.post('/search-users', async (req, res) => {
     // Search in BOTH databases
     const allUsers = [];
 
+    // Escape special regex characters in the phone prefix
+    const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const escapedPrefix = escapeRegex(phonePrefix);
+    
     // Create search patterns for both with and without +91 prefix
     // If user types "88", search for both "88" and "+9188"
-    const searchPatterns = [phonePrefix];
+    const searchPatterns = [escapedPrefix];
     if (!phonePrefix.startsWith('+')) {
-      searchPatterns.push(`\\+91${phonePrefix}`);
+      searchPatterns.push(`\\+91${escapedPrefix}`);
     }
     const searchRegex = searchPatterns.map(p => `^${p}`).join('|');
     
