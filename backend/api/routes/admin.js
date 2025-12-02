@@ -1281,6 +1281,56 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
+// Health check to verify cross-database connectivity
+router.get('/health-check', async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    console.log('=== HEALTH CHECK START ===');
+    console.log('Main connection:', mongoose.connection.name);
+    console.log('Main connection state:', mongoose.connection.readyState);
+    
+    // Check instantlly database connection
+    const instantllyDB = mongoose.connection.useDb('instantlly');
+    console.log('Instantlly DB connection created');
+    
+    // Try to list collections
+    const collections = await instantllyDB.db.listCollections().toArray();
+    console.log('Collections in instantlly:', collections.map(c => c.name));
+    
+    // Try to count users
+    const userCount = await instantllyDB.db.collection('users').countDocuments();
+    console.log('Total users in instantlly.users:', userCount);
+    
+    // Try to find a sample user with phone starting with 88
+    const sampleUser = await instantllyDB.db.collection('users').findOne({ phone: /^(\+91)?88/ });
+    console.log('Sample 88 user found:', sampleUser ? 'YES' : 'NO');
+    if (sampleUser) {
+      console.log('Sample user phone:', sampleUser.phone);
+      console.log('Sample user name:', sampleUser.name);
+    }
+    
+    console.log('=== HEALTH CHECK END ===');
+    
+    res.json({
+      success: true,
+      mainDb: mongoose.connection.name,
+      mainDbState: mongoose.connection.readyState,
+      instantllyCollections: collections.map(c => c.name),
+      userCount: userCount,
+      hasSampleUser: !!sampleUser,
+      sampleUserPhone: sampleUser?.phone,
+      sampleUserName: sampleUser?.name
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // ADMIN: Search users by phone for credit transfer (searches BOTH Channel Partner and App users)
 router.post('/search-users', async (req, res) => {
   try {
