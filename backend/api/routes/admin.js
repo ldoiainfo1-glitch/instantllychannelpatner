@@ -350,6 +350,65 @@ router.delete('/users/:id/delete', async (req, res) => {
   }
 });
 
+// Cleanup utility: Delete all users that don't have approved/pending applications
+router.post('/cleanup-orphaned-users', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    console.log('🧹 Starting orphaned users cleanup...');
+    
+    // Get all users
+    const allUsers = await User.find({});
+    console.log(`📊 Total users in database: ${allUsers.length}`);
+    
+    // Get all phone numbers from approved or pending applications
+    const activeApplications = await Application.find({ 
+      status: { $in: ['pending', 'approved'] }
+    });
+    const activePhones = new Set(activeApplications.map(app => app.applicantInfo.phone));
+    console.log(`📋 Active applications: ${activeApplications.length}`);
+    
+    // Find orphaned users (users without active applications)
+    const orphanedUsers = allUsers.filter(user => !activePhones.has(user.phone));
+    console.log(`🗑️ Orphaned users found: ${orphanedUsers.length}`);
+    
+    if (orphanedUsers.length === 0) {
+      return res.json({
+        message: 'No orphaned users found. Database is clean!',
+        totalUsers: allUsers.length,
+        activeUsers: allUsers.length,
+        deletedUsers: []
+      });
+    }
+    
+    // Delete orphaned users
+    const deletedUsers = [];
+    for (const user of orphanedUsers) {
+      await User.findByIdAndDelete(user._id);
+      deletedUsers.push({
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        credits: user.credits
+      });
+      console.log(`✅ Deleted orphaned user: ${user.name} (${user.phone})`);
+    }
+    
+    console.log(`🧹 Cleanup complete! Deleted ${deletedUsers.length} orphaned users`);
+    
+    res.json({
+      message: `Successfully cleaned up ${deletedUsers.length} orphaned user(s) from database.`,
+      totalUsersBefore: allUsers.length,
+      activeUsers: allUsers.length - deletedUsers.length,
+      deletedCount: deletedUsers.length,
+      deletedUsers: deletedUsers
+    });
+  } catch (error) {
+    console.error('❌ Error cleaning up orphaned users:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Initialize sample positions
 router.post('/initialize-positions', async (req, res) => {
   try {
