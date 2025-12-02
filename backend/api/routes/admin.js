@@ -265,6 +265,8 @@ router.put('/applications/:id/reject', async (req, res) => {
 // Delete application
 router.delete('/applications/:id/delete', async (req, res) => {
   try {
+    const User = require('../models/User');
+    
     // Don't populate positionId since it's a string, not a reference
     const application = await Application.findById(req.params.id);
     
@@ -275,22 +277,75 @@ router.delete('/applications/:id/delete', async (req, res) => {
     console.log(`🗑️ Admin deleting application: ${application._id}`);
     console.log(`📍 Position ID: ${application.positionId}`);
     console.log(`👤 Applicant: ${application.applicantInfo.name}`);
+    console.log(`📞 Phone: ${application.applicantInfo.phone}`);
+
+    // IMPORTANT: Also delete the associated user account if it exists
+    const associatedUser = await User.findOne({ phone: application.applicantInfo.phone });
+    if (associatedUser) {
+      await User.findByIdAndDelete(associatedUser._id);
+      console.log(`✅ Associated user account deleted: ${associatedUser.name} (${associatedUser.phone})`);
+    } else {
+      console.log(`ℹ️ No associated user account found for phone: ${application.applicantInfo.phone}`);
+    }
 
     // Delete the application from database
     await Application.findByIdAndDelete(req.params.id);
     console.log(`✅ Application ${application._id} deleted from database`);
     
     res.json({
-      message: 'Application deleted successfully from database.',
+      message: associatedUser 
+        ? 'Application and associated user account deleted successfully from database.'
+        : 'Application deleted successfully from database.',
       deletedApplication: {
         id: application._id,
         name: application.applicantInfo.name,
         phone: application.applicantInfo.phone,
         positionId: application.positionId
-      }
+      },
+      deletedUser: associatedUser ? {
+        id: associatedUser._id,
+        name: associatedUser.name,
+        phone: associatedUser.phone
+      } : null
     });
   } catch (error) {
     console.error('❌ Error deleting application:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete user account directly (without deleting application)
+router.delete('/users/:id/delete', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log(`🗑️ Admin deleting user account: ${user._id}`);
+    console.log(`👤 Name: ${user.name}`);
+    console.log(`📞 Phone: ${user.phone}`);
+    console.log(`💰 Credits: ${user.credits}`);
+
+    // Delete the user from database
+    await User.findByIdAndDelete(req.params.id);
+    console.log(`✅ User ${user._id} deleted from database`);
+    
+    res.json({
+      message: 'User account deleted successfully from database.',
+      deletedUser: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        credits: user.credits,
+        personCode: user.personCode
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error deleting user:', error);
     res.status(500).json({ error: error.message });
   }
 });
