@@ -804,13 +804,13 @@ router.get('/users-stats', async (req, res) => {
     
     try {
       const instantllyDB = mongoose.connection.useDb('instantlly');
-      const AppUserSchema = new mongoose.Schema({
-        credits: Number
-      }, { collection: 'users' });
-      const AppUser = instantllyDB.model('AppUser', AppUserSchema);
       
-      appUserCount = await AppUser.countDocuments();
-      const appUsers = await AppUser.find({}).select('credits').lean();
+      // Use direct MongoDB queries
+      appUserCount = await instantllyDB.db.collection('users').countDocuments();
+      const appUsers = await instantllyDB.db.collection('users')
+        .find({})
+        .project({ credits: 1 })
+        .toArray();
       appTotalCredits = appUsers.reduce((sum, user) => sum + (user.credits || 0), 0);
       
       console.log(`📱 App Users: ${appUserCount} users, ${appTotalCredits} credits`);
@@ -1213,20 +1213,23 @@ router.get('/user/:userId', async (req, res) => {
       try {
         console.log('🔍 User not in Channel Partner DB, checking App DB...');
         const instantllyDB = mongoose.connection.useDb('instantlly');
-        const AppUserSchema = new mongoose.Schema({
-          name: String,
-          phone: String,
-          email: String,
-          profilePicture: String,
-          credits: Number,
-          referralCode: String,
-          creditsExpiryDate: Date
-        });
-        const AppUser = instantllyDB.model('User', AppUserSchema);
         
-        user = await AppUser.findById(userId)
-          .select('name phone email profilePicture credits referralCode creditsExpiryDate')
-          .lean();
+        // Use direct MongoDB query
+        const ObjectId = mongoose.Types.ObjectId;
+        user = await instantllyDB.db.collection('users').findOne(
+          { _id: new ObjectId(userId) },
+          { 
+            projection: { 
+              name: 1, 
+              phone: 1, 
+              email: 1, 
+              profilePicture: 1, 
+              credits: 1, 
+              referralCode: 1, 
+              creditsExpiryDate: 1 
+            } 
+          }
+        );
         
         if (user) {
           userType = 'App User';
@@ -1350,26 +1353,24 @@ router.post('/search-users', async (req, res) => {
       const totalUsers = await instantllyDB.db.collection('users').countDocuments();
       console.log('👥 Total users in instantlly database:', totalUsers);
       
-      const AppUserSchema = new mongoose.Schema({
-        name: String,
-        phone: String,
-        email: String,
-        profilePicture: String,
-        credits: Number,
-        referralCode: String
-      }, { collection: 'users' }); // Explicitly specify collection name
-      
-      const AppUser = instantllyDB.model('User', AppUserSchema);
-      
+      // Use direct MongoDB queries instead of Mongoose models to avoid model name conflicts
       console.log('🔍 Searching app users with regex:', searchRegex);
       console.log('🔍 Search patterns:', searchPatterns);
 
-      const appUsers = await AppUser.find({
-        phone: { $regex: searchRegex, $options: 'i' }
-      })
-      .select('name phone email profilePicture credits referralCode')
-      .limit(20)
-      .lean();
+      const appUsers = await instantllyDB.db.collection('users')
+        .find({
+          phone: { $regex: searchRegex, $options: 'i' }
+        })
+        .project({
+          name: 1,
+          phone: 1,
+          email: 1,
+          profilePicture: 1,
+          credits: 1,
+          referralCode: 1
+        })
+        .limit(20)
+        .toArray();
 
       console.log(`📱 Found ${appUsers.length} Instantlly Cards App users`);
       if (appUsers.length > 0) {
@@ -1432,31 +1433,33 @@ router.post('/transfer-credits', async (req, res) => {
       console.log('📱 Transferring to App User in instantlly database');
       
       const instantllyDB = mongoose.connection.useDb('instantlly');
-      const AppUserSchema = new mongoose.Schema({
-        name: String,
-        phone: String,
-        email: String,
-        profilePicture: String,
-        credits: Number,
-        referralCode: String,
-        creditsExpiryDate: Date
-      });
-      const AppUser = instantllyDB.model('User', AppUserSchema);
       
-      receiver = await AppUser.findById(toUserId);
+      // Use direct MongoDB query to avoid model name conflicts
+      const ObjectId = mongoose.Types.ObjectId;
+      receiver = await instantllyDB.db.collection('users').findOne({ _id: new ObjectId(toUserId) });
+      
       if (!receiver) {
         return res.status(404).json({ error: 'App user not found' });
       }
 
       // Add credits to app user
-      receiver.credits = (receiver.credits || 0) + transferAmount;
+      const newCredits = (receiver.credits || 0) + transferAmount;
       
       // Extend credits expiry if needed (1 month from now)
-      if (!receiver.creditsExpiryDate || new Date(receiver.creditsExpiryDate) < new Date()) {
-        receiver.creditsExpiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      }
+      const newExpiryDate = !receiver.creditsExpiryDate || new Date(receiver.creditsExpiryDate) < new Date()
+        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        : receiver.creditsExpiryDate;
 
-      await receiver.save();
+      // Update using direct MongoDB query
+      await instantllyDB.db.collection('users').updateOne(
+        { _id: new ObjectId(toUserId) },
+        { 
+          $set: { 
+            credits: newCredits,
+            creditsExpiryDate: newExpiryDate
+          } 
+        }
+      );
       
       console.log(`✅ Admin transfer to App User successful: ${transferAmount} credits → ${receiver.name} (${receiver.phone})`);
     } else {
