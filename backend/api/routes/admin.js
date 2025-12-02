@@ -1586,4 +1586,223 @@ router.put('/applications/:id/transfer', async (req, res) => {
   }
 });
 
+/**
+ * GET /admin/ads
+ * Proxy endpoint to fetch ads from Instantlly Cards backend
+ * This avoids CORS issues by making server-to-server requests
+ */
+router.get('/ads', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const { approvalStatus } = req.query;
+    
+    console.log('🔄 Proxying ads request - approvalStatus:', approvalStatus);
+    
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const url = `${MAIN_BACKEND_URL}/api/ads${approvalStatus ? `?approvalStatus=${approvalStatus}` : ''}`;
+    
+    console.log('🌐 Fetching from:', url);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(`✅ Fetched ${data.ads?.length || 0} ads`);
+      res.json(data);
+    } else {
+      console.error('❌ Failed to fetch ads:', response.status, data);
+      res.status(response.status).json(data);
+    }
+  } catch (error) {
+    console.error('❌ Ads proxy error:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch ads',
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * PUT /admin/ads/:id
+ * Proxy endpoint to update ad status (approve/reject)
+ */
+router.put('/ads/:id', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const { id } = req.params;
+    const { approvalStatus, adminComments } = req.body;
+    
+    console.log(`🔄 Proxying ad update - ID: ${id}, Status: ${approvalStatus}`);
+    
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const url = `${MAIN_BACKEND_URL}/api/ads/${id}`;
+    
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ approvalStatus, adminComments })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(`✅ Updated ad ${id} to ${approvalStatus}`);
+      res.json(data);
+    } else {
+      console.error('❌ Failed to update ad:', response.status, data);
+      res.status(response.status).json(data);
+    }
+  } catch (error) {
+    console.error('❌ Ad update proxy error:', error);
+    res.status(500).json({ 
+      message: 'Failed to update ad',
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * DELETE /admin/ads/:id
+ * Proxy endpoint to delete an ad
+ */
+router.delete('/ads/:id', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const { id } = req.params;
+    
+    console.log(`🔄 Proxying ad deletion - ID: ${id}`);
+    
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const url = `${MAIN_BACKEND_URL}/api/ads/${id}`;
+    
+    const response = await fetch(url, { method: 'DELETE' });
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(`✅ Deleted ad ${id}`);
+      res.json(data);
+    } else {
+      console.error('❌ Failed to delete ad:', response.status, data);
+      res.status(response.status).json(data);
+    }
+  } catch (error) {
+    console.error('❌ Ad deletion proxy error:', error);
+    res.status(500).json({ 
+      message: 'Failed to delete ad',
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * POST /admin/ads/:id/approve
+ * Proxy endpoint to approve an ad
+ */
+router.post('/ads/:id/approve', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const { id } = req.params;
+    const { priority } = req.body;
+    
+    console.log(`🔄 Proxying ad approval - ID: ${id}, Priority: ${priority}`);
+    
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const url = `${MAIN_BACKEND_URL}/api/ads/${id}/approve`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ priority })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(`✅ Approved ad ${id}`);
+      res.json(data);
+    } else {
+      console.error('❌ Failed to approve ad:', response.status, data);
+      res.status(response.status).json(data);
+    }
+  } catch (error) {
+    console.error('❌ Ad approval proxy error:', error);
+    res.status(500).json({ 
+      message: 'Failed to approve ad',
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * POST /admin/ads/:id/reject
+ * Proxy endpoint to reject an ad
+ */
+router.post('/ads/:id/reject', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const { id } = req.params;
+    const { reason } = req.body;
+    
+    console.log(`🔄 Proxying ad rejection - ID: ${id}`);
+    
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const url = `${MAIN_BACKEND_URL}/api/ads/${id}/reject`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason })
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(`✅ Rejected ad ${id}`);
+      res.json(data);
+    } else {
+      console.error('❌ Failed to reject ad:', response.status, data);
+      res.status(response.status).json(data);
+    }
+  } catch (error) {
+    console.error('❌ Ad rejection proxy error:', error);
+    res.status(500).json({ 
+      message: 'Failed to reject ad',
+      error: error.message 
+    });
+  }
+});
+
+/**
+ * GET /admin/ads/:id
+ * Proxy endpoint to get a single ad details
+ */
+router.get('/ads/:id', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const { id } = req.params;
+    
+    console.log(`🔄 Proxying get ad details - ID: ${id}`);
+    
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const url = `${MAIN_BACKEND_URL}/api/ads/${id}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(`✅ Fetched ad ${id} details`);
+      res.json(data);
+    } else {
+      console.error('❌ Failed to fetch ad details:', response.status, data);
+      res.status(response.status).json(data);
+    }
+  } catch (error) {
+    console.error('❌ Get ad details proxy error:', error);
+    res.status(500).json({ 
+      message: 'Failed to fetch ad details',
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;
