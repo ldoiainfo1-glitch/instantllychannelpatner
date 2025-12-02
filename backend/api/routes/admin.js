@@ -783,22 +783,61 @@ router.get('/all-users', async (req, res) => {
   }
 });
 
-// GET USERS STATS - for admin dashboard/credits page
+// GET USERS STATS - for admin dashboard/credits page (includes BOTH Channel Partner and App users)
 router.get('/users-stats', async (req, res) => {
   try {
     const User = require('../models/User');
+    const mongoose = require('mongoose');
     
-    // Count total users
-    const totalUsers = await User.countDocuments();
+    console.log('📊 Fetching stats from BOTH databases...');
     
-    // Calculate total credits across all users
-    const users = await User.find({}).select('credits').lean();
-    const totalCredits = users.reduce((sum, user) => sum + (user.credits || 0), 0);
+    // 1. Channel Partner users
+    const cpUserCount = await User.countDocuments();
+    const cpUsers = await User.find({}).select('credits').lean();
+    const cpTotalCredits = cpUsers.reduce((sum, user) => sum + (user.credits || 0), 0);
+    
+    console.log(`📋 Channel Partner: ${cpUserCount} users, ${cpTotalCredits} credits`);
+    
+    // 2. Instantlly Cards App users
+    let appUserCount = 0;
+    let appTotalCredits = 0;
+    
+    try {
+      const instantllyDB = mongoose.connection.useDb('instantlly');
+      const AppUserSchema = new mongoose.Schema({
+        credits: Number
+      }, { collection: 'users' });
+      const AppUser = instantllyDB.model('AppUser', AppUserSchema);
+      
+      appUserCount = await AppUser.countDocuments();
+      const appUsers = await AppUser.find({}).select('credits').lean();
+      appTotalCredits = appUsers.reduce((sum, user) => sum + (user.credits || 0), 0);
+      
+      console.log(`📱 App Users: ${appUserCount} users, ${appTotalCredits} credits`);
+    } catch (appError) {
+      console.error('⚠️ Error fetching app stats:', appError.message);
+    }
+    
+    // Combined stats
+    const totalUsers = cpUserCount + appUserCount;
+    const totalCredits = cpTotalCredits + appTotalCredits;
+    
+    console.log(`✅ Total: ${totalUsers} users, ${totalCredits} credits`);
     
     res.json({
       success: true,
       totalUsers,
-      totalCredits
+      totalCredits,
+      breakdown: {
+        channelPartner: {
+          users: cpUserCount,
+          credits: cpTotalCredits
+        },
+        appUsers: {
+          users: appUserCount,
+          credits: appTotalCredits
+        }
+      }
     });
   } catch (error) {
     console.error('❌ Get users stats error:', error);
