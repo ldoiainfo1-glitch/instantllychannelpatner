@@ -1151,49 +1151,99 @@ router.post('/fix-introduced-by', async (req, res) => {
   }
 });
 
-// ADMIN: Get single user details including credits
+// ADMIN: Get single user details including credits (supports BOTH Channel Partner and App users)
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
+    const { source } = req.query; // Optional: 'channelpartner' or 'instantlly'
+    const mongoose = require('mongoose');
+
+    console.log('📋 Admin fetching user details:', userId, 'source:', source);
+
+    let user;
+    let userType = 'Channel Partner';
+
+    // Try Channel Partner database first
     const User = require('../models/User');
-
-    console.log('📋 Admin fetching user details:', userId);
-
-    const user = await User.findById(userId)
+    user = await User.findById(userId)
       .select('name phone photo personCode credits creditsHistory introducedCount isVerified')
       .lean();
 
+    // If not found in Channel Partner DB, try Instantlly App DB
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      try {
+        console.log('🔍 User not in Channel Partner DB, checking App DB...');
+        const instantllyDB = mongoose.connection.useDb('instantlly');
+        const AppUserSchema = new mongoose.Schema({
+          name: String,
+          phone: String,
+          email: String,
+          profilePicture: String,
+          credits: Number,
+          referralCode: String,
+          creditsExpiryDate: Date
+        });
+        const AppUser = instantllyDB.model('User', AppUserSchema);
+        
+        user = await AppUser.findById(userId)
+          .select('name phone email profilePicture credits referralCode creditsExpiryDate')
+          .lean();
+        
+        if (user) {
+          userType = 'App User';
+          console.log(`✅ Found App User: ${user.name} with ${user.credits || 0} credits`);
+        }
+      } catch (appError) {
+        console.error('⚠️ Error checking app database:', appError.message);
+      }
+    } else {
+      console.log(`✅ Found Channel Partner User: ${user.name} with ${user.credits || 0} credits`);
     }
 
-    console.log(`✅ Found user: ${user.name} with ${user.credits || 0} credits`);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found in either database' });
+    }
 
-    res.json({
+    // Format response based on user type
+    const response = {
       success: true,
       user: {
         _id: user._id,
         name: user.name,
         phone: user.phone,
-        photo: user.photo,
-        personCode: user.personCode,
+        photo: user.photo || user.profilePicture,
+        personCode: user.personCode || user.referralCode || 'N/A',
         credits: user.credits || 0,
-        creditsHistory: user.creditsHistory || [],
-        introducedCount: user.introducedCount || 0,
-        isVerified: user.isVerified || false
+        userType: userType,
+        source: userType === 'App User' ? 'instantlly' : 'channelpartner'
       }
-    });
+    };
+
+    // Add Channel Partner specific fields
+    if (userType === 'Channel Partner') {
+      response.user.creditsHistory = user.creditsHistory || [];
+      response.user.introducedCount = user.introducedCount || 0;
+      response.user.isVerified = user.isVerified || false;
+    }
+
+    // Add App User specific fields
+    if (userType === 'App User') {
+      response.user.email = user.email;
+      response.user.creditsExpiryDate = user.creditsExpiryDate;
+    }
+
+    res.json(response);
   } catch (error) {
     console.error('❌ Admin get user error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// ADMIN: Search users by phone for credit transfer
+// ADMIN: Search users by phone for credit transfer (searches BOTH Channel Partner and App users)
 router.post('/search-users', async (req, res) => {
   try {
     const { phonePrefix } = req.body;
-    const User = require('../models/User');
+    const mongoose = require('mongoose');
 
     console.log('🔍 Admin searching users by phone prefix:', phonePrefix);
 
@@ -1201,41 +1251,92 @@ router.post('/search-users', async (req, res) => {
       return res.json({ success: true, users: [] });
     }
 
-    // Find users whose phone contains the search prefix
-    const users = await User.find({
+    // Search in BOTH databases
+    const allUsers = [];
+
+    // 1. Search Channel Partner users (current database)
+    const User = require('../models/User');
+    const channelPartnerUsers = await User.find({
       phone: { $regex: phonePrefix, $options: 'i' }
     })
     .select('name phone photo personCode credits')
     .limit(20)
     .lean();
 
-    console.log(`✅ Found ${users.length} matching users`);
+    console.log(`📋 Found ${channelPartnerUsers.length} Channel Partner users`);
 
-    // Format users for display
-    const formattedUsers = users.map(user => ({
-      _id: user._id,
-      name: user.name,
-      phone: user.phone,
-      displayPhone: user.phone,
-      profilePicture: user.photo || null,
-      personCode: user.personCode,
-      credits: user.credits || 0
-    }));
+    // Format Channel Partner users
+    channelPartnerUsers.forEach(user => {
+      allUsers.push({
+        _id: user._id,
+        name: user.name,
+        phone: user.phone,
+        displayPhone: user.phone,
+        profilePicture: user.photo || null,
+        personCode: user.personCode || 'N/A',
+        credits: user.credits || 0,
+        userType: 'Channel Partner',
+        source: 'channelpartner'
+      });
+    });
 
-    res.json({ success: true, users: formattedUsers });
+    // 2. Search Instantlly Cards App users (main database)
+    try {
+      const instantllyDB = mongoose.connection.useDb('instantlly');
+      const AppUserSchema = new mongoose.Schema({
+        name: String,
+        phone: String,
+        email: String,
+        profilePicture: String,
+        credits: Number,
+        referralCode: String
+      });
+      const AppUser = instantllyDB.model('User', AppUserSchema);
+
+      const appUsers = await AppUser.find({
+        phone: { $regex: phonePrefix, $options: 'i' }
+      })
+      .select('name phone email profilePicture credits referralCode')
+      .limit(20)
+      .lean();
+
+      console.log(`📱 Found ${appUsers.length} Instantlly Cards App users`);
+
+      // Format App users
+      appUsers.forEach(user => {
+        allUsers.push({
+          _id: user._id,
+          name: user.name || 'App User',
+          phone: user.phone,
+          displayPhone: user.phone,
+          profilePicture: user.profilePicture || null,
+          personCode: user.referralCode || 'App User',
+          credits: user.credits || 0,
+          userType: 'App User',
+          source: 'instantlly'
+        });
+      });
+    } catch (appError) {
+      console.error('⚠️ Error searching app users:', appError.message);
+      // Continue with just channel partner users if app DB fails
+    }
+
+    console.log(`✅ Total found: ${allUsers.length} users (${channelPartnerUsers.length} CP + ${allUsers.length - channelPartnerUsers.length} App)`);
+
+    res.json({ success: true, users: allUsers });
   } catch (error) {
     console.error('❌ Admin search users error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// ADMIN: Transfer credits to any user
+// ADMIN: Transfer credits to any user (supports BOTH Channel Partner and App users)
 router.post('/transfer-credits', async (req, res) => {
   try {
-    const { toUserId, amount, description } = req.body;
-    const User = require('../models/User');
+    const { toUserId, amount, description, userType, source } = req.body;
+    const mongoose = require('mongoose');
 
-    console.log('💸 Admin transferring credits:', { toUserId, amount, description });
+    console.log('💸 Admin transferring credits:', { toUserId, amount, description, userType, source });
 
     // Validate amount
     const transferAmount = parseInt(amount);
@@ -1243,33 +1344,76 @@ router.post('/transfer-credits', async (req, res) => {
       return res.status(400).json({ error: 'Invalid transfer amount' });
     }
 
-    // Get receiver
-    const receiver = await User.findById(toUserId);
-    if (!receiver) {
-      return res.status(404).json({ error: 'User not found' });
+    let receiver;
+    let isAppUser = false;
+
+    // Determine which database to use based on source
+    if (source === 'instantlly' || userType === 'App User') {
+      // Transfer to Instantlly Cards App user
+      isAppUser = true;
+      console.log('📱 Transferring to App User in instantlly database');
+      
+      const instantllyDB = mongoose.connection.useDb('instantlly');
+      const AppUserSchema = new mongoose.Schema({
+        name: String,
+        phone: String,
+        email: String,
+        profilePicture: String,
+        credits: Number,
+        referralCode: String,
+        creditsExpiryDate: Date
+      });
+      const AppUser = instantllyDB.model('User', AppUserSchema);
+      
+      receiver = await AppUser.findById(toUserId);
+      if (!receiver) {
+        return res.status(404).json({ error: 'App user not found' });
+      }
+
+      // Add credits to app user
+      receiver.credits = (receiver.credits || 0) + transferAmount;
+      
+      // Extend credits expiry if needed (1 month from now)
+      if (!receiver.creditsExpiryDate || new Date(receiver.creditsExpiryDate) < new Date()) {
+        receiver.creditsExpiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      }
+
+      await receiver.save();
+      
+      console.log(`✅ Admin transfer to App User successful: ${transferAmount} credits → ${receiver.name} (${receiver.phone})`);
+    } else {
+      // Transfer to Channel Partner user
+      console.log('📋 Transferring to Channel Partner user');
+      
+      const User = require('../models/User');
+      receiver = await User.findById(toUserId);
+      
+      if (!receiver) {
+        return res.status(404).json({ error: 'Channel Partner user not found' });
+      }
+
+      // Add credits to channel partner user
+      receiver.credits = (receiver.credits || 0) + transferAmount;
+
+      // Add to credits history for Channel Partner users
+      if (!receiver.creditsHistory) receiver.creditsHistory = [];
+      receiver.creditsHistory.push({
+        type: 'bonus',
+        amount: transferAmount,
+        description: description || `Admin credit transfer - ${transferAmount.toLocaleString('en-IN')} credits`,
+        date: new Date()
+      });
+
+      await receiver.save();
+      
+      console.log(`✅ Admin transfer to Channel Partner successful: ${transferAmount} credits → ${receiver.name} (${receiver.phone})`);
     }
-
-    // Admin can transfer unlimited credits (no balance check)
-    receiver.credits = (receiver.credits || 0) + transferAmount;
-
-    // Add to credits history for receiver
-    if (!receiver.creditsHistory) receiver.creditsHistory = [];
-    receiver.creditsHistory.push({
-      type: 'bonus',
-      amount: transferAmount,
-      description: description || `Admin credit transfer - ${transferAmount.toLocaleString('en-IN')} credits`,
-      date: new Date()
-    });
-
-    // Save receiver
-    await receiver.save();
-
-    console.log(`✅ Admin transfer successful: ${transferAmount} credits → ${receiver.name} (${receiver.phone})`);
 
     res.json({
       success: true,
       message: `Successfully transferred ${transferAmount.toLocaleString('en-IN')} credits to ${receiver.name}`,
       receiverCredits: receiver.credits,
+      userType: isAppUser ? 'App User' : 'Channel Partner',
       transaction: {
         toUser: {
           _id: receiver._id,
