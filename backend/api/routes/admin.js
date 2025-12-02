@@ -1293,10 +1293,20 @@ router.post('/search-users', async (req, res) => {
     // Search in BOTH databases
     const allUsers = [];
 
+    // Create search patterns for both with and without +91 prefix
+    // If user types "88", search for both "88" and "+9188"
+    const searchPatterns = [phonePrefix];
+    if (!phonePrefix.startsWith('+')) {
+      searchPatterns.push(`\\+91${phonePrefix}`);
+    }
+    const searchRegex = searchPatterns.map(p => `^${p}`).join('|');
+    
+    console.log('🔍 Search regex pattern:', searchRegex);
+
     // 1. Search Channel Partner users (current database)
     const User = require('../models/User');
     const channelPartnerUsers = await User.find({
-      phone: { $regex: phonePrefix, $options: 'i' }
+      phone: { $regex: searchRegex, $options: 'i' }
     })
     .select('name phone photo personCode credits')
     .limit(20)
@@ -1336,10 +1346,10 @@ router.post('/search-users', async (req, res) => {
       
       const AppUser = instantllyDB.model('User', AppUserSchema);
       
-      console.log('🔍 Searching app users with phone prefix:', phonePrefix);
+      console.log('🔍 Searching app users with regex:', searchRegex);
 
       const appUsers = await AppUser.find({
-        phone: { $regex: phonePrefix, $options: 'i' }
+        phone: { $regex: searchRegex, $options: 'i' }
       })
       .select('name phone email profilePicture credits referralCode')
       .limit(20)
