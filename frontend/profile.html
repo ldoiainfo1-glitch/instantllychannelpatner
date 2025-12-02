@@ -1952,10 +1952,9 @@
             tbody.innerHTML = '<tr><td colspan="6" class="text-center"><i class="fas fa-spinner fa-spin me-2"></i>Loading...</td></tr>';
 
             try {
-                // Use main Instantlly Cards backend for fetching ads - Filter by user's phone
-                const MAIN_BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
+                // Use Channel Partner backend proxy to fetch user's ads
                 const userPhone = currentUser?.phone || '';
-                const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads?phone=${userPhone}`);
+                const response = await fetch(`${API_BASE_URL}/users/my-ads?phone=${encodeURIComponent(userPhone)}`);
 
                 const data = await response.json();
 
@@ -2070,11 +2069,12 @@
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
 
             try {
-                // Use Channel Partner backend for ads (handles credit deduction)
-                const url = currentEditingAdId 
-                    ? `https://instantlly-cards-backend-6ki0.onrender.com/api/channel-partner/ads/${currentEditingAdId}` 
-                    : `${API_BASE_URL}/ads`;
+                // Use Channel Partner backend for ads (handles credit deduction and proxies to main backend)
+                const url = `${API_BASE_URL}/ads`;
                 const method = currentEditingAdId ? 'PUT' : 'POST';
+                if (currentEditingAdId) {
+                    formData.append('adId', currentEditingAdId);
+                }
                 
                 const response = await fetch(url, {
                     method: method,
@@ -2118,10 +2118,9 @@
             currentEditingAdId = adId;
             
             try {
-                // Fetch ad details
-                const MAIN_BACKEND_URL = 'https://instantlly-cards-backend-6ki0.onrender.com/api';
+                // Fetch ad details via Channel Partner backend proxy
                 const userPhone = currentUser?.phone || '';
-                const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads?phone=${userPhone}`);
+                const response = await fetch(`${API_BASE_URL}/users/my-ads?phone=${encodeURIComponent(userPhone)}`);
                 const data = await response.json();
                 
                 const ad = data.ads?.find(a => (a._id || a.id) === adId);

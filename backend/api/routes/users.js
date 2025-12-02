@@ -292,4 +292,48 @@ router.get('/:personCode/introduced-count', async (req, res) => {
   }
 });
 
+/**
+ * GET /users/my-ads
+ * Fetch current user's ads from Instantlly Cards backend
+ * Proxies the request to avoid CORS issues
+ */
+router.get('/my-ads', async (req, res) => {
+  try {
+    const fetch = require('node-fetch');
+    const { phone } = req.query;
+    
+    if (!phone) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Phone number is required' 
+      });
+    }
+    
+    console.log('🔄 Fetching ads for user phone:', phone);
+    
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const url = `${MAIN_BACKEND_URL}/api/channel-partner/ads?phone=${encodeURIComponent(phone)}`;
+    
+    console.log('🌐 Calling main backend:', url);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (response.ok) {
+      console.log(`✅ Fetched ${data.ads?.length || 0} ads for user`);
+      res.json(data);
+    } else {
+      console.error('❌ Failed to fetch user ads:', response.status, data);
+      res.status(response.status).json(data);
+    }
+  } catch (error) {
+    console.error('❌ User ads fetch error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to fetch ads',
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;
