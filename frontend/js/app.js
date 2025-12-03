@@ -3089,84 +3089,109 @@ async function showIDCard(name, phone, photo,positionLocation) {
         const modalHTML = `
         <style>
             #idCardModal .modal-dialog {
-                max-width: 450px;
+                max-width: 420px;
                 margin: 0.5rem auto;
             }
             #idCardModal .modal-body {
-                overflow: visible;
-                padding: 8px;
+                overflow: hidden;
+                padding: 0;
+                height: 550px;
                 display: flex;
                 justify-content: center;
                 align-items: center;
             }
             #idCardContent {
-                transform: scale(0.42);
+                transform: scale(0.46);
                 transform-origin: center center;
-                margin: -90px auto -120px auto;
             }
             @media (min-width: 1400px) {
                 #idCardModal .modal-dialog {
-                    max-width: 500px;
+                    max-width: 480px;
+                }
+                #idCardModal .modal-body {
+                    height: 620px;
                 }
                 #idCardContent {
-                    transform: scale(0.48);
-                    margin: -70px auto -100px auto;
+                    transform: scale(0.52);
                 }
             }
             @media (max-width: 1199px) {
                 #idCardModal .modal-dialog {
-                    max-width: 420px;
+                    max-width: 400px;
+                }
+                #idCardModal .modal-body {
+                    height: 520px;
                 }
                 #idCardContent {
-                    transform: scale(0.40);
-                    margin: -100px auto -130px auto;
+                    transform: scale(0.44);
                 }
             }
             @media (max-width: 991px) {
                 #idCardModal .modal-dialog {
                     max-width: 380px;
                 }
+                #idCardModal .modal-body {
+                    height: 500px;
+                }
                 #idCardContent {
-                    transform: scale(0.37);
-                    margin: -110px auto -145px auto;
+                    transform: scale(0.42);
                 }
             }
             @media (max-width: 768px) {
                 #idCardModal .modal-dialog {
-                    max-width: 340px;
-                    margin: 0.3rem auto;
+                    max-width: 350px;
+                    margin: 0.5rem auto;
+                }
+                #idCardModal .modal-body {
+                    height: 470px;
                 }
                 #idCardContent {
-                    transform: scale(0.33);
-                    margin: -125px auto -165px auto;
+                    transform: scale(0.39);
                 }
             }
             @media (max-width: 576px) {
                 #idCardModal .modal-dialog {
-                    max-width: 95%;
-                    margin: 0.3rem auto;
+                    max-width: 320px;
+                    margin: 0.5rem auto;
+                }
+                #idCardModal .modal-body {
+                    height: 440px;
                 }
                 #idCardContent {
-                    transform: scale(0.29);
-                    margin: -140px auto -185px auto;
+                    transform: scale(0.36);
                 }
             }
             @media (max-width: 480px) {
+                #idCardModal .modal-dialog {
+                    max-width: 300px;
+                }
+                #idCardModal .modal-body {
+                    height: 420px;
+                }
                 #idCardContent {
-                    transform: scale(0.26);
-                    margin: -150px auto -200px auto;
+                    transform: scale(0.34);
                 }
             }
             @media (max-width: 400px) {
+                #idCardModal .modal-dialog {
+                    max-width: 280px;
+                }
+                #idCardModal .modal-body {
+                    height: 400px;
+                }
                 #idCardContent {
-                    transform: scale(0.23);
-                    margin: -160px auto -220px auto;
+                    transform: scale(0.32);
                 }
             }
             @media (max-width: 360px) {
+                #idCardModal .modal-dialog {
+                    max-width: 260px;
+                }
+                #idCardModal .modal-body {
+                    height: 380px;
+                }
                 #idCardContent {
-                    transform: scale(0.21);
-                    margin: -170px auto -235px auto;
+                    transform: scale(0.30);
                 }
             }
         </style>
