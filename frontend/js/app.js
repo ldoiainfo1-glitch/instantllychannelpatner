@@ -3039,22 +3039,35 @@ function fallbackCopyTextToClipboard(text) {
 //     }
 // }
 
-// Function to get complete location hierarchy path
+// Function to get complete location hierarchy path UP TO the person's level (not beyond)
 async function getCompleteLocationPath(location) {
     try {
         console.log('🔍 Getting complete path for:', location);
         
-        // Find the lowest level that has a value
-        const lowestLevel = location.village || location.pincode || location.tehsil || 
+        // Determine the person's area head level (the lowest level that has a value)
+        let personLevel = null;
+        if (location.village) personLevel = 'village';
+        else if (location.pincode) personLevel = 'pincode';
+        else if (location.tehsil) personLevel = 'tehsil';
+        else if (location.district) personLevel = 'district';
+        else if (location.division) personLevel = 'division';
+        else if (location.state) personLevel = 'state';
+        else if (location.zone) personLevel = 'zone';
+        else personLevel = 'country';
+        
+        console.log('👤 Person is Area Head at level:', personLevel);
+        
+        // Get the value to lookup
+        const lookupValue = location.village || location.pincode || location.tehsil || 
                            location.district || location.division || location.state || 
                            location.zone || location.country;
         
-        if (!lowestLevel) {
+        if (!lookupValue) {
             return location; // Return as-is if nothing is set
         }
         
         // Call backend API to get reverse lookup
-        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lowestLevel)}`);
+        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lookupValue)}`);
         
         if (!response.ok) {
             console.warn('⚠️ Could not fetch location hierarchy, using provided data');
@@ -3064,17 +3077,31 @@ async function getCompleteLocationPath(location) {
         const fullPath = await response.json();
         console.log('✅ Got complete path:', fullPath);
         
-        // Merge the full path with original location, keeping the original values where they exist
-        return {
-            country: location.country || fullPath.country || "India",
-            zone: location.zone || fullPath.zone || "",
-            state: location.state || fullPath.state || "",
-            division: location.division || fullPath.division || "",
-            district: location.district || fullPath.district || "",
-            tehsil: location.tehsil || fullPath.tehsil || "",
-            pincode: location.pincode || fullPath.pincode || "",
-            village: location.village || fullPath.village || ""
+        // Build the result - fill hierarchy UP TO person's level, leave rest empty
+        const result = {
+            country: "India", // Always show country
+            zone: "",
+            state: "",
+            division: "",
+            district: "",
+            tehsil: "",
+            pincode: "",
+            village: ""
         };
+        
+        // Fill hierarchy from top down, UP TO the person's level only
+        const hierarchy = ['country', 'zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
+        const personLevelIndex = hierarchy.indexOf(personLevel);
+        
+        for (let i = 0; i <= personLevelIndex; i++) {
+            const level = hierarchy[i];
+            // Use original location value first, then fullPath, then empty
+            result[level] = location[level] || fullPath[level] || "";
+        }
+        
+        console.log('📍 Final hierarchy (up to', personLevel + '):', result);
+        
+        return result;
     } catch (error) {
         console.error('❌ Error getting location path:', error);
         return location; // Return original on error
