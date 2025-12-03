@@ -690,7 +690,12 @@ function createPositionRow(position) {
     let photoCell = '';
     if (position.applicantDetails && position.applicantDetails.photo) {
         // Photo is now stored as base64 in MongoDB
-        photoCell = `<img src="${position.applicantDetails.photo}" 
+        // Add cache-busting timestamp to force fresh photo load
+        const photoSrc = position.applicantDetails.photo.startsWith('data:') 
+            ? position.applicantDetails.photo 
+            : `${position.applicantDetails.photo}?t=${Date.now()}`;
+        
+        photoCell = `<img src="${photoSrc}" 
                          alt="${position.applicantDetails.name || 'Applicant'}" 
                          class="rounded-circle"
                          style="width: 50px; height: 50px; object-fit: cover;"

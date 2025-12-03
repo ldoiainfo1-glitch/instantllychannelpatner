@@ -40,9 +40,19 @@ router.get('/dashboard', async (req, res) => {
 router.get('/applications/pending', async (req, res) => {
   try {
     const pendingApplications = await Application.find({ status: 'pending' })
+      .populate('userId')
       .sort({ appliedDate: -1 });
     
-    res.json(pendingApplications);
+    // Update photo from User model if available
+    const updatedApplications = pendingApplications.map(app => {
+      const appObj = app.toObject();
+      if (app.userId && app.userId.photo) {
+        appObj.applicantInfo.photo = app.userId.photo;
+      }
+      return appObj;
+    });
+    
+    res.json(updatedApplications);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -52,9 +62,19 @@ router.get('/applications/pending', async (req, res) => {
 router.get('/applications/approved', async (req, res) => {
   try {
     const approvedApplications = await Application.find({ status: 'approved' })
+      .populate('userId')
       .sort({ approvedDate: -1 });
     
-    res.json(approvedApplications);
+    // Update photo from User model if available
+    const updatedApplications = approvedApplications.map(app => {
+      const appObj = app.toObject();
+      if (app.userId && app.userId.photo) {
+        appObj.applicantInfo.photo = app.userId.photo;
+      }
+      return appObj;
+    });
+    
+    res.json(updatedApplications);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -64,9 +84,19 @@ router.get('/applications/approved', async (req, res) => {
 router.get('/applications/rejected', async (req, res) => {
   try {
     const rejectedApplications = await Application.find({ status: 'rejected' })
+      .populate('userId')
       .sort({ appliedDate: -1 });
     
-    res.json(rejectedApplications);
+    // Update photo from User model if available
+    const updatedApplications = rejectedApplications.map(app => {
+      const appObj = app.toObject();
+      if (app.userId && app.userId.photo) {
+        appObj.applicantInfo.photo = app.userId.photo;
+      }
+      return appObj;
+    });
+    
+    res.json(updatedApplications);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
