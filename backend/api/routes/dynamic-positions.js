@@ -329,11 +329,36 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
         }
       }
       
+      // CRITICAL FIX: Get updated photo from User model if available
+      let userPhoto = existingApplication.applicantInfo.photo; // Default from application
+      
+      console.log(`\n📸 PHOTO FIX for ${existingApplication.applicantInfo.name} (${existingApplication.applicantInfo.phone}):`);
+      console.log(`   Application photo: ${userPhoto ? userPhoto.length : 0} chars`);
+      
+      if (existingApplication.userId) {
+        try {
+          console.log(`   🔄 Fetching User by userId: ${existingApplication.userId}`);
+          const linkedUser = await User.findById(existingApplication.userId);
+          if (linkedUser && linkedUser.photo) {
+            userPhoto = linkedUser.photo;
+            console.log(`   ✅ Using User.photo: ${linkedUser.photo.length} chars (UPDATED)`);
+          }
+        } catch (error) {
+          console.error(`   ❌ Error fetching user by ID:`, error.message);
+        }
+      } else if (applicantUser && applicantUser.photo) {
+        // Fallback: use the user found by phone
+        userPhoto = applicantUser.photo;
+        console.log(`   ✅ Using User.photo (via phone): ${applicantUser.photo.length} chars (UPDATED)`);
+      }
+      
+      console.log(`   🎯 FINAL photo length: ${userPhoto ? userPhoto.length : 0} chars\n`);
+      
       position.applicantDetails = {
         name: existingApplication.applicantInfo.name,
         phone: existingApplication.applicantInfo.phone,
         email: existingApplication.applicantInfo.email,
-        photo: existingApplication.applicantInfo.photo,
+        photo: userPhoto, // Use updated photo from User model
         address: existingApplication.applicantInfo.address,
         companyName: existingApplication.applicantInfo.companyName,
         businessName: existingApplication.applicantInfo.businessName,
