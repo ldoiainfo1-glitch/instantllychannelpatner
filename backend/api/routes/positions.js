@@ -85,22 +85,44 @@ router.get('/', async (req, res) => {
         // Get photo from User model if available (user may have updated it), otherwise from application
         let userPhoto = application.applicantInfo.photo; // Default from application
         
+        console.log(`\n🔍 PHOTO DEBUG for ${application.applicantInfo.name} (Phone: ${application.applicantInfo.phone}):`);
+        console.log(`   Application._id: ${application._id}`);
+        console.log(`   Application.userId: ${application.userId || 'NOT SET'}`);
+        console.log(`   Application photo length: ${application.applicantInfo.photo ? application.applicantInfo.photo.length : 0} chars`);
+        console.log(`   Application photo preview: ${application.applicantInfo.photo ? application.applicantInfo.photo.substring(0, 50) : 'NO PHOTO'}...`);
+        
         // CRITICAL FIX: Manually fetch the User document to get updated photo
         if (application.userId) {
           try {
+            console.log(`   🔄 Fetching User document: ${application.userId}`);
             const linkedUser = await User.findById(application.userId);
-            if (linkedUser && linkedUser.photo) {
-              userPhoto = linkedUser.photo; // Use updated photo from User model
-              console.log(`📸 Using updated photo from User model for ${application.applicantInfo.name}`);
+            
+            if (linkedUser) {
+              console.log(`   ✅ User found: ${linkedUser._id}`);
+              console.log(`   User.photo exists: ${!!linkedUser.photo}`);
+              console.log(`   User.photo length: ${linkedUser.photo ? linkedUser.photo.length : 0} chars`);
+              console.log(`   User.photo preview: ${linkedUser.photo ? linkedUser.photo.substring(0, 50) : 'NO PHOTO'}...`);
+              
+              if (linkedUser.photo) {
+                userPhoto = linkedUser.photo; // Use updated photo from User model
+                console.log(`   📸 USING User.photo (${linkedUser.photo.length} chars) instead of Application.photo (${application.applicantInfo.photo ? application.applicantInfo.photo.length : 0} chars)`);
+                console.log(`   Photos match: ${userPhoto === application.applicantInfo.photo ? 'YES ✅' : 'NO ❌ (User photo is different/updated)'}`);
+              } else {
+                console.log(`   ⚠️  User.photo is empty/null - falling back to Application.photo`);
+              }
             } else {
-              console.log(`⚠️  User ${application.userId} not found or has no photo, using application photo`);
+              console.log(`   ❌ User ${application.userId} NOT FOUND in database`);
             }
           } catch (error) {
-            console.error(`❌ Error fetching user photo for ${application.userId}:`, error.message);
+            console.error(`   ❌ ERROR fetching user photo for ${application.userId}:`, error.message);
+            console.error(`   Error stack:`, error.stack);
           }
         } else {
-          console.log(`⚠️  No userId linked for ${application.applicantInfo.name}, using application photo`);
+          console.log(`   ⚠️  No userId linked - using Application.photo only`);
         }
+        
+        console.log(`   🎯 FINAL PHOTO LENGTH: ${userPhoto ? userPhoto.length : 0} chars`);
+        console.log(`   Photo starts with: ${userPhoto ? userPhoto.substring(0, 30) : 'NO PHOTO'}...\n`);
         
         positionObj.status = displayStatus;
         positionObj.applicantDetails = {
@@ -119,6 +141,11 @@ router.get('/', async (req, res) => {
           paymentStatus: application.paymentStatus || 'pending',
           isVerified: application.isVerified || false
         };
+        
+        console.log(`   📤 SENDING TO FRONTEND for ${application.applicantInfo.name}:`);
+        console.log(`      - applicantDetails.photo length: ${positionObj.applicantDetails.photo ? positionObj.applicantDetails.photo.length : 0} chars`);
+        console.log(`      - Photo is base64: ${positionObj.applicantDetails.photo ? positionObj.applicantDetails.photo.startsWith('data:') : false}`);
+        console.log(`      - Status: ${positionObj.status}`);
         
         // Get additional user details if user exists
         if (application.userId) {
@@ -144,7 +171,17 @@ router.get('/', async (req, res) => {
       finalPositions = enrichedPositions.filter(pos => pos.status === status);
     }
     
-    console.log(`📊 Returning ${finalPositions.length} positions with application status`);
+    console.log(`\n📊 FINAL RESPONSE SUMMARY:`);
+    console.log(`   Total positions: ${finalPositions.length}`);
+    const withApplicants = finalPositions.filter(p => p.applicantDetails);
+    console.log(`   Positions with applicants: ${withApplicants.length}`);
+    
+    // Log each applicant's photo info
+    withApplicants.forEach(p => {
+      console.log(`   - ${p.applicantDetails.name} (${p.applicantDetails.phone}): Photo ${p.applicantDetails.photo ? p.applicantDetails.photo.length : 0} chars`);
+    });
+    console.log(`\n✅ Sending response to frontend\n`);
+    
     res.json(finalPositions);
   } catch (error) {
     console.error('❌ Error fetching positions:', error);

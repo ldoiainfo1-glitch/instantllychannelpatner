@@ -689,6 +689,12 @@ function createPositionRow(position) {
     // Handle photo
     let photoCell = '';
     if (position.applicantDetails && position.applicantDetails.photo) {
+        console.log(`🖼️  FRONTEND RENDERING: ${position.applicantDetails.name}`);
+        console.log(`   Photo exists: YES`);
+        console.log(`   Photo length: ${position.applicantDetails.photo.length} chars`);
+        console.log(`   Photo preview: ${position.applicantDetails.photo.substring(0, 50)}...`);
+        console.log(`   Is base64: ${position.applicantDetails.photo.startsWith('data:')}`);
+        
         // Photo is now stored as base64 in MongoDB
         // Add cache-busting timestamp to force fresh photo load
         const photoSrc = position.applicantDetails.photo.startsWith('data:') 
@@ -700,7 +706,10 @@ function createPositionRow(position) {
                          class="rounded-circle"
                          style="width: 50px; height: 50px; object-fit: cover;"
                          onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjUiIGN5PSIyNSIgcj0iMjUiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAzMCAzMCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxMCIgeT0iMTAiPgo8cGF0aCBkPSJNMTUgMTVDMTcuNzYxNCAxNSAyMCAxMi43NjE0IDIwIDEwQzIwIDcuMjM4NTggMTcuNzYxNCA1IDE1IDVDMTIuMjM4NiA1IDEwIDcuMjM4NTggMTAgMTBDMTAgMTIuNzYxNCAxMi4yMzg2IDE1IDE1IDE1WiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMTUgMTdDMTEuNjY1IDUgOC41IDcuOTE2MjUgOC41IDExLjVWMjFIMjEuNVYxMS41QzIxLjUgNy45MTYyNSAxOC4zMzUgMTcgMTUgMTdaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4=';">`;
+        console.log(`   ✅ Photo cell created with img tag`);
     } else {
+        console.log(`🖼️  FRONTEND RENDERING: ${position.applicantDetails ? position.applicantDetails.name : 'Unknown'}`);
+        console.log(`   Photo exists: NO - showing default icon`);
         photoCell = '<i class="fas fa-user-circle fa-3x text-muted"></i>';
     }
 
@@ -881,8 +890,18 @@ async function handleSearch() {
         if (village) queryParams.push(`village=${village}`);
 
         const url = `${API_BASE_URL}/positions?${queryParams.join('&')}`;
+        console.log('🌐 FRONTEND: Fetching positions from:', url);
         const response = await fetch(url);
         currentPositions = await response.json();
+        console.log('📥 FRONTEND: Received', currentPositions.length, 'positions');
+        
+        // Log photo info for positions with applicants
+        const withApplicants = currentPositions.filter(p => p.applicantDetails);
+        console.log('👥 FRONTEND: Positions with applicants:', withApplicants.length);
+        withApplicants.forEach(p => {
+            const photoLen = p.applicantDetails.photo ? p.applicantDetails.photo.length : 0;
+            console.log(`   - ${p.applicantDetails.name} (${p.applicantDetails.phone}): Photo ${photoLen} chars`);
+        });
 
         // Client-side filter for name and phone
         let filteredPositions = currentPositions;
