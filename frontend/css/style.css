@@ -78,7 +78,7 @@ html {
     backdrop-filter: blur(10px);
 }
 
-/* Navigation */
+/* Navigation. */
 .navbar {
     backdrop-filter: blur(10px);
     background-color: white !important;
