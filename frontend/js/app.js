@@ -3090,19 +3090,19 @@ async function showIDCard(name, phone, photo,positionLocation) {
         <style>
             #idCardModal .modal-dialog {
                 max-width: 500px;
-                margin: 1rem auto;
+                margin: 1.5rem auto;
             }
             #idCardModal .modal-body {
-                max-height: calc(100vh - 150px);
+                max-height: calc(100vh - 200px);
                 overflow-y: auto;
                 overflow-x: hidden;
-                padding: 10px;
+                padding: 20px 15px;
                 display: flex;
                 justify-content: center;
-                align-items: center;
+                align-items: flex-start;
             }
             #idCardContent {
-                transform: scale(0.48);
+                transform: scale(0.50);
                 transform-origin: top center;
                 margin: 0 auto;
             }
@@ -3111,7 +3111,7 @@ async function showIDCard(name, phone, photo,positionLocation) {
                     max-width: 450px;
                 }
                 #idCardContent {
-                    transform: scale(0.43);
+                    transform: scale(0.45);
                 }
             }
             @media (max-width: 768px) {
@@ -3119,21 +3119,21 @@ async function showIDCard(name, phone, photo,positionLocation) {
                     max-width: 400px;
                 }
                 #idCardContent {
-                    transform: scale(0.38);
+                    transform: scale(0.40);
                 }
             }
             @media (max-width: 576px) {
                 #idCardModal .modal-dialog {
                     max-width: 95%;
-                    margin: 0.5rem auto;
+                    margin: 1rem auto;
                 }
                 #idCardContent {
-                    transform: scale(0.32);
+                    transform: scale(0.35);
                 }
             }
             @media (max-width: 400px) {
                 #idCardContent {
-                    transform: scale(0.28);
+                    transform: scale(0.30);
                 }
             }
         </style>
