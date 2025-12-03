@@ -2,6 +2,15 @@ const express = require('express');
 const router = express.Router();
 const Position = require('../models/Position');
 
+// Version endpoint to verify deployment
+router.get('/version', (req, res) => {
+  res.json({ 
+    version: '1.1.0-photo-fix', 
+    deployed: new Date().toISOString(),
+    message: 'Manual User.findById() photo fetch active'
+  });
+});
+
 // Get all positions with filters and application status
 router.get('/', async (req, res) => {
   try {
