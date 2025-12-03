@@ -86,8 +86,10 @@ const authRoutes = require('../api/routes/auth');
 const creditsRoutes = require('../api/routes/credits');
 const promotionsRoutes = require('../api/routes/promotions');
 const adsRoutes = require('../api/routes/ads');
+const positionsRoutes = require('../api/routes/positions');
 
 // Routes
+app.use('/api/positions', positionsRoutes); // Add positions route FIRST for photo fix
 app.use('/api/dynamic-positions', dynamicPositionsRoutes);
 app.use('/api/applications', applicationsRoutes);
 app.use('/api/locations', locationsRoutes);
