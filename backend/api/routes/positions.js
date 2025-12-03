@@ -53,9 +53,9 @@ router.get('/', async (req, res) => {
       const positionObj = position.toObject();
       
       // Find application for this specific position in channelpartner.applications
-      const application = await Application.findOne({ 
+      let application = await Application.findOne({ 
         positionId: position._id
-      }).populate('userId');
+      });
       
       if (application) {
         // Position has an application - show applicant data instead of Apply button
@@ -75,8 +75,22 @@ router.get('/', async (req, res) => {
         
         // Get photo from User model if available (user may have updated it), otherwise from application
         let userPhoto = application.applicantInfo.photo; // Default from application
-        if (application.userId && application.userId.photo) {
-          userPhoto = application.userId.photo; // Use updated photo from User model
+        
+        // CRITICAL FIX: Manually fetch the User document to get updated photo
+        if (application.userId) {
+          try {
+            const linkedUser = await User.findById(application.userId);
+            if (linkedUser && linkedUser.photo) {
+              userPhoto = linkedUser.photo; // Use updated photo from User model
+              console.log(`📸 Using updated photo from User model for ${application.applicantInfo.name}`);
+            } else {
+              console.log(`⚠️  User ${application.userId} not found or has no photo, using application photo`);
+            }
+          } catch (error) {
+            console.error(`❌ Error fetching user photo for ${application.userId}:`, error.message);
+          }
+        } else {
+          console.log(`⚠️  No userId linked for ${application.applicantInfo.name}, using application photo`);
         }
         
         positionObj.status = displayStatus;
