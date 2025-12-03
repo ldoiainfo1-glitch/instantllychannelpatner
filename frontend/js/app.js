@@ -3089,32 +3089,56 @@ async function showIDCard(name, phone, photo,positionLocation) {
         const modalHTML = `
         <style>
             #idCardModal .modal-dialog {
-                max-width: 800px;
+                max-width: 500px;
                 margin: 1rem auto;
             }
             #idCardModal .modal-body {
-                max-height: calc(100vh - 200px);
+                max-height: calc(100vh - 150px);
                 overflow-y: auto;
                 overflow-x: hidden;
+                padding: 10px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
             #idCardContent {
-                transform: scale(0.65);
+                transform: scale(0.48);
                 transform-origin: top center;
                 margin: 0 auto;
             }
-            @media (max-width: 768px) {
+            @media (max-width: 992px) {
+                #idCardModal .modal-dialog {
+                    max-width: 450px;
+                }
                 #idCardContent {
-                    transform: scale(0.45);
+                    transform: scale(0.43);
                 }
             }
-            @media (max-width: 480px) {
+            @media (max-width: 768px) {
+                #idCardModal .modal-dialog {
+                    max-width: 400px;
+                }
                 #idCardContent {
-                    transform: scale(0.35);
+                    transform: scale(0.38);
+                }
+            }
+            @media (max-width: 576px) {
+                #idCardModal .modal-dialog {
+                    max-width: 95%;
+                    margin: 0.5rem auto;
+                }
+                #idCardContent {
+                    transform: scale(0.32);
+                }
+            }
+            @media (max-width: 400px) {
+                #idCardContent {
+                    transform: scale(0.28);
                 }
             }
         </style>
         <div class="modal fade" id="idCardModal" tabindex="-1">
-            <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
 
                     <div class="modal-header bg-primary text-white">
