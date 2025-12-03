@@ -3039,8 +3039,53 @@ function fallbackCopyTextToClipboard(text) {
 //     }
 // }
 
-async function showIDCard(name, phone, photo,positionLocation) {
+// Function to get complete location hierarchy path
+async function getCompleteLocationPath(location) {
     try {
+        console.log('🔍 Getting complete path for:', location);
+        
+        // Find the lowest level that has a value
+        const lowestLevel = location.village || location.pincode || location.tehsil || 
+                           location.district || location.division || location.state || 
+                           location.zone || location.country;
+        
+        if (!lowestLevel) {
+            return location; // Return as-is if nothing is set
+        }
+        
+        // Call backend API to get reverse lookup
+        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lowestLevel)}`);
+        
+        if (!response.ok) {
+            console.warn('⚠️ Could not fetch location hierarchy, using provided data');
+            return location;
+        }
+        
+        const fullPath = await response.json();
+        console.log('✅ Got complete path:', fullPath);
+        
+        // Merge the full path with original location, keeping the original values where they exist
+        return {
+            country: location.country || fullPath.country || "India",
+            zone: location.zone || fullPath.zone || "",
+            state: location.state || fullPath.state || "",
+            division: location.division || fullPath.division || "",
+            district: location.district || fullPath.district || "",
+            tehsil: location.tehsil || fullPath.tehsil || "",
+            pincode: location.pincode || fullPath.pincode || "",
+            village: location.village || fullPath.village || ""
+        };
+    } catch (error) {
+        console.error('❌ Error getting location path:', error);
+        return location; // Return original on error
+    }
+}
+
+async function showIDCard(name, phone, photo, positionLocation) {
+    try {
+        // Get complete location hierarchy path
+        const completeLocation = await getCompleteLocationPath(positionLocation);
+        console.log('📍 Complete location for ID card:', completeLocation);
 
         function getAreaHighlight(loc) {
             if (loc.village)  return { level: "Village", value: loc.village };
@@ -3053,17 +3098,17 @@ async function showIDCard(name, phone, photo,positionLocation) {
             return { level: "Country", value: loc.country || "India" };
         }
 
-        const highlight = getAreaHighlight(positionLocation);
+        const highlight = getAreaHighlight(completeLocation);
 
         const loc = {
-            country: positionLocation.country || "India",
-            zone: positionLocation.zone || "",
-            state: positionLocation.state || "",
-            division: positionLocation.division || "",
-            district: positionLocation.district || "",
-            tehsil: positionLocation.tehsil || "",
-            pincode: positionLocation.pincode || "",
-            village: positionLocation.village || ""
+            country: completeLocation.country || "India",
+            zone: completeLocation.zone || "",
+            state: completeLocation.state || "",
+            division: completeLocation.division || "",
+            district: completeLocation.district || "",
+            tehsil: completeLocation.tehsil || "",
+            pincode: completeLocation.pincode || "",
+            village: completeLocation.village || ""
         };
 
         let areaListHTML = "";
