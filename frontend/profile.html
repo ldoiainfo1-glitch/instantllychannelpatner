@@ -1624,6 +1624,75 @@
             return location;
         }
 
+        // Get complete location hierarchy using backend API (same as ID card)
+        async function getCompleteLocationPath(location) {
+            try {
+                console.log('🔍 Getting complete path for:', location);
+                
+                // Determine the person's area head level (the lowest level that has a value)
+                let personLevel = null;
+                if (location.village) personLevel = 'village';
+                else if (location.pincode) personLevel = 'pincode';
+                else if (location.tehsil) personLevel = 'tehsil';
+                else if (location.district) personLevel = 'district';
+                else if (location.division) personLevel = 'division';
+                else if (location.state) personLevel = 'state';
+                else if (location.zone) personLevel = 'zone';
+                else personLevel = 'country';
+                
+                console.log('👤 Person is Area Head at level:', personLevel);
+                
+                // Get the value to lookup
+                const lookupValue = location.village || location.pincode || location.tehsil || 
+                                   location.district || location.division || location.state || 
+                                   location.zone || location.country;
+                
+                if (!lookupValue) {
+                    return location; // Return as-is if nothing is set
+                }
+                
+                // Call backend API to get reverse lookup
+                const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lookupValue)}`);
+                
+                if (!response.ok) {
+                    console.warn('⚠️ Could not fetch location hierarchy, using provided data');
+                    return location;
+                }
+                
+                const fullPath = await response.json();
+                console.log('✅ Got complete path from API:', fullPath);
+                
+                // Build the result - fill hierarchy UP TO person's level
+                const result = {
+                    country: "India", // Always show country
+                    zone: "",
+                    state: "",
+                    division: "",
+                    district: "",
+                    tehsil: "",
+                    pincode: "",
+                    village: ""
+                };
+                
+                // Fill hierarchy from top down, UP TO the person's level only
+                const hierarchy = ['country', 'zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
+                const personLevelIndex = hierarchy.indexOf(personLevel);
+                
+                for (let i = 0; i <= personLevelIndex; i++) {
+                    const level = hierarchy[i];
+                    // Use original location value first, then fullPath, then empty
+                    result[level] = location[level] || fullPath[level] || "";
+                }
+                
+                console.log('📍 Final hierarchy (up to', personLevel + '):', result);
+                
+                return result;
+            } catch (error) {
+                console.error('❌ Error getting location path:', error);
+                return location; // Return original on error
+            }
+        }
+
         // Go to promotions page with user data
         async function goToPromotions() {
             if (!currentUser) {
@@ -1641,12 +1710,12 @@
                 console.log('📍 Parsed location from positionId:', location);
             }
             
-            console.log('📍 Current Application:', currentApplication);
-            console.log('📍 Final Location Data:', location);
-            console.log('📍 Position ID:', currentApplication?.positionId || currentUser.positionId);
+            // Fetch complete location hierarchy from backend API (same as ID card)
+            const completeLocation = await getCompleteLocationPath(location);
+            console.log('📍 Complete location hierarchy:', completeLocation);
             
             // Generate proper designation from location (includes location name)
-            const designation = getDesignationFromLocation(location);
+            const designation = getDesignationFromLocation(completeLocation);
             console.log('🎯 Generated Designation:', designation);
             
             // Store promotion data in sessionStorage (NOT in URL - photos are too large and cause URI_TOO_LONG error)
@@ -1655,14 +1724,14 @@
                 name: currentUser.name || '',
                 phone: currentUser.phone || '',
                 photo: currentUser.photo || '',
-                country: location.country || 'India',
-                zone: location.zone || '',
-                state: location.state || '',
-                division: location.division || '',
-                district: location.district || '',
-                tehsil: location.tehsil || '',
-                pincode: location.pincode || '',
-                village: location.village || '',
+                country: completeLocation.country || 'India',
+                zone: completeLocation.zone || '',
+                state: completeLocation.state || '',
+                division: completeLocation.division || '',
+                district: completeLocation.district || '',
+                tehsil: completeLocation.tehsil || '',
+                pincode: completeLocation.pincode || '',
+                village: completeLocation.village || '',
                 designation: designation
             };
             
