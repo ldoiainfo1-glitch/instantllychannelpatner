@@ -554,21 +554,28 @@
                         ctx.font = 'bold 46px Arial';
                         ctx.fillText(userPhone, textStartX, textStartY + 65);
                         
-                        // Build location path - skip "Country: India" for India Head (country-level only)
-                        let locationPath = '';
+                        // Build combined location and designation line (3rd line format)
+                        let thirdLine = '';
                         const isIndiaHead = userDesignation === 'India Head' && !userZone && !userState && !userDivision && !userDistrict;
-                        if (userCountry && !isIndiaHead) locationPath += `Country: ${userCountry}`;
-                        if (userZone) locationPath += ` Zone: ${userZone}`;
-                        if (userState) locationPath += ` State: ${userState}`;
-                        if (userDivision) locationPath += ` Div: ${userDivision}`;
-                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
                         
-                        // Draw location path - may wrap to 2 lines if too long
-                        if (locationPath) {
+                        // Add location parts with commas
+                        if (userCountry && !isIndiaHead) thirdLine += `Country: ${userCountry}`;
+                        if (userZone) thirdLine += (thirdLine ? ', ' : '') + `Zone: ${userZone}`;
+                        if (userState) thirdLine += (thirdLine ? ', ' : '') + `State: ${userState}`;
+                        if (userDivision) thirdLine += (thirdLine ? ', ' : '') + `Div: ${userDivision}`;
+                        if (userDistrict) thirdLine += (thirdLine ? ', ' : '') + `District: ${userDistrict}`;
+                        
+                        // Add designation at the end
+                        if (userDesignation) {
+                            thirdLine += (thirdLine ? ', ' : '') + `Designation- ${userDesignation}`;
+                        }
+                        
+                        // Draw the combined 3rd line - may wrap to 2 lines if too long
+                        if (thirdLine) {
                             ctx.font = '36px Arial';
                             ctx.fillStyle = '#92400e';
                             const maxWidth = userPhoto ? 780 : 960;
-                            const words = locationPath.split(' ');
+                            const words = thirdLine.split(' ');
                             let line = '';
                             let y = textStartY + 130;
                             
@@ -584,14 +591,6 @@
                                 }
                             }
                             ctx.fillText(line.trim(), textStartX, y);
-                        }
-                        
-                        // Draw designation in bold
-                        if (userDesignation) {
-                            ctx.font = 'bold 42px Arial';
-                            ctx.fillStyle = '#7c2d12';
-                            let desigY = locationPath ? textStartY + 215 : textStartY + 130;
-                            ctx.fillText(`Designation: ${userDesignation}`, textStartX, desigY);
                         }
                         
                         // Return as data URL (no logo)
@@ -760,21 +759,28 @@
                         ctx.font = 'bold 46px Arial';
                         ctx.fillText(userPhone, textStartX, textStartY + 65);
                         
-                        // Build location path - skip "Country: India" for India Head (country-level only)
-                        let locationPath = '';
+                        // Build combined location and designation line (3rd line format)
+                        let thirdLine = '';
                         const isIndiaHead = userDesignation === 'India Head' && !userZone && !userState && !userDivision && !userDistrict;
-                        if (userCountry && !isIndiaHead) locationPath += `Country: ${userCountry}`;
-                        if (userZone) locationPath += ` Zone: ${userZone}`;
-                        if (userState) locationPath += ` State: ${userState}`;
-                        if (userDivision) locationPath += ` Div: ${userDivision}`;
-                        if (userDistrict) locationPath += ` District: ${userDistrict}`;
                         
-                        // Draw location path - may wrap to 2 lines if too long
-                        if (locationPath) {
+                        // Add location parts with commas
+                        if (userCountry && !isIndiaHead) thirdLine += `Country: ${userCountry}`;
+                        if (userZone) thirdLine += (thirdLine ? ', ' : '') + `Zone: ${userZone}`;
+                        if (userState) thirdLine += (thirdLine ? ', ' : '') + `State: ${userState}`;
+                        if (userDivision) thirdLine += (thirdLine ? ', ' : '') + `Div: ${userDivision}`;
+                        if (userDistrict) thirdLine += (thirdLine ? ', ' : '') + `District: ${userDistrict}`;
+                        
+                        // Add designation at the end
+                        if (userDesignation) {
+                            thirdLine += (thirdLine ? ', ' : '') + `Designation- ${userDesignation}`;
+                        }
+                        
+                        // Draw the combined 3rd line - may wrap to 2 lines if too long
+                        if (thirdLine) {
                             ctx.font = '36px Arial';
                             ctx.fillStyle = '#92400e';
                             const maxWidth = userPhoto ? 780 : 960;
-                            const words = locationPath.split(' ');
+                            const words = thirdLine.split(' ');
                             let line = '';
                             let y = textStartY + 130;
                             
@@ -790,14 +796,6 @@
                                 }
                             }
                             ctx.fillText(line.trim(), textStartX, y);
-                        }
-                        
-                        // Draw designation in bold
-                        if (userDesignation) {
-                            ctx.font = 'bold 42px Arial';
-                            ctx.fillStyle = '#7c2d12';
-                            let desigY = locationPath ? textStartY + 215 : textStartY + 130;
-                            ctx.fillText(`Designation: ${userDesignation}`, textStartX, desigY);
                         }
                         
                         // Download the canvas as image (no logo)
