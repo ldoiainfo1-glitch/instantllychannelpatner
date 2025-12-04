@@ -834,6 +834,9 @@
 
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Clear old promotion data cache to ensure fresh designation
+            sessionStorage.removeItem('promotionData');
+            
             if (!authToken) {
                 // Show login section
                 document.getElementById('loginSection').style.display = 'block';
@@ -1557,29 +1560,27 @@
 
         // Generate designation based on location
         function getDesignationFromLocation(location) {
-            if (!location || !location.country) return '';
+            if (!location) return 'India Head';
             
-            // Determine the lowest filled level
-            if (location.village) {
+            // Determine the lowest filled level (check for non-empty strings)
+            if (location.village && location.village.trim()) {
                 return `Village Head`;
-            } else if (location.pincode) {
+            } else if (location.pincode && location.pincode.trim()) {
                 return `Pincode Head`;
-            } else if (location.tehsil) {
+            } else if (location.tehsil && location.tehsil.trim()) {
                 return `Tehsil Head`;
-            } else if (location.district) {
+            } else if (location.district && location.district.trim()) {
                 return `District Head`;
-            } else if (location.division) {
+            } else if (location.division && location.division.trim()) {
                 return `Division Head`;
-            } else if (location.state) {
+            } else if (location.state && location.state.trim()) {
                 return `State Head`;
-            } else if (location.zone) {
+            } else if (location.zone && location.zone.trim()) {
                 return `Zone Head`;
-            } else if (location.country) {
-                // Country level - India Head
+            } else {
+                // Country level or no specific location - India Head
                 return `India Head`;
             }
-            
-            return '';
         }
 
         // Parse location from positionId
