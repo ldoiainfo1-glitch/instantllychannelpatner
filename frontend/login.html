@@ -224,11 +224,14 @@
                         </div>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="remember-me">
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <label class="remember-me mb-0">
                             <input type="checkbox" id="rememberMe">
                             Remember me for 30 days
                         </label>
+                        <a href="#" id="forgotPasswordLink" style="font-size: 11px; color: #3b82f6; text-decoration: none;">
+                            Forgot Password?
+                        </a>
                     </div>
 
                     <button type="submit" class="btn btn-login" id="loginBtn">
@@ -242,6 +245,63 @@
             <div class="login-footer">
                 <i class="fas fa-shield-alt me-1"></i>
                 Secure Admin Access Only
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                    <h5 class="modal-title">
+                        <i class="fas fa-lock me-2"></i>Reset Password
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Step 1: Request OTP -->
+                    <div id="requestOtpStep">
+                        <p class="text-center mb-3">Enter your registered phone number to receive an OTP</p>
+                        <div class="mb-3">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="resetPhone" placeholder="Enter 10-digit phone number" maxlength="10">
+                        </div>
+                        <button class="btn btn-primary w-100" id="sendOtpBtn" onclick="sendResetOTP()">
+                            <i class="fas fa-paper-plane me-2"></i>Send OTP
+                        </button>
+                    </div>
+
+                    <!-- Step 2: Verify OTP and Set New Password -->
+                    <div id="verifyOtpStep" style="display: none;">
+                        <p class="text-center mb-3">Enter the OTP sent to <strong id="sentToPhone"></strong></p>
+                        <form id="resetPasswordForm" onsubmit="resetPassword(event)">
+                            <div class="mb-3">
+                                <label class="form-label">OTP Code</label>
+                                <input type="text" class="form-control" id="otpCode" placeholder="Enter 6-digit OTP" maxlength="6" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword" placeholder="Enter new password" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" placeholder="Confirm new password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" id="resetBtn">
+                                <i class="fas fa-check me-2"></i>Reset Password
+                            </button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <a href="#" onclick="backToRequestOtp()" style="font-size: 12px;">
+                                <i class="fas fa-arrow-left me-1"></i>Back to phone number
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Alert messages -->
+                    <div id="resetAlert" class="alert mt-3" style="display: none;"></div>
+                </div>
             </div>
         </div>
     </div>

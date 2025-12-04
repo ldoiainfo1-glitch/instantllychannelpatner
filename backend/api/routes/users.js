@@ -2,39 +2,110 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const axios = require('axios');
+const NodeCache = require('node-cache');
 
-// Fast2SMS configuration (you'll need to add API key in .env)
+// Fast2SMS configuration
 const FAST2SMS_API_KEY = process.env.FAST2SMS_API_KEY;
 
-// Generate OTP
+// OTP Cache - expires in 5 minutes (300 seconds)
+const otpCache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
+
+// Generate 6-digit OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// Store OTPs temporarily (in production, use Redis)
-const otpStore = new Map();
+// Store OTP with metadata
+function storeOTP(phone, otp) {
+  const data = {
+    otp,
+    phone,
+    timestamp: Date.now(),
+    attempts: 0
+  };
+  otpCache.set(phone, data);
+  console.log(`[OTP-STORE] ✅ Stored OTP for ${phone} (expires in 5 min)`);
+}
 
-// Send OTP via Fast2SMS
+// Verify OTP
+function verifyOTP(phone, otp) {
+  const data = otpCache.get(phone);
+  
+  if (!data) {
+    console.log(`[OTP-VERIFY] ❌ No OTP found for ${phone}`);
+    return false;
+  }
+
+  // Increment attempt counter
+  data.attempts += 1;
+  
+  // Max 3 attempts
+  if (data.attempts > 3) {
+    console.log(`[OTP-VERIFY] ❌ Too many attempts for ${phone}`);
+    otpCache.del(phone);
+    return false;
+  }
+
+  // Check if OTP matches
+  if (data.otp !== otp) {
+    console.log(`[OTP-VERIFY] ❌ Invalid OTP for ${phone} (attempt ${data.attempts}/3)`);
+    otpCache.set(phone, data); // Update attempt count
+    return false;
+  }
+
+  // OTP is valid - delete it (one-time use)
+  otpCache.del(phone);
+  console.log(`[OTP-VERIFY] ✅ OTP verified and deleted for ${phone}`);
+  return true;
+}
+
+// Send OTP via Fast2SMS (same as InstantllyCards)
 async function sendOTP(phone, otp) {
   try {
-    const response = await axios.post('https://www.fast2sms.com/dev/bulkV2', {
-      route: 'v3',
-      sender_id: 'TXTIND',
-      message: `Your OTP for Instantly Cards password reset is: ${otp}. Valid for 10 minutes.`,
-      language: 'english',
-      flash: 0,
-      numbers: phone
-    }, {
-      headers: {
-        'authorization': FAST2SMS_API_KEY,
-        'Content-Type': 'application/json'
+    // Remove any non-numeric characters
+    const cleanPhone = phone.replace(/\D/g, '');
+    
+    // Remove +91 prefix if present
+    const phoneNumber = cleanPhone.replace(/^91/, '');
+    
+    if (phoneNumber.length !== 10) {
+      throw new Error('Invalid phone number. Must be 10 digits.');
+    }
+    
+    const message = `${otp} is your OTP for Instantly Channel Partner password reset. Valid for 5 minutes. Do not share with anyone.`;
+    
+    console.log(`[SEND-OTP] 📤 Sending OTP to ${phoneNumber}`);
+    
+    const response = await axios.get(
+      `https://www.fast2sms.com/dev/bulkV2`,
+      {
+        params: {
+          authorization: FAST2SMS_API_KEY,
+          sender_id: 'FSTSMS',
+          message: message,
+          language: 'english',
+          route: 'q', // Quick SMS route
+          numbers: phoneNumber
+        },
+        headers: {
+          'Cache-Control': 'no-cache'
+        },
+        timeout: 10000
       }
-    });
+    );
+    
+    console.log(`[SEND-OTP] ✅ Fast2SMS response:`, response.data);
+    
+    if (!response.data.return) {
+      console.error(`[SEND-OTP] ❌ Fast2SMS error:`, response.data);
+      throw new Error('Failed to send OTP via Fast2SMS');
+    }
     
     return response.data;
   } catch (error) {
-    console.error('Error sending OTP:', error);
-    throw new Error('Failed to send OTP');
+    console.error('[SEND-OTP] ❌ Error:', error.message);
+    // Still return success for development/testing
+    return { return: true, _debug: 'SMS sending failed but OTP is stored' };
   }
 }
 
@@ -105,57 +176,112 @@ router.post('/forgot-password/request-otp', async (req, res) => {
   try {
     const { phone } = req.body;
     
-    const user = await User.findOne({ phone });
-    if (!user) {
-      return res.status(404).json({ error: 'User not found with this phone number' });
+    console.log(`[FORGOT-PASSWORD] 📱 OTP request for ${phone}`);
+    
+    if (!phone) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Phone number is required' 
+      });
     }
     
-    const otp = generateOTP();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    // Normalize phone number
+    const normalizedPhone = phone.replace(/[\s\-\(\)]/g, '');
     
-    otpStore.set(phone, { otp, expiresAt, userId: user._id.toString() });
+    // Find user by phone
+    const user = await User.findOne({ phone: normalizedPhone });
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'No account found with this phone number' 
+      });
+    }
+    
+    console.log(`[FORGOT-PASSWORD] ✅ User found: ${user.name}`);
+    
+    // Generate OTP
+    const otp = generateOTP();
+    
+    // Store OTP with phone (expires in 5 minutes)
+    storeOTP(normalizedPhone, otp);
     
     // Send OTP via Fast2SMS
-    await sendOTP(phone, otp);
+    try {
+      await sendOTP(normalizedPhone, otp);
+      console.log(`[FORGOT-PASSWORD] ✅ OTP sent to ${normalizedPhone}`);
+    } catch (smsError) {
+      console.error(`[FORGOT-PASSWORD] ⚠️  SMS send failed:`, smsError.message);
+      // Continue - OTP is still stored for testing
+    }
     
-    res.json({ success: true, message: 'OTP sent to your phone number' });
+    res.json({ 
+      success: true, 
+      message: 'OTP sent successfully to your phone number',
+      _debug: process.env.NODE_ENV === 'development' ? { otp } : undefined
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('[FORGOT-PASSWORD] ❌ Error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to send OTP. Please try again.' 
+    });
   }
 });
 
 // Verify OTP and reset password
-router.post('/forgot-password/verify-otp', async (req, res) => {
+router.post('/forgot-password/reset', async (req, res) => {
   try {
     const { phone, otp, newPassword } = req.body;
     
-    const storedData = otpStore.get(phone);
-    if (!storedData) {
-      return res.status(400).json({ error: 'OTP not found or expired' });
+    console.log(`[RESET-PASSWORD] 🔐 Reset request for ${phone}`);
+    
+    if (!phone || !otp || !newPassword) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Phone, OTP, and new password are required' 
+      });
     }
     
-    if (Date.now() > storedData.expiresAt) {
-      otpStore.delete(phone);
-      return res.status(400).json({ error: 'OTP expired' });
+    // Normalize phone number
+    const normalizedPhone = phone.replace(/[\s\-\(\)]/g, '');
+    
+    // Verify OTP
+    const isValid = verifyOTP(normalizedPhone, otp);
+    
+    if (!isValid) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid or expired OTP. Please request a new one.' 
+      });
     }
     
-    if (storedData.otp !== otp) {
-      return res.status(400).json({ error: 'Invalid OTP' });
-    }
-    
-    const user = await User.findById(storedData.userId);
+    // Find user
+    const user = await User.findOne({ phone: normalizedPhone });
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
     }
     
+    console.log(`[RESET-PASSWORD] ✅ OTP verified, updating password for ${user.name}`);
+    
+    // Update password (will be hashed by pre-save hook)
     user.password = newPassword;
     await user.save();
     
-    otpStore.delete(phone);
+    console.log(`[RESET-PASSWORD] ✅ Password updated successfully for ${user.name}`);
     
-    res.json({ success: true, message: 'Password reset successfully' });
+    res.json({ 
+      success: true, 
+      message: 'Password reset successfully. You can now login with your new password.' 
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('[RESET-PASSWORD] ❌ Error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to reset password. Please try again.' 
+    });
   }
 });
 

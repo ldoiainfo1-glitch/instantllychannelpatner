@@ -3767,3 +3767,197 @@ function openPromotion(userId, name, phone, photo, location, designation) {
     window.location.href = 'promotion.html';
 }
 
+// ====================================
+// FORGOT PASSWORD FUNCTIONALITY
+// ====================================
+
+// Initialize forgot password on page load
+if (document.getElementById('forgotPasswordLink')) {
+    document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+        modal.show();
+    });
+}
+
+// Send OTP for password reset
+async function sendResetOTP() {
+    const phone = document.getElementById('resetPhone').value.trim();
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const resetAlert = document.getElementById('resetAlert');
+    
+    // Validate phone number
+    if (!phone || phone.length !== 10 || !/^\d{10}$/.test(phone)) {
+        showResetAlert('Please enter a valid 10-digit phone number', 'danger');
+        return;
+    }
+    
+    // Show loading state
+    sendOtpBtn.disabled = true;
+    sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/forgot-password/request-otp`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ phone })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show OTP in console for development (remove in production)
+            if (result._debug?.otp) {
+                console.log('🔐 Development OTP:', result._debug.otp);
+            }
+            
+            showResetAlert('OTP sent successfully to ' + phone, 'success');
+            
+            // Switch to verify step
+            setTimeout(() => {
+                document.getElementById('requestOtpStep').style.display = 'none';
+                document.getElementById('verifyOtpStep').style.display = 'block';
+                document.getElementById('sentToPhone').textContent = phone;
+                resetAlert.style.display = 'none';
+            }, 1500);
+        } else {
+            showResetAlert(result.error || 'Failed to send OTP', 'danger');
+            sendOtpBtn.disabled = false;
+            sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
+        }
+    } catch (error) {
+        console.error('❌ Error sending OTP:', error);
+        showResetAlert('Network error. Please try again.', 'danger');
+        sendOtpBtn.disabled = false;
+        sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
+    }
+}
+
+// Reset password with OTP verification
+async function resetPassword(event) {
+    event.preventDefault();
+    
+    const phone = document.getElementById('resetPhone').value.trim();
+    const otp = document.getElementById('otpCode').value.trim();
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const resetBtn = document.getElementById('resetBtn');
+    
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+        showResetAlert('Passwords do not match', 'danger');
+        return;
+    }
+    
+    // Validate password length
+    if (newPassword.length < 6) {
+        showResetAlert('Password must be at least 6 characters long', 'danger');
+        return;
+    }
+    
+    // Validate OTP
+    if (!otp || otp.length !== 6) {
+        showResetAlert('Please enter a valid 6-digit OTP', 'danger');
+        return;
+    }
+    
+    // Show loading state
+    resetBtn.disabled = true;
+    resetBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Resetting...';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/forgot-password/reset`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                phone,
+                otp,
+                newPassword
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showResetAlert('Password reset successfully! Redirecting to login...', 'success');
+            
+            // Close modal and clear fields after 2 seconds
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                modal.hide();
+                resetForgotPasswordForm();
+                
+                // Auto-fill phone in login if on login page
+                if (document.getElementById('phone')) {
+                    document.getElementById('phone').value = phone;
+                }
+            }, 2000);
+        } else {
+            showResetAlert(result.error || 'Failed to reset password', 'danger');
+            resetBtn.disabled = false;
+            resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Reset Password';
+        }
+    } catch (error) {
+        console.error('❌ Error resetting password:', error);
+        showResetAlert('Network error. Please try again.', 'danger');
+        resetBtn.disabled = false;
+        resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Reset Password';
+    }
+}
+
+// Show alert in forgot password modal
+function showResetAlert(message, type) {
+    const resetAlert = document.getElementById('resetAlert');
+    resetAlert.className = `alert alert-${type} mt-3`;
+    resetAlert.textContent = message;
+    resetAlert.style.display = 'block';
+    
+    // Auto-hide success messages
+    if (type === 'success') {
+        setTimeout(() => {
+            resetAlert.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// Back to request OTP step
+function backToRequestOtp() {
+    document.getElementById('verifyOtpStep').style.display = 'none';
+    document.getElementById('requestOtpStep').style.display = 'block';
+    document.getElementById('resetAlert').style.display = 'none';
+    
+    // Re-enable send OTP button
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    sendOtpBtn.disabled = false;
+    sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
+}
+
+// Reset forgot password form
+function resetForgotPasswordForm() {
+    document.getElementById('resetPhone').value = '';
+    document.getElementById('otpCode').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    document.getElementById('requestOtpStep').style.display = 'block';
+    document.getElementById('verifyOtpStep').style.display = 'none';
+    document.getElementById('resetAlert').style.display = 'none';
+    
+    // Reset buttons
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    sendOtpBtn.disabled = false;
+    sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
+    
+    const resetBtn = document.getElementById('resetBtn');
+    resetBtn.disabled = false;
+    resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Reset Password';
+}
+
+// Reset form when modal is closed
+if (document.getElementById('forgotPasswordModal')) {
+    document.getElementById('forgotPasswordModal').addEventListener('hidden.bs.modal', resetForgotPasswordForm);
+}
+
