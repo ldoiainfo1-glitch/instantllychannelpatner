@@ -1558,25 +1558,25 @@
             }
         }
 
-        // Generate designation based on location
+        // Generate designation based on location (includes location name in designation)
         function getDesignationFromLocation(location) {
             if (!location) return 'India Head';
             
-            // Determine the lowest filled level (check for non-empty strings)
+            // Determine the lowest filled level and include location name in designation
             if (location.village && location.village.trim()) {
-                return `Village Head`;
+                return `Village ${location.village} Head`;
             } else if (location.pincode && location.pincode.trim()) {
-                return `Pincode Head`;
+                return `Pincode ${location.pincode} Head`;
             } else if (location.tehsil && location.tehsil.trim()) {
-                return `Tehsil Head`;
+                return `Tehsil ${location.tehsil} Head`;
             } else if (location.district && location.district.trim()) {
-                return `District Head`;
+                return `District ${location.district} Head`;
             } else if (location.division && location.division.trim()) {
-                return `Division Head`;
+                return `Division ${location.division} Head`;
             } else if (location.state && location.state.trim()) {
-                return `State Head`;
+                return `State ${location.state} Head`;
             } else if (location.zone && location.zone.trim()) {
-                return `Zone Head`;
+                return `Zone ${location.zone} Head`;
             } else {
                 // Country level or no specific location - India Head
                 return `India Head`;
@@ -1625,7 +1625,7 @@
         }
 
         // Go to promotions page with user data
-        function goToPromotions() {
+        async function goToPromotions() {
             if (!currentUser) {
                 alert('Please wait while we load your profile data');
                 return;
@@ -1634,17 +1634,18 @@
             // Get location from application if available, otherwise parse from positionId
             let location = currentApplication?.location || {};
             
-            // If location is empty, try to parse from positionId
-            if (!location.zone && !location.state && !location.district) {
+            // If location is empty or incomplete, try to parse from positionId
+            if (!location.zone && !location.state && !location.district && !location.division) {
                 const positionId = currentApplication?.positionId || currentUser.positionId;
                 location = parseLocationFromPositionId(positionId);
+                console.log('📍 Parsed location from positionId:', location);
             }
             
             console.log('📍 Current Application:', currentApplication);
-            console.log('📍 Location Data:', location);
+            console.log('📍 Final Location Data:', location);
             console.log('📍 Position ID:', currentApplication?.positionId || currentUser.positionId);
             
-            // Generate proper designation from location
+            // Generate proper designation from location (includes location name)
             const designation = getDesignationFromLocation(location);
             console.log('🎯 Generated Designation:', designation);
             
@@ -1659,6 +1660,9 @@
                 state: location.state || '',
                 division: location.division || '',
                 district: location.district || '',
+                tehsil: location.tehsil || '',
+                pincode: location.pincode || '',
+                village: location.village || '',
                 designation: designation
             };
             
