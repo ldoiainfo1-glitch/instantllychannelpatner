@@ -324,24 +324,24 @@
         const userDivision = promotionData.division || '';
         const userDistrict = promotionData.district || '';
         
-        // Fix designation - convert old "President of India" to "India Head"
+        // Fix designation - convert old "President of India" to proper format with location name
         let userDesignation = promotionData.designation || '';
         if (userDesignation === 'President of India' || userDesignation.includes('IND-COUNTRY') || userDesignation.includes('pos_')) {
-            // Generate proper designation based on location
+            // Generate proper designation with location name included
             if (promotionData.village && promotionData.village.trim()) {
-                userDesignation = 'Village Head';
+                userDesignation = `Village ${promotionData.village} Head`;
             } else if (promotionData.pincode && promotionData.pincode.trim()) {
-                userDesignation = 'Pincode Head';
+                userDesignation = `Pincode ${promotionData.pincode} Head`;
             } else if (promotionData.tehsil && promotionData.tehsil.trim()) {
-                userDesignation = 'Tehsil Head';
+                userDesignation = `Tehsil ${promotionData.tehsil} Head`;
             } else if (promotionData.district && promotionData.district.trim()) {
-                userDesignation = 'District Head';
+                userDesignation = `District ${promotionData.district} Head`;
             } else if (promotionData.division && promotionData.division.trim()) {
-                userDesignation = 'Division Head';
+                userDesignation = `Division ${promotionData.division} Head`;
             } else if (promotionData.state && promotionData.state.trim()) {
-                userDesignation = 'State Head';
+                userDesignation = `State ${promotionData.state} Head`;
             } else if (promotionData.zone && promotionData.zone.trim()) {
-                userDesignation = 'Zone Head';
+                userDesignation = `Zone ${promotionData.zone} Head`;
             } else {
                 userDesignation = 'India Head';
             }
@@ -555,15 +555,30 @@
                         ctx.fillText(userPhone, textStartX, textStartY + 65);
                         
                         // Build combined location and designation line (3rd line format)
+                        // Show parent locations only (not the current level since it's in designation)
                         let thirdLine = '';
-                        const isIndiaHead = userDesignation === 'India Head' && !userZone && !userState && !userDivision && !userDistrict;
+                        const isIndiaHead = userDesignation.includes('India Head');
                         
-                        // Add location parts with commas
-                        if (userCountry && !isIndiaHead) thirdLine += `Country: ${userCountry}`;
-                        if (userZone) thirdLine += (thirdLine ? ', ' : '') + `Zone: ${userZone}`;
-                        if (userState) thirdLine += (thirdLine ? ', ' : '') + `State: ${userState}`;
-                        if (userDivision) thirdLine += (thirdLine ? ', ' : '') + `Div: ${userDivision}`;
-                        if (userDistrict) thirdLine += (thirdLine ? ', ' : '') + `District: ${userDistrict}`;
+                        // Determine which level user is at and show only parent locations
+                        if (userDistrict) {
+                            // District Head - show Country, Zone, State
+                            thirdLine = `Country: ${userCountry}`;
+                            if (userZone) thirdLine += `, Zone: ${userZone}`;
+                            if (userState) thirdLine += `, State: ${userState}`;
+                        } else if (userDivision) {
+                            // Division Head - show Country, Zone, State
+                            thirdLine = `Country: ${userCountry}`;
+                            if (userZone) thirdLine += `, Zone: ${userZone}`;
+                            if (userState) thirdLine += `, State: ${userState}`;
+                        } else if (userState) {
+                            // State Head - show Country, Zone only
+                            thirdLine = `Country: ${userCountry}`;
+                            if (userZone) thirdLine += `, Zone: ${userZone}`;
+                        } else if (userZone) {
+                            // Zone Head - show Country only
+                            thirdLine = `Country: ${userCountry}`;
+                        }
+                        // India Head - no location shown (isIndiaHead = true)
                         
                         // Add designation at the end
                         if (userDesignation) {
@@ -760,15 +775,30 @@
                         ctx.fillText(userPhone, textStartX, textStartY + 65);
                         
                         // Build combined location and designation line (3rd line format)
+                        // Show parent locations only (not the current level since it's in designation)
                         let thirdLine = '';
-                        const isIndiaHead = userDesignation === 'India Head' && !userZone && !userState && !userDivision && !userDistrict;
+                        const isIndiaHead = userDesignation.includes('India Head');
                         
-                        // Add location parts with commas
-                        if (userCountry && !isIndiaHead) thirdLine += `Country: ${userCountry}`;
-                        if (userZone) thirdLine += (thirdLine ? ', ' : '') + `Zone: ${userZone}`;
-                        if (userState) thirdLine += (thirdLine ? ', ' : '') + `State: ${userState}`;
-                        if (userDivision) thirdLine += (thirdLine ? ', ' : '') + `Div: ${userDivision}`;
-                        if (userDistrict) thirdLine += (thirdLine ? ', ' : '') + `District: ${userDistrict}`;
+                        // Determine which level user is at and show only parent locations
+                        if (userDistrict) {
+                            // District Head - show Country, Zone, State
+                            thirdLine = `Country: ${userCountry}`;
+                            if (userZone) thirdLine += `, Zone: ${userZone}`;
+                            if (userState) thirdLine += `, State: ${userState}`;
+                        } else if (userDivision) {
+                            // Division Head - show Country, Zone, State
+                            thirdLine = `Country: ${userCountry}`;
+                            if (userZone) thirdLine += `, Zone: ${userZone}`;
+                            if (userState) thirdLine += `, State: ${userState}`;
+                        } else if (userState) {
+                            // State Head - show Country, Zone only
+                            thirdLine = `Country: ${userCountry}`;
+                            if (userZone) thirdLine += `, Zone: ${userZone}`;
+                        } else if (userZone) {
+                            // Zone Head - show Country only
+                            thirdLine = `Country: ${userCountry}`;
+                        }
+                        // India Head - no location shown (isIndiaHead = true)
                         
                         // Add designation at the end
                         if (userDesignation) {
