@@ -2104,4 +2104,115 @@ router.get('/ads/image/:id/:type', async (req, res) => {
   }
 });
 
+// ====================================
+// ADMIN PASSWORD MANAGEMENT
+// ====================================
+
+// Get all users with their login credentials (for admin password management)
+router.get('/users-with-credentials', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Get all users with selected fields including login details
+    const users = await User.find({})
+      .select('name phone email loginId personCode credits isVerified createdAt')
+      .lean()
+      .sort({ createdAt: -1 });
+    
+    // Note: We don't send actual passwords for security
+    // Admin will update passwords which will be hashed automatically
+    
+    res.json({
+      success: true,
+      users: users
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error fetching users:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// Update user password by admin
+router.put('/users/:userId/update-password', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { newPassword } = req.body;
+    
+    console.log(`[ADMIN] Password update request for user: ${userId}`);
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Password must be at least 6 characters long' 
+      });
+    }
+    
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
+    }
+    
+    // Update password (will be hashed by pre-save hook)
+    user.password = newPassword;
+    await user.save();
+    
+    console.log(`[ADMIN] ✅ Password updated for user: ${user.name} (${user.phone})`);
+    
+    res.json({ 
+      success: true,
+      message: `Password updated successfully for ${user.name}`,
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        loginId: user.loginId
+      }
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error updating password:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// Get user details including login info (for password reset modal)
+router.get('/users/:userId/details', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const User = require('../models/User');
+    
+    const user = await User.findById(userId)
+      .select('name phone email loginId personCode credits isVerified createdAt')
+      .lean();
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
+    }
+    
+    res.json({
+      success: true,
+      user: user
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error fetching user details:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;

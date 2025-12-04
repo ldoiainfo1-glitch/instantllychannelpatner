@@ -3109,6 +3109,23 @@ async function getCompleteLocationPath(location) {
 }
 
 async function showIDCard(name, phone, photo, positionLocation) {
+    // Show loading overlay
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.id = 'idCardLoadingOverlay';
+    loadingOverlay.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                    background: rgba(0, 0, 0, 0.7); z-index: 9999; 
+                    display: flex; justify-content: center; align-items: center;">
+            <div style="text-align: center; color: white;">
+                <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem; border-width: 0.3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p style="margin-top: 1rem; font-size: 1.1rem; font-weight: 500;">Loading ID Card...</p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(loadingOverlay);
+
     try {
         // Get complete location hierarchy path
         const completeLocation = await getCompleteLocationPath(positionLocation);
@@ -3482,9 +3499,21 @@ async function showIDCard(name, phone, photo, positionLocation) {
         if (existing) existing.remove();
 
         document.body.insertAdjacentHTML("beforeend", modalHTML);
+        
+        // Remove loading overlay
+        const loadingOverlay = document.getElementById('idCardLoadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.remove();
+        }
+        
         new bootstrap.Modal(document.getElementById("idCardModal")).show();
 
     } catch (err) {
+        // Remove loading overlay on error
+        const loadingOverlay = document.getElementById('idCardLoadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.remove();
+        }
         alert("Error loading card.");
     }
 }
