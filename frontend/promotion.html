@@ -554,9 +554,10 @@
                         ctx.font = 'bold 46px Arial';
                         ctx.fillText(userPhone, textStartX, textStartY + 65);
                         
-                        // Build location path
+                        // Build location path - skip "Country: India" for India Head (country-level only)
                         let locationPath = '';
-                        if (userCountry) locationPath += `Country: ${userCountry}`;
+                        const isIndiaHead = userDesignation === 'India Head' && !userZone && !userState && !userDivision && !userDistrict;
+                        if (userCountry && !isIndiaHead) locationPath += `Country: ${userCountry}`;
                         if (userZone) locationPath += ` Zone: ${userZone}`;
                         if (userState) locationPath += ` State: ${userState}`;
                         if (userDivision) locationPath += ` Div: ${userDivision}`;
@@ -759,9 +760,10 @@
                         ctx.font = 'bold 46px Arial';
                         ctx.fillText(userPhone, textStartX, textStartY + 65);
                         
-                        // Build location path
+                        // Build location path - skip "Country: India" for India Head (country-level only)
                         let locationPath = '';
-                        if (userCountry) locationPath += `Country: ${userCountry}`;
+                        const isIndiaHead = userDesignation === 'India Head' && !userZone && !userState && !userDivision && !userDistrict;
+                        if (userCountry && !isIndiaHead) locationPath += `Country: ${userCountry}`;
                         if (userZone) locationPath += ` Zone: ${userZone}`;
                         if (userState) locationPath += ` State: ${userState}`;
                         if (userDivision) locationPath += ` Div: ${userDivision}`;
