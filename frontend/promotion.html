@@ -323,7 +323,30 @@
         const userState = promotionData.state || '';
         const userDivision = promotionData.division || '';
         const userDistrict = promotionData.district || '';
-        const userDesignation = promotionData.designation || '';
+        
+        // Fix designation - convert old "President of India" to "India Head"
+        let userDesignation = promotionData.designation || '';
+        if (userDesignation === 'President of India' || userDesignation.includes('IND-COUNTRY') || userDesignation.includes('pos_')) {
+            // Generate proper designation based on location
+            if (promotionData.village && promotionData.village.trim()) {
+                userDesignation = 'Village Head';
+            } else if (promotionData.pincode && promotionData.pincode.trim()) {
+                userDesignation = 'Pincode Head';
+            } else if (promotionData.tehsil && promotionData.tehsil.trim()) {
+                userDesignation = 'Tehsil Head';
+            } else if (promotionData.district && promotionData.district.trim()) {
+                userDesignation = 'District Head';
+            } else if (promotionData.division && promotionData.division.trim()) {
+                userDesignation = 'Division Head';
+            } else if (promotionData.state && promotionData.state.trim()) {
+                userDesignation = 'State Head';
+            } else if (promotionData.zone && promotionData.zone.trim()) {
+                userDesignation = 'Zone Head';
+            } else {
+                userDesignation = 'India Head';
+            }
+            console.log('🔄 Fixed designation from', promotionData.designation, 'to', userDesignation);
+        }
         
         // Languages supported
         const languages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu'];
