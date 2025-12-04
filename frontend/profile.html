@@ -1555,6 +1555,33 @@
             }
         }
 
+        // Generate designation based on location
+        function getDesignationFromLocation(location) {
+            if (!location || !location.country) return '';
+            
+            // Determine the lowest filled level
+            if (location.village) {
+                return `Village Head`;
+            } else if (location.pincode) {
+                return `Pincode Head`;
+            } else if (location.tehsil) {
+                return `Tehsil Head`;
+            } else if (location.district) {
+                return `District Head`;
+            } else if (location.division) {
+                return `Division Head`;
+            } else if (location.state) {
+                return `State Head`;
+            } else if (location.zone) {
+                return `Zone Head`;
+            } else if (location.country) {
+                // Country level - India Head
+                return `India Head`;
+            }
+            
+            return '';
+        }
+
         // Parse location from positionId
         function parseLocationFromPositionId(positionId) {
             if (!positionId) return {};
@@ -1616,6 +1643,10 @@
             console.log('📍 Location Data:', location);
             console.log('📍 Position ID:', currentApplication?.positionId || currentUser.positionId);
             
+            // Generate proper designation from location
+            const designation = getDesignationFromLocation(location);
+            console.log('🎯 Generated Designation:', designation);
+            
             // Store promotion data in sessionStorage (NOT in URL - photos are too large and cause URI_TOO_LONG error)
             const promotionData = {
                 userId: currentUser._id || '',
@@ -1627,7 +1658,7 @@
                 state: location.state || '',
                 division: location.division || '',
                 district: location.district || '',
-                designation: currentApplication?.positionId || currentUser.positionId || ''
+                designation: designation
             };
             
             console.log('📦 Storing promotion data in sessionStorage:', promotionData);
