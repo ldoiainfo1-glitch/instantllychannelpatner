@@ -1015,11 +1015,22 @@ function clearFilters() {
 function openApplicationModal(positionId, positionTitle, location) {
     console.log('🎯 Opening application modal for position ID:', positionId, 'Title:', positionTitle);
 
+    // Determine position level from location (most specific level available)
+    let positionLevel = 'India';
+    if (location.village) positionLevel = 'Village';
+    else if (location.pincode) positionLevel = 'Pincode';
+    else if (location.tehsil) positionLevel = 'Tehsil';
+    else if (location.district) positionLevel = 'District';
+    else if (location.division) positionLevel = 'Division';
+    else if (location.state) positionLevel = 'State';
+    else if (location.zone) positionLevel = 'Zone';
+
     // Store current position details for form submission
     window.currentPosition = {
         id: positionId, // This is the unique position ID from dynamic-positions
         title: positionTitle,
-        location: location
+        location: location,
+        level: positionLevel
     };
 
     // Update modal title
@@ -1033,7 +1044,54 @@ function openApplicationModal(positionId, positionTitle, location) {
     modal.show();
 }
 
-// Submit application
+// Global variable to store application form data temporarily
+let tempApplicationData = null;
+let selectedPaymentTier = null;
+
+// Default pricing tiers based on position level
+const DEFAULT_PRICING_TIERS = {
+    'India': [
+        { pay: 90000, profit: 510000, credit: 600000 }
+    ],
+    'Zone': [
+        { pay: 90000, profit: 510000, credit: 600000 }
+    ],
+    'State': [
+        { pay: 90000, profit: 510000, credit: 600000 }
+    ],
+    'Division': [
+        { pay: 90000, profit: 510000, credit: 600000 },
+        { pay: 75000, profit: 425000, credit: 500000 }
+    ],
+    'District': [
+        { pay: 90000, profit: 510000, credit: 600000 },
+        { pay: 75000, profit: 425000, credit: 500000 },
+        { pay: 60000, profit: 340000, credit: 400000 }
+    ],
+    'Tehsil': [
+        { pay: 90000, profit: 510000, credit: 600000 },
+        { pay: 75000, profit: 425000, credit: 500000 },
+        { pay: 60000, profit: 340000, credit: 400000 },
+        { pay: 45000, profit: 255000, credit: 300000 }
+    ],
+    'Pincode': [
+        { pay: 90000, profit: 510000, credit: 600000 },
+        { pay: 75000, profit: 425000, credit: 500000 },
+        { pay: 60000, profit: 340000, credit: 400000 },
+        { pay: 45000, profit: 255000, credit: 300000 },
+        { pay: 30000, profit: 170000, credit: 200000 }
+    ],
+    'Village': [
+        { pay: 90000, profit: 510000, credit: 600000 },
+        { pay: 75000, profit: 425000, credit: 500000 },
+        { pay: 60000, profit: 340000, credit: 400000 },
+        { pay: 45000, profit: 255000, credit: 300000 },
+        { pay: 30000, profit: 170000, credit: 200000 },
+        { pay: 15000, profit: 85000, credit: 100000 }
+    ]
+};
+
+// Submit application - Step 1: Validate form and show payment plans
 async function submitApplication(event) {
     // Prevent default form submission
     if (event) {
@@ -1050,12 +1108,6 @@ async function submitApplication(event) {
         return;
     }
 
-    // Set position ID in the hidden form field BEFORE creating FormData
-    document.getElementById('positionId').value = window.currentPosition.id;
-
-    // Now create FormData with the correct position ID
-    const formData = new FormData(form);
-
     // Validate form
     if (!form.checkValidity()) {
         form.reportValidity();
@@ -1064,13 +1116,286 @@ async function submitApplication(event) {
 
     try {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Loading...';
 
-        // Add additional fields that aren't in the form
-        formData.append('positionTitle', window.currentPosition.title);
+        // Store form data temporarily
+        const formData = new FormData(form);
+        tempApplicationData = {
+            positionId: window.currentPosition.id,
+            name: formData.get('name'),
+            phone: formData.get('phone'),
+            companyName: formData.get('companyName'),
+            businessName: formData.get('businessName'),
+            address: formData.get('address'),
+            introducedBy: formData.get('introducedBy'),
+            photo: form.querySelector('#applicantPhoto').files[0],
+            location: window.currentPosition.location,
+            positionLevel: window.currentPosition.level
+        };
 
-        // Add location data from the position
-        const location = window.currentPosition.location;
+        // Close application modal
+        const applicationModal = bootstrap.Modal.getInstance(document.getElementById('applicationModal'));
+        applicationModal.hide();
+
+        // Show payment plans modal
+        await showPaymentPlansModal();
+
+    } catch (error) {
+        console.error('❌ Error:', error);
+        showNotification(error.message || 'Error processing application', 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Next: Select Payment Plan';
+    }
+}
+
+// Show payment plans modal
+async function showPaymentPlansModal() {
+    const modal = new bootstrap.Modal(document.getElementById('paymentPlansModal'));
+    const subtitle = document.getElementById('paymentModalSubtitle');
+    const container = document.getElementById('paymentTiersContainer');
+    const customNotice = document.getElementById('customPricingNotice');
+    
+    // Get position level for pricing
+    const positionLevel = tempApplicationData.positionLevel;
+    
+    // Update subtitle
+    subtitle.textContent = `Payment plans for ${positionLevel} Head position`;
+    
+    // Fetch custom pricing if admin has set it (future implementation)
+    let pricingTiers = DEFAULT_PRICING_TIERS[positionLevel] || [];
+    let isCustomPricing = false;
+    
+    // TODO: Fetch custom pricing from backend if available
+    // try {
+    //     const response = await fetch(`${API_BASE_URL}/positions/${tempApplicationData.positionId}/pricing`);
+    //     if (response.ok) {
+    //         const data = await response.json();
+    //         if (data.customPricing && data.customPricing.enabled) {
+    //             pricingTiers = data.customPricing.tiers;
+    //             isCustomPricing = true;
+    //         }
+    //     }
+    // } catch (error) {
+    //     console.log('Using default pricing');
+    // }
+    
+    // Show/hide custom pricing notice
+    if (isCustomPricing) {
+        customNotice.classList.remove('d-none');
+    } else {
+        customNotice.classList.add('d-none');
+    }
+    
+    // Render pricing tiers
+    container.innerHTML = '';
+    pricingTiers.forEach((tier, index) => {
+        const isRecommended = index === Math.floor(pricingTiers.length / 2);
+        const tierCard = createPaymentTierCard(tier, index, isRecommended);
+        container.appendChild(tierCard);
+    });
+    
+    // Reset selected tier
+    selectedPaymentTier = null;
+    document.getElementById('proceedToPayment').disabled = true;
+    
+    modal.show();
+}
+
+// Create payment tier card element
+function createPaymentTierCard(tier, index, isRecommended) {
+    const col = document.createElement('div');
+    col.className = 'col-md-6 col-lg-4';
+    
+    col.innerHTML = `
+        <div class="card payment-tier-card h-100" onclick="selectPaymentTier(${index}, ${tier.pay}, ${tier.profit}, ${tier.credit})">
+            <div class="selected-check">
+                <i class="fas fa-check"></i>
+            </div>
+            ${isRecommended ? '<div class="tier-badge recommended">RECOMMENDED</div>' : ''}
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <div class="payment-amount-label">Investment Amount</div>
+                    <div class="payment-amount">₹${(tier.pay / 1000).toFixed(0)}K</div>
+                    <small class="text-muted">One-time payment</small>
+                </div>
+                
+                <div class="benefits-section">
+                    <div class="benefit-item">
+                        <div class="benefit-icon profit">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <div class="benefit-label">Commission (85%)</div>
+                            <div class="benefit-value">₹${(tier.profit / 1000).toFixed(0)}K</div>
+                        </div>
+                    </div>
+                    
+                    <div class="benefit-item">
+                        <div class="benefit-icon credit">
+                            <i class="fas fa-ad"></i>
+                        </div>
+                        <div class="benefit-text">
+                            <div class="benefit-label">Ad Credits (100%)</div>
+                            <div class="benefit-value">₹${(tier.credit / 1000).toFixed(0)}K</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3 text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Credits activated after admin approval
+                    </small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return col;
+}
+
+// Select payment tier
+function selectPaymentTier(index, pay, profit, credit) {
+    // Remove selected class from all cards
+    document.querySelectorAll('.payment-tier-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selected class to clicked card
+    event.currentTarget.classList.add('selected');
+    
+    // Store selected tier
+    selectedPaymentTier = { index, pay, profit, credit };
+    
+    // Enable proceed button
+    document.getElementById('proceedToPayment').disabled = false;
+    
+    // Update button text with amount
+    document.getElementById('proceedToPayment').innerHTML = `
+        <i class="fas fa-lock me-2"></i>Pay ₹${(pay / 1000).toFixed(0)}K with Razorpay
+    `;
+}
+
+// Back to application form
+function backToApplicationForm() {
+    const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentPlansModal'));
+    paymentModal.hide();
+    
+    const applicationModal = new bootstrap.Modal(document.getElementById('applicationModal'));
+    applicationModal.show();
+    
+    // Re-enable submit button
+    const submitBtn = document.getElementById('submitApplication');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = 'Next: Select Payment Plan';
+}
+
+// Proceed to Razorpay payment
+document.addEventListener('DOMContentLoaded', function() {
+    const proceedBtn = document.getElementById('proceedToPayment');
+    if (proceedBtn) {
+        proceedBtn.addEventListener('click', initiateRazorpayPayment);
+    }
+});
+
+// Initiate Razorpay payment
+async function initiateRazorpayPayment() {
+    if (!selectedPaymentTier || !tempApplicationData) {
+        showNotification('Please select a payment plan', 'error');
+        return;
+    }
+    
+    try {
+        // Show processing modal
+        const processingModal = new bootstrap.Modal(document.getElementById('paymentProcessingModal'));
+        processingModal.show();
+        
+        // Create Razorpay order
+        const orderResponse = await fetch(`${API_BASE_URL}/payments/create-order`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: selectedPaymentTier.pay,
+                positionId: tempApplicationData.positionId,
+                applicantPhone: tempApplicationData.phone
+            })
+        });
+        
+        if (!orderResponse.ok) {
+            throw new Error('Failed to create payment order');
+        }
+        
+        const orderData = await orderResponse.json();
+        
+        // Hide processing modal
+        processingModal.hide();
+        
+        // Configure Razorpay options
+        const options = {
+            key: orderData.razorpayKeyId,
+            amount: selectedPaymentTier.pay * 100, // Amount in paise
+            currency: 'INR',
+            name: 'Instantly Cards',
+            description: `${tempApplicationData.positionLevel} Head Position`,
+            image: 'images/logo.jpeg',
+            order_id: orderData.orderId,
+            handler: function (response) {
+                handlePaymentSuccess(response, orderData.orderId);
+            },
+            prefill: {
+                name: tempApplicationData.name,
+                contact: tempApplicationData.phone
+            },
+            theme: {
+                color: '#667eea'
+            },
+            modal: {
+                ondismiss: function() {
+                    showNotification('Payment cancelled', 'info');
+                }
+            }
+        };
+        
+        // Open Razorpay checkout
+        const rzp = new Razorpay(options);
+        rzp.open();
+        
+    } catch (error) {
+        console.error('❌ Payment error:', error);
+        showNotification(error.message || 'Payment initialization failed', 'error');
+        
+        const processingModal = bootstrap.Modal.getInstance(document.getElementById('paymentProcessingModal'));
+        if (processingModal) {
+            processingModal.hide();
+        }
+    }
+}
+
+// Handle payment success
+async function handlePaymentSuccess(razorpayResponse, orderId) {
+    try {
+        // Show processing modal
+        const processingModal = new bootstrap.Modal(document.getElementById('paymentProcessingModal'));
+        processingModal.show();
+        
+        // Prepare application data with payment info
+        const formData = new FormData();
+        formData.append('positionId', tempApplicationData.positionId);
+        formData.append('name', tempApplicationData.name);
+        formData.append('phone', tempApplicationData.phone);
+        formData.append('companyName', tempApplicationData.companyName || '');
+        formData.append('businessName', tempApplicationData.businessName || '');
+        formData.append('address', tempApplicationData.address || '');
+        formData.append('introducedBy', tempApplicationData.introducedBy || 'Self');
+        
+        if (tempApplicationData.photo) {
+            formData.append('photo', tempApplicationData.photo);
+        }
+        
+        // Add location data
+        const location = tempApplicationData.location;
         if (location.country) formData.append('country', location.country);
         if (location.zone) formData.append('zone', location.zone);
         if (location.state) formData.append('state', location.state);
@@ -1079,53 +1404,52 @@ async function submitApplication(event) {
         if (location.tehsil) formData.append('tehsil', location.tehsil);
         if (location.pincode) formData.append('pincode', location.pincode);
         if (location.village) formData.append('village', location.village);
-
-        console.log('📝 Submitting application with location data:', location);
-        console.log('📝 Position ID being sent:', window.currentPosition.id);
-        console.log('📝 FormData entries:');
-        for (let [key, value] of formData.entries()) {
-            console.log(`   ${key}: ${value instanceof File ? `File: ${value.name}` : value}`);
-        }
-
-        const response = await fetch(`${API_BASE_URL}/applications`, {
+        
+        // Add payment information
+        formData.append('paymentAmount', selectedPaymentTier.pay);
+        formData.append('paymentProfit', selectedPaymentTier.profit);
+        formData.append('paymentCredit', selectedPaymentTier.credit);
+        formData.append('razorpayOrderId', orderId);
+        formData.append('razorpayPaymentId', razorpayResponse.razorpay_payment_id);
+        formData.append('razorpaySignature', razorpayResponse.razorpay_signature);
+        
+        // Submit application with payment
+        const response = await fetch(`${API_BASE_URL}/applications/with-payment`, {
             method: 'POST',
             body: formData
         });
-
+        
         const result = await response.json();
-
+        
+        processingModal.hide();
+        
         if (response.ok) {
-            // Close modal immediately
-            const modalElement = document.getElementById('applicationModal');
-            const modal = bootstrap.Modal.getInstance(modalElement);
-            if (modal) {
-                modal.hide();
-            }
-
-            // Reset form
-            form.reset();
-
-            // Show success notification
-            showNotification('✅ Application submitted successfully! Reloading page...', 'success');
-
-            // Clear current position
-            window.currentPosition = null;
-
-            // Force reload the entire page after a short delay (hard reload to bypass cache)
+            // Close all modals
+            const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentPlansModal'));
+            if (paymentModal) paymentModal.hide();
+            
+            // Clear temp data
+            tempApplicationData = null;
+            selectedPaymentTier = null;
+            
+            // Show success message
+            showNotification('✅ Payment successful! Application submitted. Awaiting admin approval.', 'success');
+            
+            // Reload page after delay
             setTimeout(() => {
                 window.location.reload(true);
-            }, 1500);
+            }, 2000);
         } else {
-            throw new Error(result.error || 'Failed to submit application');
+            throw new Error(result.error || 'Application submission failed');
         }
+        
     } catch (error) {
-        console.error('❌ Error submitting application:', error);
-        showNotification(error.message || 'Error submitting application', 'error');
-
-        // Re-enable submit button on error
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = 'Submit Application';
+        console.error('❌ Error:', error);
+        showNotification(error.message || 'Failed to submit application', 'error');
+        
+        const processingModal = bootstrap.Modal.getInstance(document.getElementById('paymentProcessingModal'));
+        if (processingModal) {
+            processingModal.hide();
         }
     }
 }

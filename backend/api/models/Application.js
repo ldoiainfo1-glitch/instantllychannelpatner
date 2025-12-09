@@ -69,10 +69,32 @@ const applicationSchema = new mongoose.Schema({
     type: String,
     default: 'Self'
   },
+  // Payment information
+  payment: {
+    selectedTier: {
+      pay: Number,
+      profit: Number,
+      credit: Number
+    },
+    razorpayOrderId: String,
+    razorpayPaymentId: String,
+    razorpaySignature: String,
+    amount: Number,
+    status: {
+      type: String,
+      enum: ['pending', 'completed', 'failed'],
+      default: 'pending'
+    },
+    paidAt: Date
+  },
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
+  },
+  creditsAllocated: {
+    type: Boolean,
+    default: false
   },
   appliedDate: {
     type: Date,

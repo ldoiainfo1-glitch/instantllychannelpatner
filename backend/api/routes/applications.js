@@ -453,4 +453,158 @@ router.put('/:id/payment', async (req, res) => {
   }
 });
 
+// Submit application with payment (new endpoint for payment flow)
+router.post('/with-payment', upload.single('photo'), async (req, res) => {
+  try {
+    const { 
+      positionId, 
+      name, 
+      phone,
+      email, 
+      address, 
+      introducedBy, 
+      companyName, 
+      businessName,
+      country,
+      zone,
+      state,
+      division,
+      district,
+      tehsil,
+      pincode,
+      village,
+      paymentAmount,
+      paymentProfit,
+      paymentCredit,
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature
+    } = req.body;
+    
+    console.log('📝 Application with payment received:', { 
+      positionId, 
+      name, 
+      phone, 
+      paymentAmount, 
+      razorpayPaymentId 
+    });
+    
+    // Validate required fields
+    if (!positionId || !name || !phone || !paymentAmount || !razorpayPaymentId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Verify payment signature
+    const crypto = require('crypto');
+    const sign = razorpayOrderId + '|' + razorpayPaymentId;
+    const expectedSign = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'your_razorpay_key_secret')
+      .update(sign.toString())
+      .digest('hex');
+
+    if (razorpaySignature !== expectedSign) {
+      console.error('❌ Invalid payment signature');
+      return res.status(400).json({ error: 'Invalid payment signature' });
+    }
+    
+    console.log('✅ Payment signature verified');
+    
+    // Handle photo upload
+    let photoBase64 = null;
+    if (req.file) {
+      console.log('📸 Photo uploaded:', req.file.filename);
+      const photoPath = path.join(uploadsDir, req.file.filename);
+      const photoBuffer = fs.readFileSync(photoPath);
+      photoBase64 = `data:${req.file.mimetype};base64,${photoBuffer.toString('base64')}`;
+      fs.unlinkSync(photoPath);
+      console.log('✅ Photo converted to base64 and file deleted');
+    } else {
+      // Default placeholder
+      photoBase64 = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxNiIgeT0iMTYiPgo8cGF0aCBkPSJNMjQgMjRDMjguNDE4MyAyNCAzMiAyMC40MTgzIDMyIDE2QzMyIDExLjU4MTcgMjguNDE4MyA4IDI0IDhDMTkuNTgxNyA4IDE2IDExLjU4MTcgMTYgMTZDMTYgMjAuNDE4MyAxOS41ODE3IDI0IDI0IDI0WiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMjQgMjhDMTguNjcgMjggMTQgMzIuNjcgMTQgMzhWNDBIMzRWMzhDMzQgMzIuNjcgMjkuMzMgMjggMjQgMjhaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4=';
+    }
+    
+    // Generate unique person code
+    const User = require('../models/User');
+    function generatePersonCode() {
+      const timestamp = Date.now().toString(36);
+      const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
+      return `IC-${timestamp}-${randomStr}`;
+    }
+    
+    let personCode = generatePersonCode();
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    while (!isUnique && attempts < maxAttempts) {
+      const existingUser = await User.findOne({ personCode });
+      const existingApp = await Application.findOne({ personCode });
+      
+      if (!existingUser && !existingApp) {
+        isUnique = true;
+      } else {
+        personCode = generatePersonCode();
+        attempts++;
+      }
+    }
+    
+    console.log('🎫 Generated unique person code:', personCode);
+
+    // Create new application with payment info
+    const newApplication = new Application({
+      positionId: positionId,
+      personCode: personCode,
+      applicantInfo: {
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email ? email.trim() : '',
+        photo: photoBase64,
+        address: address ? address.trim() : '',
+        companyName: companyName ? companyName.trim() : '',
+        businessName: businessName ? businessName.trim() : ''
+      },
+      location: {
+        country: country || 'India',
+        zone: zone || null,
+        state: state || null,
+        division: division || null,
+        district: district || null,
+        tehsil: tehsil || null,
+        pincode: pincode || null,
+        village: village || null
+      },
+      payment: {
+        selectedTier: {
+          pay: parseInt(paymentAmount),
+          profit: parseInt(paymentProfit),
+          credit: parseInt(paymentCredit)
+        },
+        razorpayOrderId: razorpayOrderId,
+        razorpayPaymentId: razorpayPaymentId,
+        razorpaySignature: razorpaySignature,
+        amount: parseInt(paymentAmount),
+        status: 'completed',
+        paidAt: new Date()
+      },
+      introducedBy: introducedBy ? introducedBy.trim() : 'Self',
+      status: 'pending',
+      appliedDate: new Date(),
+      creditsAllocated: false
+    });
+    
+    const savedApplication = await newApplication.save();
+    console.log('✅ Application with payment saved:', savedApplication._id);
+
+    res.status(201).json({
+      success: true,
+      message: 'Application submitted successfully! Your application is pending admin approval.',
+      applicationId: savedApplication._id,
+      application: savedApplication
+    });
+  } catch (error) {
+    console.error('❌ Error submitting application with payment:', error);
+    res.status(500).json({ error: error.message || 'Failed to submit application' });
+  }
+});
+
 module.exports = router;

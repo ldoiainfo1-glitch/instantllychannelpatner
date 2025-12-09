@@ -87,6 +87,7 @@ const creditsRoutes = require('../api/routes/credits');
 const promotionsRoutes = require('../api/routes/promotions');
 const adsRoutes = require('../api/routes/ads');
 const positionsRoutes = require('../api/routes/positions');
+const paymentsRoutes = require('../api/routes/payments');
 
 // Routes
 app.use('/api/positions', positionsRoutes); // Add positions route FIRST for photo fix
@@ -100,6 +101,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/credits', creditsRoutes);
 app.use('/api/promotions', promotionsRoutes);
 app.use('/api/ads', adsRoutes);
+app.use('/api/payments', paymentsRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

@@ -34,6 +34,28 @@ const positionSchema = new mongoose.Schema({
     type: Number,
     default: 60000
   },
+  // Pricing tiers configuration
+  pricingTiers: [
+    {
+      pay: Number,
+      profit: Number,
+      credit: Number
+    }
+  ],
+  // Custom pricing override (admin can set custom prices for specific positions)
+  customPricing: {
+    enabled: {
+      type: Boolean,
+      default: false
+    },
+    tiers: [
+      {
+        pay: Number,
+        profit: Number,
+        credit: Number
+      }
+    ]
+  },
   isTemplate: {
     type: Boolean,
     default: false
