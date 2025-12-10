@@ -1,5 +1,7 @@
 // Configuration - Updated for Vercel deployment fix
-const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+// const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+const API_BASE_URL = 'http://localhost:5000/api';
+
 
 // Global variables
 let currentPositions = [];
@@ -1318,6 +1320,7 @@ async function initiateRazorpayPayment() {
             },
             body: JSON.stringify({
                 amount: selectedPaymentTier.pay,
+                // amount:1,
                 positionId: tempApplicationData.positionId,
                 applicantPhone: tempApplicationData.phone
             })
@@ -1335,7 +1338,8 @@ async function initiateRazorpayPayment() {
         // Configure Razorpay options
         const options = {
             key: orderData.razorpayKeyId,
-            amount: selectedPaymentTier.pay * 100, // Amount in paise
+            amount: selectedPaymentTier.pay * 100, 
+            // amount:1 * 100,
             currency: 'INR',
             name: 'Instantly Cards',
             description: `${tempApplicationData.positionLevel} Head Position`,
@@ -1409,6 +1413,9 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
         formData.append('paymentAmount', selectedPaymentTier.pay);
         formData.append('paymentProfit', selectedPaymentTier.profit);
         formData.append('paymentCredit', selectedPaymentTier.credit);
+        // formData.append('paymentAmount', 1);
+        // formData.append('paymentProfit', 0);
+        // formData.append('paymentCredit', 0);
         formData.append('razorpayOrderId', orderId);
         formData.append('razorpayPaymentId', razorpayResponse.razorpay_payment_id);
         formData.append('razorpaySignature', razorpayResponse.razorpay_signature);
@@ -1453,6 +1460,8 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
         }
     }
 }
+
+
 
 // Setup rating stars
 function setupRatingStars() {
