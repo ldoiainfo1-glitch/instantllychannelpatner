@@ -22,6 +22,8 @@ app.use(cors({
     'https://instantllychannelpatner.onrender.com',
     'https://instantlly-channel-partner.vercel.app',
     'https://instantllychannelpatner.vercel.app',
+    'https://www.instantllycards.com',
+    'https://instantllycards.com',
     /\.vercel\.app$/
   ],
   credentials: true
