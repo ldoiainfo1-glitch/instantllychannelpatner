@@ -1161,23 +1161,26 @@ async function showPaymentPlansModal() {
     // Update subtitle
     subtitle.textContent = `Payment plans for ${positionLevel} Head position`;
     
-    // Fetch custom pricing if admin has set it (future implementation)
+    // Fetch custom pricing if admin has set it
     let pricingTiers = DEFAULT_PRICING_TIERS[positionLevel] || [];
     let isCustomPricing = false;
     
-    // TODO: Fetch custom pricing from backend if available
-    // try {
-    //     const response = await fetch(`${API_BASE_URL}/positions/${tempApplicationData.positionId}/pricing`);
-    //     if (response.ok) {
-    //         const data = await response.json();
-    //         if (data.customPricing && data.customPricing.enabled) {
-    //             pricingTiers = data.customPricing.tiers;
-    //             isCustomPricing = true;
-    //         }
-    //     }
-    // } catch (error) {
-    //     console.log('Using default pricing');
-    // }
+    // Try to fetch custom pricing from backend
+    try {
+        const response = await fetch(`${API_BASE_URL}/positions/${tempApplicationData.positionId}/custom-pricing`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.customPricing && data.customPricing.enabled && data.customPricing.tiers.length > 0) {
+                pricingTiers = data.customPricing.tiers;
+                isCustomPricing = true;
+                console.log('✅ Using custom pricing for this position:', pricingTiers);
+            } else {
+                console.log('ℹ️ No custom pricing set, using default pricing');
+            }
+        }
+    } catch (error) {
+        console.log('⚠️ Error fetching custom pricing, using default:', error.message);
+    }
     
     // Show/hide custom pricing notice
     if (isCustomPricing) {
