@@ -276,12 +276,33 @@ router.get('/:positionId/custom-pricing', async (req, res) => {
       return res.status(404).json({ error: 'Position not found' });
     }
     
+    // PRIORITY 1: Check new PricingOverride system (from Dynamic Pricing Manager)
+    const PricingOverride = require('../models/PricingOverride');
+    const override = await PricingOverride.findOne({ positionId, isActive: true });
+    
+    if (override) {
+      // Use override tiers from Dynamic Pricing Manager
+      return res.json({
+        positionId: position._id,
+        designation: position.designation,
+        location: position.location,
+        hasCustomPricing: true,
+        customPricing: {
+          enabled: true,
+          tiers: override.overrideTiers,
+          source: 'pricing-manager'  // Indicate source
+        },
+        defaultPricing: position.pricingTiers || []
+      });
+    }
+    
+    // PRIORITY 2: Fallback to old customPricing field (backward compatibility)
     res.json({
       positionId: position._id,
       designation: position.designation,
       location: position.location,
       hasCustomPricing: position.customPricing?.enabled || false,
-      customPricing: position.customPricing || { enabled: false, tiers: [] },
+      customPricing: position.customPricing || { enabled: false, tiers: [], source: 'legacy' },
       defaultPricing: position.pricingTiers || []
     });
   } catch (error) {

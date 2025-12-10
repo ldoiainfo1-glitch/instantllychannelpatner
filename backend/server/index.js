@@ -88,9 +88,11 @@ const promotionsRoutes = require('../api/routes/promotions');
 const adsRoutes = require('../api/routes/ads');
 const positionsRoutes = require('../api/routes/positions');
 const paymentsRoutes = require('../api/routes/payments');
+const pricingManagerRoutes = require('../api/routes/pricing-manager');
 
 // Routes
 app.use('/api/positions', positionsRoutes); // Add positions route FIRST for photo fix
+app.use('/api/pricing-manager', pricingManagerRoutes); // Dynamic Pricing & Credits Manager
 app.use('/api/dynamic-positions', dynamicPositionsRoutes);
 app.use('/api/applications', applicationsRoutes);
 app.use('/api/locations', locationsRoutes);
