@@ -1189,7 +1189,8 @@ async function showPaymentPlansModal() {
     // Render pricing tiers
     container.innerHTML = '';
     pricingTiers.forEach((tier, index) => {
-        const isRecommended = index === Math.floor(pricingTiers.length / 2);
+        // Mark ₹90K plan as recommended (tier.pay === 90000)
+        const isRecommended = tier.pay === 90000;
         const tierCard = createPaymentTierCard(tier, index, isRecommended);
         container.appendChild(tierCard);
     });
