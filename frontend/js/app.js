@@ -1204,7 +1204,7 @@ async function showPaymentPlansModal() {
 // Create payment tier card element
 function createPaymentTierCard(tier, index, isRecommended) {
     const col = document.createElement('div');
-    col.className = 'col-md-6 col-lg-4';
+    col.className = 'col-12 col-md-6 col-lg-4';
     
     col.innerHTML = `
         <div class="card payment-tier-card h-100" onclick="selectPaymentTier(${index}, ${tier.pay}, ${tier.profit}, ${tier.credit})">
@@ -1213,10 +1213,10 @@ function createPaymentTierCard(tier, index, isRecommended) {
             </div>
             ${isRecommended ? '<div class="tier-badge recommended">RECOMMENDED</div>' : ''}
             <div class="card-body">
-                <div class="text-center mb-4">
+                <div class="text-center mb-3">
                     <div class="payment-amount-label">Investment Amount</div>
                     <div class="payment-amount">₹${(tier.pay / 1000).toFixed(0)}K</div>
-                    <small class="text-muted">One-time payment</small>
+                    <small class="text-muted" style="font-size: 0.7rem;">One-time payment</small>
                 </div>
                 
                 <div class="benefits-section">
@@ -1241,10 +1241,10 @@ function createPaymentTierCard(tier, index, isRecommended) {
                     </div>
                 </div>
                 
-                <div class="mt-3 text-center">
-                    <small class="text-muted">
+                <div class="mt-2 text-center">
+                    <small class="text-muted" style="font-size: 0.7rem;">
                         <i class="fas fa-info-circle me-1"></i>
-                        Credits activated after admin approval
+                        Activated after approval
                     </small>
                 </div>
             </div>

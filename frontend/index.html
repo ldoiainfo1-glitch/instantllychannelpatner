@@ -952,46 +952,46 @@
 
     <!-- Payment Plans Modal -->
     <div class="modal fade" id="paymentPlansModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="modal-header bg-gradient text-white py-2 py-md-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div>
-                        <h5 class="modal-title mb-1">
+                        <h5 class="modal-title mb-1" style="font-size: 1rem;">
                             <i class="fas fa-credit-card me-2"></i>Select Your Payment Plan
                         </h5>
-                        <small id="paymentModalSubtitle" class="text-white-50">Choose the plan that best suits your needs</small>
+                        <small id="paymentModalSubtitle" class="text-white-50" style="font-size: 0.75rem;">Choose the plan that best suits your needs</small>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-4">
+                <div class="modal-body p-2 p-md-3">
                     <!-- Benefits Header -->
-                    <div class="alert alert-info mb-4" style="border-left: 4px solid #3b82f6;">
+                    <div class="alert alert-info mb-2 py-2" style="border-left: 4px solid #3b82f6;">
                         <div class="d-flex align-items-center">
-                            <i class="fas fa-gift fa-2x me-3 text-primary"></i>
+                            <i class="fas fa-gift fa-lg me-2 text-primary d-none d-md-inline"></i>
                             <div>
-                                <h6 class="mb-1 fw-bold">Pay 15% & Get 85% Commission + 100% Advertisement Credit</h6>
-                                <small>Invest smartly and maximize your returns with our channel partner program</small>
+                                <h6 class="mb-0 fw-bold" style="font-size: 0.85rem;">Pay 15% & Get 85% Commission + 100% Ad Credit</h6>
+                                <small class="d-none d-md-block" style="font-size: 0.7rem;">Invest smartly and maximize your returns</small>
                             </div>
                         </div>
                     </div>
 
                     <!-- Payment Tiers -->
-                    <div id="paymentTiersContainer" class="row g-3">
+                    <div id="paymentTiersContainer" class="row g-2">
                         <!-- Tiers will be dynamically loaded here -->
                     </div>
 
                     <!-- Custom Pricing Notice -->
-                    <div id="customPricingNotice" class="alert alert-warning mt-3 d-none">
-                        <i class="fas fa-star me-2"></i>
-                        <strong>Special Pricing Applied!</strong> The admin has set custom pricing for this position.
+                    <div id="customPricingNotice" class="alert alert-warning mt-2 py-2 d-none" style="font-size: 0.8rem;">
+                        <i class="fas fa-star me-1"></i>
+                        <strong>Special Pricing Applied!</strong> Admin custom pricing.
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="backToApplicationForm()">
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="backToApplicationForm()">
                         <i class="fas fa-arrow-left me-1"></i>Back
                     </button>
-                    <button type="button" class="btn btn-success btn-lg" id="proceedToPayment" disabled>
-                        <i class="fas fa-lock me-2"></i>Pay Now with Razorpay
+                    <button type="button" class="btn btn-success" id="proceedToPayment" disabled>
+                        <i class="fas fa-lock me-1"></i>Pay Now
                     </button>
                 </div>
             </div>
