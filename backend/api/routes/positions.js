@@ -14,12 +14,18 @@ router.get('/version', (req, res) => {
 // Get all positions with filters and application status
 router.get('/', async (req, res) => {
   try {
-    const { country, zone, state, division, district, tehsil, pincode, village, status, limit, skip } = req.query;
+    const { country, zone, state, division, district, tehsil, pincode, village, status, limit, skip, phone } = req.query;
     
     let filter = {};
     
-    // Always filter by country
-    filter['location.country'] = country || 'India';
+    // Search by phone number (applicant details)
+    if (phone) {
+      filter['applicantDetails.phone'] = new RegExp(phone.replace(/\D/g, ''), 'i');
+      filter['status'] = { $in: ['Pending', 'Approved', 'Occupied'] }; // Only positions with applications
+    } else {
+      // Always filter by country if not searching by phone
+      filter['location.country'] = country || 'India';
+    }
     
     // Add specific location filters if provided
     if (village) {
