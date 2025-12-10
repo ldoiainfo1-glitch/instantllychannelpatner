@@ -1163,23 +1163,26 @@ async function showPaymentPlansModal() {
     // Update subtitle
     subtitle.textContent = `Payment plans for ${positionLevel} Head position`;
     
-    // Fetch custom pricing if admin has set it (future implementation)
+    // Fetch custom pricing if admin has set it
     let pricingTiers = DEFAULT_PRICING_TIERS[positionLevel] || [];
     let isCustomPricing = false;
     
-    // TODO: Fetch custom pricing from backend if available
-    // try {
-    //     const response = await fetch(`${API_BASE_URL}/positions/${tempApplicationData.positionId}/pricing`);
-    //     if (response.ok) {
-    //         const data = await response.json();
-    //         if (data.customPricing && data.customPricing.enabled) {
-    //             pricingTiers = data.customPricing.tiers;
-    //             isCustomPricing = true;
-    //         }
-    //     }
-    // } catch (error) {
-    //     console.log('Using default pricing');
-    // }
+    // Try to fetch custom pricing from backend
+    try {
+        const response = await fetch(`${API_BASE_URL}/positions/${tempApplicationData.positionId}/custom-pricing`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.customPricing && data.customPricing.enabled && data.customPricing.tiers.length > 0) {
+                pricingTiers = data.customPricing.tiers;
+                isCustomPricing = true;
+                console.log('✅ Using custom pricing for this position:', pricingTiers);
+            } else {
+                console.log('ℹ️ No custom pricing set, using default pricing');
+            }
+        }
+    } catch (error) {
+        console.log('⚠️ Error fetching custom pricing, using default:', error.message);
+    }
     
     // Show/hide custom pricing notice
     if (isCustomPricing) {
@@ -1191,7 +1194,8 @@ async function showPaymentPlansModal() {
     // Render pricing tiers
     container.innerHTML = '';
     pricingTiers.forEach((tier, index) => {
-        const isRecommended = index === Math.floor(pricingTiers.length / 2);
+        // Mark ₹90K plan as recommended (tier.pay === 90000)
+        const isRecommended = tier.pay === 90000;
         const tierCard = createPaymentTierCard(tier, index, isRecommended);
         container.appendChild(tierCard);
     });
@@ -1206,7 +1210,7 @@ async function showPaymentPlansModal() {
 // Create payment tier card element
 function createPaymentTierCard(tier, index, isRecommended) {
     const col = document.createElement('div');
-    col.className = 'col-md-6 col-lg-4';
+    col.className = 'col-6 col-md-6 col-lg-4';
     
     col.innerHTML = `
         <div class="card payment-tier-card h-100" onclick="selectPaymentTier(${index}, ${tier.pay}, ${tier.profit}, ${tier.credit})">
@@ -1215,10 +1219,10 @@ function createPaymentTierCard(tier, index, isRecommended) {
             </div>
             ${isRecommended ? '<div class="tier-badge recommended">RECOMMENDED</div>' : ''}
             <div class="card-body">
-                <div class="text-center mb-4">
+                <div class="text-center mb-2">
                     <div class="payment-amount-label">Investment Amount</div>
                     <div class="payment-amount">₹${(tier.pay / 1000).toFixed(0)}K</div>
-                    <small class="text-muted">One-time payment</small>
+                    <small class="text-muted" style="font-size: 0.6rem;">One-time payment</small>
                 </div>
                 
                 <div class="benefits-section">
@@ -1243,10 +1247,10 @@ function createPaymentTierCard(tier, index, isRecommended) {
                     </div>
                 </div>
                 
-                <div class="mt-3 text-center">
-                    <small class="text-muted">
+                <div class="mt-1 text-center">
+                    <small class="text-muted" style="font-size: 0.6rem;">
                         <i class="fas fa-info-circle me-1"></i>
-                        Credits activated after admin approval
+                        After approval
                     </small>
                 </div>
             </div>

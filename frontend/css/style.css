@@ -1086,7 +1086,7 @@ body, .card-body, .container {
 }
 
 .payment-tier-card .card-body {
-    padding: 1.5rem;
+    padding: 1rem;
 }
 
 .tier-badge {
@@ -1118,10 +1118,10 @@ body, .card-body, .container {
 }
 
 .payment-amount {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 800;
     color: #1f2937;
-    margin: 0.5rem 0;
+    margin: 0.25rem 0;
 }
 
 .payment-amount-label {
@@ -1134,8 +1134,8 @@ body, .card-body, .container {
 .benefit-item {
     display: flex;
     align-items: center;
-    padding: 0.75rem;
-    margin: 0.5rem 0;
+    padding: 0.6rem;
+    margin: 0.35rem 0;
     background: #f9fafb;
     border-radius: 8px;
     transition: all 0.2s ease;
@@ -1147,14 +1147,14 @@ body, .card-body, .container {
 }
 
 .benefit-icon {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 12px;
-    font-size: 1.2rem;
+    margin-right: 10px;
+    font-size: 1.1rem;
 }
 
 .benefit-icon.profit {
@@ -1178,7 +1178,7 @@ body, .card-body, .container {
 }
 
 .benefit-value {
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     font-weight: 700;
     color: #1f2937;
 }
@@ -1213,17 +1213,88 @@ body, .card-body, .container {
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
+    /* Mobile: Make modal nearly full width */
+    #paymentPlansModal .modal-dialog {
+        max-width: 98%;
+        margin: 0.25rem auto;
+    }
+    
+    /* Reduce card padding significantly for 2-column layout */
+    .payment-tier-card .card-body {
+        padding: 0.5rem !important;
+    }
+    
+    /* Much smaller payment amount */
+    .payment-amount {
+        font-size: 1.4rem;
+        margin: 0.15rem 0;
+    }
+    
+    .payment-amount-label {
+        font-size: 0.65rem;
+    }
+    
+    /* Very compact benefit items */
+    .benefit-item {
+        padding: 0.3rem;
+        margin: 0.2rem 0;
+        border-radius: 4px;
+    }
+    
+    /* Smaller benefit icons */
+    .benefit-icon {
+        width: 26px;
+        height: 26px;
+        font-size: 0.85rem;
+        margin-right: 6px;
+    }
+    
+    /* Smaller benefit values */
+    .benefit-value {
+        font-size: 0.9rem;
+    }
+    
+    .benefit-label {
+        font-size: 0.65rem;
+    }
+    
+    /* Smaller tier badge */
+    .tier-badge {
+        font-size: 0.55rem;
+        padding: 2px 6px;
+        top: 3px;
+        right: 3px;
+    }
+    
+    /* Smaller selected check */
+    .selected-check {
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        top: 3px;
+        left: 3px;
+    }
+    
+    /* 2 cards per row on mobile */
+    #paymentTiersContainer .col-6 {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1199px) {
+    #paymentPlansModal .modal-dialog {
+        max-width: 90%;
+    }
+    
     .payment-amount {
         font-size: 2rem;
     }
     
-    .benefit-item {
-        padding: 0.5rem;
-    }
-    
-    .benefit-value {
-        font-size: 1.1rem;
+    .payment-tier-card .card-body {
+        padding: 1.25rem;
     }
 }
 

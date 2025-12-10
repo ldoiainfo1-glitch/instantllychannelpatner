@@ -14,12 +14,18 @@ router.get('/version', (req, res) => {
 // Get all positions with filters and application status
 router.get('/', async (req, res) => {
   try {
-    const { country, zone, state, division, district, tehsil, pincode, village, status, limit, skip } = req.query;
+    const { country, zone, state, division, district, tehsil, pincode, village, status, limit, skip, phone } = req.query;
     
     let filter = {};
     
-    // Always filter by country
-    filter['location.country'] = country || 'India';
+    // Search by phone number (applicant details)
+    if (phone) {
+      filter['applicantDetails.phone'] = new RegExp(phone.replace(/\D/g, ''), 'i');
+      filter['status'] = { $in: ['Pending', 'Approved', 'Occupied'] }; // Only positions with applications
+    } else {
+      // Always filter by country if not searching by phone
+      filter['location.country'] = country || 'India';
+    }
     
     // Add specific location filters if provided
     if (village) {
@@ -258,6 +264,164 @@ router.get('/stats/count', async (req, res) => {
     };
     res.json(stats);
   } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ===========================================
+// CUSTOM PRICING MANAGEMENT ENDPOINTS
+// ===========================================
+
+// Get custom pricing for a specific position
+router.get('/:positionId/custom-pricing', async (req, res) => {
+  try {
+    const { positionId } = req.params;
+    
+    const position = await Position.findById(positionId);
+    if (!position) {
+      return res.status(404).json({ error: 'Position not found' });
+    }
+    
+    // PRIORITY 1: Check new PricingOverride system (from Dynamic Pricing Manager)
+    const PricingOverride = require('../models/PricingOverride');
+    const override = await PricingOverride.findOne({ positionId, isActive: true });
+    
+    if (override) {
+      // Use override tiers from Dynamic Pricing Manager
+      return res.json({
+        positionId: position._id,
+        designation: position.designation,
+        location: position.location,
+        hasCustomPricing: true,
+        customPricing: {
+          enabled: true,
+          tiers: override.overrideTiers,
+          source: 'pricing-manager'  // Indicate source
+        },
+        defaultPricing: position.pricingTiers || []
+      });
+    }
+    
+    // PRIORITY 2: Fallback to old customPricing field (backward compatibility)
+    res.json({
+      positionId: position._id,
+      designation: position.designation,
+      location: position.location,
+      hasCustomPricing: position.customPricing?.enabled || false,
+      customPricing: position.customPricing || { enabled: false, tiers: [], source: 'legacy' },
+      defaultPricing: position.pricingTiers || []
+    });
+  } catch (error) {
+    console.error('Error fetching custom pricing:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Set or update custom pricing for a specific position
+router.put('/:positionId/custom-pricing', async (req, res) => {
+  try {
+    const { positionId } = req.params;
+    const { enabled, tiers } = req.body;
+    
+    // Validate tiers structure
+    if (enabled && (!tiers || !Array.isArray(tiers) || tiers.length === 0)) {
+      return res.status(400).json({ error: 'Tiers array is required when enabling custom pricing' });
+    }
+    
+    // Validate each tier has required fields
+    if (enabled) {
+      for (const tier of tiers) {
+        if (!tier.pay || !tier.profit || !tier.credit) {
+          return res.status(400).json({ error: 'Each tier must have pay, profit, and credit values' });
+        }
+      }
+    }
+    
+    const position = await Position.findByIdAndUpdate(
+      positionId,
+      {
+        $set: {
+          'customPricing.enabled': enabled,
+          'customPricing.tiers': tiers || [],
+          updatedAt: new Date()
+        }
+      },
+      { new: true }
+    );
+    
+    if (!position) {
+      return res.status(404).json({ error: 'Position not found' });
+    }
+    
+    console.log(`✅ Custom pricing ${enabled ? 'enabled' : 'disabled'} for position ${position.designation} (${positionId})`);
+    
+    res.json({
+      success: true,
+      message: `Custom pricing ${enabled ? 'enabled' : 'disabled'} successfully`,
+      position: {
+        _id: position._id,
+        designation: position.designation,
+        location: position.location,
+        customPricing: position.customPricing
+      }
+    });
+  } catch (error) {
+    console.error('Error updating custom pricing:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete custom pricing for a position (reset to default)
+router.delete('/:positionId/custom-pricing', async (req, res) => {
+  try {
+    const { positionId } = req.params;
+    
+    const position = await Position.findByIdAndUpdate(
+      positionId,
+      {
+        $set: {
+          'customPricing.enabled': false,
+          'customPricing.tiers': [],
+          updatedAt: new Date()
+        }
+      },
+      { new: true }
+    );
+    
+    if (!position) {
+      return res.status(404).json({ error: 'Position not found' });
+    }
+    
+    console.log(`✅ Custom pricing removed for position ${position.designation} (${positionId})`);
+    
+    res.json({
+      success: true,
+      message: 'Custom pricing removed successfully',
+      position: {
+        _id: position._id,
+        designation: position.designation,
+        location: position.location
+      }
+    });
+  } catch (error) {
+    console.error('Error removing custom pricing:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get all positions with custom pricing (for admin overview)
+router.get('/custom-pricing/all', async (req, res) => {
+  try {
+    const positions = await Position.find({
+      'customPricing.enabled': true
+    }).select('_id designation location customPricing pricingTiers status');
+    
+    res.json({
+      count: positions.length,
+      positions: positions
+    });
+  } catch (error) {
+    console.error('Error fetching positions with custom pricing:', error);
     res.status(500).json({ error: error.message });
   }
 });
