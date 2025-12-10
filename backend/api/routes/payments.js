@@ -2,11 +2,19 @@ const express = require('express');
 const router = express.Router();
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const Position = require('../models/Position');
+const User = require('../models/User');
+require("dotenv").config();
+
 
 // Initialize Razorpay instance
+// const razorpay = new Razorpay({
+//   key_id: process.env.RAZORPAY_KEY_ID || 'rrzp_test_Rp5V6GpYmfdQN4',
+//   key_secret: process.env.RAZORPAY_KEY_SECRET || 'Dr2IaUpX7jw1khlfFLhR4Vcd'
+// });
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || 'your_razorpay_key_id',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || 'your_razorpay_key_secret'
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 // Create Razorpay order
@@ -20,8 +28,9 @@ router.post('/create-order', async (req, res) => {
 
     const options = {
       amount: amount * 100, // Amount in paise
+      // amount: 1 * 100, // Amount in
       currency: 'INR',
-      receipt: `receipt_${positionId}_${Date.now()}`,
+      receipt: `${positionId}_${Date.now().toString().slice(-6)}`,
       notes: {
         positionId: positionId,
         applicantPhone: applicantPhone,
@@ -38,7 +47,7 @@ router.post('/create-order', async (req, res) => {
       orderId: order.id,
       amount: order.amount,
       currency: order.currency,
-      razorpayKeyId: process.env.RAZORPAY_KEY_ID || 'your_razorpay_key_id'
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID 
     });
   } catch (error) {
     console.error('❌ Error creating Razorpay order:', error);
@@ -73,6 +82,62 @@ router.post('/verify-payment', async (req, res) => {
     res.status(500).json({ error: 'Failed to verify payment' });
   }
 });
+
+// Post Webhook to handle payment events
+router.post(
+  "/webhook",
+  express.raw({ type: "*/*" }),
+  async (req, res) => {
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    
+    const signature = req.headers["x-razorpay-signature"];
+
+    const hash = crypto
+      .createHmac("sha256", webhookSecret)
+      .update(req.body)
+      .digest("hex");
+
+    if (hash !== signature) {
+      console.log("❌ Invalid webhook signature");
+      return res.status(400).json({ error: "Invalid signature" });
+    }
+
+    const event = JSON.parse(req.body.toString());
+    console.log("WEBHOOK:", event.event);
+
+    // HANDLE ONLY THIS 👇
+    if (event.event !== "payment.captured") {
+      return res.json({ ignore: true });
+    }
+
+    const payment = event.payload.payment.entity;
+
+    const positionId = payment.notes.positionId;
+    const phone = payment.notes.phone;
+    const amount = payment.amount / 100;
+
+    // Find application
+    const application = await Application.findOne({
+      "applicantInfo.phone": phone
+    });
+
+    if (!application) return res.json({ message: "App not found" });
+
+    // Save payment
+    application.payment = {
+      razorpayOrderId: payment.order_id,
+      razorpayPaymentId: payment.id,
+      amount,
+      status: "completed",
+      paidAt: new Date()
+    };
+
+    await application.save();
+
+    console.log("✔ Payment Verified + Credits Added");
+    res.json({ ok: true });
+  }
+);
 
 // Get payment details
 router.get('/payment/:paymentId', async (req, res) => {
