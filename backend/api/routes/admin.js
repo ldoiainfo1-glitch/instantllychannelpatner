@@ -2,6 +2,135 @@ const express = require('express');
 const router = express.Router();
 const Application = require('../models/Application');
 const Position = require('../models/Position');
+const PaymentPlan = require('../models/PaymentPlan');
+
+// Initialize default payment plans in database (run once)
+async function initializePaymentPlans() {
+    try {
+        const count = await PaymentPlan.countDocuments();
+        if (count === 0) {
+            console.log('💰 Initializing default payment plans in database...');
+            
+            const defaultPlans = [
+                {
+                    positionLevel: 'India',
+                    options: [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['India'] }]
+                },
+                {
+                    positionLevel: 'Zone',
+                    options: [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Zone'] }]
+                },
+                {
+                    positionLevel: 'State',
+                    options: [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['State'] }]
+                },
+                {
+                    positionLevel: 'Division',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Division'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Division'] }
+                    ]
+                },
+                {
+                    positionLevel: 'District',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['District'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['District'] },
+                        { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['District'] }
+                    ]
+                },
+                {
+                    positionLevel: 'Tehsil',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Tehsil'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Tehsil'] },
+                        { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Tehsil'] },
+                        { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Tehsil'] }
+                    ]
+                },
+                {
+                    positionLevel: 'Pincode',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Pincode'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Pincode'] },
+                        { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Pincode'] },
+                        { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Pincode'] },
+                        { pay: 30000, profit: 170000, credit: 200000, visibleFor: ['Pincode'] }
+                    ]
+                },
+                {
+                    positionLevel: 'Village',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Village'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Village'] },
+                        { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Village'] },
+                        { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Village'] },
+                        { pay: 30000, profit: 170000, credit: 200000, visibleFor: ['Village'] },
+                        { pay: 15000, profit: 85000, credit: 100000, visibleFor: ['Village'] }
+                    ]
+                }
+            ];
+            
+            await PaymentPlan.insertMany(defaultPlans);
+            console.log('✅ Default payment plans initialized in database');
+        }
+    } catch (error) {
+        console.error('❌ Error initializing payment plans:', error);
+    }
+}
+
+// Call initialization when module loads
+initializePaymentPlans();
+
+// Get payment plans from MongoDB
+router.get('/payment-plans', async (req, res) => {
+  try {
+    const plans = await PaymentPlan.find();
+    
+    // Convert to the format expected by frontend
+    const paymentPlans = {};
+    plans.forEach(plan => {
+      paymentPlans[plan.positionLevel] = plan.options;
+    });
+    
+    res.json({ success: true, paymentPlans });
+  } catch (error) {
+    console.error('❌ Error fetching payment plans:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update payment plans in MongoDB
+router.post('/payment-plans', async (req, res) => {
+  try {
+    const { paymentPlans: newPlans } = req.body;
+    
+    if (!newPlans) {
+      return res.status(400).json({ error: 'Payment plans data required' });
+    }
+    
+    // Delete all existing plans
+    await PaymentPlan.deleteMany({});
+    
+    // Insert new plans
+    const plansToInsert = [];
+    for (const [positionLevel, options] of Object.entries(newPlans)) {
+      plansToInsert.push({
+        positionLevel,
+        options
+      });
+    }
+    
+    await PaymentPlan.insertMany(plansToInsert);
+    
+    console.log('💰 Payment plans updated in database');
+    
+    res.json({ success: true, message: 'Payment plans updated successfully', paymentPlans: newPlans });
+  } catch (error) {
+    console.error('❌ Error updating payment plans:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Get dashboard statistics
 router.get('/dashboard', async (req, res) => {

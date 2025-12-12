@@ -1050,17 +1050,11 @@ function openApplicationModal(positionId, positionTitle, location) {
 let tempApplicationData = null;
 let selectedPaymentTier = null;
 
-// Default pricing tiers based on position level
-const DEFAULT_PRICING_TIERS = {
-    'India': [
-        { pay: 90000, profit: 510000, credit: 600000 }
-    ],
-    'Zone': [
-        { pay: 90000, profit: 510000, credit: 600000 }
-    ],
-    'State': [
-        { pay: 90000, profit: 510000, credit: 600000 }
-    ],
+// Default pricing tiers based on position level (will be fetched from API)
+let DEFAULT_PRICING_TIERS = {
+    'India': [{ pay: 90000, profit: 510000, credit: 600000 }],
+    'Zone': [{ pay: 90000, profit: 510000, credit: 600000 }],
+    'State': [{ pay: 90000, profit: 510000, credit: 600000 }],
     'Division': [
         { pay: 90000, profit: 510000, credit: 600000 },
         { pay: 75000, profit: 425000, credit: 500000 }
@@ -1092,6 +1086,30 @@ const DEFAULT_PRICING_TIERS = {
         { pay: 15000, profit: 85000, credit: 100000 }
     ]
 };
+
+// Fetch payment plans from API on page load
+async function fetchPaymentPlans() {
+    try {
+        console.log('💰 Fetching payment plans from API...');
+        const response = await fetch(`${API_BASE_URL}/admin/payment-plans`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.paymentPlans) {
+                DEFAULT_PRICING_TIERS = data.paymentPlans;
+                console.log('✅ Payment plans loaded from API:', DEFAULT_PRICING_TIERS);
+            }
+        } else {
+            console.log('Using default payment plans');
+        }
+    } catch (error) {
+        console.log('Using default payment plans:', error);
+    }
+}
+
+// Load payment plans when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    fetchPaymentPlans();
+});
 
 // Submit application - Step 1: Validate form and show payment plans
 async function submitApplication(event) {
@@ -1182,6 +1200,20 @@ async function showPaymentPlansModal() {
         }
     } catch (error) {
         console.log('⚠️ Error fetching custom pricing, using default:', error.message);
+    }
+    
+    // Filter pricing tiers based on visibleFor field
+    // Only show tiers that are marked as visible for this position level
+    if (!isCustomPricing) {
+        pricingTiers = pricingTiers.filter(tier => {
+            // If tier has visibleFor array, check if current position is included
+            if (tier.visibleFor && Array.isArray(tier.visibleFor)) {
+                return tier.visibleFor.includes(positionLevel);
+            }
+            // If no visibleFor specified, show it (backward compatibility)
+            return true;
+        });
+        console.log(`✅ Filtered ${pricingTiers.length} plans visible for ${positionLevel}`);
     }
     
     // Show/hide custom pricing notice
