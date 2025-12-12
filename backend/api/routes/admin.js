@@ -174,8 +174,8 @@ router.put('/applications/:id/approve', async (req, res) => {
         positionId: application.positionId,
         appliedDate: application.appliedDate,
         approvedDate: new Date(),
-        credits: 500000, // START WITH 500,000 CREDITS (5 lacs joining bonus)
-        hasReceivedInitialCredits: true, // Mark as already received
+        credits: 0, // No default credits, admin will manually assign
+        hasReceivedInitialCredits: false, // No initial credits
         introducedCount: 0,
         isVerified: false,
         isFirstLogin: true
@@ -188,27 +188,10 @@ router.put('/applications/:id/approve', async (req, res) => {
         loginId: application.applicantInfo.phone,
         defaultPassword: defaultPassword,
         passwordLength: defaultPassword.length,
-        initialCredits: 500000
+        initialCredits: 0
       });
-    } else {
-      // User already exists - grant 500,000 credits on first approval if not already received
-      if (!user.hasReceivedInitialCredits) {
-        user.credits = (user.credits || 0) + 500000; // 5 lacs joining bonus
-        user.hasReceivedInitialCredits = true;
-        
-        // Add to credits history
-        if (!user.creditsHistory) user.creditsHistory = [];
-        user.creditsHistory.push({
-          type: 'initial',
-          amount: 500000,
-          description: 'Welcome bonus on first approval - 5 lacs joining bonus',
-          date: new Date()
-        });
-        
-        await user.save();
-        console.log(`💰 Granted 500,000 initial credits to ${user.name}. Total credits: ${user.credits}`);
-      }
     }
+    // Admin will manually assign credits using the Give Credits feature
     
     // Update introduced count and credits for introducer (100,000 credits per referral - 20% of 5 lacs)
     if (application.introducedBy && application.introducedBy !== 'Self') {
@@ -2288,6 +2271,66 @@ router.get('/users/:userId/details', async (req, res) => {
     });
   } catch (error) {
     console.error('[ADMIN] Error fetching user details:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// Admin route to manually give credits to a user
+router.post('/users/:userId/give-credits', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { credits, description } = req.body;
+
+    // Validate credits
+    if (!credits || credits <= 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid credits amount. Must be greater than 0.' 
+      });
+    }
+
+    // Find user
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
+    }
+
+    // Add credits to user
+    user.credits = (user.credits || 0) + parseInt(credits);
+    
+    // Add to credits history
+    if (!user.creditsHistory) user.creditsHistory = [];
+    user.creditsHistory.push({
+      type: 'bonus',
+      amount: parseInt(credits),
+      description: description || `Admin granted ${credits} credits`,
+      date: new Date()
+    });
+    
+    await user.save();
+    
+    console.log(`💰 Admin gave ${credits} credits to ${user.name} (${user.phone}). New balance: ${user.credits}`);
+    
+    res.json({ 
+      success: true,
+      message: `Successfully gave ${credits} credits to ${user.name}`,
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        credits: user.credits
+      }
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error giving credits:', error);
     res.status(500).json({ 
       success: false,
       error: error.message 
