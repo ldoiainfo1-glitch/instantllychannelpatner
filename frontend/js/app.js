@@ -1278,7 +1278,7 @@ function selectPaymentTier(index, pay, profit, credit) {
     
     // Update button text with amount
     document.getElementById('proceedToPayment').innerHTML = `
-        <i class="fas fa-lock me-2"></i>Pay ₹${(pay / 1000).toFixed(0)}K with Razorpay
+        <i class="fas fa-lock me-2"></i>Pay ₹${(pay / 1000).toFixed(0)}K
     `;
 }
 
@@ -1296,99 +1296,116 @@ function backToApplicationForm() {
     submitBtn.innerHTML = 'Next: Select Payment Plan';
 }
 
-// Proceed to Razorpay payment
+// Proceed to manual payment with scanner
 document.addEventListener('DOMContentLoaded', function() {
     const proceedBtn = document.getElementById('proceedToPayment');
     if (proceedBtn) {
-        proceedBtn.addEventListener('click', initiateRazorpayPayment);
+        proceedBtn.addEventListener('click', showPaymentScanner);
+    }
+    
+    // Setup screenshot upload handler
+    const screenshotInput = document.getElementById('paymentScreenshot');
+    if (screenshotInput) {
+        screenshotInput.addEventListener('change', handleScreenshotSelect);
+    }
+    
+    // Setup submit button
+    const submitBtn = document.getElementById('submitPaymentScreenshot');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', submitApplicationWithScreenshot);
     }
 });
 
-// Initiate Razorpay payment
-async function initiateRazorpayPayment() {
+// Show payment scanner modal
+function showPaymentScanner() {
     if (!selectedPaymentTier || !tempApplicationData) {
         showNotification('Please select a payment plan', 'error');
         return;
     }
     
-    try {
-        // Show processing modal
-        const processingModal = new bootstrap.Modal(document.getElementById('paymentProcessingModal'));
-        processingModal.show();
-        
-        // Create Razorpay order
-        const orderResponse = await fetch(`${API_BASE_URL}/payments/create-order`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                amount: selectedPaymentTier.pay,
-                // amount:1,
-                positionId: tempApplicationData.positionId,
-                applicantPhone: tempApplicationData.phone
-            })
-        });
-        
-        if (!orderResponse.ok) {
-            throw new Error('Failed to create payment order');
+    // Hide payment plans modal
+    const paymentPlansModal = bootstrap.Modal.getInstance(document.getElementById('paymentPlansModal'));
+    if (paymentPlansModal) {
+        paymentPlansModal.hide();
+    }
+    
+    // Show scanner modal
+    const scannerModal = new bootstrap.Modal(document.getElementById('paymentScannerModal'));
+    scannerModal.show();
+    
+    // Update payment amount display
+    const amountDisplay = document.getElementById('paymentAmountDisplay');
+    if (amountDisplay) {
+        amountDisplay.textContent = `₹${selectedPaymentTier.pay.toLocaleString('en-IN')}`;
+    }
+    
+    // Reset screenshot input and preview
+    const screenshotInput = document.getElementById('paymentScreenshot');
+    const screenshotPreview = document.getElementById('screenshotPreview');
+    const submitBtn = document.getElementById('submitPaymentScreenshot');
+    
+    if (screenshotInput) screenshotInput.value = '';
+    if (screenshotPreview) screenshotPreview.classList.add('d-none');
+    if (submitBtn) submitBtn.disabled = true;
+}
+
+// Handle screenshot file selection
+function handleScreenshotSelect(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('screenshotPreview');
+    const previewImage = document.getElementById('previewImage');
+    const submitBtn = document.getElementById('submitPaymentScreenshot');
+    
+    if (file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showNotification('Please upload an image file', 'error');
+            event.target.value = '';
+            return;
         }
         
-        const orderData = await orderResponse.json();
-        
-        // Hide processing modal
-        processingModal.hide();
-        
-        // Configure Razorpay options
-        const options = {
-            key: orderData.razorpayKeyId,
-            amount: selectedPaymentTier.pay * 100, 
-            // amount:1 * 100,
-            currency: 'INR',
-            name: 'Instantly Cards',
-            description: `${tempApplicationData.positionLevel} Head Position`,
-            image: 'images/logo.jpeg',
-            order_id: orderData.orderId,
-            handler: function (response) {
-                handlePaymentSuccess(response, orderData.orderId);
-            },
-            prefill: {
-                name: tempApplicationData.name,
-                contact: tempApplicationData.phone
-            },
-            theme: {
-                color: '#667eea'
-            },
-            modal: {
-                ondismiss: function() {
-                    showNotification('Payment cancelled', 'info');
-                }
-            }
+        // Show preview
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            preview.classList.remove('d-none');
+            submitBtn.disabled = false;
         };
-        
-        // Open Razorpay checkout
-        const rzp = new Razorpay(options);
-        rzp.open();
-        
-    } catch (error) {
-        console.error('❌ Payment error:', error);
-        showNotification(error.message || 'Payment initialization failed', 'error');
-        
-        const processingModal = bootstrap.Modal.getInstance(document.getElementById('paymentProcessingModal'));
-        if (processingModal) {
-            processingModal.hide();
-        }
+        reader.readAsDataURL(file);
+    } else {
+        preview.classList.add('d-none');
+        submitBtn.disabled = true;
     }
 }
 
-// Handle payment success
-async function handlePaymentSuccess(razorpayResponse, orderId) {
+// Cancel payment and go back
+function cancelPayment() {
+    const scannerModal = bootstrap.Modal.getInstance(document.getElementById('paymentScannerModal'));
+    if (scannerModal) {
+        scannerModal.hide();
+    }
+    
+    // Show payment plans modal again
+    const paymentPlansModal = new bootstrap.Modal(document.getElementById('paymentPlansModal'));
+    paymentPlansModal.show();
+}
+
+// Submit application with payment screenshot
+async function submitApplicationWithScreenshot() {
+    const screenshotInput = document.getElementById('paymentScreenshot');
+    const submitBtn = document.getElementById('submitPaymentScreenshot');
+    
+    if (!screenshotInput.files[0]) {
+        showNotification('Please upload payment screenshot', 'error');
+        return;
+    }
+    
     try {
-        // Show processing modal
-        const processingModal = new bootstrap.Modal(document.getElementById('paymentProcessingModal'));
-        processingModal.show();
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
         
-        // Prepare application data with payment info
+        // Prepare application data with payment screenshot
         const formData = new FormData();
         formData.append('positionId', tempApplicationData.positionId);
         formData.append('name', tempApplicationData.name);
@@ -1417,14 +1434,12 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
         formData.append('paymentAmount', selectedPaymentTier.pay);
         formData.append('paymentProfit', selectedPaymentTier.profit);
         formData.append('paymentCredit', selectedPaymentTier.credit);
-        // formData.append('paymentAmount', 1);
-        // formData.append('paymentProfit', 0);
-        // formData.append('paymentCredit', 0);
-        formData.append('razorpayOrderId', orderId);
-        formData.append('razorpayPaymentId', razorpayResponse.razorpay_payment_id);
-        formData.append('razorpaySignature', razorpayResponse.razorpay_signature);
         
-        // Submit application with payment
+        // Add payment screenshot
+        formData.append('paymentScreenshot', screenshotInput.files[0]);
+        formData.append('paymentStatus', 'pending'); // Mark as pending verification
+        
+        // Submit application with payment screenshot
         const response = await fetch(`${API_BASE_URL}/applications/with-payment`, {
             method: 'POST',
             body: formData
@@ -1432,10 +1447,11 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
         
         const result = await response.json();
         
-        processingModal.hide();
-        
         if (response.ok) {
             // Close all modals
+            const scannerModal = bootstrap.Modal.getInstance(document.getElementById('paymentScannerModal'));
+            if (scannerModal) scannerModal.hide();
+            
             const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentPlansModal'));
             if (paymentModal) paymentModal.hide();
             
@@ -1444,7 +1460,7 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
             selectedPaymentTier = null;
             
             // Show success message
-            showNotification('✅ Payment successful! Application submitted. Awaiting admin approval.', 'success');
+            showNotification('✅ Application submitted successfully! Your payment will be verified by admin.', 'success');
             
             // Reload page after delay
             setTimeout(() => {
@@ -1458,10 +1474,9 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
         console.error('❌ Error:', error);
         showNotification(error.message || 'Failed to submit application', 'error');
         
-        const processingModal = bootstrap.Modal.getInstance(document.getElementById('paymentProcessingModal'));
-        if (processingModal) {
-            processingModal.hide();
-        }
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check me-1"></i>Submit Application';
     }
 }
 

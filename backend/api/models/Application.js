@@ -76,16 +76,16 @@ const applicationSchema = new mongoose.Schema({
       profit: Number,
       credit: Number
     },
-    razorpayOrderId: String,
-    razorpayPaymentId: String,
-    razorpaySignature: String,
+    paymentScreenshot: String, // Base64 encoded payment screenshot
     amount: Number,
     status: {
       type: String,
-      enum: ['pending', 'completed', 'failed'],
+      enum: ['pending', 'verified', 'rejected'],
       default: 'pending'
     },
-    paidAt: Date
+    paidAt: Date,
+    verifiedAt: Date,
+    verifiedBy: String
   },
   status: {
     type: String,

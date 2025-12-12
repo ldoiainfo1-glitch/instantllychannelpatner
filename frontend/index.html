@@ -998,16 +998,72 @@
         </div>
     </div>
 
-    <!-- Payment Processing Modal -->
-    <div class="modal fade" id="paymentProcessingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
+    <!-- Payment Scanner Modal -->
+    <div class="modal fade" id="paymentScannerModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-body text-center p-5">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Loading...</span>
+                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="modal-title">
+                        <i class="fas fa-qrcode me-2"></i>Complete Payment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="cancelPayment()"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Payment Amount Info -->
+                    <div class="alert alert-success mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0"><i class="fas fa-rupee-sign me-2"></i>Amount to Pay</h6>
+                            </div>
+                            <div>
+                                <h4 class="mb-0 text-success" id="paymentAmountDisplay">₹0</h4>
+                            </div>
+                        </div>
                     </div>
-                    <h5>Processing Payment...</h5>
-                    <p class="text-muted">Please wait while we process your payment</p>
+
+                    <!-- Scanner Image -->
+                    <div class="text-center mb-4">
+                        <h6 class="mb-3"><i class="fas fa-mobile-alt me-2"></i>Scan QR Code to Pay</h6>
+                        <div class="scanner-image-container p-3 bg-light rounded">
+                            <img src="images/scanner.jpg" alt="Payment QR Code" class="img-fluid" style="max-width: 300px; border: 3px solid #667eea; border-radius: 10px;" onerror="this.onerror=null; this.src='images/logo.jpeg'; this.style.padding='20px';">
+                        </div>
+                        <p class="text-muted mt-3 mb-0">
+                            <i class="fas fa-info-circle me-1"></i>Scan using any UPI app (PhonePe, Google Pay, Paytm, etc.)
+                        </p>
+                    </div>
+
+                    <!-- Upload Screenshot Section -->
+                    <div class="upload-section">
+                        <hr class="my-4">
+                        <h6 class="mb-3"><i class="fas fa-upload me-2"></i>Upload Payment Screenshot</h6>
+                        <div class="mb-3">
+                            <input type="file" class="form-control" id="paymentScreenshot" accept="image/*" required>
+                            <small class="text-muted">Upload screenshot of successful payment (JPG, PNG)</small>
+                        </div>
+                        
+                        <!-- Screenshot Preview -->
+                        <div id="screenshotPreview" class="d-none mb-3">
+                            <label class="form-label fw-bold">Preview:</label>
+                            <div class="text-center">
+                                <img id="previewImage" src="" alt="Screenshot Preview" class="img-fluid rounded" style="max-height: 200px; border: 2px solid #ddd;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <strong>Note:</strong> After making the payment, upload the payment screenshot. Your application will be reviewed by admin after payment verification.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cancelPayment()">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" id="submitPaymentScreenshot" disabled>
+                        <i class="fas fa-check me-1"></i>Submit Application
+                    </button>
                 </div>
             </div>
         </div>
