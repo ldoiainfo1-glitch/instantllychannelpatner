@@ -380,6 +380,86 @@ router.delete('/users/:id/delete', async (req, res) => {
   }
 });
 
+// Get single application by ID
+router.get('/applications/:id', async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id);
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    res.json({ application });
+  } catch (error) {
+    console.error('❌ Error fetching application:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Verify payment screenshot
+router.post('/applications/:id/verify-payment', async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id);
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    if (!application.payment || !application.payment.paymentScreenshot) {
+      return res.status(400).json({ error: 'No payment screenshot found' });
+    }
+
+    // Update payment status to verified
+    application.payment.status = 'verified';
+    application.payment.verifiedAt = new Date();
+    application.payment.verifiedBy = 'Admin'; // You can pass admin info from auth token
+    
+    await application.save();
+    
+    console.log(`✅ Payment verified for application: ${application._id}`);
+
+    res.json({
+      message: 'Payment verified successfully',
+      application
+    });
+  } catch (error) {
+    console.error('❌ Error verifying payment:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reject payment screenshot
+router.post('/applications/:id/reject-payment', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const application = await Application.findById(req.params.id);
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    if (!application.payment || !application.payment.paymentScreenshot) {
+      return res.status(400).json({ error: 'No payment screenshot found' });
+    }
+
+    // Update payment status to rejected
+    application.payment.status = 'rejected';
+    application.adminNotes = reason || 'Payment rejected';
+    
+    await application.save();
+    
+    console.log(`❌ Payment rejected for application: ${application._id}. Reason: ${reason}`);
+
+    res.json({
+      message: 'Payment rejected',
+      application
+    });
+  } catch (error) {
+    console.error('❌ Error rejecting payment:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Cleanup utility: Delete all users that don't have approved/pending applications
 router.post('/cleanup-orphaned-users', async (req, res) => {
   try {
