@@ -468,25 +468,10 @@
                         </h4>
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Initial Credits:</strong> You received 5,00,000 credits when your first application was approved!
+                            <strong>Credits:</strong> Your credits are managed by the admin. Check your credits history below.
                         </div>
                         <div id="creditsHistory">
-                            <div class="list-group">
-                                <div class="list-group-item">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <i class="fas fa-plus-circle text-success me-2"></i>
-                                            <strong>Initial Credits Granted</strong>
-                                            <br>
-                                            <small class="text-muted">Welcome bonus on first approval</small>
-                                        </div>
-                                        <div class="text-end">
-                                            <h5 class="mb-0 text-success">+5,00,000</h5>
-                                            <small class="text-muted" id="creditsDate">-</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <p class="text-muted text-center">Loading credits history...</p>
                         </div>
                     </div>
                 </div>
@@ -1160,23 +1145,11 @@
             const container = document.getElementById('creditsHistory');
             
             if (!history || history.length === 0) {
-                // Show default initial credits message
+                // Show no credits history message
                 container.innerHTML = `
-                    <div class="list-group">
-                        <div class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <i class="fas fa-plus-circle text-success me-2"></i>
-                                    <strong>Initial Credits Granted</strong>
-                                    <br>
-                                    <small class="text-muted">Welcome bonus on first approval</small>
-                                </div>
-                                <div class="text-end">
-                                    <h5 class="mb-0 text-success">+5,00,000</h5>
-                                    <small class="text-muted">${new Date(userCreatedDate).toLocaleDateString()}</small>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="text-center py-4">
+                        <i class="fas fa-info-circle fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No credits history yet. Admin will assign credits.</p>
                     </div>
                 `;
                 return;
