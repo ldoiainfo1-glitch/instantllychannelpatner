@@ -109,18 +109,57 @@ router.post('/payment-plans', async (req, res) => {
       return res.status(400).json({ error: 'Payment plans data required' });
     }
     
+    // Handle both formats: array (new) or object (old)
+    let plansToInsert = [];
+    
+    if (Array.isArray(newPlans)) {
+      // New format: array of plans with visibleFor property
+      console.log('📋 Received new format (array):', newPlans);
+      
+      // Convert new format to old format for storage
+      const allLevels = ['India', 'Zone', 'State', 'Division', 'District', 'Tehsil', 'Pincode', 'Village'];
+      const plansByLevel = {};
+      
+      // Initialize empty arrays for each level
+      allLevels.forEach(level => {
+        plansByLevel[level] = [];
+      });
+      
+      // Distribute plans to appropriate levels based on visibleFor
+      newPlans.forEach(plan => {
+        const visibleFor = plan.visibleFor || allLevels;
+        visibleFor.forEach(level => {
+          plansByLevel[level].push({
+            pay: plan.pay,
+            profit: plan.profit,
+            credit: plan.credit,
+            visibleFor: [level]
+          });
+        });
+      });
+      
+      // Create documents for storage
+      for (const [positionLevel, options] of Object.entries(plansByLevel)) {
+        plansToInsert.push({
+          positionLevel,
+          options
+        });
+      }
+    } else {
+      // Old format: object with position levels as keys
+      console.log('📋 Received old format (object)');
+      for (const [positionLevel, options] of Object.entries(newPlans)) {
+        plansToInsert.push({
+          positionLevel,
+          options
+        });
+      }
+    }
+    
     // Delete all existing plans
     await PaymentPlan.deleteMany({});
     
     // Insert new plans
-    const plansToInsert = [];
-    for (const [positionLevel, options] of Object.entries(newPlans)) {
-      plansToInsert.push({
-        positionLevel,
-        options
-      });
-    }
-    
     await PaymentPlan.insertMany(plansToInsert);
     
     console.log('💰 Payment plans updated in database');
@@ -128,6 +167,7 @@ router.post('/payment-plans', async (req, res) => {
     res.json({ success: true, message: 'Payment plans updated successfully', paymentPlans: newPlans });
   } catch (error) {
     console.error('❌ Error updating payment plans:', error);
+    console.error('Error details:', error.stack);
     res.status(500).json({ error: error.message });
   }
 });
