@@ -141,12 +141,42 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     });
 
     const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com/api';
-    const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads`, {
+    const forwardUrl = `${MAIN_BACKEND_URL}/channel-partner/ads`;
+    
+    console.log('🌐 Forwarding ad to main backend:', forwardUrl);
+    
+    const response = await fetch(forwardUrl, {
       method: 'POST',
       body: formData,
     });
 
-    const data = await response.json();
+    console.log('📡 Main backend response status:', response.status, response.statusText);
+    
+    let data;
+    try {
+      data = await response.json();
+      console.log('📦 Main backend response data:', JSON.stringify(data, null, 2));
+    } catch (parseError) {
+      console.error('❌ Failed to parse main backend response:', parseError.message);
+      const textResponse = await response.text();
+      console.error('📄 Raw response:', textResponse);
+      
+      // Refund credits
+      user.credits = currentCredits;
+      user.creditsHistory.push({
+        type: 'bonus',
+        amount: 1200,
+        description: `Ad creation failed - refund: ${title}`,
+        date: new Date(),
+      });
+      await user.save();
+      
+      return res.status(500).json({
+        message: 'Main backend returned invalid response. Credits have been refunded.',
+        refunded: true,
+        error: textResponse.substring(0, 200)
+      });
+    }
 
     if (response.ok) {
       console.log('✅ Ad created successfully in main backend');
@@ -168,9 +198,11 @@ router.post('/', upload.array('images', 5), async (req, res) => {
       await user.save();
 
       console.error('❌ Ad creation failed in main backend, credits refunded');
+      console.error('❌ Error details:', JSON.stringify(data, null, 2));
       return res.status(response.status).json({
         message: data.message || 'Failed to create ad in main backend. Credits have been refunded.',
         refunded: true,
+        mainBackendError: data
       });
     }
   } catch (error) {
