@@ -1263,7 +1263,7 @@ function createPaymentTierCard(tier, index, isRecommended) {
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <div class="benefit-text">
-                            <div class="benefit-label">Commission (85%)</div>
+                            <div class="benefit-label">Commission (75%)</div>
                             <div class="benefit-value">₹${(tier.profit / 1000).toFixed(0)}K</div>
                         </div>
                     </div>
