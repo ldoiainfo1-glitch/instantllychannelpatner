@@ -99,26 +99,26 @@ router.post('/', upload.array('images', 5), async (req, res) => {
 
     // Check credits
     const currentCredits = user.credits || 0;
-    if (currentCredits < 1020) {
+    if (currentCredits < 1200) {
       return res.status(400).json({
-        message: 'Insufficient credits. You need 1020 credits to create an ad.',
+        message: 'Insufficient credits. You need 1200 credits to create an ad.',
         currentCredits: currentCredits,
-        required: 1020,
+        required: 1200,
       });
     }
 
-    // Deduct 1020 credits
-    user.credits = currentCredits - 1020;
+    // Deduct 1200 credits
+    user.credits = currentCredits - 1200;
     user.creditsHistory = user.creditsHistory || [];
     user.creditsHistory.push({
       type: 'deduction',
-      amount: -1020,
+      amount: -1200,
       description: `Ad creation: ${title}`,
       date: new Date(),
     });
     await user.save();
 
-    console.log(`✅ Deducted 1020 credits from ${user.phone}. Remaining: ${user.credits}`);
+    console.log(`✅ Deducted 1200 credits from ${user.phone}. Remaining: ${user.credits}`);
 
     // Now forward the request to main Instantlly Cards backend for ad storage
     const FormData = require('form-data');
@@ -151,11 +151,9 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     if (response.ok) {
       console.log('✅ Ad created successfully in main backend');
       return res.status(201).json({
-        message: 'Ad submitted successfully! 1020 credits deducted. Admin will review your ad. You will need to pay ₹180 after approval.',
-        creditsDeducted: 1020,
+        message: 'Ad submitted successfully! 1200 credits deducted. Admin will review your ad.',
+        creditsDeducted: 1200,
         remainingCredits: user.credits,
-        cashPaymentRequired: 180,
-        totalCost: '1020 credits + ₹180 cash',
         ad: data.ad || data,
       });
     } else {
@@ -163,7 +161,7 @@ router.post('/', upload.array('images', 5), async (req, res) => {
       user.credits = currentCredits;
       user.creditsHistory.push({
         type: 'bonus',
-        amount: 1020,
+        amount: 1200,
         description: `Ad creation failed - refund: ${title}`,
         date: new Date(),
       });
