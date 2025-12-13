@@ -2052,11 +2052,13 @@
                 const userPhone = currentUser?.phone || '';
                 const response = await fetch(`${API_BASE_URL}/users/my-ads?phone=${encodeURIComponent(userPhone)}`);
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch ads');
-                }
-
+                // Always try to parse JSON response
                 const data = await response.json();
+                
+                // Handle both success and error cases gracefully
+                if (!response.ok && !data.ads) {
+                    console.warn('Ads endpoint returned error, showing empty state');
+                }
                 const ads = data.ads || [];
 
                 if (ads.length === 0) {

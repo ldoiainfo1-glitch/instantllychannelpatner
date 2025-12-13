@@ -442,20 +442,59 @@ router.get('/my-ads', async (req, res) => {
     
     console.log('🌐 Calling main backend:', url);
     
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (response.ok) {
-      console.log(`✅ Fetched ${data.ads?.length || 0} ads for user`);
-      res.json(data);
-    } else {
-      console.error('❌ Failed to fetch user ads:', response.status, data);
-      res.status(response.status).json(data);
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      // Check if response is ok
+      if (!response.ok) {
+        console.error('❌ Main backend error:', response.status, response.statusText);
+        
+        // If endpoint doesn't exist or returns 404/500, return empty ads list
+        if (response.status === 404 || response.status === 500) {
+          console.log('⚠️ Ads endpoint not available, returning empty list');
+          return res.json({ 
+            success: true, 
+            ads: [],
+            message: 'No ads found or ads service temporarily unavailable'
+          });
+        }
+      }
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log(`✅ Fetched ${data.ads?.length || 0} ads for user`);
+        res.json(data);
+      } else {
+        console.error('❌ Failed to fetch user ads:', response.status, data);
+        // Return empty ads list instead of error
+        res.json({ 
+          success: true, 
+          ads: [],
+          message: data.message || 'No ads found'
+        });
+      }
+    } catch (fetchError) {
+      console.error('❌ Main backend fetch error:', fetchError.message);
+      // Return empty ads list if main backend is unreachable
+      console.log('⚠️ Main backend unreachable, returning empty list');
+      return res.json({ 
+        success: true, 
+        ads: [],
+        message: 'Ads service temporarily unavailable'
+      });
     }
   } catch (error) {
     console.error('❌ User ads fetch error:', error);
-    res.status(500).json({ 
-      success: false,
+    // Return empty ads list instead of error
+    res.json({ 
+      success: true,
+      ads: [],
       message: 'Failed to fetch ads',
       error: error.message 
     });
