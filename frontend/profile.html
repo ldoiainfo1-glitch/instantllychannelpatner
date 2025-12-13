@@ -814,6 +814,93 @@
         </div>
     </section>
 
+    <!-- Ad Confirmation Modal -->
+    <div class="modal fade" id="adConfirmationModal" tabindex="-1" aria-labelledby="adConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="modal-title" id="adConfirmationModalLabel">
+                        <i class="fas fa-bullhorn me-2"></i>Ad Submission Confirmation
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            <i class="fas fa-credit-card fa-3x text-primary mb-3"></i>
+                        </div>
+                        
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body py-3">
+                                        <div class="text-muted small mb-1">Cost</div>
+                                        <div class="h4 mb-0 text-danger fw-bold">
+                                            <i class="fas fa-minus-circle me-1"></i>1,200
+                                        </div>
+                                        <small class="text-muted">credits</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body py-3">
+                                        <div class="text-muted small mb-1">Current Balance</div>
+                                        <div class="h4 mb-0 text-success fw-bold" id="modalCurrentBalance">
+                                            <i class="fas fa-wallet me-1"></i>0
+                                        </div>
+                                        <small class="text-muted">credits</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info mb-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="fw-bold">After Submission:</span>
+                                <span class="h5 mb-0 text-primary fw-bold" id="modalAfterBalance">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-hourglass-half"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1">Pending Approval</h6>
+                                <p class="text-muted small mb-0">Your ad will be sent for admin review</p>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex align-items-start">
+                            <div class="flex-shrink-0">
+                                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 ms-3">
+                                <h6 class="mb-1">Go Live</h6>
+                                <p class="text-muted small mb-0">After approval, it will appear in Instantly Cards App</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-primary" id="confirmAdSubmissionBtn">
+                        <i class="fas fa-paper-plane me-2"></i>Confirm & Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -2144,21 +2231,6 @@
                 return;
             }
 
-            // Confirm submission
-            const confirmed = confirm(
-                `📢 Ad Submission Confirmation:\n\n` +
-                `💳 Cost: 1200 credits\n` +
-                `📊 Current Balance: ${currentCredits.toLocaleString('en-IN')}\n` +
-                `📊 After Submission: ${(currentCredits - 1200).toLocaleString('en-IN')}\n\n` +
-                `⏳ Your ad will be sent for admin approval.\n` +
-                `✅ After approval, it will appear in Instantly Cards App.\n\n` +
-                `Do you want to proceed?`
-            );
-
-            if (!confirmed) {
-                return;
-            }
-
             // Create FormData
             const formData = new FormData();
             formData.append('title', title);
@@ -2167,14 +2239,45 @@
             formData.append('endDate', endDate);
             formData.append('uploaderName', currentUser?.name || 'Channel Partner');
             formData.append('uploaderPhone', currentUser?.phone || phone);
-            
             formData.append('images', bottomImageFile);
             if (fullscreenImageFile) {
                 formData.append('images', fullscreenImageFile);
             }
 
-            // Show loading
+            // Show confirmation modal
+            document.getElementById('modalCurrentBalance').textContent = currentCredits.toLocaleString('en-IN');
+            document.getElementById('modalAfterBalance').textContent = (currentCredits - 1200).toLocaleString('en-IN') + ' credits';
+            
+            const confirmModal = new bootstrap.Modal(document.getElementById('adConfirmationModal'));
+            confirmModal.show();
+
             const submitBtn = document.getElementById('submitAdBtn');
+
+            // Wait for user confirmation
+            const confirmBtn = document.getElementById('confirmAdSubmissionBtn');
+            const modalElement = document.getElementById('adConfirmationModal');
+            
+            const handleConfirm = async () => {
+                confirmModal.hide();
+                await proceedWithAdSubmission(formData, currentCredits, submitBtn);
+                cleanup();
+            };
+            
+            const handleCancel = () => {
+                cleanup();
+            };
+            
+            const cleanup = () => {
+                confirmBtn.removeEventListener('click', handleConfirm);
+                modalElement.removeEventListener('hidden.bs.modal', handleCancel);
+            };
+            
+            confirmBtn.addEventListener('click', handleConfirm, { once: true });
+            modalElement.addEventListener('hidden.bs.modal', handleCancel, { once: true });
+        }
+
+        async function proceedWithAdSubmission(formData, currentCredits, submitBtn) {
+            // Show loading
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
 
