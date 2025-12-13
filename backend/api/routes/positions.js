@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Position = require('../models/Position');
+const PricingOverride = require('../models/PricingOverride');
 
 // Version endpoint to verify deployment
 router.get('/version', (req, res) => {
@@ -283,7 +284,6 @@ router.get('/:positionId/custom-pricing', async (req, res) => {
     }
     
     // PRIORITY 1: Check new PricingOverride system (from Dynamic Pricing Manager)
-    const PricingOverride = require('../models/PricingOverride');
     const override = await PricingOverride.findOne({ positionId, isActive: true });
     
     if (override) {
