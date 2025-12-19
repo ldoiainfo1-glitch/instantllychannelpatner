@@ -2507,4 +2507,170 @@ router.post('/users/:userId/give-credits', async (req, res) => {
   }
 });
 
+// Distribute commission to position hierarchy
+router.post('/applications/:id/distribute-commission', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { positionId, totalAmount, distributions } = req.body;
+
+    console.log('💰 [COMMISSION] Distribution request:', { 
+      applicationId: id, 
+      positionId, 
+      totalAmount,
+      distributions 
+    });
+
+    // Get the application to find the position hierarchy
+    const application = await Application.findById(id);
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Parse position hierarchy from positionId
+    const hierarchy = parsePositionId(positionId);
+    console.log('📍 [COMMISSION] Position hierarchy:', hierarchy);
+
+    // Find approved applications for each level in the hierarchy
+    const commissionRecipients = [];
+    let totalDistributed = 0;
+    let successfulDistributions = 0;
+
+    for (const distribution of distributions) {
+      try {
+        // Find the position holder for this level
+        const recipientPosition = await findPositionHolder(hierarchy, distribution.level);
+        
+        if (recipientPosition && recipientPosition.application) {
+          const recipient = await User.findById(recipientPosition.application.userId);
+          
+          if (recipient) {
+            // Add credits to recipient
+            const creditsToAdd = Math.floor(distribution.amount);
+            recipient.credits = (recipient.credits || 0) + creditsToAdd;
+            
+            // Add commission transaction
+            recipient.creditsHistory = recipient.creditsHistory || [];
+            recipient.creditsHistory.push({
+              amount: creditsToAdd,
+              type: 'commission',
+              description: `Commission from ${hierarchy.level} position (${distribution.percentage}% of ₹${totalAmount})`,
+              date: new Date()
+            });
+
+            await recipient.save();
+            
+            commissionRecipients.push({
+              level: distribution.level,
+              name: recipient.name,
+              phone: recipient.phone,
+              amount: creditsToAdd,
+              percentage: distribution.percentage
+            });
+
+            totalDistributed += creditsToAdd;
+            successfulDistributions++;
+
+            console.log(`✅ [COMMISSION] Distributed ₹${creditsToAdd} to ${recipient.name} (${distribution.level})`);
+          }
+        } else {
+          console.log(`⚠️ [COMMISSION] No approved holder found for ${distribution.level} level`);
+        }
+      } catch (distError) {
+        console.error(`❌ [COMMISSION] Error distributing to ${distribution.level}:`, distError);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Commission distributed to ${successfulDistributions} recipients`,
+      totalAmount: totalAmount,
+      totalDistributed: totalDistributed,
+      distributedTo: successfulDistributions,
+      recipients: commissionRecipients
+    });
+
+  } catch (error) {
+    console.error('❌ [COMMISSION] Error distributing commission:', error);
+    res.status(500).json({ 
+      error: 'Failed to distribute commission',
+      details: error.message 
+    });
+  }
+});
+
+// Helper function to parse positionId into hierarchy
+function parsePositionId(positionId) {
+  const parts = positionId.replace('pos_', '').split('_');
+  
+  return {
+    level: parts[0].replace(/-/g, ' '),
+    country: parts.length > 1 ? parts[1] : null,
+    zone: parts.length > 2 && parts[2].includes('zone') ? parts[2] : null,
+    state: parts.length > 2 && !parts[2].includes('zone') ? parts[2] : parts.length > 3 ? parts[3] : null,
+    division: parts.length > 4 ? parts[4] : null,
+    district: parts.length > 5 ? parts[5] : null,
+    tehsil: parts.length > 6 ? parts[6] : null,
+    pincode: parts.length > 7 ? parts[7] : null,
+    village: parts.length > 8 ? parts[8] : null
+  };
+}
+
+// Helper function to find position holder for a specific level
+async function findPositionHolder(hierarchy, level) {
+  try {
+    let query = { status: 'approved' };
+    
+    // Build position query based on level
+    switch (level.toLowerCase()) {
+      case 'country':
+        query.positionId = { $regex: /^pos_president_/ };
+        break;
+      case 'zone':
+        if (hierarchy.zone) {
+          query.positionId = { $regex: new RegExp(`zone-head.*${hierarchy.zone.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'state':
+        if (hierarchy.state) {
+          query.positionId = { $regex: new RegExp(`state-head.*${hierarchy.state.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'division':
+        if (hierarchy.division) {
+          query.positionId = { $regex: new RegExp(`division-head.*${hierarchy.division.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'district':
+        if (hierarchy.district) {
+          query.positionId = { $regex: new RegExp(`district-head.*${hierarchy.district.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'tehsil':
+        if (hierarchy.tehsil) {
+          query.positionId = { $regex: new RegExp(`tehsil-head.*${hierarchy.tehsil.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'pincode':
+        if (hierarchy.pincode) {
+          query.positionId = { $regex: new RegExp(`pincode-head.*${hierarchy.pincode}`, 'i') };
+        }
+        break;
+      case 'village':
+        if (hierarchy.village) {
+          query.positionId = { $regex: new RegExp(`village-head.*${hierarchy.village.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+    }
+
+    console.log(`🔍 [COMMISSION] Searching for ${level} holder with query:`, query);
+    
+    const application = await Application.findOne(query);
+    
+    return application ? { application } : null;
+  } catch (error) {
+    console.error(`Error finding ${level} position holder:`, error);
+    return null;
+  }
+}
+
 module.exports = router;
