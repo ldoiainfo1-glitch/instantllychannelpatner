@@ -21,8 +21,12 @@ const upload = multer({
 
 // GET all promotions for user (returns dates and available languages)
 router.get('/user-promotions', async (req, res) => {
+    const startTime = Date.now();
     try {
+        console.log(`📋 [${new Date().toISOString()}] Fetching promotions list...`);
+        
         // Use aggregation with $objectToArray to get only keys without loading buffer values
+        const aggregateStart = Date.now();
         const promotions = await Promotion.aggregate([
             { $sort: { date: -1 } },
             { $limit: 50 },
@@ -51,6 +55,11 @@ router.get('/user-promotions', async (req, res) => {
                 }
             }
         ]);
+        const aggregateTime = Date.now() - aggregateStart;
+        
+        console.log(`   ⏱️  Aggregation: ${aggregateTime}ms`);
+        console.log(`   📊 Found ${promotions.length} promotions`);
+        console.log(`   ✅ Total time: ${Date.now() - startTime}ms\n`);
         
         // Add cache headers
         res.set('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
@@ -61,8 +70,9 @@ router.get('/user-promotions', async (req, res) => {
             promotions: promotions
         });
     } catch (error) {
-        console.error('Error fetching promotions:', error);
-        console.error('Full error:', error.stack);
+        const totalTime = Date.now() - startTime;
+        console.error(`   ❌ Error after ${totalTime}ms:`, error.message);
+        console.error('   Full error:', error.stack);
         res.status(500).json({
             success: false,
             message: 'Failed to fetch promotions',
@@ -73,36 +83,64 @@ router.get('/user-promotions', async (req, res) => {
 
 // GET promotion image by ID and language
 router.get('/image/:promotionId/:language', async (req, res) => {
+    const startTime = Date.now();
     try {
         const { promotionId, language } = req.params;
+        console.log(`🖼️  [${new Date().toISOString()}] Image request: ${promotionId}/${language}`);
         
-        const promotion = await Promotion.findById(promotionId);
+        // Step 1: Query MongoDB
+        const queryStart = Date.now();
+        const promotion = await Promotion.findById(promotionId)
+            .select(`languages.${language}`) // Only select the specific language
+            .lean()
+            .maxTimeMS(15000); // 15 second timeout
+        const queryTime = Date.now() - queryStart;
+        console.log(`   ⏱️  MongoDB query: ${queryTime}ms`);
         
         if (!promotion) {
+            console.log(`   ❌ Promotion not found: ${promotionId}`);
             return res.status(404).json({
                 success: false,
                 message: 'Promotion not found'
             });
         }
         
-        const languageData = promotion.languages.get(language);
+        // Step 2: Extract language data
+        const extractStart = Date.now();
+        const languageData = promotion.languages ? promotion.languages[language] : null;
+        const extractTime = Date.now() - extractStart;
+        console.log(`   ⏱️  Data extraction: ${extractTime}ms`);
         
         if (!languageData || !languageData.imageData) {
+            console.log(`   ❌ Image not available for ${language}`);
             return res.status(404).json({
                 success: false,
                 message: `Image not available for ${language}`
             });
         }
         
-        // Set appropriate headers
-        res.set('Content-Type', languageData.contentType || 'image/png');
-        res.set('Cache-Control', 'public, max-age=604800'); // Cache for 7 days (images don't change)
-        res.set('ETag', `${promotionId}-${language}`); // Add ETag for browser caching
+        // Step 3: Get buffer info
+        const bufferSize = languageData.imageData.length;
+        const bufferSizeMB = (bufferSize / (1024 * 1024)).toFixed(2);
+        console.log(`   📦 Image size: ${bufferSizeMB}MB (${bufferSize} bytes)`);
         
-        // Send the image buffer
+        // Step 4: Set headers and send
+        const sendStart = Date.now();
+        res.set('Content-Type', languageData.contentType || 'image/png');
+        res.set('Cache-Control', 'public, max-age=604800'); // Cache for 7 days
+        res.set('ETag', `${promotionId}-${language}`);
+        res.set('Content-Length', bufferSize);
+        
         res.send(languageData.imageData);
+        const sendTime = Date.now() - sendStart;
+        
+        const totalTime = Date.now() - startTime;
+        console.log(`   ⏱️  Response send: ${sendTime}ms`);
+        console.log(`   ✅ Total time: ${totalTime}ms\n`);
     } catch (error) {
-        console.error('Error fetching promotion image:', error);
+        const totalTime = Date.now() - startTime;
+        console.error(`   ❌ Error after ${totalTime}ms:`, error.message);
+        console.error('   Full error:', error.stack);
         res.status(500).json({
             success: false,
             message: 'Failed to fetch promotion image',
