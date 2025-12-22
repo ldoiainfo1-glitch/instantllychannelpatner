@@ -22,21 +22,17 @@ const upload = multer({
 // GET all promotions for user (returns dates and available languages)
 router.get('/user-promotions', async (req, res) => {
     try {
-        // Use aggregation to get only the keys of languages Map, not the image buffers
+        // Use aggregation with $objectToArray to get only keys without loading buffer values
         const promotions = await Promotion.aggregate([
-            {
-                $sort: { date: -1 }
-            },
-            {
-                $limit: 50
-            },
+            { $sort: { date: -1 } },
+            { $limit: 50 },
             {
                 $project: {
                     _id: 1,
                     date: 1,
                     createdAt: 1,
-                    // Convert Map keys to array without loading the values
-                    languages: { $objectToArray: '$languages' }
+                    // Convert languages map to array of key-value pairs
+                    languagesArray: { $objectToArray: '$languages' }
                 }
             },
             {
@@ -44,17 +40,17 @@ router.get('/user-promotions', async (req, res) => {
                     _id: 1,
                     date: 1,
                     createdAt: 1,
-                    // Extract only the language codes (keys)
+                    // Extract just the keys (language codes)
                     languages: {
                         $map: {
-                            input: '$languages',
-                            as: 'lang',
-                            in: '$$lang.k'
+                            input: '$languagesArray',
+                            as: 'item',
+                            in: '$$item.k'
                         }
                     }
                 }
             }
-        ]).maxTimeMS(10000); // 10 second timeout
+        ]);
         
         // Add cache headers
         res.set('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
@@ -66,6 +62,7 @@ router.get('/user-promotions', async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching promotions:', error);
+        console.error('Full error:', error.stack);
         res.status(500).json({
             success: false,
             message: 'Failed to fetch promotions',
