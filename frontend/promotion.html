@@ -481,31 +481,63 @@
             previewImage.src = '';
             previewImage.alt = 'Generating preview...';
             
+            console.log(`🎯 [${new Date().toISOString()}] STEP 1: Clicked ${language} button for promotion ${promotionId}`);
+            console.log(`   Date: ${date}`);
+            
             // Show modal
+            const modalStart = Date.now();
             const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
             modal.show();
+            console.log(`   ⏱️  Modal shown: ${Date.now() - modalStart}ms`);
             
             try {
                 // Fetch promotion image from backend
+                console.log(`🌐 [${new Date().toISOString()}] STEP 2: Fetching image from API...`);
+                console.log(`   URL: ${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
+                const fetchStart = Date.now();
+                
                 const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
+                const fetchTime = Date.now() - fetchStart;
+                console.log(`   ⏱️  Fetch completed: ${fetchTime}ms`);
+                console.log(`   Response status: ${response.status} ${response.statusText}`);
                 
                 if (!response.ok) {
+                    console.error(`   ❌ Response not OK: ${response.status}`);
                     throw new Error('Failed to fetch promotion image');
                 }
                 
+                // Convert to blob
+                console.log(`📦 [${new Date().toISOString()}] STEP 3: Converting response to blob...`);
+                const blobStart = Date.now();
                 const blob = await response.blob();
+                const blobTime = Date.now() - blobStart;
+                console.log(`   ⏱️  Blob conversion: ${blobTime}ms`);
+                console.log(`   Blob size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                
                 const promotionImageUrl = URL.createObjectURL(blob);
+                console.log(`   ✅ Object URL created`);
                 
                 // Generate complete card preview with user details
+                console.log(`🎨 [${new Date().toISOString()}] STEP 4: Generating preview card with user details...`);
+                const canvasStart = Date.now();
                 const previewDataUrl = await generatePromotionCardPreview(promotionImageUrl, language, date);
+                const canvasTime = Date.now() - canvasStart;
+                console.log(`   ⏱️  Canvas generation: ${canvasTime}ms`);
+                
                 currentPreviewDataUrl = previewDataUrl;
                 
                 // Set preview image to the complete card
+                console.log(`🖼️  [${new Date().toISOString()}] STEP 5: Setting preview image...`);
                 previewImage.src = previewDataUrl;
                 previewImage.alt = 'Promotion Card Preview';
                 
+                const totalTime = fetchTime + blobTime + canvasTime;
+                console.log(`✅ [${new Date().toISOString()}] COMPLETE! Total time: ${totalTime}ms`);
+                console.log(`   Breakdown: Fetch=${fetchTime}ms, Blob=${blobTime}ms, Canvas=${canvasTime}ms`);
+                
             } catch (error) {
-                console.error('Error generating preview:', error);
+                console.error('❌ Error generating preview:', error);
+                console.error('   Error stack:', error.stack);
                 previewImage.alt = 'Failed to load preview';
                 alert('Failed to load preview. Please try again.');
             }
