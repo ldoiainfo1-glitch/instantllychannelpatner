@@ -45,6 +45,7 @@ app.use((req, res, next) => {
     'https://instantllychannelpatner.onrender.com',
     'https://instantlly-channel-partner.vercel.app',
     'https://instantllychannelpatner.vercel.app',
+    'https://instantllychannelpatneradmin.vercel.app',
     'https://www.instantllycards.com',
     'https://instantllycards.com'
   ];
