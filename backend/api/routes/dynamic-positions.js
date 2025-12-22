@@ -22,59 +22,62 @@ router.get('/', async (req, res) => {
     let positions = [];
     let sNo = 1;
     
+    // PERFORMANCE OPTIMIZATION: Collect all position IDs first, then batch fetch applications
+    const positionsToGenerate = [];
+    
     // Generate positions based on location hierarchy
     if (village) {
       // Village level - show this specific village position
-      positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${village}`, { country, zone, state, division, district, tehsil, pincode, village }));
+      positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${village}`, location: { country, zone, state, division, district, tehsil, pincode, village } });
     } else if (pincode) {
       // Pincode level - show villages under this pincode + pincode head
-      positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${pincode}`, { country, zone, state, division, district, tehsil, pincode }));
+      positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${pincode}`, location: { country, zone, state, division, district, tehsil, pincode } });
       
       // Add some sample villages for this pincode
       const sampleVillages = [`${pincode} Village A`, `${pincode} Village B`, `${pincode} Village C`];
       for (const village of sampleVillages) {
-        positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${village}`, { country, zone, state, division, district, tehsil, pincode, village }));
+        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${village}`, location: { country, zone, state, division, district, tehsil, pincode, village } });
       }
     } else if (tehsil) {
       // Tehsil level - show tehsil head + sample pincodes
-      positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${tehsil}`, { country, zone, state, division, district, tehsil }));
+      positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${tehsil}`, location: { country, zone, state, division, district, tehsil } });
       
       // Add sample pincodes for this tehsil
-      const basePincode = Math.floor(Math.random() * 900000) + 100000; // Generate base pincode
+      const basePincode = Math.floor(Math.random() * 900000) + 100000;
       for (let i = 0; i < 5; i++) {
         const pincode = (basePincode + i).toString();
-        positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${pincode}`, { country, zone, state, division, district, tehsil, pincode }));
+        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${pincode}`, location: { country, zone, state, division, district, tehsil, pincode } });
       }
     } else if (district) {
       // District level - show district head + sample tehsils
-      positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${district}`, { country, zone, state, division, district }));
+      positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${district}`, location: { country, zone, state, division, district } });
       
       // Add sample tehsils for this district
       const sampleTehsils = [`${district} East`, `${district} West`, `${district} North`, `${district} South`, `${district} Central`];
       for (const tehsil of sampleTehsils) {
-        positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${tehsil}`, { country, zone, state, division, district, tehsil }));
+        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${tehsil}`, location: { country, zone, state, division, district, tehsil } });
       }
     } else if (division) {
       // Division level - show division head + sample districts
-      positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${division}`, { country, zone, state, division }));
+      positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
       
       // Add sample districts for this division
       const sampleDistricts = [`${division} District 1`, `${division} District 2`, `${division} District 3`];
       for (const district of sampleDistricts) {
-        positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${district}`, { country, zone, state, division, district }));
+        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${district}`, location: { country, zone, state, division, district } });
       }
     } else if (state) {
       // State level - show state head + sample divisions
-      positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${state}`, { country, zone, state }));
+      positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${state}`, location: { country, zone, state } });
       
       // Add sample divisions for this state
       const sampleDivisions = [`${state} North Division`, `${state} South Division`, `${state} East Division`, `${state} West Division`];
       for (const division of sampleDivisions) {
-        positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${division}`, { country, zone, state, division }));
+        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
       }
     } else if (zone) {
       // Zone level - show zone head + states from location data
-      positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${zone}`, { country, zone }));
+      positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${zone}`, location: { country, zone } });
       
       try {
         // Get actual states for this zone from location data
@@ -83,11 +86,10 @@ router.get('/', async (req, res) => {
         
         // Show first few states
         for (const state of states.slice(0, 10)) {
-          positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${state}`, { country, zone, state }));
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${state}`, location: { country, zone, state } });
         }
       } catch (error) {
         console.log('⚠️ Could not load states from Location model, using sample data');
-        // Fallback to sample states
         const sampleStates = zone === 'South' ? ['Goa', 'Karnataka', 'Tamil Nadu', 'Kerala', 'Andhra Pradesh'] :
                            zone === 'North' ? ['Delhi', 'Punjab', 'Haryana', 'Uttar Pradesh', 'Rajasthan'] :
                            zone === 'East' ? ['West Bengal', 'Odisha', 'Jharkhand', 'Bihar', 'Assam'] :
@@ -97,12 +99,12 @@ router.get('/', async (req, res) => {
                            ['Sample State 1', 'Sample State 2', 'Sample State 3'];
         
         for (const state of sampleStates) {
-          positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${state}`, { country, zone, state }));
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${state}`, location: { country, zone, state } });
         }
       }
     } else {
       // Country level - show President + all zones
-      positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `President of ${country}`, { country }));
+      positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `President of ${country}`, location: { country } });
       
       try {
         // Get actual zones from location data
@@ -110,16 +112,91 @@ router.get('/', async (req, res) => {
         console.log(`📍 Found ${zonesFromDB.length} zones from database:`, zonesFromDB);
         
         for (const zone of zonesFromDB.sort()) {
-          positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${zone}`, { country, zone }));
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${zone}`, location: { country, zone } });
         }
       } catch (error) {
         console.log('⚠️ Could not load zones from Location model, using fallback');
-        // Fallback zones (without "India" suffix)
         const zones = ['North', 'South', 'East', 'Western', 'Central', 'North East'];
         for (const zone of zones) {
-          positions.push(await createPositionWithApplicationStatus(sNo++, 'Committee', `Head of ${zone}`, { country, zone }));
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${zone}`, location: { country, zone } });
         }
       }
+    }
+    
+    // 🚀 BATCH OPTIMIZATION: Generate all position IDs and fetch applications in ONE query
+    const positionIds = positionsToGenerate.map(p => generatePositionId(p.location, p.designation));
+    console.log(`⚡ Batch fetching applications for ${positionIds.length} positions...`);
+    
+    // Fetch all applications at once
+    const applications = await Application.find({ 
+      positionId: { $in: positionIds } 
+    }).lean();
+    
+    // Create a map for O(1) lookup
+    const applicationMap = {};
+    applications.forEach(app => {
+      applicationMap[app.positionId] = app;
+    });
+    
+    // Get all unique phone numbers to batch fetch users
+    const phoneNumbers = applications.map(app => app.applicantInfo?.phone).filter(Boolean);
+    const User = require('../models/User');
+    const users = await User.find({ phone: { $in: phoneNumbers } }).select('phone photo introducedCount').lean();
+    
+    // Create user map for O(1) lookup
+    const userMap = {};
+    users.forEach(user => {
+      userMap[user.phone] = user;
+    });
+    
+    console.log(`✅ Batch fetched ${applications.length} applications and ${users.length} users`);
+    
+    // Now create positions with pre-fetched data (NO additional DB queries)
+    for (const posData of positionsToGenerate) {
+      const positionId = generatePositionId(posData.location, posData.designation);
+      const application = applicationMap[positionId];
+      
+      const position = {
+        _id: positionId,
+        sNo: posData.sNo,
+        post: posData.post,
+        designation: posData.designation,
+        location: posData.location,
+        contribution: 10000,
+        credits: 60000,
+        isTemplate: true,
+        status: 'Available'
+      };
+      
+      if (application) {
+        position.status = application.status === 'pending' ? 'Pending' : 
+                         application.status === 'approved' ? 'Approved' : 'Verified';
+        
+        // Get user data from pre-fetched map
+        const user = userMap[application.applicantInfo.phone];
+        const userPhoto = user?.photo || application.applicantInfo.photo;
+        const introducedCount = user?.introducedCount || 0;
+        
+        position.applicantDetails = {
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          email: application.applicantInfo.email,
+          photo: userPhoto,
+          address: application.applicantInfo.address,
+          companyName: application.applicantInfo.companyName,
+          businessName: application.applicantInfo.businessName,
+          appliedDate: application.appliedDate,
+          introducedBy: application.introducedBy || 'Self',
+          introducedCount: introducedCount,
+          days: Math.floor((new Date() - new Date(application.appliedDate)) / (1000 * 60 * 60 * 24)),
+          applicationId: application._id,
+          isVerified: application.isVerified || false
+        };
+      } else {
+        position.applicantDetails = null;
+      }
+      
+      positions.push(position);
     }
     
     // Re-number sNo
@@ -127,7 +204,7 @@ router.get('/', async (req, res) => {
       p.sNo = index + 1;
     });
     
-    console.log(`📊 Generated ${positions.length} dynamic positions`);
+    console.log(`📊 Generated ${positions.length} dynamic positions in optimized batch mode`);
     
     // Send response with proper headers
     res.setHeader('Content-Type', 'application/json');
