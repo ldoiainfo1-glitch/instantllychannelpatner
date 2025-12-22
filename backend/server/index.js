@@ -70,6 +70,9 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Import index creation utility
+const ensureIndexes = require('../utils/ensureIndexes');
+
 // Connect to MongoDB Atlas with better error handling
 const connectDB = async () => {
   try {
@@ -87,6 +90,12 @@ const connectDB = async () => {
     });
     console.log('✅ Connected to MongoDB Atlas');
     console.log('Database:', conn.connection.name);
+    
+    // Ensure indexes exist (runs in background, doesn't block startup)
+    ensureIndexes(mongoose).catch(err => 
+      console.error('⚠️ Index creation failed:', err.message)
+    );
+    
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
     // Don't exit the process, let the app run without DB for now
