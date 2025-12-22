@@ -66,6 +66,21 @@ app.use('/api/payments/webhook', express.raw({ type: '*/*' }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
+// Set global timeout for all requests
+app.use((req, res, next) => {
+  // Set timeout to 28 seconds (Render has 30s timeout)
+  req.setTimeout(28000, () => {
+    console.log('⏱️ Request timeout for:', req.method, req.path);
+    if (!res.headersSent) {
+      res.status(504).json({ 
+        error: 'Request timeout',
+        message: 'The request took too long to process'
+      });
+    }
+  });
+  next();
+});
+
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 

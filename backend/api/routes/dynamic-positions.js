@@ -5,6 +5,9 @@ const Application = require('../models/Application');
 
 // Get available positions dynamically based on location filters.
 router.get('/', async (req, res) => {
+  // Set timeout for this route
+  req.setTimeout(25000); // 25 second timeout
+  
   try {
     const { 
       country = 'India', 
@@ -128,10 +131,22 @@ router.get('/', async (req, res) => {
     });
     
     console.log(`📊 Generated ${positions.length} dynamic positions`);
-    res.json(positions);
+    
+    // Send response with proper headers
+    res.setHeader('Content-Type', 'application/json');
+    res.status(200).json(positions);
   } catch (error) {
     console.error('❌ Error generating dynamic positions:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ Error stack:', error.stack);
+    
+    // Send error response
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Failed to generate positions',
+        message: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
   }
 });
 
