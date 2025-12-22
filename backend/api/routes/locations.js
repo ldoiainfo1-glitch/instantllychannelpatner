@@ -241,18 +241,24 @@ router.post('/manage', async (req, res) => {
     
     console.log('[LOCATION-CREATE] Creating new location:', { zone, state, division, district, tehsil, pincode, village });
     
-    // Validate required fields
-    if (!zone || !state || !division || !district || !tehsil || !pincode || !village) {
+    // Validate required fields (tehsil, pincode, village are optional)
+    if (!zone || !state || !division || !district) {
       return res.status(400).json({ 
         success: false, 
-        error: 'All location fields are required' 
+        error: 'Zone, state, division, and district are required' 
       });
     }
     
+    // Build query object for duplicate check (only include fields that are provided)
+    const existingQuery = {
+      zone, state, division, district
+    };
+    if (tehsil) existingQuery.tehsil = tehsil;
+    if (pincode) existingQuery.pincode = pincode;
+    if (village) existingQuery.village = village;
+    
     // Check if location already exists
-    const existing = await Location.findOne({
-      zone, state, division, district, tehsil, pincode, village
-    });
+    const existing = await Location.findOne(existingQuery);
     
     if (existing) {
       return res.status(400).json({ 
@@ -261,17 +267,20 @@ router.post('/manage', async (req, res) => {
       });
     }
     
-    // Create new location
-    const location = new Location({
+    // Create new location (only include fields that are provided)
+    const locationData = {
       country: country || 'India',
       zone: zone.trim(),
       state: state.trim(),
       division: division.trim(),
-      district: district.trim(),
-      tehsil: tehsil.trim(),
-      pincode: pincode.trim(),
-      village: village.trim()
-    });
+      district: district.trim()
+    };
+    
+    if (tehsil) locationData.tehsil = tehsil.trim();
+    if (pincode) locationData.pincode = pincode.trim();
+    if (village) locationData.village = village.trim();
+    
+    const location = new Location(locationData);
     
     await location.save();
     
@@ -296,11 +305,11 @@ router.put('/manage/:id', async (req, res) => {
     
     console.log('[LOCATION-UPDATE] Updating location:', id);
     
-    // Validate required fields
-    if (!zone || !state || !division || !district || !tehsil || !pincode || !village) {
+    // Validate required fields (tehsil, pincode, village are optional)
+    if (!zone || !state || !division || !district) {
       return res.status(400).json({ 
         success: false, 
-        error: 'All location fields are required' 
+        error: 'Zone, state, division, and district are required' 
       });
     }
     
@@ -312,15 +321,16 @@ router.put('/manage/:id', async (req, res) => {
       });
     }
     
-    // Update fields
+    // Update fields (only set optional fields if provided)
     location.country = country || 'India';
     location.zone = zone.trim();
     location.state = state.trim();
     location.division = division.trim();
     location.district = district.trim();
-    location.tehsil = tehsil.trim();
-    location.pincode = pincode.trim();
-    location.village = village.trim();
+    
+    if (tehsil !== undefined) location.tehsil = tehsil ? tehsil.trim() : undefined;
+    if (pincode !== undefined) location.pincode = pincode ? pincode.trim() : undefined;
+    if (village !== undefined) location.village = village ? village.trim() : undefined;
     
     await location.save();
     
