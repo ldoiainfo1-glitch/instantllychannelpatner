@@ -484,30 +484,47 @@
             console.log(`🎯 [${new Date().toISOString()}] STEP 1: Clicked ${language} button for promotion ${promotionId}`);
             console.log(`   Date: ${date}`);
             
-            // Show modal
+            // Show modal with loading message
             const modalStart = Date.now();
             const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
             modal.show();
             console.log(`   ⏱️  Modal shown: ${Date.now() - modalStart}ms`);
             
+            // Update preview text to show server status
+            previewImage.alt = '⏳ Waking up server... (Free tier takes 30-60 seconds)';
+            
             try {
-                // Fetch promotion image from backend with 30 second timeout
+                // Fetch promotion image from backend with 90 second timeout (for Render cold start)
                 console.log(`🌐 [${new Date().toISOString()}] STEP 2: Fetching image from API...`);
                 console.log(`   URL: ${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
+                console.log(`   ⚠️  Note: First request may take 30-60s (server cold start)`);
                 const fetchStart = Date.now();
                 
                 // Create abort controller for timeout
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => {
-                    console.error(`   ⏰ TIMEOUT after 30 seconds - aborting request`);
+                    console.error(`   ⏰ TIMEOUT after 90 seconds - aborting request`);
                     controller.abort();
-                }, 30000); // 30 second timeout
+                }, 90000); // 90 second timeout (handles Render cold start)
+                
+                // Update loading text at intervals
+                const loadingInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - fetchStart) / 1000);
+                    if (elapsed < 30) {
+                        previewImage.alt = `⏳ Loading... ${elapsed}s`;
+                    } else if (elapsed < 60) {
+                        previewImage.alt = `⏳ Server is waking up... ${elapsed}s (Render free tier is slow)`;
+                    } else {
+                        previewImage.alt = `⏳ Almost there... ${elapsed}s`;
+                    }
+                }, 1000);
                 
                 try {
                     const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`, {
                         signal: controller.signal
                     });
                     clearTimeout(timeoutId); // Clear timeout if request completes
+                    clearInterval(loadingInterval); // Stop loading updates
                     
                     const fetchTime = Date.now() - fetchStart;
                     console.log(`   ⏱️  Fetch completed: ${fetchTime}ms`);
@@ -551,11 +568,16 @@
                     
                 } catch (fetchError) {
                     clearTimeout(timeoutId);
+                    clearInterval(loadingInterval); // Stop loading updates
                     
                     if (fetchError.name === 'AbortError') {
-                        console.error('❌ Request timed out after 30 seconds');
-                        previewImage.alt = 'Request timed out';
-                        alert('Request timed out after 30 seconds. The server may be slow or down. Please try again.');
+                        console.error('❌ Request timed out after 90 seconds');
+                        previewImage.alt = 'Request timed out after 90 seconds';
+                        alert('⏰ Server took too long to respond (90+ seconds).\n\n' +
+                              'This happens when:\n' +
+                              '1. Render free tier is sleeping (cold start)\n' +
+                              '2. Database is very slow\n\n' +
+                              'Please try again in a moment - it should be faster now that server is awake.');
                     } else {
                         throw fetchError; // Re-throw to outer catch
                     }
