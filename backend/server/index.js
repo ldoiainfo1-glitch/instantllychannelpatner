@@ -76,12 +76,13 @@ const connectDB = async () => {
       retryWrites: true,
       w: 'majority',
       serverSelectionTimeoutMS: 30000, // 30s to select server
-      socketTimeoutMS: 60000, // 60s socket timeout
+      socketTimeoutMS: 120000, // 120s socket timeout (doubled for slow queries)
       connectTimeoutMS: 30000, // 30s connection timeout
       maxPoolSize: 5, // Increase pool for better concurrent handling
       minPoolSize: 2,
       maxIdleTimeMS: 30000, // 30s idle timeout
       heartbeatFrequencyMS: 10000, // Check connection every 10s
+      family: 4, // Force IPv4 for better compatibility
     });
     console.log('✅ Connected to MongoDB Atlas');
     console.log('Database:', conn.connection.name);

@@ -22,40 +22,47 @@ const upload = multer({
 // GET all promotions for user (returns dates and available languages)
 router.get('/user-promotions', async (req, res) => {
     try {
-        // Add limit and caching
-        const promotions = await Promotion.find({})
-            .sort({ date: -1 })
-            .limit(50) // Limit to last 50 promotions
-            .select('date languages createdAt')
-            .lean()
-            .maxTimeMS(5000); // 5 second timeout
-        
-        // Transform data to include only language names (not the full image data)
-        const transformedPromotions = promotions.map(promo => {
-            const availableLanguages = [];
-            
-            if (promo.languages) {
-                for (const [lang, data] of Object.entries(promo.languages)) {
-                    if (data && data.imageData) {
-                        availableLanguages.push(lang);
+        // Use aggregation to get only the keys of languages Map, not the image buffers
+        const promotions = await Promotion.aggregate([
+            {
+                $sort: { date: -1 }
+            },
+            {
+                $limit: 50
+            },
+            {
+                $project: {
+                    _id: 1,
+                    date: 1,
+                    createdAt: 1,
+                    // Convert Map keys to array without loading the values
+                    languages: { $objectToArray: '$languages' }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    date: 1,
+                    createdAt: 1,
+                    // Extract only the language codes (keys)
+                    languages: {
+                        $map: {
+                            input: '$languages',
+                            as: 'lang',
+                            in: '$$lang.k'
+                        }
                     }
                 }
             }
-            
-            return {
-                _id: promo._id,
-                date: promo.date,
-                languages: availableLanguages,
-                createdAt: promo.createdAt
-            };
-        });
+        ]).maxTimeMS(10000); // 10 second timeout
         
         // Add cache headers
         res.set('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
+        res.set('ETag', `promotions-list`);
         
         res.json({
             success: true,
-            promotions: transformedPromotions
+            promotions: promotions
         });
     } catch (error) {
         console.error('Error fetching promotions:', error);
