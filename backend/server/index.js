@@ -75,11 +75,13 @@ const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/instantly-cards', {
       retryWrites: true,
       w: 'majority',
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      maxPoolSize: 3, // Reduce to 3 connections to save memory
-      minPoolSize: 1,
-      maxIdleTimeMS: 10000, // Close idle connections after 10s
+      serverSelectionTimeoutMS: 30000, // 30s to select server
+      socketTimeoutMS: 60000, // 60s socket timeout
+      connectTimeoutMS: 30000, // 30s connection timeout
+      maxPoolSize: 5, // Increase pool for better concurrent handling
+      minPoolSize: 2,
+      maxIdleTimeMS: 30000, // 30s idle timeout
+      heartbeatFrequencyMS: 10000, // Check connection every 10s
     });
     console.log('✅ Connected to MongoDB Atlas');
     console.log('Database:', conn.connection.name);
@@ -90,6 +92,9 @@ const connectDB = async () => {
   }
 };
 
+// Set mongoose global timeout
+mongoose.set('bufferTimeoutMS', 30000); // 30 second buffer timeout
+
 connectDB();
 
 mongoose.connection.on('error', (err) => {
@@ -97,9 +102,16 @@ mongoose.connection.on('error', (err) => {
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('⚠️ MongoDB disconnected');
+  console.log('⚠️ MongoDB disconnected - attempting reconnect in 5s...');
   // Attempt to reconnect after 5 seconds
-  setTimeout(connectDB, 5000);
+  setTimeout(() => {
+    console.log('🔄 Attempting MongoDB reconnection...');
+    connectDB();
+  }, 5000);
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('✅ MongoDB reconnected successfully');
 });
 
 // Health check endpoint
