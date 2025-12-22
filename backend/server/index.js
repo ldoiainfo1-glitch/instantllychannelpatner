@@ -14,6 +14,8 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(compression()); // Enable gzip compression to reduce memory
+
+// Enhanced CORS configuration
 app.use(cors({
   origin: [
     'http://localhost:3000', 
@@ -26,8 +28,40 @@ app.use(cors({
     'https://instantllycards.com',
     /\.vercel\.app$/
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600
 }));
+
+// Additional CORS headers for all requests
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5500',
+    'https://instantllychannelpatner.onrender.com',
+    'https://instantlly-channel-partner.vercel.app',
+    'https://instantllychannelpatner.vercel.app',
+    'https://www.instantllycards.com',
+    'https://instantllycards.com'
+  ];
+  
+  if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+  
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use('/api/payments/webhook', express.raw({ type: '*/*' }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
