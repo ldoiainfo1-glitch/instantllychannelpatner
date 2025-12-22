@@ -22,10 +22,13 @@ const upload = multer({
 // GET all promotions for user (returns dates and available languages)
 router.get('/user-promotions', async (req, res) => {
     try {
+        // Add limit and caching
         const promotions = await Promotion.find({})
             .sort({ date: -1 })
+            .limit(50) // Limit to last 50 promotions
             .select('date languages createdAt')
-            .lean();
+            .lean()
+            .maxTimeMS(5000); // 5 second timeout
         
         // Transform data to include only language names (not the full image data)
         const transformedPromotions = promotions.map(promo => {
@@ -46,6 +49,9 @@ router.get('/user-promotions', async (req, res) => {
                 createdAt: promo.createdAt
             };
         });
+        
+        // Add cache headers
+        res.set('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
         
         res.json({
             success: true,
@@ -86,7 +92,8 @@ router.get('/image/:promotionId/:language', async (req, res) => {
         
         // Set appropriate headers
         res.set('Content-Type', languageData.contentType || 'image/png');
-        res.set('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+        res.set('Cache-Control', 'public, max-age=604800'); // Cache for 7 days (images don't change)
+        res.set('ETag', `${promotionId}-${language}`); // Add ETag for browser caching
         
         // Send the image buffer
         res.send(languageData.imageData);

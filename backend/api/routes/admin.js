@@ -619,14 +619,20 @@ router.post('/cleanup-orphaned-users', async (req, res) => {
     
     console.log('🧹 Starting orphaned users cleanup...');
     
-    // Get all users
-    const allUsers = await User.find({});
+    // Get all users - optimized with select
+    const allUsers = await User.find({})
+      .select('_id phone name')
+      .lean()
+      .maxTimeMS(10000); // 10 second timeout
     console.log(`📊 Total users in database: ${allUsers.length}`);
     
-    // Get all phone numbers from approved or pending applications
+    // Get all phone numbers from approved or pending applications - optimized
     const activeApplications = await Application.find({ 
       status: { $in: ['pending', 'approved'] }
-    });
+    })
+      .select('applicantInfo.phone')
+      .lean()
+      .maxTimeMS(10000);
     const activePhones = new Set(activeApplications.map(app => app.applicantInfo.phone));
     console.log(`📋 Active applications: ${activeApplications.length}`);
     
