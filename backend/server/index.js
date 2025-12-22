@@ -30,7 +30,7 @@ app.use(cors({
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cache-Control', 'Pragma', 'Expires'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   maxAge: 600
 }));
@@ -56,7 +56,7 @@ app.use((req, res, next) => {
   
   if (req.method === 'OPTIONS') {
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cache-Control, Pragma, Expires');
     return res.sendStatus(200);
   }
   next();
