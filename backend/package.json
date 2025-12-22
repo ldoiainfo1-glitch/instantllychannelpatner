@@ -8,6 +8,7 @@
     "dev": "nodemon server/index.js",
     "import-csv": "node import-positions-from-csv.js",
     "create-indexes": "node utils/createIndexes.js",
+    "add-location": "node utils/addLocation.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
