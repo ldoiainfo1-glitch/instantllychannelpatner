@@ -5,9 +5,6 @@ const Application = require('../models/Application');
 
 // Get available positions dynamically based on location filters.
 router.get('/', async (req, res) => {
-  // Set timeout for this route
-  req.setTimeout(25000); // 25 second timeout
-  
   try {
     const { 
       country = 'India', 
