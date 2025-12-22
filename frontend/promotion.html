@@ -491,55 +491,89 @@
             console.log(`   ⏱️  Modal shown: ${Date.now() - modalStart}ms`);
             
             try {
-                // Fetch promotion image from backend
+                // Fetch promotion image from backend with 30 second timeout
                 console.log(`🌐 [${new Date().toISOString()}] STEP 2: Fetching image from API...`);
                 console.log(`   URL: ${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
                 const fetchStart = Date.now();
                 
-                const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
-                const fetchTime = Date.now() - fetchStart;
-                console.log(`   ⏱️  Fetch completed: ${fetchTime}ms`);
-                console.log(`   Response status: ${response.status} ${response.statusText}`);
+                // Create abort controller for timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    console.error(`   ⏰ TIMEOUT after 30 seconds - aborting request`);
+                    controller.abort();
+                }, 30000); // 30 second timeout
                 
-                if (!response.ok) {
-                    console.error(`   ❌ Response not OK: ${response.status}`);
-                    throw new Error('Failed to fetch promotion image');
+                try {
+                    const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`, {
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId); // Clear timeout if request completes
+                    
+                    const fetchTime = Date.now() - fetchStart;
+                    console.log(`   ⏱️  Fetch completed: ${fetchTime}ms`);
+                    console.log(`   Response status: ${response.status} ${response.statusText}`);
+                    
+                    if (!response.ok) {
+                        console.error(`   ❌ Response not OK: ${response.status}`);
+                        const errorText = await response.text();
+                        console.error(`   Error body:`, errorText);
+                        throw new Error('Failed to fetch promotion image');
+                    }
+                    
+                    // Convert to blob
+                    console.log(`📦 [${new Date().toISOString()}] STEP 3: Converting response to blob...`);
+                    const blobStart = Date.now();
+                    const blob = await response.blob();
+                    const blobTime = Date.now() - blobStart;
+                    console.log(`   ⏱️  Blob conversion: ${blobTime}ms`);
+                    console.log(`   Blob size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                    
+                    const promotionImageUrl = URL.createObjectURL(blob);
+                    console.log(`   ✅ Object URL created`);
+                    
+                    // Generate complete card preview with user details
+                    console.log(`🎨 [${new Date().toISOString()}] STEP 4: Generating preview card with user details...`);
+                    const canvasStart = Date.now();
+                    const previewDataUrl = await generatePromotionCardPreview(promotionImageUrl, language, date);
+                    const canvasTime = Date.now() - canvasStart;
+                    console.log(`   ⏱️  Canvas generation: ${canvasTime}ms`);
+                    
+                    currentPreviewDataUrl = previewDataUrl;
+                    
+                    // Set preview image to the complete card
+                    console.log(`🖼️  [${new Date().toISOString()}] STEP 5: Setting preview image...`);
+                    previewImage.src = previewDataUrl;
+                    previewImage.alt = 'Promotion Card Preview';
+                    
+                    const totalTime = fetchTime + blobTime + canvasTime;
+                    console.log(`✅ [${new Date().toISOString()}] COMPLETE! Total time: ${totalTime}ms`);
+                    console.log(`   Breakdown: Fetch=${fetchTime}ms, Blob=${blobTime}ms, Canvas=${canvasTime}ms`);
+                    
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    
+                    if (fetchError.name === 'AbortError') {
+                        console.error('❌ Request timed out after 30 seconds');
+                        previewImage.alt = 'Request timed out';
+                        alert('Request timed out after 30 seconds. The server may be slow or down. Please try again.');
+                    } else {
+                        throw fetchError; // Re-throw to outer catch
+                    }
                 }
-                
-                // Convert to blob
-                console.log(`📦 [${new Date().toISOString()}] STEP 3: Converting response to blob...`);
-                const blobStart = Date.now();
-                const blob = await response.blob();
-                const blobTime = Date.now() - blobStart;
-                console.log(`   ⏱️  Blob conversion: ${blobTime}ms`);
-                console.log(`   Blob size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
-                
-                const promotionImageUrl = URL.createObjectURL(blob);
-                console.log(`   ✅ Object URL created`);
-                
-                // Generate complete card preview with user details
-                console.log(`🎨 [${new Date().toISOString()}] STEP 4: Generating preview card with user details...`);
-                const canvasStart = Date.now();
-                const previewDataUrl = await generatePromotionCardPreview(promotionImageUrl, language, date);
-                const canvasTime = Date.now() - canvasStart;
-                console.log(`   ⏱️  Canvas generation: ${canvasTime}ms`);
-                
-                currentPreviewDataUrl = previewDataUrl;
-                
-                // Set preview image to the complete card
-                console.log(`🖼️  [${new Date().toISOString()}] STEP 5: Setting preview image...`);
-                previewImage.src = previewDataUrl;
-                previewImage.alt = 'Promotion Card Preview';
-                
-                const totalTime = fetchTime + blobTime + canvasTime;
-                console.log(`✅ [${new Date().toISOString()}] COMPLETE! Total time: ${totalTime}ms`);
-                console.log(`   Breakdown: Fetch=${fetchTime}ms, Blob=${blobTime}ms, Canvas=${canvasTime}ms`);
                 
             } catch (error) {
                 console.error('❌ Error generating preview:', error);
+                console.error('   Error name:', error.name);
+                console.error('   Error message:', error.message);
                 console.error('   Error stack:', error.stack);
                 previewImage.alt = 'Failed to load preview';
-                alert('Failed to load preview. Please try again.');
+                
+                // More specific error messages
+                if (error.name === 'AbortError') {
+                    alert('Request timed out. Please try again or contact support if the issue persists.');
+                } else {
+                    alert('Failed to load preview. Please try again.');
+                }
             }
         }
         
