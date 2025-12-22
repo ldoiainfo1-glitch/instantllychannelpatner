@@ -88,11 +88,9 @@ router.get('/image/:promotionId/:language', async (req, res) => {
         const { promotionId, language } = req.params;
         console.log(`🖼️  [${new Date().toISOString()}] Image request: ${promotionId}/${language}`);
         
-        // Step 1: Query MongoDB
+        // Step 1: Query MongoDB - get the full document (Map type doesn't support field selection)
         const queryStart = Date.now();
         const promotion = await Promotion.findById(promotionId)
-            .select(`languages.${language}`) // Only select the specific language
-            .lean()
             .maxTimeMS(15000); // 15 second timeout
         const queryTime = Date.now() - queryStart;
         console.log(`   ⏱️  MongoDB query: ${queryTime}ms`);
@@ -105,14 +103,15 @@ router.get('/image/:promotionId/:language', async (req, res) => {
             });
         }
         
-        // Step 2: Extract language data
+        // Step 2: Extract language data from Map
         const extractStart = Date.now();
-        const languageData = promotion.languages ? promotion.languages[language] : null;
+        const languageData = promotion.languages.get(language);
         const extractTime = Date.now() - extractStart;
         console.log(`   ⏱️  Data extraction: ${extractTime}ms`);
         
         if (!languageData || !languageData.imageData) {
             console.log(`   ❌ Image not available for ${language}`);
+            console.log(`   Available languages: ${Array.from(promotion.languages.keys()).join(', ')}`);
             return res.status(404).json({
                 success: false,
                 message: `Image not available for ${language}`
