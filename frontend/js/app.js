@@ -80,7 +80,7 @@ function setupEventListeners() {
 
     // Search and filters
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
-    document.getElementById('refreshBtn').addEventListener('click', refreshPositionsData);
+    document.getElementById('refreshBtn').addEventListener('click', handleSearch);
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
 
     // Setup searchable filters
@@ -88,6 +88,34 @@ function setupEventListeners() {
 
     // Application form
     document.getElementById('submitApplication').addEventListener('click', submitApplication);
+    
+    // Phone number validation with visual feedback
+    const phoneInput = document.getElementById('applicantPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            const phoneHelp = document.getElementById('phoneHelp');
+            const value = this.value.replace(/[^0-9]/g, '');
+            this.value = value; // Only allow numbers
+            
+            if (value.length === 0) {
+                phoneHelp.textContent = '10 digit phone number only';
+                phoneHelp.className = 'text-muted';
+                this.classList.remove('is-valid', 'is-invalid');
+            } else if (value.length < 10) {
+                phoneHelp.textContent = `Enter ${10 - value.length} more digit${10 - value.length > 1 ? 's' : ''}`;
+                phoneHelp.className = 'text-warning';
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            } else if (value.length === 10) {
+                phoneHelp.textContent = '✓ Valid phone number';
+                phoneHelp.className = 'text-success';
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.value = value.substring(0, 10); // Limit to 10 digits
+            }
+        });
+    }
 
     // Feedback form (now using dummy content, no form needed)
 
@@ -1128,10 +1156,57 @@ async function submitApplication(event) {
         return;
     }
 
-    // Validate form
-    if (!form.checkValidity()) {
-        form.reportValidity();
+    // Get form fields
+    const name = document.getElementById('applicantName').value.trim();
+    const phone = document.getElementById('applicantPhone').value.trim();
+    const photoInput = document.getElementById('applicantPhoto');
+    
+    // Validate name
+    if (!name) {
+        showNotification('Please enter your full name', 'error');
+        document.getElementById('applicantName').focus();
         return;
+    }
+    
+    if (name.length < 3) {
+        showNotification('Name must be at least 3 characters long', 'error');
+        document.getElementById('applicantName').focus();
+        return;
+    }
+    
+    // Validate phone number
+    if (!phone) {
+        showNotification('Please enter your phone number', 'error');
+        document.getElementById('applicantPhone').focus();
+        return;
+    }
+    
+    if (!/^\d{10}$/.test(phone)) {
+        showNotification('Phone number must be exactly 10 digits', 'error');
+        document.getElementById('applicantPhone').focus();
+        return;
+    }
+    
+    // Validate photo file if uploaded
+    if (photoInput.files.length > 0) {
+        const photoFile = photoInput.files[0];
+        const isImage = photoFile.type.startsWith('image/');
+        const isPDF = photoFile.type === 'application/pdf';
+        
+        if (!isImage && !isPDF) {
+            showNotification('Photo must be an image file (JPG, PNG) or PDF', 'error');
+            photoInput.value = '';
+            photoInput.focus();
+            return;
+        }
+        
+        // Check file size (max 5MB)
+        if (photoFile.size > 5 * 1024 * 1024) {
+            showNotification('Photo file size must be less than 5MB', 'error');
+            photoInput.value = '';
+            photoInput.focus();
+            return;
+        }
     }
 
     try {
@@ -1142,13 +1217,13 @@ async function submitApplication(event) {
         const formData = new FormData(form);
         tempApplicationData = {
             positionId: window.currentPosition.id,
-            name: formData.get('name'),
-            phone: formData.get('phone'),
+            name: name,
+            phone: phone,
             companyName: formData.get('companyName'),
             businessName: formData.get('businessName'),
             address: formData.get('address'),
             introducedBy: formData.get('introducedBy'),
-            photo: form.querySelector('#applicantPhoto').files[0],
+            photo: photoInput.files[0],
             location: window.currentPosition.location,
             positionLevel: window.currentPosition.level
         };
@@ -1452,9 +1527,21 @@ async function submitApplicationWithScreenshot() {
     const screenshotInput = document.getElementById('paymentScreenshot');
     const submitBtn = document.getElementById('submitPaymentScreenshot');
     
-    if (!screenshotInput.files[0]) {
-        showNotification('Please upload payment screenshot', 'error');
-        return;
+    // Validate screenshot if provided
+    if (screenshotInput.files[0]) {
+        const file = screenshotInput.files[0];
+        const isImage = file.type.startsWith('image/');
+        const isPDF = file.type === 'application/pdf';
+        
+        if (!isImage && !isPDF) {
+            showNotification('Payment screenshot must be an image (JPG, PNG) or PDF', 'error');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification('File size must be less than 5MB', 'error');
+            return;
+        }
     }
     
     try {
