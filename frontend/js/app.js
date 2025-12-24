@@ -1386,24 +1386,49 @@ function handleScreenshotSelect(event) {
     const file = event.target.files[0];
     const preview = document.getElementById('screenshotPreview');
     const previewImage = document.getElementById('previewImage');
+    const pdfPreview = document.getElementById('pdfPreview');
+    const pdfFileName = document.getElementById('pdfFileName');
     const submitBtn = document.getElementById('submitPaymentScreenshot');
     
     if (file) {
-        // Validate file type
-        if (!file.type.startsWith('image/')) {
-            showNotification('Please upload an image file', 'error');
+        // Validate file type (accept images and PDFs)
+        const isImage = file.type.startsWith('image/');
+        const isPDF = file.type === 'application/pdf';
+        
+        if (!isImage && !isPDF) {
+            showNotification('Please upload an image file (JPG, PNG) or PDF', 'error');
             event.target.value = '';
             return;
         }
         
-        // Show preview
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImage.src = e.target.result;
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification('File size must be less than 5MB', 'error');
+            event.target.value = '';
+            return;
+        }
+        
+        // Show appropriate preview
+        if (isImage) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImage.classList.remove('d-none');
+                if (pdfPreview) pdfPreview.classList.add('d-none');
+                preview.classList.remove('d-none');
+                submitBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        } else if (isPDF) {
+            // Show PDF preview
+            previewImage.classList.add('d-none');
+            if (pdfPreview) {
+                pdfPreview.classList.remove('d-none');
+                if (pdfFileName) pdfFileName.textContent = file.name;
+            }
             preview.classList.remove('d-none');
             submitBtn.disabled = false;
-        };
-        reader.readAsDataURL(file);
+        }
     } else {
         preview.classList.add('d-none');
         submitBtn.disabled = true;
