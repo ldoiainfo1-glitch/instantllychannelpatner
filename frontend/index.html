@@ -1035,10 +1035,10 @@
                     <!-- Upload Screenshot Section -->
                     <div class="upload-section">
                         <hr class="my-4">
-                        <h6 class="mb-3"><i class="fas fa-upload me-2"></i>Upload Payment Screenshot</h6>
+                        <h6 class="mb-3"><i class="fas fa-upload me-2"></i>Upload Payment Screenshot (Optional)</h6>
                         <div class="mb-3">
-                            <input type="file" class="form-control" id="paymentScreenshot" accept="image/*" required>
-                            <small class="text-muted">Upload screenshot of successful payment (JPG, PNG)</small>
+                            <input type="file" class="form-control" id="paymentScreenshot" accept="image/*">
+                            <small class="text-muted">Upload screenshot of successful payment (JPG, PNG) - Optional</small>
                         </div>
                         
                         <!-- Screenshot Preview -->
@@ -1053,7 +1053,7 @@
                     <!-- Instructions -->
                     <div class="alert alert-info mt-3">
                         <small>
-                            <strong>Note:</strong> After making the payment, upload the payment screenshot. Your application will be reviewed by admin after payment verification.
+                            <strong>Note:</strong> After making the payment, you can optionally upload the payment screenshot for faster verification. Your application will be reviewed by admin.
                         </small>
                     </div>
                 </div>
@@ -1061,7 +1061,7 @@
                     <button type="button" class="btn btn-secondary" onclick="cancelPayment()">
                         <i class="fas fa-times me-1"></i>Cancel
                     </button>
-                    <button type="button" class="btn btn-success" id="submitPaymentScreenshot" disabled>
+                    <button type="button" class="btn btn-success" id="submitPaymentScreenshot">
                         <i class="fas fa-check me-1"></i>Submit Application
                     </button>
                 </div>
