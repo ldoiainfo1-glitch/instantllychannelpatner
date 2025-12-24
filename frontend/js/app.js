@@ -1579,9 +1579,13 @@ async function submitApplicationWithScreenshot() {
         formData.append('paymentProfit', selectedPaymentTier.profit);
         formData.append('paymentCredit', selectedPaymentTier.credit);
         
-        // Add payment screenshot
-        formData.append('paymentScreenshot', screenshotInput.files[0]);
-        formData.append('paymentStatus', 'pending'); // Mark as pending verification
+        // Add payment screenshot only if uploaded (optional)
+        if (screenshotInput.files[0]) {
+            formData.append('paymentScreenshot', screenshotInput.files[0]);
+            formData.append('paymentStatus', 'pending'); // Mark as pending verification
+        } else {
+            formData.append('paymentStatus', 'pending'); // Mark as pending even without screenshot
+        }
         
         // Submit application with payment screenshot
         const response = await fetch(`${API_BASE_URL}/applications/with-payment`, {

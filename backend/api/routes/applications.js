@@ -496,12 +496,13 @@ router.post('/with-payment', upload.fields([
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    // Validate payment screenshot is uploaded
-    if (!req.files || !req.files.paymentScreenshot || !req.files.paymentScreenshot[0]) {
-      return res.status(400).json({ error: 'Payment screenshot is required' });
+    // Payment screenshot is now optional
+    const hasScreenshot = !!(req.files && req.files.paymentScreenshot && req.files.paymentScreenshot[0]);
+    if (hasScreenshot) {
+      console.log('✅ Payment screenshot uploaded');
+    } else {
+      console.log('ℹ️  No payment screenshot provided (optional)');
     }
-    
-    console.log('✅ Payment screenshot uploaded');
     
     // Handle photo upload (applicant photo)
     let photoBase64 = null;
@@ -517,15 +518,19 @@ router.post('/with-payment', upload.fields([
       photoBase64 = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxNiIgeT0iMTYiPgo8cGF0aCBkPSJNMjQgMjRDMjguNDE4MyAyNCAzMiAyMC40MTgzIDMyIDE2QzMyIDExLjU4MTcgMjguNDE4MyA4IDI0IDhDMTkuNTgxNyA4IDE2IDExLjU4MTcgMTYgMTZDMTYgMjAuNDE4MyAxOS41ODE3IDI0IDI0IDI0WiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMjQgMjhDMTguNjcgMjggMTQgMzIuNjcgMTQgMzhWNDBIMzRWMzhDMzQgMzIuNjcgMjkuMzMgMjggMjQgMjhaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4=';
     }
     
-    // Handle payment screenshot upload
+    // Handle payment screenshot upload (optional)
     let paymentScreenshotBase64 = null;
-    const screenshotFile = req.files.paymentScreenshot[0];
-    console.log('💳 Payment screenshot uploaded:', screenshotFile.filename);
-    const screenshotPath = path.join(uploadsDir, screenshotFile.filename);
-    const screenshotBuffer = fs.readFileSync(screenshotPath);
-    paymentScreenshotBase64 = `data:${screenshotFile.mimetype};base64,${screenshotBuffer.toString('base64')}`;
-    fs.unlinkSync(screenshotPath);
-    console.log('✅ Payment screenshot converted to base64 and file deleted');
+    if (req.files && req.files.paymentScreenshot && req.files.paymentScreenshot[0]) {
+      const screenshotFile = req.files.paymentScreenshot[0];
+      console.log('💳 Payment screenshot uploaded:', screenshotFile.filename);
+      const screenshotPath = path.join(uploadsDir, screenshotFile.filename);
+      const screenshotBuffer = fs.readFileSync(screenshotPath);
+      paymentScreenshotBase64 = `data:${screenshotFile.mimetype};base64,${screenshotBuffer.toString('base64')}`;
+      fs.unlinkSync(screenshotPath);
+      console.log('✅ Payment screenshot converted to base64 and file deleted');
+    } else {
+      console.log('ℹ️  No payment screenshot to process');
+    }
     
     // Generate unique person code
     const User = require('../models/User');
