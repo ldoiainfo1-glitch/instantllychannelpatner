@@ -1453,7 +1453,7 @@ function showPaymentScanner() {
     
     if (screenshotInput) screenshotInput.value = '';
     if (screenshotPreview) screenshotPreview.classList.add('d-none');
-    if (submitBtn) submitBtn.disabled = true;
+    if (submitBtn) submitBtn.disabled = false; // Enable by default since screenshot is optional
 }
 
 // Handle screenshot file selection
@@ -1505,8 +1505,8 @@ function handleScreenshotSelect(event) {
             submitBtn.disabled = false;
         }
     } else {
+        // No file selected - hide preview but keep button enabled (screenshot is optional)
         preview.classList.add('d-none');
-        submitBtn.disabled = true;
     }
 }
 
