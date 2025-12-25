@@ -3,6 +3,63 @@ const router = express.Router();
 const Location = require('../models/Location');
 const Application = require('../models/Application');
 
+// NEW: Get position statistics - counts approved applications at each level
+router.get('/statistics', async (req, res) => {
+  try {
+    console.log('📊 Fetching position statistics from approved applications...');
+    
+    // Get all approved applications
+    const approvedApplications = await Application.find({ 
+      status: 'approved' 
+    }).select('positionId').lean();
+    
+    console.log(`✅ Found ${approvedApplications.length} approved applications`);
+    
+    // Count positions at each level by parsing positionId
+    const stats = {
+      country: 0,
+      zone: 0,
+      state: 0,
+      division: 0,
+      district: 0,
+      tehsil: 0,
+      pincode: 0,
+      village: 0
+    };
+    
+    approvedApplications.forEach(app => {
+      const posId = app.positionId || '';
+      const parts = posId.split('-').map(p => p.trim().toLowerCase());
+      
+      // Determine level by counting parts after "india"
+      // Format: india, india-zone, india-zone-state, etc.
+      const indiaIndex = parts.indexOf('india');
+      if (indiaIndex === -1) return;
+      
+      const levelCount = parts.length - indiaIndex - 1;
+      
+      if (levelCount === 0) stats.country++;
+      else if (levelCount === 1) stats.zone++;
+      else if (levelCount === 2) stats.state++;
+      else if (levelCount === 3) stats.division++;
+      else if (levelCount === 4) stats.district++;
+      else if (levelCount === 5) stats.tehsil++;
+      else if (levelCount === 6) stats.pincode++;
+      else if (levelCount >= 7) stats.village++;
+    });
+    
+    console.log('📈 Statistics calculated:', stats);
+    
+    res.json({
+      success: true,
+      givenPositions: stats
+    });
+  } catch (error) {
+    console.error('❌ Error fetching position statistics:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get available positions dynamically based on location filters.
 router.get('/', async (req, res) => {
   try {
