@@ -1357,6 +1357,30 @@
                 
             } catch (error) {
                 console.error('❌ Error loading position statistics:', error);
+                
+                // Show user-friendly error message
+                const tbody = document.getElementById('positionStatsBody');
+                let errorMessage = 'Failed to load statistics. ';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage += 'The server may be starting up. Please wait 10 seconds and refresh the page.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-danger">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p class="mb-0">${errorMessage}</p>
+                            <button class="btn btn-primary mt-3" onclick="location.reload()">
+                                <i class="fas fa-sync-alt me-1"></i>
+                                Refresh Page
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                
                 console.error('   Error details:', {
                     name: error.name,
                     message: error.message,
