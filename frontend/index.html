@@ -74,23 +74,23 @@
 
     <!-- Position Statistics Section -->
     <section class="position-stats-section py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 76px;">
-        <div class="container">
+        <div class="container" style="max-width: 900px;">
             <div class="card shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
-                <div class="card-header text-white text-center py-3" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">
-                    <h5 class="mb-0 fw-bold">
+                <div class="card-header text-white text-center py-2" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">
+                    <h5 class="mb-0 fw-bold" style="font-size: 1rem;">
                         <i class="fas fa-chart-bar me-2"></i>
                         Position Statistics - Real-time Overview
                     </h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table mb-0" id="positionStatsTable" style="margin: 0;">
+                        <table class="table mb-0" id="positionStatsTable" style="margin: 0; table-layout: fixed;">
                             <thead style="background: #2c3e50;">
                                 <tr>
-                                    <th class="text-start ps-4" style="width: 25%; color: #fff; font-weight: 600; padding: 14px 8px; border: none;">Location Level</th>
-                                    <th class="text-center" style="width: 15%; color: #fff; font-weight: 600; padding: 14px 4px; border: none;">Total</th>
-                                    <th class="text-center" style="width: 15%; color: #fff; font-weight: 600; padding: 14px 4px; border: none;">Given</th>
-                                    <th class="text-center pe-4" style="width: 20%; color: #fff; font-weight: 600; padding: 14px 8px; border: none;">Remaining</th>
+                                    <th class="text-start ps-3" style="width: 30%; color: #fff; font-weight: 600; padding: 10px 4px; border: none; font-size: 0.9rem;">Location Level</th>
+                                    <th class="text-center" style="width: 22%; color: #fff; font-weight: 600; padding: 10px 2px; border: none; font-size: 0.9rem;">Total</th>
+                                    <th class="text-center" style="width: 22%; color: #fff; font-weight: 600; padding: 10px 2px; border: none; font-size: 0.9rem;">Given</th>
+                                    <th class="text-center pe-3" style="width: 26%; color: #fff; font-weight: 600; padding: 10px 4px; border: none; font-size: 0.9rem;">Remaining</th>
                                 </tr>
                             </thead>
                             <tbody id="positionStatsBody">
@@ -406,32 +406,32 @@
                                 }
                                 
                                 #positionStatsTable tbody td {
-                                    padding: 12px 4px;
+                                    padding: 8px 2px;
                                     vertical-align: middle;
                                     border: none;
                                 }
                                 
                                 #positionStatsTable tbody td:first-child {
-                                    padding-left: 20px;
+                                    padding-left: 12px;
                                 }
                                 
                                 #positionStatsTable tbody td:last-child {
-                                    padding-right: 20px;
+                                    padding-right: 12px;
                                 }
                                 
                                 #positionStatsTable .location-name {
                                     font-weight: 600;
                                     color: #1e293b;
-                                    font-size: 0.95rem;
+                                    font-size: 0.875rem;
                                 }
                                 
                                 #positionStatsTable .stat-number {
-                                    font-size: 1.05rem;
+                                    font-size: 0.9rem;
                                     font-weight: 700;
-                                    padding: 6px 12px;
-                                    border-radius: 6px;
+                                    padding: 4px 8px;
+                                    border-radius: 5px;
                                     display: inline-block;
-                                    min-width: 60px;
+                                    min-width: 50px;
                                 }
                                 
                                 #positionStatsTable .total-col {
@@ -456,25 +456,25 @@
                                 
                                 @media (max-width: 768px) {
                                     #positionStatsTable .stat-number {
-                                        font-size: 0.9rem;
-                                        min-width: 50px;
-                                        padding: 4px 6px;
+                                        font-size: 0.8rem;
+                                        min-width: 45px;
+                                        padding: 3px 5px;
                                     }
                                     
                                     #positionStatsTable tbody td {
-                                        padding: 10px 3px;
+                                        padding: 8px 2px;
                                     }
                                     
                                     #positionStatsTable tbody td:first-child {
-                                        padding-left: 12px;
+                                        padding-left: 8px;
                                     }
                                     
                                     #positionStatsTable tbody td:last-child {
-                                        padding-right: 12px;
+                                        padding-right: 8px;
                                     }
                                     
                                     #positionStatsTable .location-name {
-                                        font-size: 0.85rem;
+                                        font-size: 0.8rem;
                                     }
                                 }
                             </style>
