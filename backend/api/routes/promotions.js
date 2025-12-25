@@ -37,7 +37,13 @@ router.get('/user-promotions', async (req, res) => {
             },
             {
                 $project: {
-                    _id: { $toString: '$_id' }, // Use date as string for ID
+                    // Use date ISO string as _id for frontend compatibility
+                    _id: { 
+                        $dateToString: { 
+                            format: '%Y-%m-%d', 
+                            date: '$_id' 
+                        } 
+                    },
                     date: '$_id',
                     languages: 1,
                     createdAt: 1
@@ -73,46 +79,41 @@ router.get('/user-promotions', async (req, res) => {
 });
 
 // GET promotion image by date and language (NEW SCHEMA)
-// promotionId is actually the date string now
+// promotionId is the date string (YYYY-MM-DD format)
 router.get('/image/:promotionId/:language', async (req, res) => {
     const startTime = Date.now();
     try {
         const { promotionId, language } = req.params;
         console.log(`🖼️  [${new Date().toISOString()}] Image request: ${promotionId}/${language}`);
         
-        // promotionId might be a date string, try to parse it
-        let queryDate;
-        try {
-            queryDate = new Date(promotionId);
-            queryDate.setHours(0, 0, 0, 0);
-        } catch (e) {
-            // If not a valid date, treat as ObjectId
-            queryDate = null;
+        // Parse promotionId as date (should be YYYY-MM-DD format)
+        const queryDate = new Date(promotionId);
+        queryDate.setHours(0, 0, 0, 0);
+        
+        if (isNaN(queryDate.getTime())) {
+            console.log(`   ❌ Invalid date format: ${promotionId}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid date format. Use YYYY-MM-DD'
+            });
         }
         
         // Step 1: Query MongoDB - find by date and language
+        console.log(`   🔍 Querying: date=${queryDate.toISOString()}, language=${language.toLowerCase()}`);
         const queryStart = Date.now();
-        let promotion;
         
-        if (queryDate && !isNaN(queryDate.getTime())) {
-            // Query by date and language
-            promotion = await Promotion.findOne({ 
-                date: queryDate, 
-                language: language.toLowerCase() 
-            })
-            .select('imageData contentType')
-            .maxTimeMS(15000);
-        } else {
-            // Try as ObjectId for backwards compatibility
-            promotion = await Promotion.findById(promotionId)
-            .maxTimeMS(15000);
-        }
+        const promotion = await Promotion.findOne({ 
+            date: queryDate, 
+            language: language.toLowerCase() 
+        })
+        .select('imageData contentType')
+        .maxTimeMS(15000);
         
         const queryTime = Date.now() - queryStart;
         console.log(`   ⏱️  MongoDB query: ${queryTime}ms`);
         
         if (!promotion) {
-            console.log(`   ❌ Promotion not found: ${promotionId}/${language}`);
+            console.log(`   ❌ Promotion not found: date=${promotionId}, language=${language}`);
             return res.status(404).json({
                 success: false,
                 message: 'Promotion not found'
@@ -184,7 +185,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         console.log(`✅ [UPLOAD ${uploadId}] Required fields validated`);
         
         // Step 2: Validate language
-        const validLanguages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu', 'malayalam', 'punjabi'];
+        const validLanguages = ['hindi', 'english', 'marathi', 'gujarati','punjabi' , 'bengali', 'odia', 'tamil', 'telugu', 'kannada', 'malayalam', 'urdu'];
         const langLower = language.toLowerCase();
         console.log(`🔍 [UPLOAD ${uploadId}] Validating language: "${langLower}"`);
         
