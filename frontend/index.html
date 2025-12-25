@@ -1241,49 +1241,49 @@
                 
                 console.log('📊 Loading position statistics...');
                 
-                // Fetch dynamic positions and locations
-                const [positionsResponse, locationsResponse] = await Promise.all([
-                    fetch(`${API_BASE_URL}/dynamic-positions?country=India&_t=${Date.now()}`),
+                // Fetch statistics from optimized endpoint that counts ALL approved applications
+                const [statsResponse, locationsResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/dynamic-positions/statistics?_t=${Date.now()}`),
                     fetch(`${API_BASE_URL}/locations/all?_t=${Date.now()}`)
                 ]);
                 
                 console.log('✅ API responses received');
-                console.log('   Positions status:', positionsResponse.status, positionsResponse.ok);
+                console.log('   Statistics status:', statsResponse.status, statsResponse.ok);
                 console.log('   Locations status:', locationsResponse.status, locationsResponse.ok);
                 
-                if (!positionsResponse.ok || !locationsResponse.ok) {
-                    throw new Error(`API error: Positions ${positionsResponse.status}, Locations ${locationsResponse.status}`);
+                if (!statsResponse.ok || !locationsResponse.ok) {
+                    throw new Error(`API error: Statistics ${statsResponse.status}, Locations ${locationsResponse.status}`);
                 }
                 
-                const positionsData = await positionsResponse.json();
+                const statsData = await statsResponse.json();
                 const locationsData = await locationsResponse.json();
                 
                 console.log('📦 Parsed data:', { 
-                    positionsSuccess: positionsData.success, 
-                    positionsCount: positionsData.positions?.length,
+                    statsSuccess: statsData.success, 
+                    givenPositions: statsData.givenPositions,
                     locationsSuccess: locationsData.success,
                     hasLocationCounts: !!locationsData.locationCounts
                 });
                 
-                // Handle data even if success flag is missing
-                const positions = positionsData.positions || positionsData || [];
+                // Handle data
+                const givenPositions = statsData.givenPositions || {};
                 const locationCounts = locationsData.locationCounts || null;
                 
                 console.log('✅ Final data:', { 
-                    positionsLength: positions.length, 
+                    givenPositions: givenPositions, 
                     locationCounts: locationCounts
                 });
                 
                 // Calculate statistics for each level
                 const stats = {
-                    'Country (India)': { total: 1, given: 0 },
-                    'Zone': { total: 0, given: 0 },
-                    'State': { total: 0, given: 0 },
-                    'Division': { total: 0, given: 0 },
-                    'District': { total: 0, given: 0 },
-                    'Tehsil': { total: 0, given: 0 },
-                    'Pincode': { total: 0, given: 0 },
-                    'Village': { total: 0, given: 0 }
+                    'Country (India)': { total: 1, given: givenPositions.country || 0 },
+                    'Zone': { total: 0, given: givenPositions.zone || 0 },
+                    'State': { total: 0, given: givenPositions.state || 0 },
+                    'Division': { total: 0, given: givenPositions.division || 0 },
+                    'District': { total: 0, given: givenPositions.district || 0 },
+                    'Tehsil': { total: 0, given: givenPositions.tehsil || 0 },
+                    'Pincode': { total: 0, given: givenPositions.pincode || 0 },
+                    'Village': { total: 0, given: givenPositions.village || 0 }
                 };
                 
                 // Use location counts from optimized API response
@@ -1296,26 +1296,10 @@
                     stats['Tehsil'].total = locationCounts.tehsil || 0;
                     stats['Pincode'].total = locationCounts.pincode || 0;
                     stats['Village'].total = locationCounts.village || 0;
-                    console.log('✅ Using optimized location counts from API');
+                    console.log('✅ Using optimized location counts from API and given counts from statistics endpoint');
                 } else {
                     console.warn('⚠️ Location counts not available, stats may be incomplete');
                 }
-                
-                // Count given positions by checking if applicantDetails exists
-                positions.forEach(pos => {
-                    if (pos.applicantDetails && pos.applicantDetails.name) {
-                        // Position has been taken - determine level from location hierarchy
-                        const loc = pos.location || {};
-                        if (loc.village) stats['Village'].given++;
-                        else if (loc.pincode) stats['Pincode'].given++;
-                        else if (loc.tehsil) stats['Tehsil'].given++;
-                        else if (loc.district) stats['District'].given++;
-                        else if (loc.division) stats['Division'].given++;
-                        else if (loc.state) stats['State'].given++;
-                        else if (loc.zone) stats['Zone'].given++;
-                        else if (loc.country) stats['Country (India)'].given++;
-                    }
-                });
                 
                 // Display statistics in table
                 const tbody = document.getElementById('positionStatsBody');
