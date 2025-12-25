@@ -159,8 +159,8 @@ async function loadLocationData() {
     try {
         console.log('⚡ Loading location data with cache-busting...');
 
-        // Try new optimized endpoint first - with cache-busting
-        let response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all`);
+        // Use format=distinct to get actual location lists for filters (not counts)
+        let response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all?format=distinct`);
 
         if (response.ok) {
             const data = await response.json();

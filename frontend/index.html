@@ -1374,15 +1374,6 @@
                     message: error.message,
                     stack: error.stack
                 });
-                const tbody = document.getElementById('positionStatsBody');
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="text-center text-danger py-3">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            ${error.message || 'Failed to load statistics. Please refresh the page.'}
-                        </td>
-                    </tr>
-                `;
             }
         }
         
