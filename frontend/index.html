@@ -1239,21 +1239,40 @@
             try {
                 const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
                 
+                console.log('📊 Loading position statistics...');
+                
                 // Fetch dynamic positions and locations
                 const [positionsResponse, locationsResponse] = await Promise.all([
                     fetch(`${API_BASE_URL}/dynamic-positions?country=India&_t=${Date.now()}`),
                     fetch(`${API_BASE_URL}/locations/all?_t=${Date.now()}`)
                 ]);
                 
+                console.log('✅ API responses received');
+                console.log('   Positions status:', positionsResponse.status, positionsResponse.ok);
+                console.log('   Locations status:', locationsResponse.status, locationsResponse.ok);
+                
+                if (!positionsResponse.ok || !locationsResponse.ok) {
+                    throw new Error(`API error: Positions ${positionsResponse.status}, Locations ${locationsResponse.status}`);
+                }
+                
                 const positionsData = await positionsResponse.json();
                 const locationsData = await locationsResponse.json();
                 
-                if (!positionsData.success || !locationsData.success) {
-                    throw new Error('Failed to fetch data');
-                }
+                console.log('📦 Parsed data:', { 
+                    positionsSuccess: positionsData.success, 
+                    positionsCount: positionsData.positions?.length,
+                    locationsSuccess: locationsData.success,
+                    locationsCount: locationsData.locations?.length 
+                });
                 
-                const positions = positionsData.positions || [];
-                const locations = locationsData.locations || [];
+                // Handle data even if success flag is missing
+                const positions = positionsData.positions || positionsData || [];
+                const locations = locationsData.locations || locationsData || [];
+                
+                console.log('✅ Final data:', { 
+                    positionsLength: positions.length, 
+                    locationsLength: locations.length 
+                });
                 
                 // Calculate statistics for each level
                 const stats = {
@@ -1333,14 +1352,21 @@
                     tbody.appendChild(row);
                 });
                 
+                console.log('✅ Position statistics table updated successfully');
+                
             } catch (error) {
-                console.error('Error loading position statistics:', error);
+                console.error('❌ Error loading position statistics:', error);
+                console.error('   Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
                 const tbody = document.getElementById('positionStatsBody');
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="4" class="text-center text-danger py-3">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            Failed to load statistics. Please refresh the page.
+                            ${error.message || 'Failed to load statistics. Please refresh the page.'}
                         </td>
                     </tr>
                 `;
