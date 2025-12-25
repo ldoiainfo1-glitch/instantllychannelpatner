@@ -1262,16 +1262,16 @@
                     positionsSuccess: positionsData.success, 
                     positionsCount: positionsData.positions?.length,
                     locationsSuccess: locationsData.success,
-                    locationsCount: locationsData.locations?.length 
+                    hasLocationCounts: !!locationsData.locationCounts
                 });
                 
                 // Handle data even if success flag is missing
                 const positions = positionsData.positions || positionsData || [];
-                const locations = locationsData.locations || locationsData || [];
+                const locationCounts = locationsData.locationCounts || null;
                 
                 console.log('✅ Final data:', { 
                     positionsLength: positions.length, 
-                    locationsLength: locations.length 
+                    locationCounts: locationCounts
                 });
                 
                 // Calculate statistics for each level
@@ -1286,32 +1286,20 @@
                     'Village': { total: 0, given: 0 }
                 };
                 
-                // Count unique locations at each level
-                const uniqueZones = new Set();
-                const uniqueStates = new Set();
-                const uniqueDivisions = new Set();
-                const uniqueDistricts = new Set();
-                const uniqueTehsils = new Set();
-                const uniquePincodes = new Set();
-                const uniqueVillages = new Set();
-                
-                locations.forEach(loc => {
-                    if (loc.zone) uniqueZones.add(loc.zone);
-                    if (loc.state) uniqueStates.add(loc.state);
-                    if (loc.division) uniqueDivisions.add(loc.division);
-                    if (loc.district) uniqueDistricts.add(loc.district);
-                    if (loc.tehsil) uniqueTehsils.add(loc.tehsil);
-                    if (loc.pincode) uniquePincodes.add(loc.pincode);
-                    if (loc.village) uniqueVillages.add(loc.village);
-                });
-                
-                stats['Zone'].total = uniqueZones.size;
-                stats['State'].total = uniqueStates.size;
-                stats['Division'].total = uniqueDivisions.size;
-                stats['District'].total = uniqueDistricts.size;
-                stats['Tehsil'].total = uniqueTehsils.size;
-                stats['Pincode'].total = uniquePincodes.size;
-                stats['Village'].total = uniqueVillages.size;
+                // Use location counts from optimized API response
+                if (locationCounts) {
+                    stats['Country (India)'].total = locationCounts.country || 1;
+                    stats['Zone'].total = locationCounts.zone || 0;
+                    stats['State'].total = locationCounts.state || 0;
+                    stats['Division'].total = locationCounts.division || 0;
+                    stats['District'].total = locationCounts.district || 0;
+                    stats['Tehsil'].total = locationCounts.tehsil || 0;
+                    stats['Pincode'].total = locationCounts.pincode || 0;
+                    stats['Village'].total = locationCounts.village || 0;
+                    console.log('✅ Using optimized location counts from API');
+                } else {
+                    console.warn('⚠️ Location counts not available, stats may be incomplete');
+                }
                 
                 // Count given positions by checking if applicantDetails exists
                 positions.forEach(pos => {
