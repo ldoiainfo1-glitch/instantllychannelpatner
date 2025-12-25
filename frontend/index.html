@@ -1367,14 +1367,14 @@
                     
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="location-name text-center">${level}</td>
-                        <td class="text-center">
+                        <td class="location-name text-center" style="padding: 4px 6px; font-size: 0.75rem; border: none;"><strong>${level}</strong></td>
+                        <td class="text-center" style="padding: 4px 6px; font-size: 0.75rem; border: none;">
                             <span class="stat-number total-col">${total}</span>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" style="padding: 4px 6px; font-size: 0.75rem; border: none;">
                             <span class="stat-number given-col">${given}</span>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" style="padding: 4px 6px; font-size: 0.75rem; border: none;">
                             <span class="stat-number remaining-col ${remaining === 0 ? 'zero' : ''}">${remaining}</span>
                         </td>
                     `;
