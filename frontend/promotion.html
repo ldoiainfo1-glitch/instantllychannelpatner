@@ -386,7 +386,14 @@
         // Load promotions from backend
         async function loadPromotions() {
             try {
-                const response = await fetch(`${API_BASE_URL}/promotions/user-promotions`);
+                // Add timestamp to prevent caching
+                const timestamp = new Date().getTime();
+                const response = await fetch(`${API_BASE_URL}/promotions/user-promotions?_t=${timestamp}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error('Failed to load promotions');

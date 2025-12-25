@@ -60,9 +60,10 @@ router.get('/user-promotions', async (req, res) => {
         console.log(`   📊 Found ${promotions.length} promotion dates`);
         console.log(`   ✅ Total time: ${Date.now() - startTime}ms\n`);
         
-        // Add cache headers
-        res.set('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes
-        res.set('ETag', `promotions-list`);
+        // Prevent caching to always show latest data
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
         
         res.json({
             success: true,
