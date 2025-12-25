@@ -206,9 +206,12 @@ router.get('/', async (req, res) => {
     
     console.log(`📊 Generated ${positions.length} dynamic positions in optimized batch mode`);
     
-    // Send response with proper headers
+    // Send response with proper headers and format expected by frontend
     res.setHeader('Content-Type', 'application/json');
-    res.status(200).json(positions);
+    res.status(200).json({
+      success: true,
+      positions: positions
+    });
   } catch (error) {
     console.error('❌ Error generating dynamic positions:', error);
     console.error('❌ Error stack:', error.stack);

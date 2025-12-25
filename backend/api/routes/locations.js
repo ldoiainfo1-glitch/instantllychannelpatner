@@ -5,26 +5,39 @@ const Location = require('../models/Location');
 // Get ALL location data in one optimized request (for performance)
 router.get('/all', async (req, res) => {
   try {
-    // Use Promise.all to fetch all distinct values in parallel
-    const [zones, states, divisions, districts, tehsils, pincodes, villages] = await Promise.all([
-      Location.distinct('zone', { zone: { $ne: null, $ne: '' } }),
-      Location.distinct('state', { state: { $ne: null, $ne: '' } }),
-      Location.distinct('division', { division: { $ne: null, $ne: '' } }),
-      Location.distinct('district', { district: { $ne: null, $ne: '' } }),
-      Location.distinct('tehsil', { tehsil: { $ne: null, $ne: '' } }),
-      Location.distinct('pincode', { pincode: { $ne: null, $ne: '' } }),
-      Location.distinct('village', { village: { $ne: null, $ne: '' } })
-    ]);
+    // Check if requesting distinct values for dropdowns
+    if (req.query.format === 'distinct') {
+      // Use Promise.all to fetch all distinct values in parallel
+      const [zones, states, divisions, districts, tehsils, pincodes, villages] = await Promise.all([
+        Location.distinct('zone', { zone: { $ne: null, $ne: '' } }),
+        Location.distinct('state', { state: { $ne: null, $ne: '' } }),
+        Location.distinct('division', { division: { $ne: null, $ne: '' } }),
+        Location.distinct('district', { district: { $ne: null, $ne: '' } }),
+        Location.distinct('tehsil', { tehsil: { $ne: null, $ne: '' } }),
+        Location.distinct('pincode', { pincode: { $ne: null, $ne: '' } }),
+        Location.distinct('village', { village: { $ne: null, $ne: '' } })
+      ]);
+      
+      // Return all data in one response (sorted for better UX)
+      return res.json({
+        zones: zones.sort(),
+        states: states.sort(),
+        divisions: divisions.sort(),
+        districts: districts.sort(),
+        tehsils: tehsils.sort(),
+        pincodes: pincodes.sort(),
+        villages: villages.sort()
+      });
+    }
     
-    // Return all data in one response (sorted for better UX)
+    // Default: return all locations as array for position statistics
+    const locations = await Location.find({})
+      .select('zone state division district tehsil pincode village -_id')
+      .lean();
+    
     res.json({
-      zones: zones.sort(),
-      states: states.sort(),
-      divisions: divisions.sort(),
-      districts: districts.sort(),
-      tehsils: tehsils.sort(),
-      pincodes: pincodes.sort(),
-      villages: villages.sort()
+      success: true,
+      locations: locations
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
