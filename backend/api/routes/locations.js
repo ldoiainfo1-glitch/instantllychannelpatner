@@ -30,16 +30,38 @@ router.get('/all', async (req, res) => {
       });
     }
     
-    // Default: return all locations as array for position statistics
-    const locations = await Location.find({})
-      .select('zone state division district tehsil pincode village -_id')
-      .lean();
+    // OPTIMIZED: Return only distinct counts for statistics (prevents memory overflow)
+    // This endpoint was causing crashes by loading 158K+ records into memory
+    console.log('📊 Fetching location statistics (distinct counts only)...');
     
+    const [zones, states, divisions, districts, tehsils, pincodes, villages] = await Promise.all([
+      Location.distinct('zone', { zone: { $ne: null, $ne: '' } }),
+      Location.distinct('state', { state: { $ne: null, $ne: '' } }),
+      Location.distinct('division', { division: { $ne: null, $ne: '' } }),
+      Location.distinct('district', { district: { $ne: null, $ne: '' } }),
+      Location.distinct('tehsil', { tehsil: { $ne: null, $ne: '' } }),
+      Location.distinct('pincode', { pincode: { $ne: null, $ne: '' } }),
+      Location.distinct('village', { village: { $ne: null, $ne: '' } })
+    ]);
+    
+    console.log(`✅ Location counts: Zones=${zones.length}, States=${states.length}, Divisions=${divisions.length}, Districts=${districts.length}, Tehsils=${tehsils.length}, Pincodes=${pincodes.length}, Villages=${villages.length}`);
+    
+    // Return statistics in a format compatible with frontend expectations
     res.json({
       success: true,
-      locations: locations
+      locationCounts: {
+        country: 1, // India
+        zone: zones.length,
+        state: states.length,
+        division: divisions.length,
+        district: districts.length,
+        tehsil: tehsils.length,
+        pincode: pincodes.length,
+        village: villages.length
+      }
     });
   } catch (error) {
+    console.error('❌ Error fetching location statistics:', error);
     res.status(500).json({ error: error.message });
   }
 });
