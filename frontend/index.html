@@ -72,6 +72,44 @@
         </div>
     </nav>
 
+    <!-- Position Statistics Section -->
+    <section class="position-stats-section py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 76px;">
+        <div class="container">
+            <div class="card shadow-lg border-0">
+                <div class="card-header text-white text-center" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Position Statistics - Real-time Overview
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped mb-0" id="positionStatsTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th class="text-center" style="width: 30%;">Location Level</th>
+                                    <th class="text-center" style="width: 23%;">Total Positions</th>
+                                    <th class="text-center" style="width: 23%;">Positions Given</th>
+                                    <th class="text-center" style="width: 24%;">Remaining</th>
+                                </tr>
+                            </thead>
+                            <tbody id="positionStatsBody">
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted">Loading position statistics...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Home Section -->
     <section id="home" class="hero-section">
         <div class="container">
@@ -340,6 +378,49 @@
                                     .filter-badge-col {
                                         display: none !important;
                                     }
+                                }
+                            </style>
+
+                            <style>
+                                /* Position Statistics Table Styles */
+                                .position-stats-section {
+                                    margin-top: 76px;
+                                }
+                                
+                                #positionStatsTable tbody tr {
+                                    transition: all 0.2s ease;
+                                }
+                                
+                                #positionStatsTable tbody tr:hover {
+                                    background-color: #f8f9fa !important;
+                                    transform: scale(1.01);
+                                }
+                                
+                                #positionStatsTable .location-name {
+                                    font-weight: 600;
+                                    color: #2c3e50;
+                                }
+                                
+                                #positionStatsTable .stat-number {
+                                    font-size: 1.1rem;
+                                    font-weight: 700;
+                                }
+                                
+                                #positionStatsTable .total-col {
+                                    color: #3b82f6;
+                                }
+                                
+                                #positionStatsTable .given-col {
+                                    color: #10b981;
+                                }
+                                
+                                #positionStatsTable .remaining-col {
+                                    color: #f59e0b;
+                                }
+                                
+                                #positionStatsTable .remaining-col.zero {
+                                    color: #ef4444;
+                                    font-weight: 800;
                                 }
                             </style>
 
@@ -1151,6 +1232,125 @@
             });
         });
     </script>
+    
+    <script>
+        // Load Position Statistics
+        async function loadPositionStatistics() {
+            try {
+                const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+                
+                // Fetch dynamic positions and locations
+                const [positionsResponse, locationsResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/dynamic-positions?country=India&_t=${Date.now()}`),
+                    fetch(`${API_BASE_URL}/locations/all?_t=${Date.now()}`)
+                ]);
+                
+                const positionsData = await positionsResponse.json();
+                const locationsData = await locationsResponse.json();
+                
+                if (!positionsData.success || !locationsData.success) {
+                    throw new Error('Failed to fetch data');
+                }
+                
+                const positions = positionsData.positions || [];
+                const locations = locationsData.locations || [];
+                
+                // Calculate statistics for each level
+                const stats = {
+                    'Country (India)': { total: 1, given: 0 },
+                    'Zone': { total: 0, given: 0 },
+                    'State': { total: 0, given: 0 },
+                    'Division': { total: 0, given: 0 },
+                    'District': { total: 0, given: 0 },
+                    'Tehsil': { total: 0, given: 0 },
+                    'Pincode': { total: 0, given: 0 },
+                    'Village': { total: 0, given: 0 }
+                };
+                
+                // Count unique locations at each level
+                const uniqueZones = new Set();
+                const uniqueStates = new Set();
+                const uniqueDivisions = new Set();
+                const uniqueDistricts = new Set();
+                const uniqueTehsils = new Set();
+                const uniquePincodes = new Set();
+                const uniqueVillages = new Set();
+                
+                locations.forEach(loc => {
+                    if (loc.zone) uniqueZones.add(loc.zone);
+                    if (loc.state) uniqueStates.add(loc.state);
+                    if (loc.division) uniqueDivisions.add(loc.division);
+                    if (loc.district) uniqueDistricts.add(loc.district);
+                    if (loc.tehsil) uniqueTehsils.add(loc.tehsil);
+                    if (loc.pincode) uniquePincodes.add(loc.pincode);
+                    if (loc.village) uniqueVillages.add(loc.village);
+                });
+                
+                stats['Zone'].total = uniqueZones.size;
+                stats['State'].total = uniqueStates.size;
+                stats['Division'].total = uniqueDivisions.size;
+                stats['District'].total = uniqueDistricts.size;
+                stats['Tehsil'].total = uniqueTehsils.size;
+                stats['Pincode'].total = uniquePincodes.size;
+                stats['Village'].total = uniqueVillages.size;
+                
+                // Count given positions by checking if applicant exists
+                positions.forEach(pos => {
+                    if (pos.applicant && pos.applicant.name) {
+                        // Position has been taken
+                        if (pos.level === 'country') stats['Country (India)'].given++;
+                        else if (pos.level === 'zone') stats['Zone'].given++;
+                        else if (pos.level === 'state') stats['State'].given++;
+                        else if (pos.level === 'division') stats['Division'].given++;
+                        else if (pos.level === 'district') stats['District'].given++;
+                        else if (pos.level === 'tehsil') stats['Tehsil'].given++;
+                        else if (pos.level === 'pincode') stats['Pincode'].given++;
+                        else if (pos.level === 'village') stats['Village'].given++;
+                    }
+                });
+                
+                // Display statistics in table
+                const tbody = document.getElementById('positionStatsBody');
+                tbody.innerHTML = '';
+                
+                Object.keys(stats).forEach(level => {
+                    const { total, given } = stats[level];
+                    const remaining = total - given;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="location-name text-center">${level}</td>
+                        <td class="text-center">
+                            <span class="stat-number total-col">${total}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="stat-number given-col">${given}</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="stat-number remaining-col ${remaining === 0 ? 'zero' : ''}">${remaining}</span>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Error loading position statistics:', error);
+                const tbody = document.getElementById('positionStatsBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center text-danger py-3">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Failed to load statistics. Please refresh the page.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Load statistics when page loads
+        document.addEventListener('DOMContentLoaded', loadPositionStatistics);
+    </script>
+    
     <script src="js/app.js"></script>
 </body>
 </html>
