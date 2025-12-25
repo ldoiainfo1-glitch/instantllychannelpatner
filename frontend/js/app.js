@@ -3917,7 +3917,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                         width:100%;
                                         margin-bottom:0px;
                                     ">
-                                        <div style="font-weight:700;">Mob: $9833752025</div>
+                                        <div style="font-weight:700;">Mob: 9833752025</div>
                                         <div style="font-size:18px;">Web: instantly.com</div>
                                     </div>
 
