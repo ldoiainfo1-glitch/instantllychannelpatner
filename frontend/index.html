@@ -75,31 +75,31 @@
     <!-- Position Statistics Section -->
     <section class="position-stats-section py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 76px;">
         <div class="container">
-            <div class="card shadow-lg border-0">
-                <div class="card-header text-white text-center" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
-                    <h5 class="mb-0">
+            <div class="card shadow-lg border-0" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header text-white text-center py-3" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">
+                    <h5 class="mb-0 fw-bold">
                         <i class="fas fa-chart-bar me-2"></i>
                         Position Statistics - Real-time Overview
                     </h5>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped mb-0" id="positionStatsTable">
-                            <thead class="table-dark">
+                        <table class="table mb-0" id="positionStatsTable" style="margin: 0;">
+                            <thead style="background: #2c3e50;">
                                 <tr>
-                                    <th class="text-center" style="width: 30%;">Location Level</th>
-                                    <th class="text-center" style="width: 23%;">Total Positions</th>
-                                    <th class="text-center" style="width: 23%;">Positions Given</th>
-                                    <th class="text-center" style="width: 24%;">Remaining</th>
+                                    <th class="text-start ps-4" style="width: 35%; color: #fff; font-weight: 600; padding: 14px 12px; border: none;">Location Level</th>
+                                    <th class="text-center" style="width: 20%; color: #fff; font-weight: 600; padding: 14px 8px; border: none;">Total</th>
+                                    <th class="text-center" style="width: 20%; color: #fff; font-weight: 600; padding: 14px 8px; border: none;">Given</th>
+                                    <th class="text-center pe-4" style="width: 25%; color: #fff; font-weight: 600; padding: 14px 12px; border: none;">Remaining</th>
                                 </tr>
                             </thead>
                             <tbody id="positionStatsBody">
                                 <tr>
-                                    <td colspan="4" class="text-center py-4">
+                                    <td colspan="4" class="text-center py-5">
                                         <div class="spinner-border text-primary" role="status">
                                             <span class="visually-hidden">Loading...</span>
                                         </div>
-                                        <p class="mt-2 text-muted">Loading position statistics...</p>
+                                        <p class="mt-3 text-muted mb-0">Loading position statistics...</p>
                                     </td>
                                 </tr>
                             </tbody>
@@ -387,40 +387,95 @@
                                     margin-top: 76px;
                                 }
                                 
+                                #positionStatsTable {
+                                    border-collapse: collapse;
+                                }
+                                
                                 #positionStatsTable tbody tr {
-                                    transition: all 0.2s ease;
+                                    transition: all 0.15s ease;
+                                    border-bottom: 1px solid #e5e7eb;
                                 }
                                 
                                 #positionStatsTable tbody tr:hover {
-                                    background-color: #f8f9fa !important;
-                                    transform: scale(1.01);
+                                    background-color: #f8fafc !important;
+                                    box-shadow: inset 0 0 0 1px #3b82f6;
+                                }
+                                
+                                #positionStatsTable tbody tr:last-child {
+                                    border-bottom: none;
+                                }
+                                
+                                #positionStatsTable tbody td {
+                                    padding: 12px 8px;
+                                    vertical-align: middle;
+                                    border: none;
+                                }
+                                
+                                #positionStatsTable tbody td:first-child {
+                                    padding-left: 24px;
+                                }
+                                
+                                #positionStatsTable tbody td:last-child {
+                                    padding-right: 24px;
                                 }
                                 
                                 #positionStatsTable .location-name {
                                     font-weight: 600;
-                                    color: #2c3e50;
+                                    color: #1e293b;
+                                    font-size: 0.95rem;
                                 }
                                 
                                 #positionStatsTable .stat-number {
-                                    font-size: 1.1rem;
+                                    font-size: 1.05rem;
                                     font-weight: 700;
+                                    padding: 6px 12px;
+                                    border-radius: 6px;
+                                    display: inline-block;
+                                    min-width: 60px;
                                 }
                                 
                                 #positionStatsTable .total-col {
-                                    color: #3b82f6;
+                                    background: #dbeafe;
+                                    color: #1e40af;
                                 }
                                 
                                 #positionStatsTable .given-col {
-                                    color: #10b981;
+                                    background: #d1fae5;
+                                    color: #065f46;
                                 }
                                 
                                 #positionStatsTable .remaining-col {
-                                    color: #f59e0b;
+                                    background: #fed7aa;
+                                    color: #92400e;
                                 }
                                 
                                 #positionStatsTable .remaining-col.zero {
-                                    color: #ef4444;
-                                    font-weight: 800;
+                                    background: #f3f4f6;
+                                    color: #6b7280;
+                                }
+                                
+                                @media (max-width: 768px) {
+                                    #positionStatsTable .stat-number {
+                                        font-size: 0.9rem;
+                                        min-width: 50px;
+                                        padding: 4px 8px;
+                                    }
+                                    
+                                    #positionStatsTable tbody td {
+                                        padding: 10px 6px;
+                                    }
+                                    
+                                    #positionStatsTable tbody td:first-child {
+                                        padding-left: 16px;
+                                    }
+                                    
+                                    #positionStatsTable tbody td:last-child {
+                                        padding-right: 16px;
+                                    }
+                                    
+                                    #positionStatsTable .location-name {
+                                        font-size: 0.85rem;
+                                    }
                                 }
                             </style>
 
