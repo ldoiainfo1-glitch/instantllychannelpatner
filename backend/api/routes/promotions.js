@@ -151,63 +151,108 @@ router.get('/image/:promotionId/:language', async (req, res) => {
 // POST upload promotion (admin only)
 // Expects: date, language, and image file
 router.post('/upload', upload.single('image'), async (req, res) => {
+    const uploadId = Date.now();
+    console.log(`\n🚀 [UPLOAD ${uploadId}] ======== NEW UPLOAD REQUEST ========`);
+    
     try {
         const { date, language, uploadedBy } = req.body;
+        console.log(`📝 [UPLOAD ${uploadId}] Request body:`, { date, language, uploadedBy });
+        console.log(`📎 [UPLOAD ${uploadId}] File info:`, req.file ? {
+            fieldname: req.file.fieldname,
+            originalname: req.file.originalname,
+            mimetype: req.file.mimetype,
+            size: req.file.size
+        } : 'NO FILE');
         
+        // Step 1: Validate required fields
         if (!date || !language || !req.file) {
+            console.log(`❌ [UPLOAD ${uploadId}] Missing required fields`);
             return res.status(400).json({
                 success: false,
                 message: 'Date, language, and image file are required'
             });
         }
+        console.log(`✅ [UPLOAD ${uploadId}] Required fields validated`);
         
-        // Validate language
+        // Step 2: Validate language
         const validLanguages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu', 'malayalam', 'punjabi'];
-        if (!validLanguages.includes(language.toLowerCase())) {
+        const langLower = language.toLowerCase();
+        console.log(`🔍 [UPLOAD ${uploadId}] Validating language: "${langLower}"`);
+        console.log(`📋 [UPLOAD ${uploadId}] Valid languages:`, validLanguages);
+        
+        if (!validLanguages.includes(langLower)) {
+            console.log(`❌ [UPLOAD ${uploadId}] Invalid language: "${langLower}"`);
             return res.status(400).json({
                 success: false,
                 message: 'Invalid language. Must be one of: ' + validLanguages.join(', ')
             });
         }
+        console.log(`✅ [UPLOAD ${uploadId}] Language validated: "${langLower}"`);
         
-        // Parse date
+        // Step 3: Parse date
+        console.log(`📅 [UPLOAD ${uploadId}] Parsing date: "${date}"`);
         const promotionDate = new Date(date);
         promotionDate.setHours(0, 0, 0, 0); // Normalize to start of day
+        console.log(`✅ [UPLOAD ${uploadId}] Date parsed:`, promotionDate.toISOString());
         
-        // Find or create promotion for this date
+        // Step 4: Find or create promotion for this date
+        console.log(`🔍 [UPLOAD ${uploadId}] Searching for existing promotion with date:`, promotionDate);
         let promotion = await Promotion.findOne({ date: promotionDate });
         
         if (!promotion) {
+            console.log(`➕ [UPLOAD ${uploadId}] No existing promotion found, creating new one`);
             promotion = new Promotion({
                 date: promotionDate,
                 languages: new Map(),
                 uploadedBy: uploadedBy || 'admin'
             });
+            console.log(`✅ [UPLOAD ${uploadId}] New promotion object created`);
+        } else {
+            console.log(`✅ [UPLOAD ${uploadId}] Found existing promotion:`, promotion._id);
+            console.log(`📋 [UPLOAD ${uploadId}] Existing languages:`, Array.from(promotion.languages.keys()));
         }
         
-        // Add or update language data
-        promotion.languages.set(language.toLowerCase(), {
+        // Step 5: Add or update language data
+        console.log(`💾 [UPLOAD ${uploadId}] Setting language data for: "${langLower}"`);
+        console.log(`📊 [UPLOAD ${uploadId}] Buffer size: ${req.file.buffer.length} bytes`);
+        
+        promotion.languages.set(langLower, {
             imageData: req.file.buffer,
             contentType: req.file.mimetype,
             uploadedAt: new Date()
         });
+        console.log(`✅ [UPLOAD ${uploadId}] Language data set in Map`);
+        console.log(`📋 [UPLOAD ${uploadId}] Current languages in Map:`, Array.from(promotion.languages.keys()));
         
+        // Step 6: Save to database
+        console.log(`💾 [UPLOAD ${uploadId}] Saving to database...`);
         await promotion.save();
+        console.log(`✅ [UPLOAD ${uploadId}] Successfully saved to database`);
+        console.log(`🎉 [UPLOAD ${uploadId}] Upload complete for ${langLower} on ${date}`);
         
         res.json({
             success: true,
             message: `Promotion uploaded successfully for ${language} on ${date}`,
             promotionId: promotion._id,
             date: promotion.date,
-            language: language.toLowerCase()
+            language: langLower
         });
+        
+        console.log(`✅ [UPLOAD ${uploadId}] Response sent successfully\n`);
     } catch (error) {
-        console.error('Error uploading promotion:', error);
+        console.error(`❌❌❌ [UPLOAD ${uploadId}] CRITICAL ERROR ❌❌❌`);
+        console.error(`❌ [UPLOAD ${uploadId}] Error name:`, error.name);
+        console.error(`❌ [UPLOAD ${uploadId}] Error message:`, error.message);
+        console.error(`❌ [UPLOAD ${uploadId}] Error stack:`, error.stack);
+        
         res.status(500).json({
             success: false,
             message: 'Failed to upload promotion',
-            error: error.message
+            error: error.message,
+            errorName: error.name
         });
+        
+        console.log(`❌ [UPLOAD ${uploadId}] Error response sent\n`);
     }
 });
 
