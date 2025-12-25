@@ -25,40 +25,31 @@ router.get('/user-promotions', async (req, res) => {
     try {
         console.log(`📋 [${new Date().toISOString()}] Fetching promotions list...`);
         
-        // Use aggregation with $objectToArray to get only keys without loading buffer values
+        // NEW: Group by date and collect languages
         const aggregateStart = Date.now();
         const promotions = await Promotion.aggregate([
-            { $sort: { date: -1 } },
-            { $limit: 50 },
             {
-                $project: {
-                    _id: 1,
-                    date: 1,
-                    createdAt: 1,
-                    // Convert languages map to array of key-value pairs
-                    languagesArray: { $objectToArray: '$languages' }
+                $group: {
+                    _id: '$date',
+                    languages: { $push: '$language' },
+                    createdAt: { $first: '$createdAt' }
                 }
             },
             {
                 $project: {
-                    _id: 1,
-                    date: 1,
-                    createdAt: 1,
-                    // Extract just the keys (language codes)
-                    languages: {
-                        $map: {
-                            input: '$languagesArray',
-                            as: 'item',
-                            in: '$$item.k'
-                        }
-                    }
+                    _id: { $toString: '$_id' }, // Use date as string for ID
+                    date: '$_id',
+                    languages: 1,
+                    createdAt: 1
                 }
-            }
+            },
+            { $sort: { date: -1 } },
+            { $limit: 50 }
         ]);
         const aggregateTime = Date.now() - aggregateStart;
         
         console.log(`   ⏱️  Aggregation: ${aggregateTime}ms`);
-        console.log(`   📊 Found ${promotions.length} promotions`);
+        console.log(`   📊 Found ${promotions.length} promotion dates`);
         console.log(`   ✅ Total time: ${Date.now() - startTime}ms\n`);
         
         // Add cache headers
@@ -81,56 +72,74 @@ router.get('/user-promotions', async (req, res) => {
     }
 });
 
-// GET promotion image by ID and language
+// GET promotion image by date and language (NEW SCHEMA)
+// promotionId is actually the date string now
 router.get('/image/:promotionId/:language', async (req, res) => {
     const startTime = Date.now();
     try {
         const { promotionId, language } = req.params;
         console.log(`🖼️  [${new Date().toISOString()}] Image request: ${promotionId}/${language}`);
         
-        // Step 1: Query MongoDB - get the full document (Map type doesn't support field selection)
+        // promotionId might be a date string, try to parse it
+        let queryDate;
+        try {
+            queryDate = new Date(promotionId);
+            queryDate.setHours(0, 0, 0, 0);
+        } catch (e) {
+            // If not a valid date, treat as ObjectId
+            queryDate = null;
+        }
+        
+        // Step 1: Query MongoDB - find by date and language
         const queryStart = Date.now();
-        const promotion = await Promotion.findById(promotionId)
-            .maxTimeMS(15000); // 15 second timeout
+        let promotion;
+        
+        if (queryDate && !isNaN(queryDate.getTime())) {
+            // Query by date and language
+            promotion = await Promotion.findOne({ 
+                date: queryDate, 
+                language: language.toLowerCase() 
+            })
+            .select('imageData contentType')
+            .maxTimeMS(15000);
+        } else {
+            // Try as ObjectId for backwards compatibility
+            promotion = await Promotion.findById(promotionId)
+            .maxTimeMS(15000);
+        }
+        
         const queryTime = Date.now() - queryStart;
         console.log(`   ⏱️  MongoDB query: ${queryTime}ms`);
         
         if (!promotion) {
-            console.log(`   ❌ Promotion not found: ${promotionId}`);
+            console.log(`   ❌ Promotion not found: ${promotionId}/${language}`);
             return res.status(404).json({
                 success: false,
                 message: 'Promotion not found'
             });
         }
         
-        // Step 2: Extract language data from Map
-        const extractStart = Date.now();
-        const languageData = promotion.languages.get(language);
-        const extractTime = Date.now() - extractStart;
-        console.log(`   ⏱️  Data extraction: ${extractTime}ms`);
-        
-        if (!languageData || !languageData.imageData) {
-            console.log(`   ❌ Image not available for ${language}`);
-            console.log(`   Available languages: ${Array.from(promotion.languages.keys()).join(', ')}`);
+        if (!promotion.imageData) {
+            console.log(`   ❌ Image data not available`);
             return res.status(404).json({
                 success: false,
-                message: `Image not available for ${language}`
+                message: `Image not available`
             });
         }
         
-        // Step 3: Get buffer info
-        const bufferSize = languageData.imageData.length;
+        // Step 2: Get buffer info
+        const bufferSize = promotion.imageData.length;
         const bufferSizeMB = (bufferSize / (1024 * 1024)).toFixed(2);
         console.log(`   📦 Image size: ${bufferSizeMB}MB (${bufferSize} bytes)`);
         
-        // Step 4: Set headers and send
+        // Step 3: Set headers and send
         const sendStart = Date.now();
-        res.set('Content-Type', languageData.contentType || 'image/png');
+        res.set('Content-Type', promotion.contentType || 'image/png');
         res.set('Cache-Control', 'public, max-age=604800'); // Cache for 7 days
         res.set('ETag', `${promotionId}-${language}`);
         res.set('Content-Length', bufferSize);
         
-        res.send(languageData.imageData);
+        res.send(promotion.imageData);
         const sendTime = Date.now() - sendStart;
         
         const totalTime = Date.now() - startTime;
@@ -178,7 +187,6 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         const validLanguages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu', 'malayalam', 'punjabi'];
         const langLower = language.toLowerCase();
         console.log(`🔍 [UPLOAD ${uploadId}] Validating language: "${langLower}"`);
-        console.log(`📋 [UPLOAD ${uploadId}] Valid languages:`, validLanguages);
         
         if (!validLanguages.includes(langLower)) {
             console.log(`❌ [UPLOAD ${uploadId}] Invalid language: "${langLower}"`);
@@ -192,39 +200,40 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         // Step 3: Parse date
         console.log(`📅 [UPLOAD ${uploadId}] Parsing date: "${date}"`);
         const promotionDate = new Date(date);
-        promotionDate.setHours(0, 0, 0, 0); // Normalize to start of day
+        promotionDate.setHours(0, 0, 0, 0);
         console.log(`✅ [UPLOAD ${uploadId}] Date parsed:`, promotionDate.toISOString());
         
-        // Step 4: Find or create promotion for this date
-        console.log(`🔍 [UPLOAD ${uploadId}] Searching for existing promotion with date:`, promotionDate);
-        let promotion = await Promotion.findOne({ date: promotionDate });
+        // Step 4: Find existing promotion for this date+language or create new
+        console.log(`🔍 [UPLOAD ${uploadId}] Searching for existing promotion with date: ${promotionDate.toISOString()} and language: ${langLower}`);
         
-        if (!promotion) {
-            console.log(`➕ [UPLOAD ${uploadId}] No existing promotion found, creating new one`);
+        let promotion = await Promotion.findOne({ 
+            date: promotionDate, 
+            language: langLower 
+        });
+        
+        if (promotion) {
+            console.log(`♻️ [UPLOAD ${uploadId}] Found existing promotion, updating it:`, promotion._id);
+            // Update existing
+            promotion.imageData = req.file.buffer;
+            promotion.contentType = req.file.mimetype;
+            promotion.uploadedBy = uploadedBy || 'admin';
+            promotion.uploadedAt = new Date();
+        } else {
+            console.log(`➕ [UPLOAD ${uploadId}] Creating new promotion document`);
+            // Create new
             promotion = new Promotion({
                 date: promotionDate,
-                languages: new Map(),
-                uploadedBy: uploadedBy || 'admin'
+                language: langLower,
+                imageData: req.file.buffer,
+                contentType: req.file.mimetype,
+                uploadedBy: uploadedBy || 'admin',
+                uploadedAt: new Date()
             });
-            console.log(`✅ [UPLOAD ${uploadId}] New promotion object created`);
-        } else {
-            console.log(`✅ [UPLOAD ${uploadId}] Found existing promotion:`, promotion._id);
-            console.log(`📋 [UPLOAD ${uploadId}] Existing languages:`, Array.from(promotion.languages.keys()));
         }
         
-        // Step 5: Add or update language data
-        console.log(`💾 [UPLOAD ${uploadId}] Setting language data for: "${langLower}"`);
-        console.log(`📊 [UPLOAD ${uploadId}] Buffer size: ${req.file.buffer.length} bytes`);
+        console.log(`📊 [UPLOAD ${uploadId}] Document size: ${req.file.buffer.length} bytes (${(req.file.buffer.length / 1024).toFixed(2)} KB)`);
         
-        promotion.languages.set(langLower, {
-            imageData: req.file.buffer,
-            contentType: req.file.mimetype,
-            uploadedAt: new Date()
-        });
-        console.log(`✅ [UPLOAD ${uploadId}] Language data set in Map`);
-        console.log(`📋 [UPLOAD ${uploadId}] Current languages in Map:`, Array.from(promotion.languages.keys()));
-        
-        // Step 6: Save to database
+        // Step 5: Save to database
         console.log(`💾 [UPLOAD ${uploadId}] Saving to database...`);
         await promotion.save();
         console.log(`✅ [UPLOAD ${uploadId}] Successfully saved to database`);
@@ -256,8 +265,9 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     }
 });
 
-// POST upload multiple languages for a date
-router.post('/upload-multiple', upload.array('images', 10), async (req, res) => {
+// POST upload multiple languages for a date - DEPRECATED (use single upload endpoint)
+// Keeping for backwards compatibility but not recommended
+router.post('/upload-multiple', upload.array('images', 12), async (req, res) => {
     try {
         const { date, languages, uploadedBy } = req.body;
         
@@ -268,7 +278,7 @@ router.post('/upload-multiple', upload.array('images', 10), async (req, res) => 
             });
         }
         
-        // Parse languages (should be comma-separated or JSON array)
+        // Parse languages
         let languageArray;
         if (typeof languages === 'string') {
             try {
@@ -291,18 +301,7 @@ router.post('/upload-multiple', upload.array('images', 10), async (req, res) => 
         const promotionDate = new Date(date);
         promotionDate.setHours(0, 0, 0, 0);
         
-        // Find or create promotion
-        let promotion = await Promotion.findOne({ date: promotionDate });
-        
-        if (!promotion) {
-            promotion = new Promotion({
-                date: promotionDate,
-                languages: new Map(),
-                uploadedBy: uploadedBy || 'admin'
-            });
-        }
-        
-        // Add all language data
+        // Upload each language separately with new schema
         const validLanguages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu', 'malayalam', 'punjabi'];
         const uploadedLanguages = [];
         
@@ -310,25 +309,38 @@ router.post('/upload-multiple', upload.array('images', 10), async (req, res) => 
             const lang = languageArray[i].toLowerCase();
             
             if (!validLanguages.includes(lang)) {
-                continue; // Skip invalid languages
+                continue;
             }
             
-            promotion.languages.set(lang, {
-                imageData: req.files[i].buffer,
-                contentType: req.files[i].mimetype,
-                uploadedAt: new Date()
-            });
+            // Find or create document for this date+language
+            let promotion = await Promotion.findOne({ date: promotionDate, language: lang });
             
+            if (promotion) {
+                // Update existing
+                promotion.imageData = req.files[i].buffer;
+                promotion.contentType = req.files[i].mimetype;
+                promotion.uploadedBy = uploadedBy || 'admin';
+                promotion.uploadedAt = new Date();
+            } else {
+                // Create new
+                promotion = new Promotion({
+                    date: promotionDate,
+                    language: lang,
+                    imageData: req.files[i].buffer,
+                    contentType: req.files[i].mimetype,
+                    uploadedBy: uploadedBy || 'admin',
+                    uploadedAt: new Date()
+                });
+            }
+            
+            await promotion.save();
             uploadedLanguages.push(lang);
         }
-        
-        await promotion.save();
         
         res.json({
             success: true,
             message: `Promotions uploaded for ${uploadedLanguages.length} languages`,
-            promotionId: promotion._id,
-            date: promotion.date,
+            date: promotionDate,
             languages: uploadedLanguages
         });
     } catch (error) {
@@ -344,28 +356,41 @@ router.post('/upload-multiple', upload.array('images', 10), async (req, res) => 
 // GET all promotions (admin view with metadata only)
 router.get('/admin/all', async (req, res) => {
     try {
-        const promotions = await Promotion.find({})
-            .sort({ date: -1 })
-            .select('-languages.imageData') // Exclude large image data
-            .lean();
+        // NEW: Group by date and collect languages with metadata
+        const promotions = await Promotion.aggregate([
+            {
+                $group: {
+                    _id: '$date',
+                    languages: {
+                        $push: {
+                            code: '$language',
+                            uploadedAt: '$uploadedAt',
+                            contentType: '$contentType',
+                            uploadedBy: '$uploadedBy'
+                        }
+                    },
+                    uploadedBy: { $first: '$uploadedBy' },
+                    createdAt: { $first: '$createdAt' }
+                }
+            },
+            { $sort: { _id: -1 } }
+        ]);
         
-        // Transform to show language availability
+        // Transform to admin format
         const transformedPromotions = promotions.map(promo => {
             const languageInfo = {};
             
-            if (promo.languages) {
-                for (const [lang, data] of Object.entries(promo.languages)) {
-                    languageInfo[lang] = {
-                        available: !!(data && data.contentType),
-                        uploadedAt: data?.uploadedAt,
-                        contentType: data?.contentType
-                    };
-                }
-            }
+            promo.languages.forEach(lang => {
+                languageInfo[lang.code] = {
+                    available: true,
+                    uploadedAt: lang.uploadedAt,
+                    contentType: lang.contentType
+                };
+            });
             
             return {
                 _id: promo._id,
-                date: promo.date,
+                date: promo._id,
                 languages: languageInfo,
                 uploadedBy: promo.uploadedBy,
                 createdAt: promo.createdAt
@@ -386,61 +411,63 @@ router.get('/admin/all', async (req, res) => {
     }
 });
 
-// DELETE promotion by ID
-router.delete('/:promotionId', async (req, res) => {
+// DELETE all promotions for a specific date
+router.delete('/:dateString', async (req, res) => {
     try {
-        const { promotionId } = req.params;
+        const { dateString } = req.params;
         
-        const promotion = await Promotion.findByIdAndDelete(promotionId);
+        // Parse the date
+        const targetDate = new Date(dateString);
+        targetDate.setHours(0, 0, 0, 0);
         
-        if (!promotion) {
+        // Delete all promotions for this date
+        const result = await Promotion.deleteMany({ date: targetDate });
+        
+        if (result.deletedCount === 0) {
             return res.status(404).json({
                 success: false,
-                message: 'Promotion not found'
+                message: 'No promotions found for this date'
             });
         }
         
         res.json({
             success: true,
-            message: 'Promotion deleted successfully'
+            message: `Deleted ${result.deletedCount} promotion(s) for ${dateString}`
         });
     } catch (error) {
-        console.error('Error deleting promotion:', error);
+        console.error('Error deleting promotions:', error);
         res.status(500).json({
             success: false,
-            message: 'Failed to delete promotion',
+            message: 'Failed to delete promotions',
             error: error.message
         });
     }
 });
 
-// DELETE specific language from a promotion
-router.delete('/:promotionId/:language', async (req, res) => {
+// DELETE specific language from a promotion date
+router.delete('/:dateString/:language', async (req, res) => {
     try {
-        const { promotionId, language } = req.params;
+        const { dateString, language } = req.params;
         
-        const promotion = await Promotion.findById(promotionId);
+        // Parse the date
+        const targetDate = new Date(dateString);
+        targetDate.setHours(0, 0, 0, 0);
+        
+        const promotion = await Promotion.findOneAndDelete({ 
+            date: targetDate, 
+            language: language.toLowerCase() 
+        });
         
         if (!promotion) {
             return res.status(404).json({
                 success: false,
-                message: 'Promotion not found'
+                message: `Promotion not found for ${language} on ${dateString}`
             });
         }
-        
-        if (!promotion.languages.has(language)) {
-            return res.status(404).json({
-                success: false,
-                message: `Language ${language} not found in this promotion`
-            });
-        }
-        
-        promotion.languages.delete(language);
-        await promotion.save();
         
         res.json({
             success: true,
-            message: `Language ${language} removed from promotion`
+            message: `Language ${language} removed from promotion on ${dateString}`
         });
     } catch (error) {
         console.error('Error deleting language:', error);
