@@ -162,7 +162,7 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         }
         
         // Validate language
-        const validLanguages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu'];
+        const validLanguages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu', 'malayalam', 'punjabi'];
         if (!validLanguages.includes(language.toLowerCase())) {
             return res.status(400).json({
                 success: false,
@@ -258,7 +258,7 @@ router.post('/upload-multiple', upload.array('images', 10), async (req, res) => 
         }
         
         // Add all language data
-        const validLanguages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu'];
+        const validLanguages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu', 'malayalam', 'punjabi'];
         const uploadedLanguages = [];
         
         for (let i = 0; i < req.files.length; i++) {
