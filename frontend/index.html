@@ -76,52 +76,57 @@
 <section class="position-stats-section py-3"
          style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-top: 76px;">
 
-  <!-- 🔥 Shrink container to content -->
-  <div style="display: flex; justify-content: center;">
+                    <!-- 🔥 Shrink container to content -->
+                    <div style="display: flex; justify-content: center;">
 
-    <div class="card shadow-lg border-0"
-         style="border-radius: 10px; overflow: hidden; display: inline-block;">
+                        <div class="card shadow-lg border-0"
+                            style="border-radius: 10px; overflow: hidden; display: inline-block;">
 
-      <div class="card-header text-white text-center py-1"
-           style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">
-        <h5 class="mb-0 fw-bold" style="font-size: 0.85rem;">
-          <i class="fas fa-chart-bar me-1"></i>
-          Position Statistics - Real-time Overview
-        </h5>
-      </div>
+                        <div class="card-header text-white text-center py-1"
+                            style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">
+                            <h5 class="mb-0 fw-bold" style="font-size: 0.85rem;">
+                            <i class="fas fa-chart-bar me-1"></i>
+                            Position Statistics - Real-time Overview
+                            </h5>
+                        </div>
 
-      <div class="card-body p-0">
-        <table class="table mb-0" id="positionStatsTable"
-               style="table-layout: auto; border-collapse: collapse; width: auto; margin: 0 auto;">
+                        <div class="card-body p-0">
+                            <table class="table mb-0" id="positionStatsTable"
+                                style="table-layout: auto; border-collapse: collapse; width: auto; margin: 0 auto;">
 
-          <thead style="background: #2c3e50;">
-            <tr>
-              <th style="color:#fff; padding:4px 6px; font-size:0.75rem; border:none; text-align:left;">
-                Location Level
-              </th>
-              <th style="color:#fff; padding:4px 6px; font-size:0.75rem; border:none; text-align:center;">
-                Total
-              </th>
-              <th style="color:#fff; padding:4px 6px; font-size:0.75rem; border:none; text-align:center;">
-                Given
-              </th>
-              <th style="color:#fff; padding:4px 6px; font-size:0.75rem; border:none; text-align:center;">
-                Remaining
-              </th>
-            </tr>
-          </thead>
+                            <thead style="background: #2c3e50;">
+                                <tr>
+                                <th style="color:#fff; padding:4px 6px; font-size:0.75rem; border:none; text-align:left;">
+                                    Location Level
+                                </th>
+                                <th style="color:#fff; padding:4px 6px; font-size:0.75rem; border:none; text-align:center;">
+                                    Total
+                                </th>
+                                <th style="color:#fff; padding:4px 6px; font-size:0.75rem; border:none; text-align:center;">
+                                    Given
+                                </th>
+                                <th style="color:#fff; padding:4px 6px; font-size:0.75rem; border:none; text-align:center;">
+                                    Remaining
+                                </th>
+                                </tr>
+                            </thead>
 
-          <tbody id="positionStatsBody">
-            <!-- dynamic rows -->
-          </tbody>
-
-        </table>
-      </div>
-
-    </div>
-  </div>
-</section>
-
+                            <tbody id="positionStatsBody">
+                                <tr>
+                                    <td colspan="4" class="text-center py-3">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted mb-0" style="font-size: 0.8rem;">Loading position statistics...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Home Section -->
     <section id="home" class="hero-section">
@@ -1379,14 +1384,14 @@
                     
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="location-name text-center" style="padding: 4px 6px; font-size: 0.75rem; border: none;"><strong>${level}</strong></td>
-                        <td class="text-center" style="padding: 4px 6px; font-size: 0.75rem; border: none;">
+                        <td class="location-name text-center">${level}</td>
+                        <td class="text-center">
                             <span class="stat-number total-col">${total}</span>
                         </td>
-                        <td class="text-center" style="padding: 4px 6px; font-size: 0.75rem; border: none;">
+                        <td class="text-center">
                             <span class="stat-number given-col">${given}</span>
                         </td>
-                        <td class="text-center" style="padding: 4px 6px; font-size: 0.75rem; border: none;">
+                        <td class="text-center">
                             <span class="stat-number remaining-col ${remaining === 0 ? 'zero' : ''}">${remaining}</span>
                         </td>
                     `;
