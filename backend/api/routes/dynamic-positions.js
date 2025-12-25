@@ -29,23 +29,27 @@ router.get('/statistics', async (req, res) => {
     
     approvedApplications.forEach(app => {
       const posId = app.positionId || '';
-      const parts = posId.split('-').map(p => p.trim().toLowerCase());
+      console.log(`Parsing positionId: ${posId}`);
       
-      // Determine level by counting parts after "india"
-      // Format: india, india-zone, india-zone-state, etc.
-      const indiaIndex = parts.indexOf('india');
-      if (indiaIndex === -1) return;
-      
-      const levelCount = parts.length - indiaIndex - 1;
-      
-      if (levelCount === 0) stats.country++;
-      else if (levelCount === 1) stats.zone++;
-      else if (levelCount === 2) stats.state++;
-      else if (levelCount === 3) stats.division++;
-      else if (levelCount === 4) stats.district++;
-      else if (levelCount === 5) stats.tehsil++;
-      else if (levelCount === 6) stats.pincode++;
-      else if (levelCount >= 7) stats.village++;
+      // Format: pos_level-head_india_zone_state_...
+      // Extract level from position ID
+      if (posId.includes('president')) {
+        stats.country++;
+      } else if (posId.includes('zone-head')) {
+        stats.zone++;
+      } else if (posId.includes('state-head')) {
+        stats.state++;
+      } else if (posId.includes('division-head')) {
+        stats.division++;
+      } else if (posId.includes('district-head')) {
+        stats.district++;
+      } else if (posId.includes('tehsil-head')) {
+        stats.tehsil++;
+      } else if (posId.includes('pincode-head')) {
+        stats.pincode++;
+      } else if (posId.includes('village-head')) {
+        stats.village++;
+      }
     });
     
     console.log('📈 Statistics calculated:', stats);
