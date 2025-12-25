@@ -1313,18 +1313,19 @@
                 stats['Pincode'].total = uniquePincodes.size;
                 stats['Village'].total = uniqueVillages.size;
                 
-                // Count given positions by checking if applicant exists
+                // Count given positions by checking if applicantDetails exists
                 positions.forEach(pos => {
-                    if (pos.applicant && pos.applicant.name) {
-                        // Position has been taken
-                        if (pos.level === 'country') stats['Country (India)'].given++;
-                        else if (pos.level === 'zone') stats['Zone'].given++;
-                        else if (pos.level === 'state') stats['State'].given++;
-                        else if (pos.level === 'division') stats['Division'].given++;
-                        else if (pos.level === 'district') stats['District'].given++;
-                        else if (pos.level === 'tehsil') stats['Tehsil'].given++;
-                        else if (pos.level === 'pincode') stats['Pincode'].given++;
-                        else if (pos.level === 'village') stats['Village'].given++;
+                    if (pos.applicantDetails && pos.applicantDetails.name) {
+                        // Position has been taken - determine level from location hierarchy
+                        const loc = pos.location || {};
+                        if (loc.village) stats['Village'].given++;
+                        else if (loc.pincode) stats['Pincode'].given++;
+                        else if (loc.tehsil) stats['Tehsil'].given++;
+                        else if (loc.district) stats['District'].given++;
+                        else if (loc.division) stats['Division'].given++;
+                        else if (loc.state) stats['State'].given++;
+                        else if (loc.zone) stats['Zone'].given++;
+                        else if (loc.country) stats['Country (India)'].given++;
                     }
                 });
                 

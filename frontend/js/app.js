@@ -585,7 +585,10 @@ async function loadApplications() {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const positions = await response.json();
+        const data = await response.json();
+        
+        // Handle both old array format and new {success, positions} format
+        const positions = data.positions || data || [];
 
         // Store positions directly - they are already formatted with application data
         currentPositions = positions.map((pos, index) => ({
