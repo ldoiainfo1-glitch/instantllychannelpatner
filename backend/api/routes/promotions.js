@@ -32,6 +32,7 @@ router.get('/user-promotions', async (req, res) => {
                 $group: {
                     _id: '$date',
                     languages: { $push: '$language' },
+                    about: { $first: '$about' },
                     createdAt: { $first: '$createdAt' }
                 }
             },
@@ -46,6 +47,7 @@ router.get('/user-promotions', async (req, res) => {
                     },
                     date: '$_id',
                     languages: 1,
+                    about: 1,
                     createdAt: 1
                 }
             },
@@ -165,8 +167,8 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     console.log(`\n🚀 [UPLOAD ${uploadId}] ======== NEW UPLOAD REQUEST ========`);
     
     try {
-        const { date, language, uploadedBy } = req.body;
-        console.log(`📝 [UPLOAD ${uploadId}] Request body:`, { date, language, uploadedBy });
+        const { date, language, uploadedBy, about } = req.body;
+        console.log(`📝 [UPLOAD ${uploadId}] Request body:`, { date, language, uploadedBy, about });
         console.log(`📎 [UPLOAD ${uploadId}] File info:`, req.file ? {
             fieldname: req.file.fieldname,
             originalname: req.file.originalname,
@@ -219,11 +221,15 @@ router.post('/upload', upload.single('image'), async (req, res) => {
             promotion.contentType = req.file.mimetype;
             promotion.uploadedBy = uploadedBy || 'admin';
             promotion.uploadedAt = new Date();
+            if (about !== undefined) {
+                promotion.about = about || '';
+            }
         } else {
             console.log(`➕ [UPLOAD ${uploadId}] Creating new promotion document`);
             // Create new
             promotion = new Promotion({
                 date: promotionDate,
+                about: about || '',
                 language: langLower,
                 imageData: req.file.buffer,
                 contentType: req.file.mimetype,
@@ -362,6 +368,7 @@ router.get('/admin/all', async (req, res) => {
             {
                 $group: {
                     _id: '$date',
+                    about: { $first: '$about' },
                     languages: {
                         $push: {
                             code: '$language',
@@ -392,6 +399,7 @@ router.get('/admin/all', async (req, res) => {
             return {
                 _id: promo._id,
                 date: promo._id,
+                about: promo.about || '',
                 languages: languageInfo,
                 uploadedBy: promo.uploadedBy,
                 createdAt: promo.createdAt

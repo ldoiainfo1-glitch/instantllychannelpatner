@@ -240,6 +240,7 @@
                         <tr>
                             <th>Sr.No</th>
                             <th>Date</th>
+                            <th>About</th>
                             <th>Hindi</th>
                             <th>English</th>
                             <th>Marathi</th>
@@ -435,6 +436,7 @@
                 let rowHTML = `
                     <td><strong>${index + 1}</strong></td>
                     <td><strong>${formattedDate}</strong></td>
+                    <td><span class="text-muted">${promo.about || '-'}</span></td>
                 `;
                 
                 // Add download buttons for each language

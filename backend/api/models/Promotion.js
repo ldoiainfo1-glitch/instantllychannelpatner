@@ -8,6 +8,11 @@ const promotionSchema = new mongoose.Schema({
         required: true,
         index: true
     },
+    about: {
+        type: String,
+        trim: true,
+        default: ''
+    },
     language: {
         type: String,
         required: true,
