@@ -496,10 +496,10 @@ router.get('/aggregated-stats', async (req, res) => {
     // Determine which level is selected and what child levels to aggregate
     const stats = [];
     
-    // Define the hierarchy
+    // Define the hierarchy in correct order
     const hierarchy = [
-      { level: 'state', field: 'state', display: 'State' },
       { level: 'zone', field: 'zone', display: 'Zone' },
+      { level: 'state', field: 'state', display: 'State' },
       { level: 'division', field: 'division', display: 'Division' },
       { level: 'district', field: 'district', display: 'District' },
       { level: 'tehsil', field: 'tehsil', display: 'Tehsil' },
@@ -529,11 +529,11 @@ router.get('/aggregated-stats', async (req, res) => {
       selectedLevelName = 'Division';
       selectedLevelValue = division;
     } else if (state) {
-      selectedLevelIndex = 0;
+      selectedLevelIndex = 1;
       selectedLevelName = 'State';
       selectedLevelValue = state;
     } else if (zone) {
-      selectedLevelIndex = 1;
+      selectedLevelIndex = 0;
       selectedLevelName = 'Zone';
       selectedLevelValue = zone;
     }
