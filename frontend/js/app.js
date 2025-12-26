@@ -600,6 +600,21 @@ async function loadApplications() {
 
         // Update selected filters display
         updateSelectedFiltersBadges();
+        
+        // Update Position Statistics table with same filters
+        const filters = {};
+        if (zone) filters.zone = zone;
+        if (state) filters.state = state;
+        if (division) filters.division = division;
+        if (district) filters.district = district;
+        if (tehsil) filters.tehsil = tehsil;
+        if (pincode) filters.pincode = pincode;
+        if (village) filters.village = village;
+        filters.country = country;
+        
+        if (typeof loadPositionStatistics === 'function') {
+            loadPositionStatistics(filters);
+        }
     } catch (error) {
         console.error('❌ Error loading applications:', error);
         showNotification('Error loading applications: ' + error.message, 'error');

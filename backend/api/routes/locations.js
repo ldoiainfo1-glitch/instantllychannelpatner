@@ -478,4 +478,97 @@ router.post('/manage/bulk-import', async (req, res) => {
   }
 });
 
+// Get child locations for filtered statistics
+router.get('/children', async (req, res) => {
+  try {
+    const { country, zone, state, division, district, tehsil, pincode } = req.query;
+    const Application = require('../models/Application');
+    
+    // Build filter for parent level
+    let parentFilter = { country: country || 'India' };
+    if (zone) parentFilter.zone = zone;
+    if (state) parentFilter.state = state;
+    if (division) parentFilter.division = division;
+    if (district) parentFilter.district = district;
+    if (tehsil) parentFilter.tehsil = tehsil;
+    if (pincode) parentFilter.pincode = pincode;
+    
+    // Determine what child level to fetch
+    let childLevel, childField;
+    if (pincode) {
+      childLevel = 'village';
+      childField = 'village';
+    } else if (tehsil) {
+      childLevel = 'pincode';
+      childField = 'pincode';
+    } else if (district) {
+      childLevel = 'tehsil';
+      childField = 'tehsil';
+    } else if (division) {
+      childLevel = 'district';
+      childField = 'district';
+    } else if (state) {
+      childLevel = 'division';
+      childField = 'division';
+    } else if (zone) {
+      childLevel = 'state';
+      childField = 'state';
+    } else {
+      childLevel = 'zone';
+      childField = 'zone';
+    }
+    
+    // Get distinct children
+    const childFilter = { ...parentFilter, [childField]: { $ne: null, $ne: '' } };
+    const childNames = await Location.distinct(childField, childFilter);
+    
+    // Count given positions for each child
+    const children = await Promise.all(childNames.map(async (name) => {
+      const locationFilter = { ...parentFilter, [childField]: name };
+      
+      // Count total locations at this level
+      const totalCount = await Location.countDocuments(locationFilter);
+      
+      // Count approved applications for this location
+      const givenCount = await Application.countDocuments({
+        [`position.location.${childField}`]: name,
+        status: 'approved'
+      });
+      
+      return {
+        name,
+        total: totalCount,
+        given: givenCount
+      };
+    }));
+    
+    // Sort by name
+    children.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Get parent stats
+    const parentTotal = await Location.countDocuments(parentFilter);
+    const parentGiven = await Application.countDocuments({
+      status: 'approved',
+      ...Object.keys(parentFilter).reduce((acc, key) => {
+        if (key !== 'country') {
+          acc[`position.location.${key}`] = parentFilter[key];
+        }
+        return acc;
+      }, {})
+    });
+    
+    res.json({
+      success: true,
+      children,
+      parentTotal,
+      parentGiven,
+      childLevel
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching child locations:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;

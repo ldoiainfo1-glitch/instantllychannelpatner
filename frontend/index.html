@@ -173,6 +173,18 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- Pagination Controls -->
+                    <div class="card-footer py-2" id="statsPaginationContainer" style="display:none; background:#f8f9fa;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button class="btn btn-sm btn-outline-primary" id="statsPrevBtn" disabled>
+                                <i class="fas fa-chevron-left"></i> Prev
+                            </button>
+                            <span class="text-muted" id="statsPageInfo" style="font-size:0.85rem;">Page 1</span>
+                            <button class="btn btn-sm btn-outline-primary" id="statsNextBtn" disabled>
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1307,8 +1319,15 @@
     </script>
     
     <script>
+        // Position Statistics with Filter Integration and Pagination
+        let statsCurrentPage = 1;
+        let statsRowsPerPage = 10;
+        let allStatsData = [];
+        let currentFilters = {};
+
         // Load Position Statistics
-        async function loadPositionStatistics() {
+        async function loadPositionStatistics(filters = {}) {
+            currentFilters = filters;
             try {
                 const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
                 
@@ -1374,55 +1393,12 @@
                     console.warn('⚠️ Location counts not available, stats may be incomplete');
                 }
                 
-                // Display statistics in table
-                const tbody = document.getElementById('positionStatsBody');
-                tbody.innerHTML = '';
+                // Get filtered statistics based on current filters
+                const filteredStats = await getFilteredStatistics(filters, statsData, locationsData);
+                allStatsData = filteredStats;
                 
-                // Calculate totals
-                let totalSum = 0;
-                let givenSum = 0;
-                let remainingSum = 0;
-                
-                Object.keys(stats).forEach(level => {
-                    const { total, given } = stats[level];
-                    const remaining = total - given;
-                    
-                    // Add to totals
-                    totalSum += total;
-                    givenSum += given;
-                    remainingSum += remaining;
-                    
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td style="padding:6px 12px; border:none; text-align:left; font-weight:500;">${level}</td>
-                        <td style="padding:6px 12px; border:none; text-align:center;">
-                            <span class="stat-number total-col">${total}</span>
-                        </td>
-                        <td style="padding:6px 12px; border:none; text-align:center;">
-                            <span class="stat-number given-col">${given}</span>
-                        </td>
-                        <td style="padding:6px 12px; border:none; text-align:center;">
-                            <span class="stat-number remaining-col ${remaining === 0 ? 'zero' : ''}">${remaining}</span>
-                        </td>
-                    `;
-                    tbody.appendChild(row);
-                });
-                
-                // Add total row
-                const totalRow = document.createElement('tr');
-                totalRow.innerHTML = `
-                    <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:left; font-weight:800; font-size:1.05rem; color:#fff; text-transform:uppercase;">Total</td>
-                    <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:center; font-weight:800; font-size:1.05rem; color:#fff;">
-                        <span class="stat-number">${totalSum}</span>
-                    </td>
-                    <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:center; font-weight:800; font-size:1.05rem; color:#fff;">
-                        <span class="stat-number">${givenSum}</span>
-                    </td>
-                    <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:center; font-weight:800; font-size:1.05rem; color:#fff;">
-                        <span class="stat-number">${remainingSum}</span>
-                    </td>
-                `;
-                tbody.appendChild(totalRow);
+                // Display with pagination
+                displayStatsPage(statsCurrentPage);
                 
                 console.log('✅ Position statistics table updated successfully');
                 
@@ -1458,6 +1434,180 @@
                     stack: error.stack
                 });
             }
+        }
+
+        // Get filtered statistics based on location filters
+        async function getFilteredStatistics(filters, statsData, locationsData) {
+            const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+            const givenPositions = statsData.givenPositions || {};
+            
+            // If no filters, show global statistics
+            if (!filters || Object.keys(filters).length === 0 || (Object.keys(filters).length === 1 && filters.country === 'India')) {
+                const locationCounts = locationsData.locationCounts || {};
+                return [
+                    { level: 'Country (India)', total: locationCounts.country || 1, given: givenPositions.country || 0 },
+                    { level: 'Zone', total: locationCounts.zone || 0, given: givenPositions.zone || 0 },
+                    { level: 'State', total: locationCounts.state || 0, given: givenPositions.state || 0 },
+                    { level: 'Division', total: locationCounts.division || 0, given: givenPositions.division || 0 },
+                    { level: 'District', total: locationCounts.district || 0, given: givenPositions.district || 0 },
+                    { level: 'Tehsil', total: locationCounts.tehsil || 0, given: givenPositions.tehsil || 0 },
+                    { level: 'Pincode', total: locationCounts.pincode || 0, given: givenPositions.pincode || 0 },
+                    { level: 'Village', total: locationCounts.village || 0, given: givenPositions.village || 0 }
+                ];
+            }
+
+            // Determine the deepest filter level
+            const filterHierarchy = ['village', 'pincode', 'tehsil', 'district', 'division', 'state', 'zone'];
+            let deepestLevel = null;
+            let parentLocation = null;
+            
+            for (const level of filterHierarchy) {
+                if (filters[level]) {
+                    deepestLevel = level;
+                    parentLocation = filters[level];
+                    break;
+                }
+            }
+
+            // Fetch child locations for the selected parent
+            try {
+                const queryParams = new URLSearchParams(filters);
+                const response = await fetch(`${API_BASE_URL}/locations/children?${queryParams}`);
+                const data = await response.json();
+                
+                if (!data.success || !data.children) {
+                    return [];
+                }
+
+                // Map children to statistics format
+                const stats = [];
+                
+                // Add parent as first item
+                const parentStats = {
+                    level: `${capitalize(deepestLevel)}: ${parentLocation}`,
+                    total: data.parentTotal || 1,
+                    given: data.parentGiven || 0
+                };
+                stats.push(parentStats);
+                
+                // Add children
+                data.children.forEach(child => {
+                    stats.push({
+                        level: child.name,
+                        total: child.total || 0,
+                        given: child.given || 0
+                    });
+                });
+                
+                return stats;
+                
+            } catch (error) {
+                console.error('Error fetching filtered statistics:', error);
+                return [];
+            }
+        }
+
+        // Display stats page with pagination
+        function displayStatsPage(page) {
+            const tbody = document.getElementById('positionStatsBody');
+            tbody.innerHTML = '';
+            
+            const start = (page - 1) * statsRowsPerPage;
+            const end = Math.min(start + statsRowsPerPage, allStatsData.length);
+            const pageData = allStatsData.slice(start, end);
+            
+            // Calculate totals for this page
+            let totalSum = 0;
+            let givenSum = 0;
+            let remainingSum = 0;
+            
+            // Display rows
+            pageData.forEach(item => {
+                const { level, total, given } = item;
+                const remaining = total - given;
+                
+                totalSum += total;
+                givenSum += given;
+                remainingSum += remaining;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="padding:6px 12px; border:none; text-align:left; font-weight:500;">${level}</td>
+                    <td style="padding:6px 12px; border:none; text-align:center;">
+                        <span class="stat-number total-col">${total}</span>
+                    </td>
+                    <td style="padding:6px 12px; border:none; text-align:center;">
+                        <span class="stat-number given-col">${given}</span>
+                    </td>
+                    <td style="padding:6px 12px; border:none; text-align:center;">
+                        <span class="stat-number remaining-col ${remaining === 0 ? 'zero' : ''}">${remaining}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Add total row for the page
+            const totalRow = document.createElement('tr');
+            totalRow.innerHTML = `
+                <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:left; font-weight:800; font-size:1.05rem; color:#fff; text-transform:uppercase;">Total</td>
+                <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:center; font-weight:800; font-size:1.05rem; color:#fff;">
+                    <span class="stat-number">${totalSum}</span>
+                </td>
+                <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:center; font-weight:800; font-size:1.05rem; color:#fff;">
+                    <span class="stat-number">${givenSum}</span>
+                </td>
+                <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:center; font-weight:800; font-size:1.05rem; color:#fff;">
+                    <span class="stat-number">${remainingSum}</span>
+                </td>
+            `;
+            tbody.appendChild(totalRow);
+            
+            // Update pagination controls
+            updateStatsPagination();
+        }
+
+        // Update pagination controls
+        function updateStatsPagination() {
+            const totalPages = Math.ceil(allStatsData.length / statsRowsPerPage);
+            const container = document.getElementById('statsPaginationContainer');
+            const pageInfo = document.getElementById('statsPageInfo');
+            const prevBtn = document.getElementById('statsPrevBtn');
+            const nextBtn = document.getElementById('statsNextBtn');
+            
+            // Show/hide pagination based on data length
+            if (allStatsData.length <= statsRowsPerPage) {
+                container.style.display = 'none';
+                return;
+            } else {
+                container.style.display = 'block';
+            }
+            
+            pageInfo.textContent = `Page ${statsCurrentPage} of ${totalPages}`;
+            prevBtn.disabled = statsCurrentPage === 1;
+            nextBtn.disabled = statsCurrentPage === totalPages;
+        }
+
+        // Pagination button handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('statsPrevBtn').addEventListener('click', () => {
+                if (statsCurrentPage > 1) {
+                    statsCurrentPage--;
+                    displayStatsPage(statsCurrentPage);
+                }
+            });
+            
+            document.getElementById('statsNextBtn').addEventListener('click', () => {
+                const totalPages = Math.ceil(allStatsData.length / statsRowsPerPage);
+                if (statsCurrentPage < totalPages) {
+                    statsCurrentPage++;
+                    displayStatsPage(statsCurrentPage);
+                }
+            });
+        });
+
+        // Helper function
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
         }
         
         // Load statistics when page loads
