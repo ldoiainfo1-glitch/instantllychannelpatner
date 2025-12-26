@@ -478,6 +478,131 @@ router.post('/manage/bulk-import', async (req, res) => {
   }
 });
 
+// Get aggregated statistics by level for a filtered location
+router.get('/aggregated-stats', async (req, res) => {
+  try {
+    const { country, zone, state, division, district, tehsil, pincode } = req.query;
+    const Application = require('../models/Application');
+    
+    // Build filter for the selected location
+    let locationFilter = { country: country || 'India' };
+    if (zone) locationFilter.zone = zone;
+    if (state) locationFilter.state = state;
+    if (division) locationFilter.division = division;
+    if (district) locationFilter.district = district;
+    if (tehsil) locationFilter.tehsil = tehsil;
+    if (pincode) locationFilter.pincode = pincode;
+    
+    // Determine which level is selected and what child levels to aggregate
+    const stats = [];
+    
+    // Define the hierarchy
+    const hierarchy = [
+      { level: 'state', field: 'state', display: 'State' },
+      { level: 'zone', field: 'zone', display: 'Zone' },
+      { level: 'division', field: 'division', display: 'Division' },
+      { level: 'district', field: 'district', display: 'District' },
+      { level: 'tehsil', field: 'tehsil', display: 'Tehsil' },
+      { level: 'pincode', field: 'pincode', display: 'Pincode' },
+      { level: 'village', field: 'village', display: 'Village' }
+    ];
+    
+    // Find which level is selected
+    let selectedLevelIndex = -1;
+    let selectedLevelName = '';
+    let selectedLevelValue = '';
+    
+    if (pincode) {
+      selectedLevelIndex = 5;
+      selectedLevelName = 'Pincode';
+      selectedLevelValue = pincode;
+    } else if (tehsil) {
+      selectedLevelIndex = 4;
+      selectedLevelName = 'Tehsil';
+      selectedLevelValue = tehsil;
+    } else if (district) {
+      selectedLevelIndex = 3;
+      selectedLevelName = 'District';
+      selectedLevelValue = district;
+    } else if (division) {
+      selectedLevelIndex = 2;
+      selectedLevelName = 'Division';
+      selectedLevelValue = division;
+    } else if (state) {
+      selectedLevelIndex = 0;
+      selectedLevelName = 'State';
+      selectedLevelValue = state;
+    } else if (zone) {
+      selectedLevelIndex = 1;
+      selectedLevelName = 'Zone';
+      selectedLevelValue = zone;
+    }
+    
+    // Add the selected level itself (always 1 position)
+    const selectedLevelGiven = await Application.countDocuments({
+      ...Object.keys(locationFilter).reduce((acc, key) => {
+        if (key !== 'country') {
+          acc[`position.location.${key}`] = locationFilter[key];
+        }
+        return acc;
+      }, {}),
+      status: 'approved'
+    });
+    
+    stats.push({
+      level: `${selectedLevelName} (${selectedLevelValue})`,
+      total: 1,
+      given: selectedLevelGiven > 0 ? 1 : 0
+    });
+    
+    // Aggregate counts for all child levels
+    for (let i = selectedLevelIndex + 1; i < hierarchy.length; i++) {
+      const childLevel = hierarchy[i];
+      const childFilter = { ...locationFilter, [childLevel.field]: { $ne: null, $ne: '' } };
+      
+      // Count distinct child locations
+      const distinctChildren = await Location.distinct(childLevel.field, childFilter);
+      const totalCount = distinctChildren.length;
+      
+      // Count approved applications for this level
+      const appFilter = {
+        status: 'approved',
+        ...Object.keys(locationFilter).reduce((acc, key) => {
+          if (key !== 'country') {
+            acc[`position.location.${key}`] = locationFilter[key];
+          }
+          return acc;
+        }, {})
+      };
+      
+      // Count how many of these child locations have approved applications
+      let givenCount = 0;
+      for (const childName of distinctChildren) {
+        const hasApproved = await Application.countDocuments({
+          ...appFilter,
+          [`position.location.${childLevel.field}`]: childName
+        });
+        if (hasApproved > 0) givenCount++;
+      }
+      
+      stats.push({
+        level: childLevel.display,
+        total: totalCount,
+        given: givenCount
+      });
+    }
+    
+    res.json({
+      success: true,
+      stats
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching aggregated statistics:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Get child locations for filtered statistics
 router.get('/children', async (req, res) => {
   try {
