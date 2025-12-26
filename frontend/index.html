@@ -138,6 +138,10 @@
                             <i class="fas fa-chart-bar me-2"></i>
                             Position Statistics - Real-time Overview
                             </h5>
+                            <div id="statsFilterInfo" class="mt-1" style="font-size: 0.75rem; font-weight: 400; opacity: 0.9; display: none;">
+                                <i class="fas fa-filter me-1"></i>
+                                <span id="statsFilterText"></span>
+                            </div>
                         </div>
 
                         <div class="card-body p-0">
@@ -1414,6 +1418,9 @@
                 const filteredStats = await getFilteredStatistics(filters, statsData, locationsData);
                 allStatsData = filteredStats;
                 
+                // Update filter info display
+                updateStatsFilterInfo(filters);
+                
                 // Display with pagination
                 displayStatsPage(statsCurrentPage);
                 
@@ -1621,6 +1628,53 @@
                 }
             });
         });
+
+        // Update filter info display
+        function updateStatsFilterInfo(filters) {
+            const filterInfoDiv = document.getElementById('statsFilterInfo');
+            const filterText = document.getElementById('statsFilterText');
+            
+            // Check if filters are applied (excluding default India)
+            const hasFilters = filters && Object.keys(filters).some(key => 
+                key !== 'country' && filters[key]
+            );
+            
+            if (!hasFilters) {
+                filterInfoDiv.style.display = 'none';
+                return;
+            }
+            
+            // Build filter text
+            const filterHierarchy = ['zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
+            let filterParts = [];
+            
+            for (const level of filterHierarchy) {
+                if (filters[level]) {
+                    const levelName = level.charAt(0).toUpperCase() + level.slice(1);
+                    filterParts.push(`${levelName}: ${filters[level]}`);
+                    break; // Only show the deepest filter
+                }
+            }
+            
+            if (filterParts.length > 0) {
+                const childLevel = getChildLevelName(filters);
+                filterText.innerHTML = `${filterParts[0]} <span style="opacity:0.7;">• Showing ${allStatsData.length - 1} ${childLevel}${allStatsData.length - 1 !== 1 ? 's' : ''}</span>`;
+                filterInfoDiv.style.display = 'block';
+            } else {
+                filterInfoDiv.style.display = 'none';
+            }
+        }
+        
+        // Get child level name based on filters
+        function getChildLevelName(filters) {
+            if (filters.pincode) return 'Village';
+            if (filters.tehsil) return 'Pincode';
+            if (filters.district) return 'Tehsil';
+            if (filters.division) return 'District';
+            if (filters.state) return 'Division';
+            if (filters.zone) return 'State';
+            return 'Zone';
+        }
 
         // Helper function
         function capitalize(str) {
