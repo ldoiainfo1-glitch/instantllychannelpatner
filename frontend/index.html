@@ -126,8 +126,18 @@
 <section class="position-stats-section"
          style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0; margin: 0;">
 
-                    <!-- 🔥 Shrink container to content -->
-                    <div style="display: flex; justify-content: center; padding: 20px 0;">
+                    <!-- 🔥 Container with descriptive text -->
+                    <div style="display: flex; flex-direction: column; align-items: center; padding: 30px 20px 20px;">
+                        
+                        <!-- Descriptive Header -->
+                        <div style="text-align: center; color: white; margin-bottom: 20px; max-width: 600px;">
+                            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                <i class="fas fa-chart-line me-2"></i>Live Position Analytics
+                            </h3>
+                            <p style="font-size: 0.9rem; opacity: 0.95; margin: 0; line-height: 1.5;">
+                                Real-time overview of available and assigned positions across all location levels in India
+                            </p>
+                        </div>
 
                         <div class="card shadow-lg border-0"
                             style="border-radius: 10px; overflow: hidden; display: inline-block;">
@@ -187,6 +197,30 @@
                             <button class="btn btn-sm btn-outline-primary" id="statsNextBtn" disabled>
                                 Next <i class="fas fa-chevron-right"></i>
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Info Box -->
+            <div style="text-align: center; color: white; margin-top: 20px; max-width: 700px;">
+                <div style="display: flex; justify-content: center; gap: 30px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="background: rgba(255,255,255,0.15); padding: 12px 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                            <i class="fas fa-map-marked-alt" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+                            <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Hierarchical structure from Country to Village level</p>
+                        </div>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="background: rgba(255,255,255,0.15); padding: 12px 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                            <i class="fas fa-sync-alt" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+                            <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Updates automatically with filter selection</p>
+                        </div>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="background: rgba(255,255,255,0.15); padding: 12px 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                            <i class="fas fa-users" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+                            <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Live data from approved applications</p>
                         </div>
                     </div>
                 </div>
@@ -1678,6 +1712,7 @@
 
         // Helper function
         function capitalize(str) {
+            if (!str) return '';
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
         
