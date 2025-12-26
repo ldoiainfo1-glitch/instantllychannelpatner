@@ -1328,6 +1328,23 @@
         // Load Position Statistics
         async function loadPositionStatistics(filters = {}) {
             currentFilters = filters;
+            
+            // Show loading state
+            const tbody = document.getElementById('positionStatsBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted mb-0" style="font-size: 0.8rem;">Updating statistics...</p>
+                    </td>
+                </tr>
+            `;
+            
+            // Hide pagination during loading
+            document.getElementById('statsPaginationContainer').style.display = 'none';
+            
             try {
                 const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
                 
