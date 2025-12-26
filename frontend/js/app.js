@@ -3670,7 +3670,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     padding:8px;
                     font-size:24px;
                     font-weight:700;
-                    margin:8px 0 10px 0;
+                    margin:6px 0;
                 ">
                     <b>${label}:</b> ${value}
                 </div>`;
