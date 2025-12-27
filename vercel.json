@@ -1,37 +1,9 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && npm install || true",
-  "outputDirectory": "frontend",
-  "builds": [
+  "rewrites": [
     {
-      "src": "frontend/**/*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "frontend/**/*.css",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "frontend/**/*.js",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "frontend/images/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "frontend/.well-known/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/$1"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "https://instantlly-cards-backend-6ki0.onrender.com/api/$1"
+      "source": "/api/(.*)",
+      "destination": "https://instantlly-cards-backend-6ki0.onrender.com/api/$1"
     }
   ]
 }
