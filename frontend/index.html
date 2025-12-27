@@ -1477,8 +1477,13 @@
             const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
             const givenPositions = statsData.givenPositions || {};
             
+            // Check if any meaningful filter is selected (excluding just 'country: India')
+            const hasFilters = filters && Object.keys(filters).some(key => 
+                key !== 'country' && filters[key] && filters[key] !== ''
+            );
+            
             // If no filters, show global statistics
-            if (!filters || Object.keys(filters).length === 0 || (Object.keys(filters).length === 1 && filters.country === 'India')) {
+            if (!hasFilters) {
                 const locationCounts = locationsData.locationCounts || {};
                 return [
                     { level: 'Country (India)', total: locationCounts.country || 1, given: givenPositions.country || 0 },
