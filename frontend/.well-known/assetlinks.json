@@ -1,10 +1,11 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "com.instantllycards.www.twa",
-    "sha256_cert_fingerprints": [
-      "5B:8E:A0:6F:65:E0:38:F7:22:EF:38:E1:0E:D7:B3:0D:FD:7D:60:7F:EA:26:2E:B7:4B:2B:55:3D:D9:65:C9:9A"
-    ]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.instantllycards.www.twa",
+      "sha256_cert_fingerprints":
+        ["A4:BF:C1:80:E4:43:8C:D8:9F:C5:4D:63:29:68:88:8B:A4:15:54:79:3C:33:30:F9:30:59:B2:1F:4E:FD:A8:1B"]
+    }
   }
-}]
+]
