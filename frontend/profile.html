@@ -362,6 +362,11 @@
                     </button>
                 </li>
                 <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#creditsTableTab">
+                        <i class="fas fa-wallet me-2"></i>Credits
+                    </button>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#creditsTab">
                         <i class="fas fa-history me-2"></i>Credits History
                     </button>
@@ -460,8 +465,8 @@
                     </div>
                 </div>
 
-                <!-- Credits History Tab -->
-                <div class="tab-pane fade" id="creditsTab">
+                <!-- NEW Credits Tab with Two Tables -->
+                <div class="tab-pane fade" id="creditsTableTab">
                     <div class="info-card">
                         <h4 class="mb-4">
                             <i class="fas fa-wallet me-2"></i>Credits Dashboard
@@ -473,7 +478,7 @@
                                 <div class="card bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                     <div class="card-body text-center py-4">
                                         <h5 class="mb-2"><i class="fas fa-coins me-2"></i>Total Available Credits</h5>
-                                        <h1 class="mb-0" id="totalCreditsDisplay">0</h1>
+                                        <h1 class="mb-0" id="totalCreditsDisplay2">0</h1>
                                         <small class="text-white-50">Cash Credits + Extra Credits</small>
                                     </div>
                                 </div>
@@ -482,7 +487,7 @@
                         
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>New Credit System:</strong> When you use ads, cash credits are deducted first. Once cash credits finish, extra credits will be used.
+                            <strong>New Credit System:</strong> When you create ads, cash credits are deducted first. Once cash credits finish, extra credits will be used.
                         </div>
                         
                         <!-- Two Tables Side by Side -->
@@ -493,7 +498,7 @@
                                     <div class="card-header bg-primary text-white">
                                         <h5 class="mb-0">
                                             <i class="fas fa-money-bill-wave me-2"></i>Cash Credits
-                                            <span class="badge bg-light text-primary float-end" id="cashCreditsBalance">0</span>
+                                            <span class="badge bg-light text-primary float-end" id="cashCreditsBalance2">0</span>
                                         </h5>
                                         <small>Paid Amount - Used First</small>
                                     </div>
@@ -507,7 +512,7 @@
                                                         <th class="text-center" style="width: 34%;">Total</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody id="cashHistoryTable">
+                                                <tbody id="cashHistoryTable2">
                                                     <tr>
                                                         <td colspan="3" class="text-center text-muted py-4">
                                                             <i class="fas fa-spinner fa-spin me-2"></i>Loading...
@@ -526,7 +531,7 @@
                                     <div class="card-header bg-success text-white">
                                         <h5 class="mb-0">
                                             <i class="fas fa-gift me-2"></i>Extra Credits
-                                            <span class="badge bg-light text-success float-end" id="extraCreditsBalance">0</span>
+                                            <span class="badge bg-light text-success float-end" id="extraCreditsBalance2">0</span>
                                         </h5>
                                         <small>Bonus Credits - Used After Cash</small>
                                     </div>
@@ -540,7 +545,7 @@
                                                         <th class="text-center" style="width: 34%;">Total</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody id="extraHistoryTable">
+                                                <tbody id="extraHistoryTable2">
                                                     <tr>
                                                         <td colspan="3" class="text-center text-muted py-4">
                                                             <i class="fas fa-spinner fa-spin me-2"></i>Loading...
@@ -553,12 +558,26 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Credits History Tab -->
+                <div class="tab-pane fade" id="creditsTab">
+                    <div class="info-card">
+                        <h4 class="mb-4">
+                            <i class="fas fa-history me-2"></i>Credits History
+                        </h4>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Credits:</strong> Your credits are managed by the admin. Check your credits history below.
+                        </div>
                         
                         <!-- Legacy Credits History (for backward compatibility) -->
                         <div class="card">
                             <div class="card-header bg-light">
                                 <h6 class="mb-0">
-                                    <i class="fas fa-history me-2"></i>All Transactions (Combined View)
+                                    <i class="fas fa-history me-2"></i>All Transactions
                                 </h6>
                             </div>
                             <div class="card-body">
@@ -1324,27 +1343,27 @@
                     console.log('💵 Cash Credits:', user.cashCredits);
                     console.log('🎁 Extra Credits:', user.extraCredits);
                     
-                    // Update total credits display
-                    const totalCreditsEl = document.getElementById('totalCreditsDisplay');
-                    if (totalCreditsEl) {
-                        totalCreditsEl.textContent = (user.credits || 0).toLocaleString('en-IN');
+                    // Update total credits display (new Credits tab)
+                    const totalCreditsEl2 = document.getElementById('totalCreditsDisplay2');
+                    if (totalCreditsEl2) {
+                        totalCreditsEl2.textContent = (user.credits || 0).toLocaleString('en-IN');
                     }
                     
-                    // Update cash and extra balances
-                    const cashBalanceEl = document.getElementById('cashCreditsBalance');
-                    const extraBalanceEl = document.getElementById('extraCreditsBalance');
-                    if (cashBalanceEl) {
-                        cashBalanceEl.textContent = (user.cashCredits || 0).toLocaleString('en-IN');
+                    // Update cash and extra balances (new Credits tab)
+                    const cashBalanceEl2 = document.getElementById('cashCreditsBalance2');
+                    const extraBalanceEl2 = document.getElementById('extraCreditsBalance2');
+                    if (cashBalanceEl2) {
+                        cashBalanceEl2.textContent = (user.cashCredits || 0).toLocaleString('en-IN');
                     }
-                    if (extraBalanceEl) {
-                        extraBalanceEl.textContent = (user.extraCredits || 0).toLocaleString('en-IN');
+                    if (extraBalanceEl2) {
+                        extraBalanceEl2.textContent = (user.extraCredits || 0).toLocaleString('en-IN');
                     }
                     
-                    // Display cash and extra history tables
-                    displayCashHistory(user.cashHistory || []);
-                    displayExtraHistory(user.extraHistory || []);
+                    // Display cash and extra history tables (new Credits tab)
+                    displayCashHistory2(user.cashHistory || []);
+                    displayExtraHistory2(user.extraHistory || []);
                     
-                    // Display legacy combined history
+                    // Display legacy combined history (Credits History tab)
                     displayCreditsHistory(user.creditsHistory || [], user.approvedDate || user.createdAt);
                 } else {
                     console.error('Failed to load credits history');
@@ -1394,6 +1413,80 @@
         // Display extra credits table
         function displayExtraHistory(history) {
             const tbody = document.getElementById('extraHistoryTable');
+            
+            if (!history || history.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox me-2"></i>No extra credits yet
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Sort by date (newest first)
+            const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = sorted.map(entry => {
+                const isDebit = entry.type === 'debit';
+                const debitAmount = isDebit ? entry.amount : '-';
+                const creditAmount = !isDebit ? entry.amount : '-';
+                
+                return `
+                    <tr>
+                        <td class="text-center ${isDebit ? 'text-danger fw-bold' : ''}">
+                            ${debitAmount !== '-' ? debitAmount.toLocaleString('en-IN') : '-'}
+                        </td>
+                        <td class="text-center ${!isDebit ? 'text-success fw-bold' : ''}">
+                            ${creditAmount !== '-' ? creditAmount.toLocaleString('en-IN') : '-'}
+                        </td>
+                        <td class="text-center fw-bold text-success">${entry.balance.toLocaleString('en-IN')}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Display cash credits table for NEW Credits tab
+        function displayCashHistory2(history) {
+            const tbody = document.getElementById('cashHistoryTable2');
+            
+            if (!history || history.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox me-2"></i>No cash transactions yet
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            // Sort by date (newest first)
+            const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            tbody.innerHTML = sorted.map(entry => {
+                const isDebit = entry.type === 'debit';
+                const debitAmount = isDebit ? entry.amount : '-';
+                const creditAmount = !isDebit ? entry.amount : '-';
+                
+                return `
+                    <tr>
+                        <td class="text-center ${isDebit ? 'text-danger fw-bold' : ''}">
+                            ${debitAmount !== '-' ? debitAmount.toLocaleString('en-IN') : '-'}
+                        </td>
+                        <td class="text-center ${!isDebit ? 'text-success fw-bold' : ''}">
+                            ${creditAmount !== '-' ? creditAmount.toLocaleString('en-IN') : '-'}
+                        </td>
+                        <td class="text-center fw-bold text-primary">${entry.balance.toLocaleString('en-IN')}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Display extra credits table for NEW Credits tab
+        function displayExtraHistory2(history) {
+            const tbody = document.getElementById('extraHistoryTable2');
             
             if (!history || history.length === 0) {
                 tbody.innerHTML = `
