@@ -2453,17 +2453,26 @@ router.get('/users/:userId/details', async (req, res) => {
   }
 });
 
-// Admin route to manually give credits to a user
+// Admin route to manually give credits to a user (NEW SYSTEM: Cash + Extra Credits)
 router.post('/users/:userId/give-credits', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { credits, description } = req.body;
+    const { amountPaid, creditsToGive, description } = req.body;
 
-    // Validate credits
-    if (!credits || credits <= 0) {
+    console.log('💰 Give Credits Request:', { userId, amountPaid, creditsToGive, description });
+
+    // Validate inputs
+    if (!creditsToGive || creditsToGive <= 0) {
       return res.status(400).json({ 
         success: false,
-        error: 'Invalid credits amount. Must be greater than 0.' 
+        error: 'Credits to give must be greater than 0.' 
+      });
+    }
+
+    if (!amountPaid || amountPaid < 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Amount paid must be 0 or greater.' 
       });
     }
 
@@ -2478,34 +2487,142 @@ router.post('/users/:userId/give-credits', async (req, res) => {
       });
     }
 
-    // Add credits to user
-    user.credits = (user.credits || 0) + parseInt(credits);
+    // Calculate credit split
+    // Cash credits = amount paid (e.g., 25,000)
+    // Extra credits = remaining credits (e.g., 2,00,000 - 25,000 = 1,75,000)
+    const cashCreditsToAdd = parseInt(amountPaid);
+    const extraCreditsToAdd = parseInt(creditsToGive) - cashCreditsToAdd;
+
+    console.log('📊 Credit Split:', {
+      totalCredits: creditsToGive,
+      cashCredits: cashCreditsToAdd,
+      extraCredits: extraCreditsToAdd
+    });
+
+    if (extraCreditsToAdd < 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Credits to give must be greater than or equal to amount paid' 
+      });
+    }
+
+    // Update user credits
+    const oldTotalCredits = user.credits || 0;
+    const oldCashCredits = user.cashCredits || 0;
+    const oldExtraCredits = user.extraCredits || 0;
+
+    // Add cash credits
+    user.cashCredits = oldCashCredits + cashCreditsToAdd;
     
-    // Add to credits history
+    // Add extra credits
+    user.extraCredits = oldExtraCredits + extraCreditsToAdd;
+    
+    // Update total
+    user.credits = user.cashCredits + user.extraCredits;
+
+    // Initialize arrays if they don't exist
+    if (!user.cashHistory) user.cashHistory = [];
+    if (!user.extraHistory) user.extraHistory = [];
     if (!user.creditsHistory) user.creditsHistory = [];
+
+    // Add to cash history if cash credits were added
+    if (cashCreditsToAdd > 0) {
+      user.cashHistory.push({
+        type: 'credit',
+        amount: cashCreditsToAdd,
+        balance: user.cashCredits,
+        description: description || `Admin added ₹${amountPaid.toLocaleString('en-IN')} (${cashCreditsToAdd.toLocaleString('en-IN')} cash credits)`,
+        date: new Date()
+      });
+    }
+
+    // Add to extra history if extra credits were added
+    if (extraCreditsToAdd > 0) {
+      user.extraHistory.push({
+        type: 'credit',
+        amount: extraCreditsToAdd,
+        balance: user.extraCredits,
+        description: description || `Admin added ${extraCreditsToAdd.toLocaleString('en-IN')} bonus credits`,
+        date: new Date()
+      });
+    }
+
+    // Add to legacy credits history (for backward compatibility)
     user.creditsHistory.push({
       type: 'bonus',
-      amount: parseInt(credits),
-      description: description || `Admin granted ${credits} credits`,
+      amount: parseInt(creditsToGive),
+      description: description || `Admin granted ${creditsToGive.toLocaleString('en-IN')} credits (₹${amountPaid.toLocaleString('en-IN')} paid + ${extraCreditsToAdd.toLocaleString('en-IN')} bonus)`,
       date: new Date()
     });
     
     await user.save();
     
-    console.log(`💰 Admin gave ${credits} credits to ${user.name} (${user.phone}). New balance: ${user.credits}`);
+    console.log(`✅ Credits given to ${user.name}:`, {
+      total: user.credits,
+      cash: user.cashCredits,
+      extra: user.extraCredits,
+      oldTotal: oldTotalCredits
+    });
     
     res.json({ 
       success: true,
-      message: `Successfully gave ${credits} credits to ${user.name}`,
+      message: `Successfully gave ${creditsToGive.toLocaleString('en-IN')} credits to ${user.name}`,
       user: {
         id: user._id,
         name: user.name,
         phone: user.phone,
-        credits: user.credits
+        credits: user.credits,
+        cashCredits: user.cashCredits,
+        extraCredits: user.extraCredits
+      },
+      breakdown: {
+        amountPaid: amountPaid,
+        cashCredits: cashCreditsToAdd,
+        extraCredits: extraCreditsToAdd,
+        totalCredits: creditsToGive
       }
     });
   } catch (error) {
     console.error('[ADMIN] Error giving credits:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// Get user credit details with cash and extra breakdown
+router.get('/users/:userId/credit-details', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const User = require('../models/User');
+    
+    const user = await User.findById(userId)
+      .select('name phone credits cashCredits extraCredits cashHistory extraHistory')
+      .lean();
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
+    }
+    
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        totalCredits: user.credits || 0,
+        cashCredits: user.cashCredits || 0,
+        extraCredits: user.extraCredits || 0,
+        cashHistory: user.cashHistory || [],
+        extraHistory: user.extraHistory || []
+      }
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error fetching credit details:', error);
     res.status(500).json({ 
       success: false,
       error: error.message 
