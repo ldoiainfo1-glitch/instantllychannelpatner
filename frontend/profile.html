@@ -1031,6 +1031,22 @@
             // Clear old promotion data cache to ensure fresh designation
             sessionStorage.removeItem('promotionData');
             
+            // DEBUG: Check if Credits tab exists
+            console.log('🔍 DEBUG: Checking for Credits tab...');
+            const creditsTabButton = document.querySelector('button[data-bs-target="#creditsTableTab"]');
+            const creditsTabContent = document.getElementById('creditsTableTab');
+            console.log('🔍 Credits tab button exists:', !!creditsTabButton);
+            console.log('🔍 Credits tab content exists:', !!creditsTabContent);
+            
+            // DEBUG: List all tab buttons
+            const allTabButtons = document.querySelectorAll('.nav-link[data-bs-toggle="tab"]');
+            console.log('🔍 Total tabs found:', allTabButtons.length);
+            allTabButtons.forEach((btn, index) => {
+                const target = btn.getAttribute('data-bs-target');
+                const text = btn.textContent.trim();
+                console.log(`🔍 Tab ${index + 1}: "${text}" -> ${target}`);
+            });
+            
             if (!authToken) {
                 // Show login section
                 document.getElementById('loginSection').style.display = 'block';
