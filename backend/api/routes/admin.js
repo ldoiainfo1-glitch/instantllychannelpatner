@@ -1954,19 +1954,40 @@ router.post('/ads/:id/approve', async (req, res) => {
     const fetch = require('node-fetch');
     const { id } = req.params;
     const { priority } = req.body;
+    const authHeader = req.headers.authorization;
     
     console.log(`🔄 Proxying ad approval - ID: ${id}, Priority: ${priority}`);
+    console.log('🔐 Forwarding Authorization:', authHeader ? 'YES' : 'NO');
+
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authorization token missing'
+      });
+    }
     
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL;
     const url = `${MAIN_BACKEND_URL}/api/ads/${id}/approve`;
     
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json',
+        'Authorization': authHeader
+       },
       body: JSON.stringify({ priority })
     });
     
-    const data = await response.json();
+    const text = await response.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      console.error('❌ Non-JSON response from main backend:', text);
+      return res.status(500).json({
+        message: 'Main backend did not return JSON',
+        raw: text
+      });
+    }
     
     if (response.ok) {
       console.log(`✅ Approved ad ${id}`);

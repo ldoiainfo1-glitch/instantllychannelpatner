@@ -12,9 +12,9 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) {
-      return cb(new Error('Only image files are allowed'));
-    }
+    // if (!file.mimetype.startsWith('image/')) {
+    //   return cb(new Error('Only image files are allowed'));
+    // }
     cb(null, true);
   },
 });
@@ -24,14 +24,14 @@ const upload = multer({
  * Create a new ad - deduct 1020 credits from channel partner
  * Then forward to main Instantlly Cards backend for ad creation
  */
-router.post('/', upload.array('images', 5), async (req, res) => {
+router.post('/', upload.any(), async (req, res) => {
   try {
     console.log('📤 Ad creation request received');
     console.log('Body:', JSON.stringify(req.body, null, 2));
     console.log('Files:', req.files?.length || 0);
 
-    const { title, phoneNumber, startDate, endDate, uploaderName, uploaderPhone } = req.body;
-    const files = req.files;
+    const { title, phoneNumber, startDate, endDate, uploaderName, uploaderPhone, bottomMediaType = 'image', fullscreenMediaType = 'image' } = req.body;
+    const files = req.files || [];
 
     // Validation
     if (!title || !phoneNumber || !startDate || !endDate) {
@@ -40,10 +40,33 @@ router.post('/', upload.array('images', 5), async (req, res) => {
         required: ['title', 'phoneNumber', 'startDate', 'endDate'],
       });
     }
+    const bottomImage = files.find(f => f.fieldname === "bottomImage");
+    const bottomVideo = files.find(f => f.fieldname === "bottomVideo");
+    const fullscreenImage = files.find(f => f.fieldname === "fullscreenImage");
+    const fullscreenVideo = files.find(f => f.fieldname === "fullscreenVideo")
 
-    if (!files || files.length === 0) {
-      return res.status(400).json({ message: 'At least one image is required (bottom image)' });
+
+    // bottom validation
+    if (bottomMediaType === "image" && !bottomImage) {
+      return res.status(400).json({ message: "Bottom image required" });
     }
+
+    if (bottomMediaType === "video" && !bottomVideo) {
+      return res.status(400).json({ message: "Bottom video required" });
+    }
+
+    // video type validation
+    if (bottomVideo && !bottomVideo.mimetype.startsWith("video/")) {
+      return res.status(400).json({ message: "Bottom video must be video format" });
+    }
+
+    if (fullscreenVideo && !fullscreenVideo.mimetype.startsWith("video/")) {
+      return res.status(400).json({ message: "Fullscreen video must be video format" });
+    }
+
+    // if (!files || files.length === 0) {
+    //   return res.status(400).json({ message: 'At least one image is required (bottom image)' });
+    // }
 
     // Get the user's phone (who is creating the ad)
     const userPhone = uploaderPhone || phoneNumber;
@@ -76,11 +99,11 @@ router.post('/', upload.array('images', 5), async (req, res) => {
       // Show sample users for debugging
       const sampleUsers = await User.find({}).limit(3).select('name phone credits');
       console.log('📋 Sample users in database:', sampleUsers.map(u => `${u.name}: ${u.phone} (${u.credits} credits)`));
-      
+
       // Count total users
       const totalUsers = await User.countDocuments();
       console.log('📊 Total users in database:', totalUsers);
-      
+
       return res.status(400).json({
         message: `User not found with phone ${userPhone}. Please ensure you are logged in.`,
         searchedPhone: userPhone,
@@ -123,7 +146,7 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     // Now forward the request to main Instantlly Cards backend for ad storage
     const FormData = require('form-data');
     const fetch = require('node-fetch');
-    
+
     const formData = new FormData();
     formData.append('title', title);
     formData.append('phoneNumber', phoneNumber);
@@ -131,17 +154,16 @@ router.post('/', upload.array('images', 5), async (req, res) => {
     formData.append('endDate', endDate);
     formData.append('uploaderName', uploaderName || user.name);
     formData.append('uploaderPhone', user.phone);
+    formData.append('bottomMediaType', bottomMediaType);
+    formData.append('fullscreenMediaType', fullscreenMediaType);
 
     // Add images
-    files.forEach((file, index) => {
-      formData.append('images', file.buffer, {
-        filename: file.originalname,
-        contentType: file.mimetype,
-      });
-    });
+    files.forEach(file => {
+      formData.append(file.fieldname, file.buffer, { filename: file.originalname, contentType: file.mimetype });
+    })
 
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com/api';
-    const response = await fetch(`${MAIN_BACKEND_URL}/channel-partner/ads`, {
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const response = await fetch(`${MAIN_BACKEND_URL}/api/channel-partner/ads`, {
       method: 'POST',
       body: formData,
     });
@@ -195,25 +217,25 @@ router.get('/image/:id/:type', async (req, res) => {
   try {
     const fetch = require('node-fetch');
     const { id, type } = req.params;
-    
+
     console.log(`🖼️  Proxying image request - Ad: ${id}, Type: ${type}`);
-    
+
     const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
     const url = `${MAIN_BACKEND_URL}/api/ads/image/${id}/${type}`;
-    
+
     const response = await fetch(url);
-    
+
     if (response.ok) {
       // Get the content type from the response
       const contentType = response.headers.get('content-type');
-      
+
       // Set appropriate headers for image caching
       res.setHeader('Content-Type', contentType || 'image/jpeg');
       res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
-      
+
       // Pipe the image data directly to the response
       response.body.pipe(res);
-      
+
       console.log(`✅ Served image ${id}/${type}`);
     } else {
       console.error(`❌ Image not found: ${id}/${type} - Status: ${response.status}`);
