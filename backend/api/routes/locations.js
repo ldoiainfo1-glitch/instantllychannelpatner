@@ -543,7 +543,7 @@ router.get('/aggregated-stats', async (req, res) => {
     const selectedLevelGiven = await Application.countDocuments({
       ...Object.keys(locationFilter).reduce((acc, key) => {
         if (key !== 'country') {
-          acc[`position.location.${key}`] = locationFilter[key];
+          acc[`location.${key}`] = locationFilter[key];
         }
         return acc;
       }, {}),
@@ -570,7 +570,7 @@ router.get('/aggregated-stats', async (req, res) => {
         status: 'approved',
         ...Object.keys(locationFilter).reduce((acc, key) => {
           if (key !== 'country') {
-            acc[`position.location.${key}`] = locationFilter[key];
+            acc[`location.${key}`] = locationFilter[key];
           }
           return acc;
         }, {})
@@ -581,7 +581,7 @@ router.get('/aggregated-stats', async (req, res) => {
         { $match: appFilter },
         {
           $group: {
-            _id: `$position.location.${childLevel.field}`,
+            _id: `$location.${childLevel.field}`,
             count: { $sum: 1 }
           }
         }
