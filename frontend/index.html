@@ -14,6 +14,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Razorpay Checkout -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- Performance Utilities -->
+    <script src="js/performance.js"></script>
 </head>
 <body>
     <!-- Navigation -->
@@ -431,6 +433,26 @@
                                 /* Position Statistics Table Styles */
                                 .position-stats-section {
                                     margin-top: 76px;
+                                }
+                                
+                                /* Loading overlay for performance */
+                                .loading-overlay {
+                                    position: absolute;
+                                    top: 0;
+                                    left: 0;
+                                    right: 0;
+                                    bottom: 0;
+                                    background: rgba(255, 255, 255, 0.95);
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    z-index: 1000;
+                                    border-radius: 8px;
+                                }
+                                
+                                .loading-content {
+                                    text-align: center;
+                                    color: #3b82f6;
                                 }
                                 
                                 #positionStatsTable {
@@ -1366,23 +1388,16 @@
                 
                 console.log('📊 Loading position statistics...');
                 
-                // Fetch statistics from optimized endpoint that counts ALL approved applications
-                const [statsResponse, locationsResponse] = await Promise.all([
-                    fetch(`${API_BASE_URL}/dynamic-positions/statistics?_t=${Date.now()}`),
-                    fetch(`${API_BASE_URL}/locations/all?_t=${Date.now()}`)
+                // 🚀 USE CACHED FETCH - Cache both API calls for 5 minutes
+                const statsUrl = `${API_BASE_URL}/dynamic-positions/statistics`;
+                const locationsUrl = `${API_BASE_URL}/locations/all`;
+                
+                const [statsData, locationsData] = await Promise.all([
+                    cachedFetch(statsUrl, {}, 'position-stats'),
+                    cachedFetch(locationsUrl, {}, 'locations-all')
                 ]);
                 
-                console.log('✅ API responses received');
-                console.log('   Statistics status:', statsResponse.status, statsResponse.ok);
-                console.log('   Locations status:', locationsResponse.status, locationsResponse.ok);
-                
-                if (!statsResponse.ok || !locationsResponse.ok) {
-                    throw new Error(`API error: Statistics ${statsResponse.status}, Locations ${locationsResponse.status}`);
-                }
-                
-                const statsData = await statsResponse.json();
-                const locationsData = await locationsResponse.json();
-                
+                console.log('✅ API responses received (cached)');
                 console.log('📦 Parsed data:', { 
                     statsSuccess: statsData.success, 
                     givenPositions: statsData.givenPositions,
@@ -1511,8 +1526,11 @@
             // Fetch aggregated statistics for the selected location
             try {
                 const queryParams = new URLSearchParams(filters);
-                const response = await fetch(`${API_BASE_URL}/locations/aggregated-stats?${queryParams}`);
-                const data = await response.json();
+                const url = `${API_BASE_URL}/locations/aggregated-stats?${queryParams}`;
+                
+                // 🚀 USE CACHED FETCH with unique cache key for each filter combination
+                const cacheKey = `aggregated-stats-${queryParams.toString()}`;
+                const data = await cachedFetch(url, {}, cacheKey);
                 
                 if (!data.success) {
                     return [];

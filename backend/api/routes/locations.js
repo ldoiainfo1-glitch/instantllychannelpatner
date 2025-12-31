@@ -480,7 +480,8 @@ router.post('/manage/bulk-import', async (req, res) => {
 });
 
 // Get aggregated statistics by level for a filtered location
-router.get('/aggregated-stats', async (req, res) => {
+// Cache for 5 minutes since statistics don't change frequently
+router.get('/aggregated-stats', memoryCacheMiddleware(300000), async (req, res) => {
   try {
     const { country, zone, state, division, district, tehsil, pincode } = req.query;
     const Application = require('../models/Application');
@@ -576,15 +577,19 @@ router.get('/aggregated-stats', async (req, res) => {
         }, {})
       };
       
-      // Count how many of these child locations have approved applications
-      let givenCount = 0;
-      for (const childName of distinctChildren) {
-        const hasApproved = await Application.countDocuments({
-          ...appFilter,
-          [`position.location.${childLevel.field}`]: childName
-        });
-        if (hasApproved > 0) givenCount++;
-      }
+      // 🚀 OPTIMIZED: Use aggregation to count given positions in ONE query
+      const givenCountPipeline = [
+        { $match: appFilter },
+        {
+          $group: {
+            _id: `$position.location.${childLevel.field}`,
+            count: { $sum: 1 }
+          }
+        }
+      ];
+      
+      const givenResults = await Application.aggregate(givenCountPipeline);
+      const givenCount = givenResults.length; // Number of distinct child locations with approved applications
       
       stats.push({
         level: childLevel.display,
