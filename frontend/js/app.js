@@ -776,12 +776,56 @@ function createPositionRow(position) {
         ? position.applicantDetails.days
         : '-';
 
-    // Others column - Actions dropdown
+    // Others column - Actions dropdown or Expand button
     let othersCell = '';
-
-    // Show action button IMMEDIATELY when status is Approved (no payment required)
-    // Status can be: "Available", "Pending", "Approved", "Verified", "Rejected"
-    if (position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')) {
+    
+    // Check if this is a zone-level position to show "See 1 more level" button
+    const isZoneLevel = position.location && position.location.zone && !position.location.state;
+    
+    if (isZoneLevel && (position.status === 'Approved' || position.status === 'Verified')) {
+        // Show BOTH expand button AND actions dropdown for zone level
+        const phone = position.applicantDetails.phone || '';
+        const name = position.applicantDetails.name || '';
+        const photo = position.applicantDetails.photo || '';
+        const zoneName = position.location.zone;
+        
+        othersCell = `
+            <div class="d-flex gap-2 align-items-center">
+                <button class="btn btn-sm btn-info" onclick="toggleZoneStates('${position._id}', '${zoneName}'); return false;" 
+                        id="expandBtn_${position._id}" title="See states under this zone">
+                    <i class="fas fa-chevron-down me-1" id="expandIcon_${position._id}"></i>See 1 more level
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
+                            id="actionMenu${position._id}" data-bs-toggle="dropdown" aria-expanded="false">
+                        Actions ▼
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="showLoginCredentials('${phone}', '${name}'); return false;">
+                                <i class="fas fa-key me-2"></i>Login Credentials
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="showReferralCode('${position._id}', '${phone}'); return false;">
+                                <i class="fas fa-users me-2"></i>Referral Code
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}); return false;">
+                                <i class="fas fa-id-card me-2"></i>ID Card
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}, '${position.designation || ''}'); return false;">
+                                <i class="fas fa-bullhorn me-2"></i>Promotion
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        `;
+    } else if (position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')) {
         // ENABLED Actions dropdown - shows immediately after admin approval
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
@@ -844,6 +888,180 @@ function createPositionRow(position) {
         <td>${othersCell}</td>
     `;
 
+    return row;
+}
+
+// Store expanded zones state
+const expandedZones = new Map();
+
+// Toggle zone states display
+async function toggleZoneStates(positionId, zoneName) {
+    const expandBtn = document.getElementById(`expandBtn_${positionId}`);
+    const expandIcon = document.getElementById(`expandIcon_${positionId}`);
+    const parentRow = document.querySelector(`tr:has(#expandBtn_${positionId})`);
+    
+    if (!parentRow) {
+        console.error('Parent row not found');
+        return;
+    }
+    
+    // Check if already expanded
+    if (expandedZones.has(positionId)) {
+        // Collapse: Remove all nested rows
+        const nestedRows = document.querySelectorAll(`tr[data-parent-zone="${positionId}"]`);
+        nestedRows.forEach(row => row.remove());
+        expandedZones.delete(positionId);
+        
+        // Update button icon
+        expandIcon.className = 'fas fa-chevron-down me-1';
+        expandBtn.innerHTML = '<i class="fas fa-chevron-down me-1"></i>See 1 more level';
+        return;
+    }
+    
+    // Expand: Fetch and display states
+    expandBtn.disabled = true;
+    expandBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading...';
+    
+    try {
+        // Fetch states for this zone
+        const response = await fetch(`${API_BASE_URL}/dynamic-positions?zone=${encodeURIComponent(zoneName)}`);
+        const data = await response.json();
+        
+        if (!data.positions || data.positions.length === 0) {
+            alert('No state positions found for this zone');
+            return;
+        }
+        
+        // Filter for state-level positions only (not zones)
+        const statePositions = data.positions.filter(pos => 
+            pos.location && pos.location.state && pos.location.zone === zoneName
+        );
+        
+        if (statePositions.length === 0) {
+            alert('No state-level positions found for this zone');
+            return;
+        }
+        
+        // Mark as expanded
+        expandedZones.set(positionId, true);
+        
+        // Create nested rows
+        statePositions.forEach((statePos, index) => {
+            const nestedRow = createNestedStateRow(statePos, positionId, index + 1);
+            parentRow.insertAdjacentElement('afterend', nestedRow);
+        });
+        
+        // Update button icon
+        expandIcon.className = 'fas fa-chevron-up me-1';
+        expandBtn.innerHTML = '<i class="fas fa-chevron-up me-1"></i>Hide level';
+        
+    } catch (error) {
+        console.error('Error fetching zone states:', error);
+        alert('Failed to load states. Please try again.');
+    } finally {
+        expandBtn.disabled = false;
+    }
+}
+
+// Create nested row for state under zone
+function createNestedStateRow(position, parentZoneId, subIndex) {
+    const row = document.createElement('tr');
+    row.setAttribute('data-parent-zone', parentZoneId);
+    row.style.backgroundColor = '#f8f9fa';
+    
+    const statusClass = getStatusClass(position.status);
+    let statusText = position.status;
+    if (position.applicantDetails) {
+        if (position.status === 'Verified' || position.applicantDetails.isVerified) {
+            statusText = 'Verified';
+        } else if (position.status === 'Approved') {
+            statusText = 'Approved';
+        } else if (position.status === 'Pending') {
+            statusText = 'Pending Admin Review';
+        }
+    }
+    
+    // Name cell
+    let nameCell = '';
+    if (position.status === 'Available') {
+        nameCell = `
+            <button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
+                <i class="fas fa-plus me-1"></i>Apply Now
+            </button>
+            <div class="mt-2"><small class="text-muted" style="font-size: 0.75rem;">ID: ${position._id}</small></div>
+        `;
+    } else if (position.applicantDetails && position.applicantDetails.name) {
+        nameCell = `
+            <div>${position.applicantDetails.name}</div>
+            <small class="text-muted" style="font-size: 0.75rem;">ID: ${position._id}</small>
+        `;
+    } else {
+        nameCell = '-';
+    }
+    
+    // Area Head For
+    let areaHeadFor = position.location.state ? position.location.state.toUpperCase() : '-';
+    
+    // Photo
+    let photoCell = '';
+    if (position.applicantDetails && position.applicantDetails.photo) {
+        const photoSrc = position.applicantDetails.photo.startsWith('data:') 
+            ? position.applicantDetails.photo 
+            : `${position.applicantDetails.photo}?t=${Date.now()}`;
+        photoCell = `<img src="${photoSrc}" alt="${position.applicantDetails.name || 'Applicant'}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">`;
+    } else {
+        photoCell = '<i class="fas fa-user-circle fa-3x text-muted"></i>';
+    }
+    
+    // Phone
+    const phoneNo = position.applicantDetails && position.applicantDetails.phone ? position.applicantDetails.phone : '-';
+    
+    // Introduced
+    const introducedBy = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
+        ? position.applicantDetails.introducedCount : (position.applicantDetails ? 0 : '-');
+    
+    // Days
+    const days = position.applicantDetails && position.applicantDetails.days !== undefined ? position.applicantDetails.days : '-';
+    
+    // Actions
+    let othersCell = '';
+    if (position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')) {
+        const phone = position.applicantDetails.phone || '';
+        const name = position.applicantDetails.name || '';
+        const photo = position.applicantDetails.photo || '';
+        
+        othersCell = `
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
+                        id="actionMenu${position._id}" data-bs-toggle="dropdown" aria-expanded="false">
+                    Actions ▼
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
+                    <li><a class="dropdown-item" href="#" onclick="showLoginCredentials('${phone}', '${name}'); return false;"><i class="fas fa-key me-2"></i>Login Credentials</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showReferralCode('${position._id}', '${phone}'); return false;"><i class="fas fa-users me-2"></i>Referral Code</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}, '${position.designation || ''}'); return false;"><i class="fas fa-bullhorn me-2"></i>Promotion</a></li>
+                </ul>
+            </div>
+        `;
+    } else if (position.status === 'Available') {
+        othersCell = '<span class="text-muted small">-</span>';
+    } else {
+        othersCell = '<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" disabled title="Available after admin approval">Actions ▼</button>';
+    }
+    
+    row.innerHTML = `
+        <td style="padding-left: 40px;"><i class="fas fa-level-down-alt me-2 text-muted"></i>${position.sNo}</td>
+        <td>${nameCell}</td>
+        <td>${areaHeadFor}</td>
+        <td class="text-center">${photoCell}</td>
+        <td>${phoneNo}</td>
+        <td>${introducedBy}</td>
+        <td><strong>${days}</strong></td>
+        <td><span class="badge ${statusClass}">${statusText}</span></td>
+        <td>${othersCell}</td>
+    `;
+    
     return row;
 }
 
