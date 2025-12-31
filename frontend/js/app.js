@@ -779,20 +779,53 @@ function createPositionRow(position) {
     // Others column - Actions dropdown or Expand button
     let othersCell = '';
     
-    // Check if this is a zone-level position to show "See 1 more level" button
-    const isZoneLevel = position.location && position.location.zone && !position.location.state;
+    // Determine if this position has potential child levels
+    const locationHierarchy = {
+        'zone': 'state',
+        'state': 'division', 
+        'division': 'district',
+        'district': 'tehsil',
+        'tehsil': 'pincode',
+        'pincode': 'village'
+    };
     
-    if (isZoneLevel && (position.status === 'Approved' || position.status === 'Verified')) {
-        // Show BOTH expand button AND actions dropdown for zone level
+    // Detect current level and check if it has children
+    let currentLevel = null;
+    let hasChildren = false;
+    
+    if (position.location) {
+        if (position.location.pincode && !position.location.village) {
+            currentLevel = 'pincode';
+            hasChildren = true;
+        } else if (position.location.tehsil && !position.location.pincode) {
+            currentLevel = 'tehsil';
+            hasChildren = true;
+        } else if (position.location.district && !position.location.tehsil) {
+            currentLevel = 'district';
+            hasChildren = true;
+        } else if (position.location.division && !position.location.district) {
+            currentLevel = 'division';
+            hasChildren = true;
+        } else if (position.location.state && !position.location.division) {
+            currentLevel = 'state';
+            hasChildren = true;
+        } else if (position.location.zone && !position.location.state) {
+            currentLevel = 'zone';
+            hasChildren = true;
+        }
+    }
+    
+    if (hasChildren && (position.status === 'Approved' || position.status === 'Verified')) {
+        // Show BOTH expand button AND actions dropdown for any level with children
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
-        const zoneName = position.location.zone;
+        const locationJson = JSON.stringify(position.location).replace(/"/g, '&quot;');
         
         othersCell = `
             <div class="d-flex gap-2 align-items-center">
-                <button class="btn btn-sm btn-info" onclick="toggleZoneStates('${position._id}', '${zoneName}'); return false;" 
-                        id="expandBtn_${position._id}" title="See states under this zone"
+                <button class="btn btn-sm btn-info" onclick="toggleChildLocations('${position._id}', '${currentLevel}', ${locationJson}); return false;" 
+                        id="expandBtn_${position._id}" title="See ${locationHierarchy[currentLevel]}s under this ${currentLevel}"
                         style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
                     <i class="fas fa-chevron-down me-1" id="expandIcon_${position._id}" style="font-size: 0.7rem;"></i>See 1 more level
                 </button>
@@ -813,12 +846,12 @@ function createPositionRow(position) {
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}); return false;">
+                            <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${locationJson}); return false;">
                                 <i class="fas fa-id-card me-2"></i>ID Card
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}, '${position.designation || ''}'); return false;">
+                            <a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${locationJson}, '${position.designation || ''}'); return false;">
                                 <i class="fas fa-bullhorn me-2"></i>Promotion
                             </a>
                         </li>
@@ -892,11 +925,11 @@ function createPositionRow(position) {
     return row;
 }
 
-// Store expanded zones state
-const expandedZones = new Map();
+// Store expanded locations state
+const expandedLocations = new Map();
 
-// Toggle zone states display
-async function toggleZoneStates(positionId, zoneName) {
+// Toggle child locations display (works for all levels)
+async function toggleChildLocations(positionId, parentLevel, parentLocation) {
     const expandBtn = document.getElementById(`expandBtn_${positionId}`);
     const expandIcon = document.getElementById(`expandIcon_${positionId}`);
     const parentRow = document.querySelector(`tr:has(#expandBtn_${positionId})`);
@@ -907,11 +940,11 @@ async function toggleZoneStates(positionId, zoneName) {
     }
     
     // Check if already expanded
-    if (expandedZones.has(positionId)) {
+    if (expandedLocations.has(positionId)) {
         // Collapse: Remove all nested rows
-        const nestedRows = document.querySelectorAll(`tr[data-parent-zone="${positionId}"]`);
+        const nestedRows = document.querySelectorAll(`tr[data-parent-id="${positionId}"]`);
         nestedRows.forEach(row => row.remove());
-        expandedZones.delete(positionId);
+        expandedLocations.delete(positionId);
         
         // Update button icon
         expandIcon.className = 'fas fa-chevron-down me-1';
@@ -920,37 +953,69 @@ async function toggleZoneStates(positionId, zoneName) {
         return;
     }
     
-    // Expand: Fetch and display states
+    // Expand: Fetch and display child locations
     expandBtn.disabled = true;
     expandBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading...';
     
     try {
-        // Fetch states for this zone
-        const response = await fetch(`${API_BASE_URL}/dynamic-positions?zone=${encodeURIComponent(zoneName)}`);
+        // Build query params based on parent location
+        const queryParams = new URLSearchParams();
+        if (parentLocation.country) queryParams.append('country', parentLocation.country);
+        if (parentLocation.zone) queryParams.append('zone', parentLocation.zone);
+        if (parentLocation.state) queryParams.append('state', parentLocation.state);
+        if (parentLocation.division) queryParams.append('division', parentLocation.division);
+        if (parentLocation.district) queryParams.append('district', parentLocation.district);
+        if (parentLocation.tehsil) queryParams.append('tehsil', parentLocation.tehsil);
+        if (parentLocation.pincode) queryParams.append('pincode', parentLocation.pincode);
+        
+        // Fetch child positions
+        const response = await fetch(`${API_BASE_URL}/dynamic-positions?${queryParams.toString()}`);
         const data = await response.json();
         
         if (!data.positions || data.positions.length === 0) {
-            alert('No state positions found for this zone');
+            alert('No child positions found for this location');
             return;
         }
         
-        // Filter for state-level positions only (not zones)
-        const statePositions = data.positions.filter(pos => 
-            pos.location && pos.location.state && pos.location.zone === zoneName
-        );
+        // Filter for immediate child level only
+        const childPositions = data.positions.filter(pos => {
+            if (!pos.location) return false;
+            
+            // Check if this is the immediate child level
+            if (parentLevel === 'zone') {
+                return pos.location.state && pos.location.zone === parentLocation.zone && !pos.location.division;
+            } else if (parentLevel === 'state') {
+                return pos.location.division && pos.location.state === parentLocation.state && !pos.location.district;
+            } else if (parentLevel === 'division') {
+                return pos.location.district && pos.location.division === parentLocation.division && !pos.location.tehsil;
+            } else if (parentLevel === 'district') {
+                return pos.location.tehsil && pos.location.district === parentLocation.district && !pos.location.pincode;
+            } else if (parentLevel === 'tehsil') {
+                return pos.location.pincode && pos.location.tehsil === parentLocation.tehsil && !pos.location.village;
+            } else if (parentLevel === 'pincode') {
+                return pos.location.village && pos.location.pincode === parentLocation.pincode;
+            }
+            return false;
+        });
         
-        if (statePositions.length === 0) {
-            alert('No state-level positions found for this zone');
+        if (childPositions.length === 0) {
+            alert('No child-level positions found');
             return;
         }
         
         // Mark as expanded
-        expandedZones.set(positionId, true);
+        expandedLocations.set(positionId, true);
+        
+        // Get current nesting level from parent row
+        const parentNestLevel = parseInt(parentRow.getAttribute('data-nest-level') || '0');
+        const childNestLevel = parentNestLevel + 1;
         
         // Create nested rows
-        statePositions.forEach((statePos, index) => {
-            const nestedRow = createNestedStateRow(statePos, positionId, index + 1);
-            parentRow.insertAdjacentElement('afterend', nestedRow);
+        let lastInsertedRow = parentRow;
+        childPositions.forEach((childPos, index) => {
+            const nestedRow = createNestedRow(childPos, positionId, index + 1, childNestLevel);
+            lastInsertedRow.insertAdjacentElement('afterend', nestedRow);
+            lastInsertedRow = nestedRow;
         });
         
         // Update button icon
@@ -959,18 +1024,22 @@ async function toggleZoneStates(positionId, zoneName) {
         expandBtn.innerHTML = '<i class="fas fa-chevron-up me-1" style="font-size: 0.7rem;"></i>Hide level';
         
     } catch (error) {
-        console.error('Error fetching zone states:', error);
-        alert('Failed to load states. Please try again.');
+        console.error('Error fetching child locations:', error);
+        alert('Failed to load child locations. Please try again.');
     } finally {
         expandBtn.disabled = false;
     }
 }
 
-// Create nested row for state under zone
-function createNestedStateRow(position, parentZoneId, subIndex) {
+// Create nested row for any child location
+function createNestedRow(position, parentId, subIndex, nestLevel) {
     const row = document.createElement('tr');
-    row.setAttribute('data-parent-zone', parentZoneId);
-    row.style.backgroundColor = '#f8f9fa';
+    row.setAttribute('data-parent-id', parentId);
+    row.setAttribute('data-nest-level', nestLevel);
+    
+    // Calculate background color based on nesting level
+    const bgColors = ['#f8f9fa', '#f0f1f3', '#e8e9eb', '#e0e1e3', '#d8d9db'];
+    row.style.backgroundColor = bgColors[Math.min(nestLevel - 1, bgColors.length - 1)];
     
     const statusClass = getStatusClass(position.status);
     let statusText = position.status;
@@ -983,6 +1052,9 @@ function createNestedStateRow(position, parentZoneId, subIndex) {
             statusText = 'Pending Admin Review';
         }
     }
+    
+    // Calculate indentation based on nesting level
+    const indentPx = 20 + (nestLevel * 20);
     
     // Name cell
     let nameCell = '';
@@ -1002,8 +1074,16 @@ function createNestedStateRow(position, parentZoneId, subIndex) {
         nameCell = '-';
     }
     
-    // Area Head For
-    let areaHeadFor = position.location.state ? position.location.state.toUpperCase() : '-';
+    // Area Head For - show most specific location
+    let areaHeadFor = '-';
+    if (position.location) {
+        if (position.location.village) areaHeadFor = position.location.village.toUpperCase();
+        else if (position.location.pincode) areaHeadFor = position.location.pincode;
+        else if (position.location.tehsil) areaHeadFor = position.location.tehsil.toUpperCase();
+        else if (position.location.district) areaHeadFor = position.location.district.toUpperCase();
+        else if (position.location.division) areaHeadFor = position.location.division.toUpperCase();
+        else if (position.location.state) areaHeadFor = position.location.state.toUpperCase();
+    }
     
     // Photo
     let photoCell = '';
@@ -1016,27 +1096,71 @@ function createNestedStateRow(position, parentZoneId, subIndex) {
         photoCell = '<i class="fas fa-user-circle fa-3x text-muted"></i>';
     }
     
-    // Phone
+    // Phone, Introduced, Days
     const phoneNo = position.applicantDetails && position.applicantDetails.phone ? position.applicantDetails.phone : '-';
-    
-    // Introduced
     const introducedBy = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
         ? position.applicantDetails.introducedCount : (position.applicantDetails ? 0 : '-');
-    
-    // Days
     const days = position.applicantDetails && position.applicantDetails.days !== undefined ? position.applicantDetails.days : '-';
     
-    // Actions
+    // Check if this nested row can also expand
+    const locationHierarchy = {
+        'zone': 'state', 'state': 'division', 'division': 'district',
+        'district': 'tehsil', 'tehsil': 'pincode', 'pincode': 'village'
+    };
+    
+    let currentLevel = null;
+    let hasChildren = false;
+    
+    if (position.location) {
+        if (position.location.pincode && !position.location.village) {
+            currentLevel = 'pincode'; hasChildren = true;
+        } else if (position.location.tehsil && !position.location.pincode) {
+            currentLevel = 'tehsil'; hasChildren = true;
+        } else if (position.location.district && !position.location.tehsil) {
+            currentLevel = 'district'; hasChildren = true;
+        } else if (position.location.division && !position.location.district) {
+            currentLevel = 'division'; hasChildren = true;
+        } else if (position.location.state && !position.location.division) {
+            currentLevel = 'state'; hasChildren = true;
+        }
+    }
+    
+    // Actions or Expand button
     let othersCell = '';
-    if (position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')) {
+    if (hasChildren && position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')) {
+        const phone = position.applicantDetails.phone || '';
+        const name = position.applicantDetails.name || '';
+        const photo = position.applicantDetails.photo || '';
+        const locationJson = JSON.stringify(position.location).replace(/"/g, '&quot;');
+        
+        othersCell = `
+            <div class="d-flex gap-2 align-items-center">
+                <button class="btn btn-sm btn-info" onclick="toggleChildLocations('${position._id}', '${currentLevel}', ${locationJson}); return false;" 
+                        id="expandBtn_${position._id}" title="See ${locationHierarchy[currentLevel]}s"
+                        style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                    <i class="fas fa-chevron-down me-1" id="expandIcon_${position._id}" style="font-size: 0.7rem;"></i>See 1 more level
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="actionMenu${position._id}" data-bs-toggle="dropdown">
+                        Actions ▼
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
+                        <li><a class="dropdown-item" href="#" onclick="showLoginCredentials('${phone}', '${name}'); return false;"><i class="fas fa-key me-2"></i>Login Credentials</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showReferralCode('${position._id}', '${phone}'); return false;"><i class="fas fa-users me-2"></i>Referral Code</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${locationJson}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${locationJson}, '${position.designation || ''}'); return false;"><i class="fas fa-bullhorn me-2"></i>Promotion</a></li>
+                    </ul>
+                </div>
+            </div>
+        `;
+    } else if (position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
         
         othersCell = `
             <div class="dropdown">
-                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
-                        id="actionMenu${position._id}" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="actionMenu${position._id}" data-bs-toggle="dropdown">
                     Actions ▼
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
@@ -1053,8 +1177,11 @@ function createNestedStateRow(position, parentZoneId, subIndex) {
         othersCell = '<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" disabled title="Available after admin approval">Actions ▼</button>';
     }
     
+    // Indent indicator based on nest level
+    const indentIndicator = '→ '.repeat(nestLevel);
+    
     row.innerHTML = `
-        <td style="padding-left: 40px;"><i class="fas fa-level-down-alt me-2 text-muted"></i>${subIndex}</td>
+        <td style="padding-left: ${indentPx}px;"><span class="text-muted">${indentIndicator}</span>${subIndex}</td>
         <td>${nameCell}</td>
         <td>${areaHeadFor}</td>
         <td class="text-center">${photoCell}</td>
