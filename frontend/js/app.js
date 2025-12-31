@@ -792,8 +792,9 @@ function createPositionRow(position) {
         othersCell = `
             <div class="d-flex gap-2 align-items-center">
                 <button class="btn btn-sm btn-info" onclick="toggleZoneStates('${position._id}', '${zoneName}'); return false;" 
-                        id="expandBtn_${position._id}" title="See states under this zone">
-                    <i class="fas fa-chevron-down me-1" id="expandIcon_${position._id}"></i>See 1 more level
+                        id="expandBtn_${position._id}" title="See states under this zone"
+                        style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                    <i class="fas fa-chevron-down me-1" id="expandIcon_${position._id}" style="font-size: 0.7rem;"></i>See 1 more level
                 </button>
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
@@ -914,7 +915,8 @@ async function toggleZoneStates(positionId, zoneName) {
         
         // Update button icon
         expandIcon.className = 'fas fa-chevron-down me-1';
-        expandBtn.innerHTML = '<i class="fas fa-chevron-down me-1"></i>See 1 more level';
+        expandIcon.style.fontSize = '0.7rem';
+        expandBtn.innerHTML = '<i class="fas fa-chevron-down me-1" style="font-size: 0.7rem;"></i>See 1 more level';
         return;
     }
     
@@ -953,7 +955,8 @@ async function toggleZoneStates(positionId, zoneName) {
         
         // Update button icon
         expandIcon.className = 'fas fa-chevron-up me-1';
-        expandBtn.innerHTML = '<i class="fas fa-chevron-up me-1"></i>Hide level';
+        expandIcon.style.fontSize = '0.7rem';
+        expandBtn.innerHTML = '<i class="fas fa-chevron-up me-1" style="font-size: 0.7rem;"></i>Hide level';
         
     } catch (error) {
         console.error('Error fetching zone states:', error);
