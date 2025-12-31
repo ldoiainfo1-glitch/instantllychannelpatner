@@ -4030,17 +4030,20 @@ async function showIDCard(name, phone, photo, positionLocation) {
                 <div style="
                     background:white;
                     color:black;
-                    padding:8px;
+                    padding:8px 10px;
                     font-size:24px;
                     font-weight:700;
                     margin:6px 0;
+                    display:flex;
+                    align-items:center;
+                    line-height:1.1;
                 ">
-                    <b>${label}:</b> ${value}
+                    <span style="font-weight:bold; margin-right:8px;">${label}:</span><span>${value}</span>
                 </div>`;
             }
 
             // ALWAYS show the row - even if empty
-            return `<div style="margin-bottom:6px;"><b>${label}:</b> ${value}</div>`;
+            return `<div style="margin-bottom:6px; line-height:1.25;"><b>${label}:</b> ${value}</div>`;
         }
 
         // ALWAYS show all 8 fields in order (filled or empty)
