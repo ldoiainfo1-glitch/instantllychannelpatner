@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Location = require('../models/Location');
+const { memoryCacheMiddleware, setCacheHeaders, CACHE_DURATIONS } = require('../../middleware/cache');
 
 // Get ALL location data in one optimized request (for performance)
-router.get('/all', async (req, res) => {
+router.get('/all', memoryCacheMiddleware(300000), setCacheHeaders(CACHE_DURATIONS.SHORT), async (req, res) => {
   try {
     // Check if requesting distinct values for dropdowns
     if (req.query.format === 'distinct') {
@@ -692,6 +693,30 @@ router.get('/children', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Error fetching child locations:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Export all locations (for CSV generation)
+router.get('/export-all', async (req, res) => {
+  try {
+    console.log('📤 Exporting all locations...');
+    
+    const locations = await Location.find({})
+      .select('country zone state division district tehsil pincode village -_id')
+      .sort({ state: 1, district: 1, tehsil: 1, village: 1 })
+      .lean();
+    
+    console.log(`✅ Exported ${locations.length} locations`);
+    
+    res.json({
+      success: true,
+      locations,
+      count: locations.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Error exporting locations:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
