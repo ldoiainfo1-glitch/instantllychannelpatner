@@ -1054,7 +1054,7 @@ function createNestedStateRow(position, parentZoneId, subIndex) {
     }
     
     row.innerHTML = `
-        <td style="padding-left: 40px;"><i class="fas fa-level-down-alt me-2 text-muted"></i>${position.sNo}</td>
+        <td style="padding-left: 40px;"><i class="fas fa-level-down-alt me-2 text-muted"></i>${subIndex}</td>
         <td>${nameCell}</td>
         <td>${areaHeadFor}</td>
         <td class="text-center">${photoCell}</td>
