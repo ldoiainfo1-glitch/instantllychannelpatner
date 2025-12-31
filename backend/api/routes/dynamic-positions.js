@@ -2,11 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Location = require('../models/Location');
 const Application = require('../models/Application');
-const { memoryCacheMiddleware, setCacheHeaders } = require('../../middleware/cache');
 
 // NEW: Get position statistics - counts approved applications at each level
-// Cache for 5 minutes since statistics don't change frequently
-router.get('/statistics', memoryCacheMiddleware(300000), async (req, res) => {
+router.get('/statistics', async (req, res) => {
   try {
     console.log('📊 Fetching position statistics from approved applications...');
     

@@ -480,8 +480,7 @@ router.post('/manage/bulk-import', async (req, res) => {
 });
 
 // Get aggregated statistics by level for a filtered location
-// Cache for 5 minutes since statistics don't change frequently
-router.get('/aggregated-stats', memoryCacheMiddleware(300000), async (req, res) => {
+router.get('/aggregated-stats', async (req, res) => {
   try {
     const { country, zone, state, division, district, tehsil, pincode } = req.query;
     const Application = require('../models/Application');
