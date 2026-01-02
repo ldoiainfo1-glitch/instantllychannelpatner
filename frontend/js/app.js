@@ -1274,8 +1274,8 @@ function calculateDays(appliedDate) {
 
 // Handle search functionality
 async function handleSearch() {
-    const searchName = document.getElementById('searchName').value.toLowerCase();
-    const searchPhone = document.getElementById('searchPhone').value;
+    const searchName = document.getElementById('searchName').value.toLowerCase().trim();
+    const searchPhone = document.getElementById('searchPhone').value.trim();
     const country = document.getElementById('filterCountry').value || 'India';
     const zone = document.getElementById('filterZone').value;
     const state = document.getElementById('filterState').value;
@@ -1297,45 +1297,68 @@ async function handleSearch() {
     try {
         showLoading(true);
 
-        // Build query params
-        let queryParams = [`country=${country}`];
-        if (zone) queryParams.push(`zone=${zone}`);
-        if (state) queryParams.push(`state=${state}`);
-        if (division) queryParams.push(`division=${division}`);
-        if (district) queryParams.push(`district=${district}`);
-        if (tehsil) queryParams.push(`tehsil=${tehsil}`);
-        if (pincode) queryParams.push(`pincode=${pincode}`);
-        if (village) queryParams.push(`village=${village}`);
+        // Build query params for dynamic-positions endpoint (same as loadApplications)
+        const params = new URLSearchParams({ country });
+        if (zone) params.append('zone', zone);
+        if (state) params.append('state', state);
+        if (division) params.append('division', division);
+        if (district) params.append('district', district);
+        if (tehsil) params.append('tehsil', tehsil);
+        if (pincode) params.append('pincode', pincode);
+        if (village) params.append('village', village);
+        params.append('_t', Date.now()); // Cache-busting
 
-        const url = `${API_BASE_URL}/positions?${queryParams.join('&')}`;
+        const url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
         console.log('🌐 FRONTEND: Fetching positions from:', url);
-        const response = await fetch(url);
-        currentPositions = await response.json();
+        const response = await fetch(url, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const positions = data.positions || data || [];
+        
+        currentPositions = positions;
         console.log('📥 FRONTEND: Received', currentPositions.length, 'positions');
         
-        // Log photo info for positions with applicants
+        // Log positions with applicants
         const withApplicants = currentPositions.filter(p => p.applicantDetails);
         console.log('👥 FRONTEND: Positions with applicants:', withApplicants.length);
-        withApplicants.forEach(p => {
-            const photoLen = p.applicantDetails.photo ? p.applicantDetails.photo.length : 0;
-            console.log(`   - ${p.applicantDetails.name} (${p.applicantDetails.phone}): Photo ${photoLen} chars`);
-        });
+        if (withApplicants.length > 0) {
+            withApplicants.slice(0, 5).forEach(p => {
+                console.log(`   - ${p.applicantDetails?.name || 'N/A'} (${p.applicantDetails?.phone || 'N/A'})`);
+            });
+        }
 
         // Client-side filter for name and phone
         let filteredPositions = currentPositions;
         if (searchName || searchPhone) {
             console.log('🔎 Applying client-side search filters...');
+            console.log(`   Search term: "${searchName}" (name) or "${searchPhone}" (phone)`);
+            
             filteredPositions = currentPositions.filter(position => {
                 // Must have applicant details
                 if (!position.applicantDetails) {
                     return false;
                 }
 
-                // Name search
+                // Name search - check if any part of the name matches
                 if (searchName) {
-                    const positionName = position.applicantDetails.name.toLowerCase();
+                    const positionName = (position.applicantDetails.name || '').toLowerCase();
                     const matches = positionName.includes(searchName);
-                    console.log(`  Name check: "${positionName}" includes "${searchName}" = ${matches}`);
+                    
+                    // Log first 10 comparisons
+                    if (filteredPositions.length < 10) {
+                        console.log(`  Name: "${positionName}" includes "${searchName}" = ${matches}`);
+                    }
+                    
                     if (!matches) {
                         return false;
                     }
@@ -1343,9 +1366,13 @@ async function handleSearch() {
 
                 // Phone search
                 if (searchPhone) {
-                    const positionPhone = position.applicantDetails.phone;
+                    const positionPhone = position.applicantDetails.phone || '';
                     const matches = positionPhone.includes(searchPhone);
-                    console.log(`  Phone check: "${positionPhone}" includes "${searchPhone}" = ${matches}`);
+                    
+                    if (filteredPositions.length < 10) {
+                        console.log(`  Phone: "${positionPhone}" includes "${searchPhone}" = ${matches}`);
+                    }
+                    
                     if (!matches) {
                         return false;
                     }
@@ -1359,10 +1386,14 @@ async function handleSearch() {
         displayPositions(filteredPositions);
 
         // Show search results count
-        showNotification(`Found ${filteredPositions.length} positions`, 'info');
+        if (searchName || searchPhone) {
+            showNotification(`Found ${filteredPositions.length} matching position(s)`, 'info');
+        } else {
+            showNotification(`Loaded ${filteredPositions.length} position(s)`, 'info');
+        }
     } catch (error) {
-        console.error('Error searching positions:', error);
-        showNotification('Error searching positions', 'error');
+        console.error('❌ Error searching positions:', error);
+        showNotification('Error searching positions: ' + error.message, 'error');
     } finally {
         showLoading(false);
     }
