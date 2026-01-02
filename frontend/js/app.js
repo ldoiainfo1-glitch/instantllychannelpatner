@@ -82,6 +82,19 @@ function setupEventListeners() {
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
     document.getElementById('refreshBtn').addEventListener('click', handleSearch);
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
+    
+    // Add auto-search on input (with debounce to avoid too many searches)
+    let searchTimeout;
+    const debounceSearch = () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            console.log('🔍 Auto-search triggered');
+            handleSearch();
+        }, 500); // Wait 500ms after user stops typing
+    };
+    
+    document.getElementById('searchName').addEventListener('input', debounceSearch);
+    document.getElementById('searchPhone').addEventListener('input', debounceSearch);
 
     // Setup searchable filters
     setupSearchableFilters();
@@ -1272,6 +1285,15 @@ async function handleSearch() {
     const pincode = document.getElementById('filterPincode').value;
     const village = document.getElementById('filterVillage').value;
 
+    console.log('🔍 Search called with:', {
+        searchName,
+        searchPhone,
+        zone,
+        state,
+        division,
+        district
+    });
+
     try {
         showLoading(true);
 
@@ -1302,21 +1324,36 @@ async function handleSearch() {
         // Client-side filter for name and phone
         let filteredPositions = currentPositions;
         if (searchName || searchPhone) {
+            console.log('🔎 Applying client-side search filters...');
             filteredPositions = currentPositions.filter(position => {
-                // Name search
-                if (searchName && position.applicantDetails &&
-                    !position.applicantDetails.name.toLowerCase().includes(searchName)) {
+                // Must have applicant details
+                if (!position.applicantDetails) {
                     return false;
                 }
 
+                // Name search
+                if (searchName) {
+                    const positionName = position.applicantDetails.name.toLowerCase();
+                    const matches = positionName.includes(searchName);
+                    console.log(`  Name check: "${positionName}" includes "${searchName}" = ${matches}`);
+                    if (!matches) {
+                        return false;
+                    }
+                }
+
                 // Phone search
-                if (searchPhone && position.applicantDetails &&
-                    !position.applicantDetails.phone.includes(searchPhone)) {
-                    return false;
+                if (searchPhone) {
+                    const positionPhone = position.applicantDetails.phone;
+                    const matches = positionPhone.includes(searchPhone);
+                    console.log(`  Phone check: "${positionPhone}" includes "${searchPhone}" = ${matches}`);
+                    if (!matches) {
+                        return false;
+                    }
                 }
 
                 return true;
             });
+            console.log(`✅ Search filtered: ${filteredPositions.length} of ${currentPositions.length} positions match`);
         }
 
         displayPositions(filteredPositions);
