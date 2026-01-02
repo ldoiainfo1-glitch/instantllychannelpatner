@@ -727,24 +727,40 @@ function createPositionRow(position) {
     // Determine Area Head For - show most specific location area name (district, tehsil, etc.)
     let areaHeadFor = '-';
     if (position.location) {
-        // Prioritize most specific location first (village > pincode > tehsil > district > division > state > zone > country)
-        if (position.location.village) {
-            areaHeadFor = position.location.village.toUpperCase();
-        } else if (position.location.pincode) {
-            areaHeadFor = position.location.pincode;
-        } else if (position.location.tehsil) {
-            areaHeadFor = position.location.tehsil.toUpperCase();
-        } else if (position.location.district) {
-            areaHeadFor = position.location.district.toUpperCase();
-        } else if (position.location.division) {
-            areaHeadFor = position.location.division.toUpperCase();
-        } else if (position.location.state) {
-            areaHeadFor = position.location.state.toUpperCase();
-        } else if (position.location.zone) {
-            areaHeadFor = position.location.zone.toUpperCase();
-        } else if (position.location.country) {
-            areaHeadFor = position.location.country.toUpperCase();
+        // Build full hierarchy like admin panel: "Country (Zone) State Division District Tehsil Pincode Village"
+        const parts = [];
+        
+        if (position.location.country) {
+            parts.push(position.location.country);
         }
+        if (position.location.zone) {
+            // Show zone in parentheses after country, like "India (West Zone)"
+            if (parts.length > 0) {
+                parts[parts.length - 1] += ` (${position.location.zone})`;
+            } else {
+                parts.push(position.location.zone);
+            }
+        }
+        if (position.location.state) {
+            parts.push(position.location.state);
+        }
+        if (position.location.division) {
+            parts.push(position.location.division);
+        }
+        if (position.location.district) {
+            parts.push(position.location.district);
+        }
+        if (position.location.tehsil) {
+            parts.push(position.location.tehsil);
+        }
+        if (position.location.pincode) {
+            parts.push(position.location.pincode);
+        }
+        if (position.location.village) {
+            parts.push(position.location.village);
+        }
+        
+        areaHeadFor = parts.length > 0 ? parts.join(' ') : '-';
     }
 
     // Handle photo
@@ -1087,15 +1103,41 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
         nameCell = '-';
     }
     
-    // Area Head For - show most specific location
+    // Area Head For - show full hierarchy like admin panel
     let areaHeadFor = '-';
     if (position.location) {
-        if (position.location.village) areaHeadFor = position.location.village.toUpperCase();
-        else if (position.location.pincode) areaHeadFor = position.location.pincode;
-        else if (position.location.tehsil) areaHeadFor = position.location.tehsil.toUpperCase();
-        else if (position.location.district) areaHeadFor = position.location.district.toUpperCase();
-        else if (position.location.division) areaHeadFor = position.location.division.toUpperCase();
-        else if (position.location.state) areaHeadFor = position.location.state.toUpperCase();
+        const parts = [];
+        
+        if (position.location.country) {
+            parts.push(position.location.country);
+        }
+        if (position.location.zone) {
+            if (parts.length > 0) {
+                parts[parts.length - 1] += ` (${position.location.zone})`;
+            } else {
+                parts.push(position.location.zone);
+            }
+        }
+        if (position.location.state) {
+            parts.push(position.location.state);
+        }
+        if (position.location.division) {
+            parts.push(position.location.division);
+        }
+        if (position.location.district) {
+            parts.push(position.location.district);
+        }
+        if (position.location.tehsil) {
+            parts.push(position.location.tehsil);
+        }
+        if (position.location.pincode) {
+            parts.push(position.location.pincode);
+        }
+        if (position.location.village) {
+            parts.push(position.location.village);
+        }
+        
+        areaHeadFor = parts.length > 0 ? parts.join(' ') : '-';
     }
     
     // Photo
