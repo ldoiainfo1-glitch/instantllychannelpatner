@@ -2796,4 +2796,87 @@ async function findPositionHolder(hierarchy, level) {
   }
 }
 
+// Sync Position IDs to match Application positionIds
+router.post('/sync-position-ids', async (req, res) => {
+  try {
+    console.log('🔄 Starting position ID synchronization...');
+    
+    // Get all approved applications
+    const approvedApplications = await Application.find({ status: 'approved' });
+    console.log(`📊 Found ${approvedApplications.length} approved applications`);
+    
+    let updated = 0;
+    let skipped = 0;
+    let errors = 0;
+    const updates = [];
+    
+    for (const app of approvedApplications) {
+      try {
+        const { positionId, country, zone, state, division, district, tehsil, pincode, village } = app;
+        
+        // Build query to find matching position by location hierarchy
+        const query = {};
+        
+        // Add all available location fields
+        if (country) query.country = country;
+        if (zone) query.zone = zone;
+        if (state) query.state = state;
+        if (division) query.division = division;
+        if (district) query.district = district;
+        if (tehsil) query.tehsil = tehsil;
+        if (pincode) query.pincode = pincode;
+        if (village) query.village = village;
+        
+        // Find position by location match
+        const position = await Position.findOne(query);
+        
+        if (position) {
+          if (position.positionId !== positionId) {
+            // Update position to use the application's positionId
+            position.positionId = positionId;
+            await position.save();
+            
+            updated++;
+            updates.push({
+              oldId: position.positionId,
+              newId: positionId,
+              location: `${district || tehsil || pincode || village}`.trim()
+            });
+            
+            console.log(`✅ Updated: ${district || tehsil || pincode || village} -> ${positionId}`);
+          } else {
+            skipped++;
+          }
+        } else {
+          console.log(`⚠️ No position found for: ${district || tehsil || pincode || village}`);
+        }
+      } catch (err) {
+        errors++;
+        console.error(`❌ Error processing application ${app._id}:`, err.message);
+      }
+    }
+    
+    console.log(`✅ Sync complete! Updated: ${updated}, Skipped: ${skipped}, Errors: ${errors}`);
+    
+    res.json({
+      success: true,
+      message: 'Position IDs synchronized successfully',
+      stats: {
+        totalApplications: approvedApplications.length,
+        updated,
+        skipped,
+        errors
+      },
+      updates: updates.slice(0, 20) // Return first 20 updates as sample
+    });
+    
+  } catch (error) {
+    console.error('❌ Error syncing position IDs:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
