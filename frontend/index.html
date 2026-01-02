@@ -20,36 +20,100 @@
         }
     </style>
     <script>
-        // Aggressive fix for zone dropdown height - v5
+        // Aggressive fix for zone dropdown height - v5 with detailed debugging
         (function() {
-            function forceDropdownHeight() {
-                const dropdowns = document.querySelectorAll('.filter-dropdown, #zoneDropdown');
-                dropdowns.forEach(dd => {
-                    dd.style.setProperty('max-height', '600px', 'important');
+            function analyzeAndFixZoneDropdown() {
+                const zoneDropdown = document.getElementById('zoneDropdown');
+                if (!zoneDropdown) {
+                    console.log('⏳ Zone dropdown not found yet');
+                    return;
+                }
+                
+                // Log current state
+                const computedStyle = window.getComputedStyle(zoneDropdown);
+                const currentMaxHeight = computedStyle.maxHeight;
+                const currentOverflow = computedStyle.overflowY;
+                const inlineStyle = zoneDropdown.style.maxHeight;
+                const classList = Array.from(zoneDropdown.classList).join(', ');
+                const items = zoneDropdown.querySelectorAll('.filter-dropdown-item, .filter-options > div');
+                const itemCount = items.length;
+                
+                console.log('🔍 ZONE DROPDOWN ANALYSIS:', {
+                    'Element ID': zoneDropdown.id,
+                    'Classes': classList,
+                    'Computed max-height': currentMaxHeight,
+                    'Computed overflow-y': currentOverflow,
+                    'Inline max-height': inlineStyle || 'none',
+                    'Items count': itemCount,
+                    'Display': computedStyle.display,
+                    'Height': computedStyle.height
                 });
+                
+                // Check each item's visibility
+                items.forEach((item, index) => {
+                    const itemStyle = window.getComputedStyle(item);
+                    console.log(`  Item ${index + 1}:`, {
+                        text: item.textContent.trim().substring(0, 20),
+                        display: itemStyle.display,
+                        height: itemStyle.height,
+                        visible: item.offsetHeight > 0
+                    });
+                });
+                
+                // Force the fix
+                zoneDropdown.style.setProperty('max-height', '600px', 'important');
+                zoneDropdown.style.setProperty('overflow-y', 'auto', 'important');
+                
+                console.log('✅ Applied fix: max-height: 600px !important');
+                
+                // Check if fix applied
+                setTimeout(() => {
+                    const newMaxHeight = window.getComputedStyle(zoneDropdown).maxHeight;
+                    console.log('🔄 After fix applied, max-height is:', newMaxHeight);
+                    if (newMaxHeight !== '600px') {
+                        console.error('❌ FIX NOT APPLIED! Something is overriding it.');
+                    }
+                }, 100);
             }
             
             // Run immediately
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', forceDropdownHeight);
+                document.addEventListener('DOMContentLoaded', analyzeAndFixZoneDropdown);
             } else {
-                forceDropdownHeight();
+                analyzeAndFixZoneDropdown();
             }
             
-            // Keep forcing every 100ms for first 3 seconds
+            // Keep analyzing and fixing every 200ms for first 5 seconds
             let count = 0;
             const interval = setInterval(() => {
-                forceDropdownHeight();
+                analyzeAndFixZoneDropdown();
                 count++;
-                if (count > 30) clearInterval(interval);
-            }, 100);
+                if (count > 25) clearInterval(interval);
+            }, 200);
             
-            // Observe for any class changes
-            const observer = new MutationObserver(forceDropdownHeight);
+            // Observe for any changes to the zone dropdown
             setTimeout(() => {
-                document.querySelectorAll('.filter-dropdown, #zoneDropdown').forEach(el => {
-                    observer.observe(el, { attributes: true, attributeFilter: ['class', 'style'] });
-                });
+                const zoneDropdown = document.getElementById('zoneDropdown');
+                if (zoneDropdown) {
+                    const observer = new MutationObserver((mutations) => {
+                        console.log('🔔 Zone dropdown mutated:', mutations.map(m => ({
+                            type: m.type,
+                            attributeName: m.attributeName,
+                            oldValue: m.oldValue
+                        })));
+                        analyzeAndFixZoneDropdown();
+                    });
+                    
+                    observer.observe(zoneDropdown, {
+                        attributes: true,
+                        attributeFilter: ['class', 'style'],
+                        attributeOldValue: true,
+                        childList: true,
+                        subtree: true
+                    });
+                    
+                    console.log('👀 MutationObserver set up for zone dropdown');
+                }
             }, 1000);
         })();
     </script>
