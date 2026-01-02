@@ -159,13 +159,13 @@ async function loadLocationData() {
     try {
         console.log('⚡ Loading location data with cache-busting...');
 
-        // Use format=distinct to get actual location lists for filters (not counts)
-        let response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all?format=distinct`);
+        // Fetch FULL location data with hierarchical relationships
+        let response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all?format=full`);
 
         if (response.ok) {
             const data = await response.json();
 
-            // Store all options
+            // Store full location objects with hierarchical relationships
             locationData = {
                 zones: data.zones || [],
                 states: data.states || [],
@@ -173,7 +173,9 @@ async function loadLocationData() {
                 districts: data.districts || [],
                 tehsils: data.tehsils || [],
                 pincodes: data.pincodes || [],
-                villages: data.villages || []
+                villages: data.villages || [],
+                // Store full objects for hierarchical filtering
+                fullLocations: data.locations || [] // Array of full location objects with all fields
             };
         } else {
             // Fallback to individual endpoints if /all doesn't exist
@@ -206,7 +208,8 @@ async function loadLocationData() {
                 districts: districts || [],
                 tehsils: tehsils || [],
                 pincodes: pincodes || [],
-                villages: villages || []
+                villages: villages || [],
+                fullLocations: [] // Not available in fallback mode
             };
         }
 
@@ -2677,8 +2680,8 @@ function setupSearchableFilters() {
     }, { passive: true });
 }
 
-// Get filtered data based on parent filter selections (cascading filters)
-function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
+// Get filtered data based on parent filter selections (cascading filters from LOCATION DATABASE)
+async function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
     // Get current filter values from parent filters
     const selectedZone = document.getElementById('filterZone').value;
     const selectedState = document.getElementById('filterState').value;
@@ -2687,92 +2690,95 @@ function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
     const selectedTehsil = document.getElementById('filterTehsil').value;
     const selectedPincode = document.getElementById('filterPincode').value;
 
-    // If no positions data loaded yet, return all data
-    if (!currentPositions || currentPositions.length === 0) {
-        console.log('⚠️ No positions loaded yet, showing all options for', dataKey);
+    // Determine which parent filters are active based on the current input
+    const filterParams = {};
+    
+    // For each filter level, include all parent filters
+    if (inputId === 'filterState' && selectedZone) {
+        filterParams.zone = selectedZone;
+    } else if (inputId === 'filterDivision') {
+        if (selectedZone) filterParams.zone = selectedZone;
+        if (selectedState) filterParams.state = selectedState;
+    } else if (inputId === 'filterDistrict') {
+        if (selectedZone) filterParams.zone = selectedZone;
+        if (selectedState) filterParams.state = selectedState;
+        if (selectedDivision) filterParams.division = selectedDivision;
+    } else if (inputId === 'filterTehsil') {
+        if (selectedZone) filterParams.zone = selectedZone;
+        if (selectedState) filterParams.state = selectedState;
+        if (selectedDivision) filterParams.division = selectedDivision;
+        if (selectedDistrict) filterParams.district = selectedDistrict;
+    } else if (inputId === 'filterPincode') {
+        if (selectedZone) filterParams.zone = selectedZone;
+        if (selectedState) filterParams.state = selectedState;
+        if (selectedDivision) filterParams.division = selectedDivision;
+        if (selectedDistrict) filterParams.district = selectedDistrict;
+        if (selectedTehsil) filterParams.tehsil = selectedTehsil;
+    } else if (inputId === 'filterVillage') {
+        if (selectedZone) filterParams.zone = selectedZone;
+        if (selectedState) filterParams.state = selectedState;
+        if (selectedDivision) filterParams.division = selectedDivision;
+        if (selectedDistrict) filterParams.district = selectedDistrict;
+        if (selectedTehsil) filterParams.tehsil = selectedTehsil;
+        if (selectedPincode) filterParams.pincode = selectedPincode;
+    }
+
+    // If no parent filters selected, return all data
+    if (Object.keys(filterParams).length === 0) {
+        console.log(`🔍 No parent filters selected for ${inputId}, showing all ${dataKey}`);
         return allData;
     }
 
-    // Filter positions based on parent selections
-    let filteredPositions = currentPositions.filter(position => {
-        const loc = position.location;
-        if (!loc) return false;
-
-        // Apply cascading filter logic based on which filter we're showing
-        if (inputId === 'filterState') {
-            // State filter: only show states from selected zone
-            return !selectedZone || loc.zone === selectedZone;
-        } else if (inputId === 'filterDivision') {
-            // Division filter: filter by zone and state
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState);
-        } else if (inputId === 'filterDistrict') {
-            // District filter: filter by zone, state, and division
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState) &&
-                (!selectedDivision || loc.division === selectedDivision);
-        } else if (inputId === 'filterTehsil') {
-            // Tehsil filter: filter by zone, state, division, and district
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState) &&
-                (!selectedDivision || loc.division === selectedDivision) &&
-                (!selectedDistrict || loc.district === selectedDistrict);
-        } else if (inputId === 'filterPincode') {
-            // Pincode filter: filter by all parent filters
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState) &&
-                (!selectedDivision || loc.division === selectedDivision) &&
-                (!selectedDistrict || loc.district === selectedDistrict) &&
-                (!selectedTehsil || loc.tehsil === selectedTehsil);
-        } else if (inputId === 'filterVillage') {
-            // Village filter: filter by all parent filters including pincode
-            return (!selectedZone || loc.zone === selectedZone) &&
-                (!selectedState || loc.state === selectedState) &&
-                (!selectedDivision || loc.division === selectedDivision) &&
-                (!selectedDistrict || loc.district === selectedDistrict) &&
-                (!selectedTehsil || loc.tehsil === selectedTehsil) &&
-                (!selectedPincode || loc.pincode === selectedPincode);
+    // Build query string for API request
+    const queryString = new URLSearchParams(filterParams).toString();
+    
+    try {
+        console.log(`🔍 Fetching cascaded ${dataKey} with filters:`, filterParams);
+        
+        // Map input ID to API endpoint field
+        const fieldMap = {
+            'filterZone': 'zones',
+            'filterState': 'states',
+            'filterDivision': 'divisions',
+            'filterDistrict': 'districts',
+            'filterTehsil': 'tehsils',
+            'filterPincode': 'pincodes',
+            'filterVillage': 'villages'
+        };
+        
+        const apiField = fieldMap[inputId];
+        
+        // Fetch filtered data from backend using existing locations/all endpoint with query params
+        const response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all?${queryString}`);
+        
+        if (!response.ok) {
+            console.warn(`⚠️ API error, falling back to all data for ${dataKey}`);
+            return allData;
         }
-
-        return true; // Zone filter shows all zones
-    });
-
-    // Extract unique values for the current filter from filtered positions
-    const uniqueValues = new Set();
-    const locationFieldMap = {
-        'filterZone': 'zone',
-        'filterState': 'state',
-        'filterDivision': 'division',
-        'filterDistrict': 'district',
-        'filterTehsil': 'tehsil',
-        'filterPincode': 'pincode',
-        'filterVillage': 'village'
-    };
-
-    const fieldName = locationFieldMap[inputId];
-    if (fieldName) {
-        filteredPositions.forEach(position => {
-            const value = position.location?.[fieldName];
-            if (value) {
-                uniqueValues.add(value);
-            }
-        });
-    }
-
-    // Convert Set to Array and sort
-    const filteredData = Array.from(uniqueValues).sort();
-
-    console.log(`🔍 Cascading filter for ${inputId}: ${filteredData.length} options (from ${filteredPositions.length} matching positions)`);
-
-    // Important: If filtering resulted in matches but no unique values for this specific field,
-    // that means the data exists but this field might not be populated for those positions
-    // In that case, return all data as fallback
-    if (filteredPositions.length > 0 && filteredData.length === 0) {
-        console.log(`  ⚠️ ${filteredPositions.length} positions match parents but have no ${fieldName} data, showing all options`);
+        
+        const data = await response.json();
+        
+        // Extract the specific field data we need (zones, states, divisions, etc.)
+        let filteredData = [];
+        
+        if (data[apiField] && Array.isArray(data[apiField])) {
+            filteredData = data[apiField];
+        } else if (data.success && data[apiField]) {
+            filteredData = data[apiField];
+        } else {
+            // If response doesn't have the expected format, fall back to all data
+            filteredData = allData;
+        }
+        
+        console.log(`✅ Cascaded filter: ${filteredData.length} ${dataKey} options (filtered by parent selections)`);
+        
+        return filteredData.length > 0 ? filteredData : allData;
+        
+    } catch (error) {
+        console.error(`❌ Error fetching filtered ${dataKey}:`, error);
+        // Fallback to all data on error
         return allData;
     }
-
-    return filteredData.length > 0 ? filteredData : allData;
 }
 
 // Show filter dropdown with search functionality
@@ -2811,8 +2817,8 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     // Add active class to current container
     container?.classList.add('active');
 
-    // Get filtered data based on parent selections (cascading filters)
-    let data = getFilteredDataBasedOnParents(inputId, dataKey, locationData[dataKey]);
+    // Get filtered data based on parent selections (cascading filters) - NOW ASYNC!
+    let data = await getFilteredDataBasedOnParents(inputId, dataKey, locationData[dataKey]);
     console.log(`✅ Showing dropdown for ${dataKey}:`, data.length, 'items (filtered by parent selections)');
 
     // Only create dropdown content if it doesn't exist or data changed
