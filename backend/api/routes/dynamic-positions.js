@@ -78,7 +78,19 @@ router.get('/', async (req, res) => {
       village 
     } = req.query;
     
-    console.log('🎯 Generating dynamic positions for:', { country, zone, state, division, district, tehsil, pincode, village });
+    console.log('\n========================================');
+    console.log('🎯 NEW REQUEST - Generating dynamic positions');
+    console.log('========================================');
+    console.log('📥 Query Parameters Received:');
+    console.log('   country:', country);
+    console.log('   zone:', zone);
+    console.log('   state:', state);
+    console.log('   division:', division);
+    console.log('   district:', district);
+    console.log('   tehsil:', tehsil);
+    console.log('   pincode:', pincode);
+    console.log('   village:', village);
+    console.log('========================================\n');
     
     let positions = [];
     let sNo = 1;
@@ -101,13 +113,20 @@ router.get('/', async (req, res) => {
       }
     } else if (tehsil) {
       // Tehsil level - show tehsil head + sample pincodes
+      console.log('\n🔍 TEHSIL LEVEL - Building positions');
+      console.log('   Creating tehsil head with location:', { country, zone, state, division, district, tehsil });
+      
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${tehsil}`, location: { country, zone, state, division, district, tehsil } });
       
       // Add sample pincodes for this tehsil
       const basePincode = Math.floor(Math.random() * 900000) + 100000;
+      console.log('   Generating 5 sample pincodes starting from:', basePincode);
+      
       for (let i = 0; i < 5; i++) {
         const pincode = (basePincode + i).toString();
-        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${pincode}`, location: { country, zone, state, division, district, tehsil, pincode } });
+        const pincodeLocation = { country, zone, state, division, district, tehsil, pincode };
+        console.log(`   - Pincode ${pincode} with location:`, pincodeLocation);
+        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${pincode}`, location: pincodeLocation });
       }
     } else if (district) {
       // District level - show district head + sample tehsils
@@ -185,13 +204,33 @@ router.get('/', async (req, res) => {
     }
     
     // 🚀 BATCH OPTIMIZATION: Generate all position IDs and fetch applications in ONE query
-    const positionIds = positionsToGenerate.map(p => generatePositionId(p.location, p.designation));
+    console.log('\n📋 POSITION ID GENERATION:');
+    const positionIds = positionsToGenerate.map((p, index) => {
+      const generatedId = generatePositionId(p.location, p.designation);
+      if (index < 3) { // Log first 3 for debugging
+        console.log(`   [${index + 1}] ${p.designation}`);
+        console.log(`       Location: ${JSON.stringify(p.location)}`);
+        console.log(`       Generated ID: ${generatedId}`);
+      }
+      return generatedId;
+    });
+    console.log(`   Total positions to generate: ${positionIds.length}\n`);
+    
     console.log(`⚡ Batch fetching applications for ${positionIds.length} positions...`);
     
     // Fetch all applications at once
     const applications = await Application.find({ 
       positionId: { $in: positionIds } 
     }).lean();
+    
+    console.log(`\n📊 APPLICATION RESULTS:`);
+    console.log(`   Found ${applications.length} approved applications`);
+    if (applications.length > 0) {
+      applications.forEach((app, index) => {
+        console.log(`   [${index + 1}] ${app.applicantInfo?.name || 'Unknown'} - ${app.positionId}`);
+      });
+    }
+    console.log('');
     
     // Create a map for O(1) lookup
     const applicationMap = {};
