@@ -185,8 +185,43 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  console.error('❌ Error occurred:', err.message);
+  console.error('Stack:', err.stack);
+  console.error('Request:', {
+    method: req.method,
+    url: req.url,
+    body: req.body,
+    query: req.query
+  });
+  
+  // Send appropriate error response
+  res.status(err.status || 500).json({ 
+    error: err.message || 'Something went wrong!',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Promise Rejection:', reason);
+  console.error('Promise:', promise);
+  // Don't exit the process, just log the error
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  console.error('Stack:', error.stack);
+  // Log but don't exit immediately to allow graceful shutdown
+});
+
+// Graceful shutdown handler
+process.on('SIGTERM', () => {
+  console.log('👋 SIGTERM received. Shutting down gracefully...');
+  mongoose.connection.close(false, () => {
+    console.log('💤 MongoDB connection closed');
+    process.exit(0);
+  });
 });
 
 // Start server
