@@ -636,7 +636,7 @@ async function loadApplications() {
         const tbody = document.getElementById('positionsTableBody');
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" class="text-center py-4 text-danger">
+                <td colspan="10" class="text-center py-4 text-danger">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     Error loading positions. Please refresh the page.
                 </td>
@@ -652,7 +652,7 @@ function displayPositions(positions) {
     if (positions.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="9" class="text-center py-4">
+                <td colspan="10" class="text-center py-4">
                     <i class="fas fa-search fa-2x text-muted mb-3"></i>
                     <p class="text-muted mb-0">No positions found matching your criteria</p>
                 </td>
@@ -700,26 +700,19 @@ function createPositionRow(position) {
     // Format location for position display
     const location = formatLocation(position.location);
 
-    // Handle name - show applicant name or Apply button with Position ID below
+    // ID cell - always show position ID
+    const idCell = `<small class="text-muted" style="font-size: 0.7rem; word-break: break-all;">${position._id}</small>`;
+
+    // Handle name - show applicant name or Apply button
     let nameCell = '';
     if (position.status === 'Available') {
         nameCell = `
-            <div>
-                <button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
-                    <i class="fas fa-plus me-1"></i>Apply Now
-                </button>
-                <div class="mt-2">
-                    <small class="text-muted d-block" style="font-size: 0.75rem;">ID: ${position._id}</small>
-                </div>
-            </div>
+            <button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
+                <i class="fas fa-plus me-1"></i>Apply Now
+            </button>
         `;
     } else if (position.applicantDetails && position.applicantDetails.name) {
-        nameCell = `
-            <div>
-                <div>${position.applicantDetails.name}</div>
-                <small class="text-muted" style="font-size: 0.75rem;">ID: ${position._id}</small>
-            </div>
-        `;
+        nameCell = position.applicantDetails.name;
     } else {
         nameCell = '-';
     }
@@ -925,6 +918,7 @@ function createPositionRow(position) {
 
     row.innerHTML = `
         <td><strong>${position.sNo}</strong></td>
+        <td>${idCell}</td>
         <td>${nameCell}</td>
         <td>${areaHeadFor}</td>
         <td class="text-center">${photoCell}</td>
@@ -1069,6 +1063,9 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
     // Calculate indentation based on nesting level
     const indentPx = 20 + (nestLevel * 20);
     
+    // ID cell - always show position ID
+    const idCell = `<small class="text-muted" style="font-size: 0.7rem; word-break: break-all;">${position._id}</small>`;
+    
     // Name cell
     let nameCell = '';
     if (position.status === 'Available') {
@@ -1076,13 +1073,9 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
             <button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
                 <i class="fas fa-plus me-1"></i>Apply Now
             </button>
-            <div class="mt-2"><small class="text-muted" style="font-size: 0.75rem;">ID: ${position._id}</small></div>
         `;
     } else if (position.applicantDetails && position.applicantDetails.name) {
-        nameCell = `
-            <div>${position.applicantDetails.name}</div>
-            <small class="text-muted" style="font-size: 0.75rem;">ID: ${position._id}</small>
-        `;
+        nameCell = position.applicantDetails.name;
     } else {
         nameCell = '-';
     }
@@ -1207,6 +1200,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
     
     row.innerHTML = `
         <td style="padding-left: ${indentPx}px;"><span class="text-muted">${indentIndicator}</span>${subIndex}</td>
+        <td>${idCell}</td>
         <td>${nameCell}</td>
         <td>${areaHeadFor}</td>
         <td class="text-center">${photoCell}</td>
