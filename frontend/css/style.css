@@ -1006,7 +1006,7 @@ body, .card-body, .container {
 
 /* Filter options container for scrollable items */
 .filter-options {
-    max-height: 150px;
+    max-height: 500px;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
