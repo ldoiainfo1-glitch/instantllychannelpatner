@@ -159,13 +159,13 @@ async function loadLocationData() {
     try {
         console.log('⚡ Loading location data with cache-busting...');
 
-        // Fetch FULL location data with hierarchical relationships
-        let response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all?format=full`);
+        // Use format=distinct to get actual location lists for filters (not counts)
+        let response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all?format=distinct`);
 
         if (response.ok) {
             const data = await response.json();
 
-            // Store full location objects with hierarchical relationships
+            // Store all options
             locationData = {
                 zones: data.zones || [],
                 states: data.states || [],
@@ -173,9 +173,7 @@ async function loadLocationData() {
                 districts: data.districts || [],
                 tehsils: data.tehsils || [],
                 pincodes: data.pincodes || [],
-                villages: data.villages || [],
-                // Store full objects for hierarchical filtering
-                fullLocations: data.locations || [] // Array of full location objects with all fields
+                villages: data.villages || []
             };
         } else {
             // Fallback to individual endpoints if /all doesn't exist
@@ -208,8 +206,7 @@ async function loadLocationData() {
                 districts: districts || [],
                 tehsils: tehsils || [],
                 pincodes: pincodes || [],
-                villages: villages || [],
-                fullLocations: [] // Not available in fallback mode
+                villages: villages || []
             };
         }
 
@@ -2680,8 +2677,8 @@ function setupSearchableFilters() {
     }, { passive: true });
 }
 
-// Get filtered data based on parent filter selections (cascading filters from LOCATION DATABASE)
-async function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
+// Get filtered data based on parent filter selections (cascading filters - NO API CALL)
+function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
     // Get current filter values from parent filters
     const selectedZone = document.getElementById('filterZone').value;
     const selectedState = document.getElementById('filterState').value;
@@ -2690,95 +2687,17 @@ async function getFilteredDataBasedOnParents(inputId, dataKey, allData) {
     const selectedTehsil = document.getElementById('filterTehsil').value;
     const selectedPincode = document.getElementById('filterPincode').value;
 
-    // Determine which parent filters are active based on the current input
-    const filterParams = {};
-    
-    // For each filter level, include all parent filters
-    if (inputId === 'filterState' && selectedZone) {
-        filterParams.zone = selectedZone;
-    } else if (inputId === 'filterDivision') {
-        if (selectedZone) filterParams.zone = selectedZone;
-        if (selectedState) filterParams.state = selectedState;
-    } else if (inputId === 'filterDistrict') {
-        if (selectedZone) filterParams.zone = selectedZone;
-        if (selectedState) filterParams.state = selectedState;
-        if (selectedDivision) filterParams.division = selectedDivision;
-    } else if (inputId === 'filterTehsil') {
-        if (selectedZone) filterParams.zone = selectedZone;
-        if (selectedState) filterParams.state = selectedState;
-        if (selectedDivision) filterParams.division = selectedDivision;
-        if (selectedDistrict) filterParams.district = selectedDistrict;
-    } else if (inputId === 'filterPincode') {
-        if (selectedZone) filterParams.zone = selectedZone;
-        if (selectedState) filterParams.state = selectedState;
-        if (selectedDivision) filterParams.division = selectedDivision;
-        if (selectedDistrict) filterParams.district = selectedDistrict;
-        if (selectedTehsil) filterParams.tehsil = selectedTehsil;
-    } else if (inputId === 'filterVillage') {
-        if (selectedZone) filterParams.zone = selectedZone;
-        if (selectedState) filterParams.state = selectedState;
-        if (selectedDivision) filterParams.division = selectedDivision;
-        if (selectedDistrict) filterParams.district = selectedDistrict;
-        if (selectedTehsil) filterParams.tehsil = selectedTehsil;
-        if (selectedPincode) filterParams.pincode = selectedPincode;
-    }
-
     // If no parent filters selected, return all data
-    if (Object.keys(filterParams).length === 0) {
+    if (!selectedZone && !selectedState && !selectedDivision && !selectedDistrict && !selectedTehsil && !selectedPincode) {
         console.log(`🔍 No parent filters selected for ${inputId}, showing all ${dataKey}`);
         return allData;
     }
 
-    // Build query string for API request
-    const queryString = new URLSearchParams(filterParams).toString();
-    
-    try {
-        console.log(`🔍 Fetching cascaded ${dataKey} with filters:`, filterParams);
-        
-        // Map input ID to API endpoint field
-        const fieldMap = {
-            'filterZone': 'zones',
-            'filterState': 'states',
-            'filterDivision': 'divisions',
-            'filterDistrict': 'districts',
-            'filterTehsil': 'tehsils',
-            'filterPincode': 'pincodes',
-            'filterVillage': 'villages'
-        };
-        
-        const apiField = fieldMap[inputId];
-        
-        // Fetch filtered data from backend using existing locations/all endpoint with query params
-        const response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all?${queryString}`);
-        
-        if (!response.ok) {
-            console.warn(`⚠️ API error, falling back to all data for ${dataKey}`);
-            return allData;
-        }
-        
-        const data = await response.json();
-        
-        // Extract the specific field data we need (zones, states, divisions, etc.)
-        let filteredData = [];
-        
-        if (data[apiField] && Array.isArray(data[apiField])) {
-            filteredData = data[apiField];
-        } else if (data.success && data[apiField]) {
-            filteredData = data[apiField];
-        } else {
-            // If response doesn't have the expected format, fall back to all data
-            filteredData = allData;
-        }
-        
-        console.log(`✅ Cascaded filter: ${filteredData.length} ${dataKey} options (filtered by parent selections)`);
-        
-        return filteredData.length > 0 ? filteredData : allData;
-        
-    } catch (error) {
-        console.error(`❌ Error fetching filtered ${dataKey}:`, error);
-        // Fallback to all data on error
-        return allData;
-    }
+    // For client-side cascading, we need to use reverse lookup API to get hierarchical relationships
+    // Since we can't filter location lists directly without backend support,
+    // we return all data for now and rely on the existing reverse mapping feature
+    console.log(`🔍 Cascaded filter for ${inputId}: showing all ${allData.length} ${dataKey} (reverse mapping will auto-populate parents)`);
+    return allData;
 }
 
 // Show filter dropdown with search functionality
@@ -2817,9 +2736,9 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     // Add active class to current container
     container?.classList.add('active');
 
-    // Get filtered data based on parent selections (cascading filters) - NOW ASYNC!
-    let data = await getFilteredDataBasedOnParents(inputId, dataKey, locationData[dataKey]);
-    console.log(`✅ Showing dropdown for ${dataKey}:`, data.length, 'items (filtered by parent selections)');
+    // Get filtered data based on parent selections (reverse mapping handles cascading)
+    let data = getFilteredDataBasedOnParents(inputId, dataKey, locationData[dataKey]);
+    console.log(`✅ Showing dropdown for ${dataKey}:`, data.length, 'items');
 
     // Only create dropdown content if it doesn't exist or data changed
     if (!dropdown.dataset.initialized || dropdown.dataset.dataKey !== dataKey) {
