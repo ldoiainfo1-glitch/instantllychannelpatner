@@ -203,19 +203,19 @@ router.get('/', async (req, res) => {
       }
     }
     
-    // 🚀 BATCH OPTIMIZATION: Generate all position IDs and fetch applications in ONE query
+    // 🚀 BATCH OPTIMIZATION: Generate all position IDs ONCE and store them
     console.log('\n📋 POSITION ID GENERATION:');
-    const positionIds = positionsToGenerate.map((p, index) => {
-      const generatedId = generatePositionId(p.location, p.designation);
+    positionsToGenerate.forEach((p, index) => {
+      p.positionId = generatePositionId(p.location, p.designation);
       if (index < 3) { // Log first 3 for debugging
         console.log(`   [${index + 1}] ${p.designation}`);
         console.log(`       Location: ${JSON.stringify(p.location)}`);
-        console.log(`       Generated ID: ${generatedId}`);
+        console.log(`       Generated ID: ${p.positionId}`);
       }
-      return generatedId;
     });
-    console.log(`   Total positions to generate: ${positionIds.length}\n`);
+    console.log(`   Total positions to generate: ${positionsToGenerate.length}\n`);
     
+    const positionIds = positionsToGenerate.map(p => p.positionId);
     console.log(`⚡ Batch fetching applications for ${positionIds.length} positions...`);
     
     // Fetch all applications at once
@@ -251,9 +251,9 @@ router.get('/', async (req, res) => {
     
     console.log(`✅ Batch fetched ${applications.length} applications and ${users.length} users`);
     
-    // Now create positions with pre-fetched data (NO additional DB queries)
+    // Now create positions with pre-fetched data (NO additional DB queries, NO re-generating IDs)
     for (const posData of positionsToGenerate) {
-      const positionId = generatePositionId(posData.location, posData.designation);
+      const positionId = posData.positionId; // Use pre-generated ID
       const application = applicationMap[positionId];
       
       const position = {
