@@ -9,7 +9,13 @@
     <!-- Updated for production deployment - v1.4 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="css/style.css" rel="stylesheet">
+    <link href="css/style.css?v=2.0" rel="stylesheet">
+    <style>
+        /* Force zone dropdown to show all 6 zones without scroll */
+        .filter-dropdown {
+            max-height: 600px !important;
+        }
+    </style>
     <!-- Add this in your HTML head if not already there -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- Razorpay Checkout -->
