@@ -727,40 +727,24 @@ function createPositionRow(position) {
     // Determine Area Head For - show most specific location area name (district, tehsil, etc.)
     let areaHeadFor = '-';
     if (position.location) {
-        // Build full hierarchy like admin panel: "Country (Zone) State Division District Tehsil Pincode Village"
-        const parts = [];
-        
-        if (position.location.country) {
-            parts.push(position.location.country);
-        }
-        if (position.location.zone) {
-            // Show zone in parentheses after country, like "India (West Zone)"
-            if (parts.length > 0) {
-                parts[parts.length - 1] += ` (${position.location.zone})`;
-            } else {
-                parts.push(position.location.zone);
-            }
-        }
-        if (position.location.state) {
-            parts.push(position.location.state);
-        }
-        if (position.location.division) {
-            parts.push(position.location.division);
-        }
-        if (position.location.district) {
-            parts.push(position.location.district);
-        }
-        if (position.location.tehsil) {
-            parts.push(position.location.tehsil);
-        }
-        if (position.location.pincode) {
-            parts.push(position.location.pincode);
-        }
+        // Show only the most specific location (lowest level in hierarchy)
         if (position.location.village) {
-            parts.push(position.location.village);
+            areaHeadFor = position.location.village;
+        } else if (position.location.pincode) {
+            areaHeadFor = position.location.pincode;
+        } else if (position.location.tehsil) {
+            areaHeadFor = position.location.tehsil;
+        } else if (position.location.district) {
+            areaHeadFor = position.location.district;
+        } else if (position.location.division) {
+            areaHeadFor = position.location.division;
+        } else if (position.location.state) {
+            areaHeadFor = position.location.state;
+        } else if (position.location.zone) {
+            areaHeadFor = position.location.zone;
+        } else if (position.location.country) {
+            areaHeadFor = position.location.country;
         }
-        
-        areaHeadFor = parts.length > 0 ? parts.join(' ') : '-';
     }
 
     // Handle photo
@@ -1103,41 +1087,27 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
         nameCell = '-';
     }
     
-    // Area Head For - show full hierarchy like admin panel
+    // Area Head For - show only the most specific location name
     let areaHeadFor = '-';
     if (position.location) {
-        const parts = [];
-        
-        if (position.location.country) {
-            parts.push(position.location.country);
-        }
-        if (position.location.zone) {
-            if (parts.length > 0) {
-                parts[parts.length - 1] += ` (${position.location.zone})`;
-            } else {
-                parts.push(position.location.zone);
-            }
-        }
-        if (position.location.state) {
-            parts.push(position.location.state);
-        }
-        if (position.location.division) {
-            parts.push(position.location.division);
-        }
-        if (position.location.district) {
-            parts.push(position.location.district);
-        }
-        if (position.location.tehsil) {
-            parts.push(position.location.tehsil);
-        }
-        if (position.location.pincode) {
-            parts.push(position.location.pincode);
-        }
+        // Show only the most specific location (lowest level in hierarchy)
         if (position.location.village) {
-            parts.push(position.location.village);
+            areaHeadFor = position.location.village;
+        } else if (position.location.pincode) {
+            areaHeadFor = position.location.pincode;
+        } else if (position.location.tehsil) {
+            areaHeadFor = position.location.tehsil;
+        } else if (position.location.district) {
+            areaHeadFor = position.location.district;
+        } else if (position.location.division) {
+            areaHeadFor = position.location.division;
+        } else if (position.location.state) {
+            areaHeadFor = position.location.state;
+        } else if (position.location.zone) {
+            areaHeadFor = position.location.zone;
+        } else if (position.location.country) {
+            areaHeadFor = position.location.country;
         }
-        
-        areaHeadFor = parts.length > 0 ? parts.join(' ') : '-';
     }
     
     // Photo
