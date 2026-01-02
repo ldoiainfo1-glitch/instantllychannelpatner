@@ -70,6 +70,22 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Memory monitoring - log warnings before crashes
+setInterval(() => {
+  const used = process.memoryUsage();
+  const heapUsedMB = (used.heapUsed / 1024 / 1024).toFixed(2);
+  const rss = (used.rss / 1024 / 1024).toFixed(2);
+  
+  // Warn if memory usage exceeds 1.5GB (75% of 2GB)
+  if (used.rss > 1.5 * 1024 * 1024 * 1024) {
+    console.warn(`⚠️ HIGH MEMORY USAGE: Heap=${heapUsedMB}MB, RSS=${rss}MB - Triggering GC...`);
+    if (global.gc) {
+      global.gc();
+      console.log('✅ Manual garbage collection completed');
+    }
+  }
+}, 30000); // Check every 30 seconds
+
 // Import index creation utility
 const ensureIndexes = require('../utils/ensureIndexes');
 

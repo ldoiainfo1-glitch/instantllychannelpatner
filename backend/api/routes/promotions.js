@@ -3,6 +3,31 @@ const router = express.Router();
 const multer = require('multer');
 const Promotion = require('../models/Promotion');
 
+// Simple in-memory request queue to prevent concurrent image uploads
+let activeImageUploads = 0;
+const MAX_CONCURRENT_UPLOADS = 2; // Limit to 2 concurrent uploads (prevents memory spikes)
+
+const queueUpload = () => {
+    return new Promise((resolve) => {
+        const checkQueue = () => {
+            if (activeImageUploads < MAX_CONCURRENT_UPLOADS) {
+                activeImageUploads++;
+                console.log(`📊 Active uploads: ${activeImageUploads}/${MAX_CONCURRENT_UPLOADS}`);
+                resolve();
+            } else {
+                console.log(`⏳ Upload queue full (${activeImageUploads}/${MAX_CONCURRENT_UPLOADS}), waiting...`);
+                setTimeout(checkQueue, 100); // Check again in 100ms
+            }
+        };
+        checkQueue();
+    });
+};
+
+const releaseUpload = () => {
+    activeImageUploads--;
+    console.log(`✅ Upload released. Active: ${activeImageUploads}/${MAX_CONCURRENT_UPLOADS}`);
+};
+
 // Configure multer for memory storage
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -167,6 +192,9 @@ router.post('/upload', upload.single('image'), async (req, res) => {
     const uploadId = Date.now();
     console.log(`\n🚀 [UPLOAD ${uploadId}] ======== NEW UPLOAD REQUEST ========`);
     
+    // Wait for queue slot
+    await queueUpload();
+    
     try {
         const { date, language, uploadedBy, about } = req.body;
         console.log(`📝 [UPLOAD ${uploadId}] Request body:`, { date, language, uploadedBy, about });
@@ -247,6 +275,9 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         console.log(`✅ [UPLOAD ${uploadId}] Successfully saved to database`);
         console.log(`🎉 [UPLOAD ${uploadId}] Upload complete for ${langLower} on ${date}`);
         
+        // Clear buffer from memory immediately
+        req.file.buffer = null;
+        
         res.json({
             success: true,
             message: `Promotion uploaded successfully for ${language} on ${date}`,
@@ -270,6 +301,9 @@ router.post('/upload', upload.single('image'), async (req, res) => {
         });
         
         console.log(`❌ [UPLOAD ${uploadId}] Error response sent\n`);
+    } finally {
+        // Always release the queue slot
+        releaseUpload();
     }
 });
 
