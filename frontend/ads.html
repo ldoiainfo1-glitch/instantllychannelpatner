@@ -548,6 +548,7 @@
 
         // Check authentication on page load
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Ads page initializing...');
             checkAuth();
             loadMyAds();
             setupUploadAreas();
@@ -556,14 +557,17 @@
             // Set minimum date to today
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('startDate').min = today;
+            console.log('📅 Minimum start date set to:', today);
 
             // Add event listeners for media type radio buttons
             document.querySelectorAll('input[name="mediaType"]').forEach(radio => {
                 radio.addEventListener('change', updateMediaType);
+                console.log('🔘 Media type listener added for:', radio.value);
             });
 
             // Initialize media type sections
             updateMediaType();
+            console.log('✅ Ads page initialization complete');
         });
 
         function checkAuth() {
@@ -601,11 +605,15 @@
         }
 
         function setupUploadArea(areaId, inputId, previewId, setFileCallback, label) {
+            console.log('📁 Setting up upload area:', label);
             const area = document.getElementById(areaId);
             const input = document.getElementById(inputId);
             const preview = document.getElementById(previewId);
 
-            area.addEventListener('click', () => input.click());
+            area.addEventListener('click', () => {
+                console.log('🖱️ Upload area clicked:', label);
+                input.click();
+            });
 
             area.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -631,8 +639,10 @@
             input.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file) {
+                    console.log('📎 File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
                     setFileCallback(file);
                     displayPreview(file, preview, label, () => {
+                        console.log('🗑️ File removed:', label);
                         setFileCallback(null);
                         input.value = '';
                     });
@@ -660,16 +670,21 @@
 
         // Price calculation based on duration
         function updatePrice() {
+            console.log('💰 updatePrice() called');
             const durationSelect = document.getElementById('adDuration');
             const costInput = document.getElementById('adCost');
             const duration = parseInt(durationSelect.value) || 0;
+            console.log('📊 Selected duration:', duration, 'months');
             
             if (duration > 0) {
                 const totalCost = duration * 1200;
+                console.log('💵 Calculated cost:', totalCost, 'rupees/credits');
                 costInput.value = `₹${totalCost.toLocaleString()} (${totalCost.toLocaleString()} credits)`;
+                console.log('✅ Cost field updated:', costInput.value);
                 // Update end date when duration changes
                 updateEndDate();
             } else {
+                console.log('⚠️ No duration selected, resetting cost');
                 costInput.value = '₹0 (0 credits)';
                 document.getElementById('endDateDisplay').textContent = 'Select start date and duration';
             }
@@ -677,62 +692,81 @@
 
         // Auto-calculate end date based on start date + duration
         function updateEndDate() {
+            console.log('📅 updateEndDate() called');
             const startDateInput = document.getElementById('startDate');
             const durationSelect = document.getElementById('adDuration');
             const endDateDisplay = document.getElementById('endDateDisplay');
             
             const startDate = startDateInput.value;
             const duration = parseInt(durationSelect.value) || 0;
+            console.log('📆 Start date:', startDate);
+            console.log('📊 Duration:', duration, 'months');
             
             if (startDate && duration > 0) {
                 const start = new Date(startDate);
                 const end = new Date(start);
                 end.setMonth(end.getMonth() + duration);
+                console.log('🎯 Calculated end date:', end.toISOString());
                 
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
                 const endDateFormatted = end.toLocaleDateString('en-IN', options);
+                console.log('✅ Formatted end date:', endDateFormatted);
                 
                 endDateDisplay.innerHTML = `<strong>${endDateFormatted}</strong> <span class="text-muted">(${duration} month${duration > 1 ? 's' : ''} from start date)</span>`;
             } else {
+                console.log('⚠️ Missing start date or duration');
                 endDateDisplay.textContent = 'Select start date and duration';
             }
         }
 
         // Update media type sections based on selection
         function updateMediaType() {
+            console.log('🎬 updateMediaType() called');
             const mediaType = document.querySelector('input[name="mediaType"]:checked').value;
+            console.log('📺 Selected media type:', mediaType);
+            
             const fullscreenInput = document.getElementById('fullscreenInput');
             const fullscreenLabel = document.getElementById('fullscreenLabel');
             const fullscreenHint = document.getElementById('fullscreenHint');
             const fullscreenTitle = document.getElementById('fullscreenTitle');
             
             if (mediaType === 'video') {
+                console.log('🎥 Switching to video mode');
                 fullscreenInput.accept = 'video/*';
                 fullscreenLabel.innerHTML = '<i class="fas fa-video me-1"></i>Fullscreen Video (Optional)';
                 fullscreenHint.innerHTML = 'This video appears when user taps the bottom banner. Recommended size: <strong>MP4 format, max 50MB</strong>';
                 fullscreenTitle.textContent = 'Drag & Drop Fullscreen Video Here';
+                console.log('✅ Video mode applied');
             } else {
+                console.log('🖼️ Switching to image mode');
                 fullscreenInput.accept = 'image/*';
                 fullscreenLabel.innerHTML = '<i class="fas fa-expand me-1"></i>Fullscreen Image (Optional)';
                 fullscreenHint.innerHTML = 'This image appears when user taps the bottom banner. Recommended size: <strong>624 × 1000 pixels</strong>';
                 fullscreenTitle.textContent = 'Drag & Drop Fullscreen Image Here';
+                console.log('✅ Image mode applied');
             }
         }
 
         function setupFormSubmit() {
             const form = document.getElementById('adUploadForm');
+            console.log('📝 Form submit handler attached');
             
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+                console.log('🚀 Form submission started');
 
                 if (!bottomBannerFile) {
+                    console.error('❌ No bottom banner file selected');
                     alert('Please select at least the bottom banner image (required)');
                     return;
                 }
+                console.log('✅ Bottom banner file present:', bottomBannerFile?.name);
 
                 // Validate duration selection
                 const duration = parseInt(document.getElementById('adDuration').value);
+                console.log('📊 Duration value:', duration);
                 if (!duration || duration < 1) {
+                    console.error('❌ Invalid duration');
                     alert('Please select advertisement duration');
                     return;
                 }
@@ -741,6 +775,7 @@
                 const startDate = new Date(document.getElementById('startDate').value);
                 const endDate = new Date(startDate);
                 endDate.setMonth(endDate.getMonth() + duration);
+                console.log('📅 Calculated dates - Start:', startDate, 'End:', endDate);
 
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalHTML = submitBtn.innerHTML;
@@ -748,13 +783,31 @@
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
 
                 const formData = new FormData();
-                formData.append('title', document.getElementById('adTitle').value);
-                formData.append('phoneNumber', document.getElementById('phoneNumber').value);
-                formData.append('startDate', document.getElementById('startDate').value);
-                formData.append('endDate', endDate.toISOString().split('T')[0]); // Auto-calculated end date
+                const title = document.getElementById('adTitle').value;
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                const startDateValue = document.getElementById('startDate').value;
+                const endDateValue = endDate.toISOString().split('T')[0];
+                const mediaType = document.querySelector('input[name="mediaType"]:checked').value;
+                const cost = duration * 1200;
+                
+                console.log('📋 Form data to submit:');
+                console.log('  - Title:', title);
+                console.log('  - Phone:', phoneNumber);
+                console.log('  - Start Date:', startDateValue);
+                console.log('  - End Date:', endDateValue);
+                console.log('  - Duration:', duration, 'months');
+                console.log('  - Media Type:', mediaType);
+                console.log('  - Cost:', cost, 'credits');
+                console.log('  - Bottom Banner:', bottomBannerFile?.name);
+                console.log('  - Fullscreen:', fullscreenFile?.name || 'None');
+                
+                formData.append('title', title);
+                formData.append('phoneNumber', phoneNumber);
+                formData.append('startDate', startDateValue);
+                formData.append('endDate', endDateValue); // Auto-calculated end date
                 formData.append('duration', duration); // Add duration field
-                formData.append('mediaType', document.querySelector('input[name="mediaType"]:checked').value); // Add media type
-                formData.append('cost', duration * 1200); // Add cost field
+                formData.append('mediaType', mediaType); // Add media type
+                formData.append('cost', cost); // Add cost field
 
                 if (bottomBannerFile) {
                     formData.append('images', bottomBannerFile);
@@ -764,8 +817,10 @@
                 }
 
                 const token = localStorage.getItem('authToken');
+                console.log('🔑 Auth token present:', !!token);
 
                 try {
+                    console.log('📤 Sending POST request to:', `${API_BASE_URL}/channel-partner/ads`);
                     const response = await fetch(`${API_BASE_URL}/channel-partner/ads`, {
                         method: 'POST',
                         headers: {
@@ -773,22 +828,28 @@
                         },
                         body: formData
                     });
+                    console.log('📥 Response status:', response.status, response.statusText);
 
                     const data = await response.json();
+                    console.log('📦 Response data:', data);
 
                     if (response.ok) {
+                        console.log('✅ Advertisement uploaded successfully!');
                         alert('Advertisement uploaded successfully! Awaiting admin approval.');
                         clearForm();
                         loadMyAds();
                         // Switch to My Ads tab
                         document.querySelector('[data-bs-target="#myAdsTab"]').click();
                     } else {
+                        console.error('❌ Upload failed:', data.message);
                         alert(`Error: ${data.message || 'Failed to upload advertisement'}`);
                     }
                 } catch (error) {
-                    console.error('Upload error:', error);
+                    console.error('💥 Upload error:', error);
+                    console.error('Error details:', error.message, error.stack);
                     alert('Failed to upload advertisement. Please try again.');
                 } finally {
+                    console.log('🔄 Resetting submit button');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = originalHTML;
                 }
@@ -796,19 +857,23 @@
         }
 
         function clearForm() {
+            console.log('🧹 Clearing form...');
             document.getElementById('adUploadForm').reset();
             document.getElementById('bottomBannerPreview').innerHTML = '';
             document.getElementById('fullscreenPreview').innerHTML = '';
             bottomBannerFile = null;
             fullscreenFile = null;
+            console.log('🗑️ File references cleared');
             
             // Reset calculated fields
             document.getElementById('adCost').value = '₹0 (0 credits)';
             document.getElementById('endDateDisplay').textContent = 'Select start date and duration';
+            console.log('💰 Calculated fields reset');
             
             // Reset to default media type
             document.getElementById('mediaImage').checked = true;
             updateMediaType();
+            console.log('✅ Form cleared successfully');
         }
 
         async function loadMyAds() {
