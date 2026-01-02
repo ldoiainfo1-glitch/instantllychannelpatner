@@ -592,27 +592,65 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
 function generatePositionId(location, designation) {
   const parts = [];
   
-  // Build hierarchical position ID
+  // Always include country
   if (location.country) parts.push(location.country.toLowerCase().replace(/\s+/g, '-'));
-  if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
-  if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
-  if (location.division) parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
-  if (location.district) parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
-  if (location.tehsil) parts.push(location.tehsil.toLowerCase().replace(/\s+/g, '-'));
-  if (location.pincode) parts.push(location.pincode.toLowerCase().replace(/\s+/g, '-'));
-  if (location.village) parts.push(location.village.toLowerCase().replace(/\s+/g, '-'));
   
-  // Determine position type
+  // Determine position type and build FULL HIERARCHY path
   let positionType = 'president';
-  if (location.village) positionType = 'village-head';
-  else if (location.pincode) positionType = 'pincode-head';
-  else if (location.tehsil) positionType = 'tehsil-head';
-  else if (location.district) positionType = 'district-head';
-  else if (location.division) positionType = 'division-head';
-  else if (location.state) positionType = 'state-head';
-  else if (location.zone) positionType = 'zone-head';
   
-  // Create unique position ID: pos_type_location-hierarchy
+  if (location.village) {
+    positionType = 'village-head';
+    // Build full hierarchy: country > zone > state > division > district > tehsil > pincode > village
+    if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+    if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
+    if (location.division) parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
+    if (location.district) parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
+    if (location.tehsil) parts.push(location.tehsil.toLowerCase().replace(/\s+/g, '-'));
+    if (location.pincode) parts.push(location.pincode.toLowerCase().replace(/\s+/g, '-'));
+    if (location.village) parts.push(location.village.toLowerCase().replace(/\s+/g, '-'));
+  } else if (location.pincode) {
+    positionType = 'pincode-head';
+    // Build full hierarchy: country > zone > state > division > district > tehsil > pincode
+    if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+    if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
+    if (location.division) parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
+    if (location.district) parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
+    if (location.tehsil) parts.push(location.tehsil.toLowerCase().replace(/\s+/g, '-'));
+    if (location.pincode) parts.push(location.pincode.toLowerCase().replace(/\s+/g, '-'));
+  } else if (location.tehsil) {
+    positionType = 'tehsil-head';
+    // Build full hierarchy: country > zone > state > division > district > tehsil
+    if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+    if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
+    if (location.division) parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
+    if (location.district) parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
+    if (location.tehsil) parts.push(location.tehsil.toLowerCase().replace(/\s+/g, '-'));
+  } else if (location.district) {
+    positionType = 'district-head';
+    // Build full hierarchy: country > zone > state > division > district
+    if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+    if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
+    if (location.division) parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
+    if (location.district) parts.push(location.district.toLowerCase().replace(/\s+/g, '-'));
+  } else if (location.division) {
+    positionType = 'division-head';
+    // Build full hierarchy: country > zone > state > division
+    if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+    if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
+    if (location.division) parts.push(location.division.toLowerCase().replace(/\s+/g, '-'));
+  } else if (location.state) {
+    positionType = 'state-head';
+    // Build full hierarchy: country > zone > state
+    if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+    if (location.state) parts.push(location.state.toLowerCase().replace(/\s+/g, '-'));
+  } else if (location.zone) {
+    positionType = 'zone-head';
+    // Build full hierarchy: country > zone
+    if (location.zone) parts.push(location.zone.toLowerCase().replace(/\s+/g, '-'));
+  }
+  
+  // Create unique position ID with FULL hierarchy
+  // Example: pos_tehsil-head_india_east-zone_bihar_patna-sahib-division_patna_sampatchak
   const locationPath = parts.join('_');
   return `pos_${positionType}_${locationPath}`;
 }
