@@ -860,14 +860,32 @@
 
                         <form id="adCreationForm" onsubmit="submitAdvertisement(event)">
                             <div class="row">
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-12 mb-3">
                                     <label class="form-label fw-bold">
                                         <i class="fas fa-heading me-2"></i>Advertisement Title *
                                     </label>
                                     <input type="text" class="form-control" id="adTitle" required placeholder="e.g., Summer Sale 2024">
                                 </div>
 
-                                <div class="col-md-6 mb-3">
+                                <!-- Media Type Selection -->
+                                <div class="col-md-12 mb-4">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-photo-video me-2"></i>Media Type *
+                                    </label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="adMediaType" id="adMediaImage" value="image" checked>
+                                        <label class="btn btn-outline-primary" for="adMediaImage">
+                                            <i class="fas fa-image me-2"></i>Image
+                                        </label>
+                                        <input type="radio" class="btn-check" name="adMediaType" id="adMediaVideo" value="video">
+                                        <label class="btn btn-outline-primary" for="adMediaVideo">
+                                            <i class="fas fa-video me-2"></i>Video
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Select whether your advertisement is an image or video</small>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
                                     <label class="form-label fw-bold">
                                         <i class="fas fa-phone me-2"></i>Contact Phone Number *
                                     </label>
@@ -875,18 +893,45 @@
                                     <small class="text-muted">Users will see Call/Message buttons with this number</small>
                                 </div>
 
+                                <!-- Duration Selection -->
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">
-                                        <i class="fas fa-calendar me-2"></i>Start Date *
+                                        <i class="fas fa-calendar-alt me-2"></i>Advertisement Duration *
                                     </label>
-                                    <input type="date" class="form-control" id="adStartDate" required>
+                                    <select class="form-select" id="adDuration" required onchange="updateAdPrice()">
+                                        <option value="">Select duration...</option>
+                                        <option value="1">1 Month</option>
+                                        <option value="2">2 Months</option>
+                                        <option value="3">3 Months</option>
+                                        <option value="4">4 Months</option>
+                                        <option value="5">5 Months</option>
+                                        <option value="6">6 Months</option>
+                                        <option value="12">12 Months (1 Year)</option>
+                                    </select>
+                                    <small class="text-muted">Select how long you want your ad to run</small>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">
-                                        <i class="fas fa-calendar-check me-2"></i>End Date *
+                                        <i class="fas fa-coins me-2"></i>Total Cost *
                                     </label>
-                                    <input type="date" class="form-control" id="adEndDate" required>
+                                    <input type="text" class="form-control bg-light" id="adCost" value="₹0 (0 credits)" readonly>
+                                    <small class="text-muted">₹1200 per month (1200 credits)</small>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-calendar me-2"></i>Start Date *
+                                    </label>
+                                    <input type="date" class="form-control" id="adStartDate" required onchange="updateAdEndDate()">
+                                    <small class="text-muted">Your ad will start on this date</small>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>End Date:</strong> <span id="adEndDateDisplay">Select start date and duration</span>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
@@ -900,11 +945,11 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">
+                                    <label class="form-label fw-bold" id="adFullscreenLabel">
                                         <i class="fas fa-image me-2"></i>Fullscreen Image (Optional) (624 × 1000px)
                                     </label>
-                                    <input type="file" class="form-control" id="adFullscreenImage" accept="image/*">
-                                    <small class="text-muted">Shown when user taps the banner</small>
+                                    <input type="file" class="form-control" id="adFullscreenImage" accept="image/*,video/*">
+                                    <small class="text-muted" id="adFullscreenHint">Shown when user taps the banner</small>
                                     <div id="fullscreenImagePreview" class="mt-2" style="display: none;">
                                         <img id="fullscreenImagePreviewImg" src="" class="img-fluid rounded border" style="max-height: 200px;">
                                     </div>
@@ -914,7 +959,7 @@
                             <div class="alert alert-warning">
                                 <i class="fas fa-coins me-2"></i>
                                 <strong>Current Credits:</strong> <span id="adFormCredits">0</span> 
-                                | <strong>Cost:</strong> 1200 credits
+                                | <strong>Cost:</strong> <span id="adFormCostDisplay">Select duration</span>
                             </div>
 
                             <button type="submit" class="btn btn-primary btn-lg" id="submitAdBtn">
@@ -2397,6 +2442,11 @@
             previewAdImage(e.target.files[0], 'fullscreenImagePreview', 'fullscreenImagePreviewImg');
         });
 
+        // Media type change handler
+        document.querySelectorAll('input[name="adMediaType"]').forEach(radio => {
+            radio.addEventListener('change', updateAdMediaType);
+        });
+
         function previewAdImage(file, previewDivId, previewImgId) {
             if (file) {
                 const reader = new FileReader();
@@ -2408,18 +2458,110 @@
             }
         }
 
+        // Price calculation based on duration
+        function updateAdPrice() {
+            console.log('💰 updateAdPrice() called');
+            const durationSelect = document.getElementById('adDuration');
+            const costInput = document.getElementById('adCost');
+            const costDisplay = document.getElementById('adFormCostDisplay');
+            const duration = parseInt(durationSelect.value) || 0;
+            console.log('📊 Selected duration:', duration, 'months');
+            
+            if (duration > 0) {
+                const totalCost = duration * 1200;
+                console.log('💵 Calculated cost:', totalCost, 'credits');
+                costInput.value = `₹${totalCost.toLocaleString()} (${totalCost.toLocaleString()} credits)`;
+                if (costDisplay) {
+                    costDisplay.textContent = `${totalCost.toLocaleString()} credits`;
+                }
+                console.log('✅ Cost field updated');
+                // Update end date when duration changes
+                updateAdEndDate();
+            } else {
+                console.log('⚠️ No duration selected');
+                costInput.value = '₹0 (0 credits)';
+                if (costDisplay) {
+                    costDisplay.textContent = 'Select duration';
+                }
+                document.getElementById('adEndDateDisplay').textContent = 'Select start date and duration';
+            }
+        }
+
+        // Auto-calculate end date based on start date + duration
+        function updateAdEndDate() {
+            console.log('📅 updateAdEndDate() called');
+            const startDateInput = document.getElementById('adStartDate');
+            const durationSelect = document.getElementById('adDuration');
+            const endDateDisplay = document.getElementById('adEndDateDisplay');
+            
+            const startDate = startDateInput.value;
+            const duration = parseInt(durationSelect.value) || 0;
+            console.log('📆 Start date:', startDate);
+            console.log('📊 Duration:', duration, 'months');
+            
+            if (startDate && duration > 0) {
+                const start = new Date(startDate);
+                const end = new Date(start);
+                end.setMonth(end.getMonth() + duration);
+                console.log('🎯 Calculated end date:', end.toISOString());
+                
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const endDateFormatted = end.toLocaleDateString('en-IN', options);
+                console.log('✅ Formatted end date:', endDateFormatted);
+                
+                endDateDisplay.innerHTML = `<strong>${endDateFormatted}</strong> <span class="text-muted">(${duration} month${duration > 1 ? 's' : ''} from start date)</span>`;
+            } else {
+                console.log('⚠️ Missing start date or duration');
+                endDateDisplay.textContent = 'Select start date and duration';
+            }
+        }
+
+        // Update media type sections based on selection
+        function updateAdMediaType() {
+            console.log('🎬 updateAdMediaType() called');
+            const mediaType = document.querySelector('input[name="adMediaType"]:checked')?.value || 'image';
+            console.log('📺 Selected media type:', mediaType);
+            
+            const fullscreenInput = document.getElementById('adFullscreenImage');
+            const fullscreenLabel = document.getElementById('adFullscreenLabel');
+            const fullscreenHint = document.getElementById('adFullscreenHint');
+            
+            if (mediaType === 'video') {
+                console.log('🎥 Switching to video mode');
+                if (fullscreenInput) fullscreenInput.accept = 'video/*';
+                if (fullscreenLabel) fullscreenLabel.innerHTML = '<i class="fas fa-video me-2"></i>Fullscreen Video (Optional) (MP4, max 50MB)';
+                if (fullscreenHint) fullscreenHint.textContent = 'This video appears when user taps the bottom banner';
+                console.log('✅ Video mode applied');
+            } else {
+                console.log('🖼️ Switching to image mode');
+                if (fullscreenInput) fullscreenInput.accept = 'image/*';
+                if (fullscreenLabel) fullscreenLabel.innerHTML = '<i class="fas fa-image me-2"></i>Fullscreen Image (Optional) (624 × 1000px)';
+                if (fullscreenHint) fullscreenHint.textContent = 'Shown when user taps the banner';
+                console.log('✅ Image mode applied');
+            }
+        }
+
         function showCreateAdForm() {
             // Update credits display
             document.getElementById('adFormCredits').textContent = (currentUser?.credits || 0).toLocaleString('en-IN');
             
-            // Check if user has enough credits
+            // Check if user has enough credits (minimum 1200 for 1 month)
             if (!currentUser || currentUser.credits < 1200) {
                 showNotification(
-                    `Insufficient credits! You have ${currentUser?.credits || 0} credits but need 1200 credits to create an ad.`,
+                    `Insufficient credits! You have ${currentUser?.credits || 0} credits but need at least 1200 credits to create an ad.`,
                     'error'
                 );
                 return;
             }
+            
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('adStartDate').min = today;
+            console.log('📅 Minimum start date set to:', today);
+            
+            // Initialize media type
+            document.getElementById('adMediaImage').checked = true;
+            updateAdMediaType();
             
             document.getElementById('createAdForm').style.display = 'block';
             document.getElementById('createAdForm').scrollIntoView({ behavior: 'smooth' });
@@ -2430,6 +2572,17 @@
             document.getElementById('adCreationForm').reset();
             document.getElementById('bottomImagePreview').style.display = 'none';
             document.getElementById('fullscreenImagePreview').style.display = 'none';
+            
+            // Reset calculated fields
+            document.getElementById('adCost').value = '₹0 (0 credits)';
+            document.getElementById('adEndDateDisplay').textContent = 'Select start date and duration';
+            document.getElementById('adFormCostDisplay').textContent = 'Select duration';
+            
+            // Reset to default media type
+            document.getElementById('adMediaImage').checked = true;
+            updateAdMediaType();
+            
+            console.log('🧹 Ad form cleared');
         }
 
         async function loadUserAdvertisements() {
@@ -2508,25 +2661,48 @@
 
         async function submitAdvertisement(event) {
             event.preventDefault();
+            console.log('🚀 Ad submission started');
 
             const title = document.getElementById('adTitle').value;
             const phone = document.getElementById('adPhone').value;
             const startDate = document.getElementById('adStartDate').value;
-            const endDate = document.getElementById('adEndDate').value;
+            const duration = parseInt(document.getElementById('adDuration').value);
+            const mediaType = document.querySelector('input[name="adMediaType"]:checked')?.value || 'image';
             const bottomImageFile = document.getElementById('adBottomImage').files[0];
             const fullscreenImageFile = document.getElementById('adFullscreenImage').files[0];
 
+            console.log('📝 Form data:', { title, phone, startDate, duration, mediaType });
+
             // Validation
-            if (!title || !phone || !startDate || !endDate || !bottomImageFile) {
-                showNotification('Please fill all required fields and upload bottom banner image', 'error');
+            if (!title || !phone || !startDate || !duration || !bottomImageFile) {
+                console.error('❌ Missing required fields');
+                showNotification('Please fill all required fields: title, phone, start date, duration, and bottom banner image', 'error');
                 return;
             }
 
-            // Check credits again
+            if (duration < 1) {
+                console.error('❌ Invalid duration');
+                showNotification('Please select a valid advertisement duration', 'error');
+                return;
+            }
+
+            // Calculate end date based on duration
+            const start = new Date(startDate);
+            const end = new Date(start);
+            end.setMonth(end.getMonth() + duration);
+            const endDate = end.toISOString().split('T')[0];
+            console.log('📅 Calculated end date:', endDate);
+
+            // Calculate cost
+            const cost = duration * 1200;
+            console.log('💰 Total cost:', cost, 'credits');
+
+            // Check credits
             const currentCredits = currentUser?.credits || 0;
-            if (currentCredits < 1200) {
+            if (currentCredits < cost) {
+                console.error('❌ Insufficient credits');
                 showNotification(
-                    `Insufficient credits! You have ${currentCredits} credits but need 1200 credits.`,
+                    `Insufficient credits! You have ${currentCredits} credits but need ${cost} credits for ${duration} month${duration > 1 ? 's' : ''}.`,
                     'error'
                 );
                 return;
@@ -2537,7 +2713,10 @@
             formData.append('title', title);
             formData.append('phoneNumber', phone);
             formData.append('startDate', startDate);
-            formData.append('endDate', endDate);
+            formData.append('endDate', endDate); // Auto-calculated
+            formData.append('duration', duration); // Add duration
+            formData.append('cost', cost); // Add cost
+            formData.append('mediaType', mediaType); // Add media type
             formData.append('uploaderName', currentUser?.name || 'Channel Partner');
             formData.append('uploaderPhone', currentUser?.phone || phone);
             formData.append('images', bottomImageFile);
@@ -2545,9 +2724,11 @@
                 formData.append('images', fullscreenImageFile);
             }
 
-            // Show confirmation modal
+            console.log('📦 FormData prepared with duration:', duration, 'cost:', cost, 'mediaType:', mediaType);
+
+            // Show confirmation modal with updated cost
             document.getElementById('modalCurrentBalance').textContent = currentCredits.toLocaleString('en-IN');
-            document.getElementById('modalAfterBalance').textContent = (currentCredits - 1200).toLocaleString('en-IN') + ' credits';
+            document.getElementById('modalAfterBalance').textContent = (currentCredits - cost).toLocaleString('en-IN') + ' credits';
             
             const confirmModal = new bootstrap.Modal(document.getElementById('adConfirmationModal'));
             confirmModal.show();
@@ -2560,11 +2741,12 @@
             
             const handleConfirm = async () => {
                 confirmModal.hide();
-                await proceedWithAdSubmission(formData, currentCredits, submitBtn);
+                await proceedWithAdSubmission(formData, currentCredits, submitBtn, cost, duration);
                 cleanup();
             };
             
             const handleCancel = () => {
+                console.log('❌ User cancelled submission');
                 cleanup();
             };
             
@@ -2577,24 +2759,30 @@
             modalElement.addEventListener('hidden.bs.modal', handleCancel, { once: true });
         }
 
-        async function proceedWithAdSubmission(formData, currentCredits, submitBtn) {
+        async function proceedWithAdSubmission(formData, currentCredits, submitBtn, cost = 1200, duration = 1) {
+            console.log('📤 Proceeding with submission - Cost:', cost, 'Duration:', duration);
             // Show loading
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Submitting...';
 
             try {
+                console.log('📡 Sending POST request to API...');
                 const response = await fetch(`${API_BASE_URL}/ads`, {
                     method: 'POST',
                     body: formData
                 });
+                console.log('📥 Response status:', response.status);
 
                 const data = await response.json();
+                console.log('📦 Response data:', data);
 
                 if (response.ok) {
+                    const remainingCredits = data.remainingCredits?.toLocaleString('en-IN') || (currentCredits - cost).toLocaleString('en-IN');
+                    console.log('✅ Ad submitted successfully! Remaining:', remainingCredits);
                     showNotification(
                         `✅ Advertisement submitted successfully!\n\n` +
-                        `💳 1200 credits deducted\n` +
-                        `📊 Remaining: ${data.remainingCredits?.toLocaleString('en-IN') || (currentCredits - 1200).toLocaleString('en-IN')} credits\n\n` +
+                        `💳 ${cost} credits deducted (${duration} month${duration > 1 ? 's' : ''})\n` +
+                        `📊 Remaining: ${remainingCredits} credits\n\n` +
                         `⏳ Your ad is pending admin approval.`,
                         'success'
                     );
