@@ -935,10 +935,11 @@
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">
+                                    <label class="form-label fw-bold" id="adBottomLabel">
                                         <i class="fas fa-image me-2"></i>Bottom Banner Image * (624 × 174px)
                                     </label>
-                                    <input type="file" class="form-control" id="adBottomImage" accept="image/*" required>
+                                    <input type="file" class="form-control" id="adBottomImage" accept="image/*,video/*" required>
+                                    <small class="text-muted" id="adBottomHint">This appears in the bottom carousel</small>
                                     <div id="bottomImagePreview" class="mt-2" style="display: none;">
                                         <img id="bottomImagePreviewImg" src="" class="img-fluid rounded border" style="max-height: 150px;">
                                     </div>
@@ -2522,22 +2523,35 @@
             const mediaType = document.querySelector('input[name="adMediaType"]:checked')?.value || 'image';
             console.log('📺 Selected media type:', mediaType);
             
+            const bottomInput = document.getElementById('adBottomImage');
+            const bottomLabel = document.getElementById('adBottomLabel');
+            const bottomHint = document.getElementById('adBottomHint');
             const fullscreenInput = document.getElementById('adFullscreenImage');
             const fullscreenLabel = document.getElementById('adFullscreenLabel');
             const fullscreenHint = document.getElementById('adFullscreenHint');
             
             if (mediaType === 'video') {
                 console.log('🎥 Switching to video mode');
+                // Update bottom banner for video
+                if (bottomInput) bottomInput.accept = 'video/*';
+                if (bottomLabel) bottomLabel.innerHTML = '<i class="fas fa-video me-2"></i>Bottom Banner Video * (MP4, max 50MB)';
+                if (bottomHint) bottomHint.textContent = 'This video appears in the bottom carousel';
+                // Update fullscreen for video
                 if (fullscreenInput) fullscreenInput.accept = 'video/*';
                 if (fullscreenLabel) fullscreenLabel.innerHTML = '<i class="fas fa-video me-2"></i>Fullscreen Video (Optional) (MP4, max 50MB)';
                 if (fullscreenHint) fullscreenHint.textContent = 'This video appears when user taps the bottom banner';
-                console.log('✅ Video mode applied');
+                console.log('✅ Video mode applied to both banners');
             } else {
                 console.log('🖼️ Switching to image mode');
+                // Update bottom banner for image
+                if (bottomInput) bottomInput.accept = 'image/*';
+                if (bottomLabel) bottomLabel.innerHTML = '<i class="fas fa-image me-2"></i>Bottom Banner Image * (624 × 174px)';
+                if (bottomHint) bottomHint.textContent = 'This appears in the bottom carousel';
+                // Update fullscreen for image
                 if (fullscreenInput) fullscreenInput.accept = 'image/*';
                 if (fullscreenLabel) fullscreenLabel.innerHTML = '<i class="fas fa-image me-2"></i>Fullscreen Image (Optional) (624 × 1000px)';
                 if (fullscreenHint) fullscreenHint.textContent = 'Shown when user taps the banner';
-                console.log('✅ Image mode applied');
+                console.log('✅ Image mode applied to both banners');
             }
         }
 

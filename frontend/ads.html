@@ -393,17 +393,17 @@
                                 </div>
 
                                 <div class="col-12 mb-4" id="bottomBannerSection">
-                                    <label class="form-label">
+                                    <label class="form-label" id="bottomBannerLabel">
                                         <i class="fas fa-mobile-alt me-1"></i>Bottom Banner Image (Required)
                                     </label>
-                                    <p class="text-muted small mb-2">
+                                    <p class="text-muted small mb-2" id="bottomBannerHint">
                                         This image appears in the bottom carousel. Recommended size: <strong>624 × 174 pixels</strong>
                                     </p>
                                     <div class="upload-area" id="bottomBannerArea">
                                         <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
                                         <h5>Drag & Drop Bottom Banner Here</h5>
                                         <p class="text-muted mb-3">or click to browse</p>
-                                        <input type="file" id="bottomBannerInput" accept="image/*" hidden>
+                                        <input type="file" id="bottomBannerInput" accept="image/*,video/*" hidden>
                                         <button type="button" class="btn btn-primary" 
                                                 onclick="document.getElementById('bottomBannerInput').click()">
                                             <i class="fas fa-folder-open me-2"></i>Choose File
@@ -725,6 +725,9 @@
             const mediaType = document.querySelector('input[name="mediaType"]:checked').value;
             console.log('📺 Selected media type:', mediaType);
             
+            const bottomInput = document.getElementById('bottomBannerInput');
+            const bottomLabel = document.getElementById('bottomBannerLabel');
+            const bottomHint = document.getElementById('bottomBannerHint');
             const fullscreenInput = document.getElementById('fullscreenInput');
             const fullscreenLabel = document.getElementById('fullscreenLabel');
             const fullscreenHint = document.getElementById('fullscreenHint');
@@ -732,18 +735,28 @@
             
             if (mediaType === 'video') {
                 console.log('🎥 Switching to video mode');
+                // Update bottom banner for video
+                bottomInput.accept = 'video/*';
+                bottomLabel.innerHTML = '<i class="fas fa-video me-1"></i>Bottom Banner Video (Required)';
+                bottomHint.innerHTML = 'This video appears in the bottom carousel. Recommended: <strong>MP4 format, max 50MB</strong>';
+                // Update fullscreen for video
                 fullscreenInput.accept = 'video/*';
                 fullscreenLabel.innerHTML = '<i class="fas fa-video me-1"></i>Fullscreen Video (Optional)';
                 fullscreenHint.innerHTML = 'This video appears when user taps the bottom banner. Recommended size: <strong>MP4 format, max 50MB</strong>';
                 fullscreenTitle.textContent = 'Drag & Drop Fullscreen Video Here';
-                console.log('✅ Video mode applied');
+                console.log('✅ Video mode applied to both banners');
             } else {
                 console.log('🖼️ Switching to image mode');
+                // Update bottom banner for image
+                bottomInput.accept = 'image/*';
+                bottomLabel.innerHTML = '<i class="fas fa-mobile-alt me-1"></i>Bottom Banner Image (Required)';
+                bottomHint.innerHTML = 'This image appears in the bottom carousel. Recommended size: <strong>624 × 174 pixels</strong>';
+                // Update fullscreen for image
                 fullscreenInput.accept = 'image/*';
                 fullscreenLabel.innerHTML = '<i class="fas fa-expand me-1"></i>Fullscreen Image (Optional)';
                 fullscreenHint.innerHTML = 'This image appears when user taps the bottom banner. Recommended size: <strong>624 × 1000 pixels</strong>';
                 fullscreenTitle.textContent = 'Drag & Drop Fullscreen Image Here';
-                console.log('✅ Image mode applied');
+                console.log('✅ Image mode applied to both banners');
             }
         }
 
