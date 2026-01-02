@@ -373,7 +373,26 @@
                                            placeholder="e.g., Summer Sale 2024" required>
                                 </div>
 
-                                <div class="col-12 mb-4">
+                                <!-- Media Type Selection -->
+                                <div class="col-md-12 mb-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-photo-video me-1"></i>Media Type <span class="text-danger">*</span>
+                                    </label>
+                                    <div class="btn-group w-100" role="group">
+                                        <input type="radio" class="btn-check" name="mediaType" id="mediaImage" value="image" checked>
+                                        <label class="btn btn-outline-primary" for="mediaImage">
+                                            <i class="fas fa-image me-2"></i>Image
+                                        </label>
+
+                                        <input type="radio" class="btn-check" name="mediaType" id="mediaVideo" value="video">
+                                        <label class="btn btn-outline-primary" for="mediaVideo">
+                                            <i class="fas fa-video me-2"></i>Video
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block mt-2">Select whether your advertisement is an image or video</small>
+                                </div>
+
+                                <div class="col-12 mb-4" id="bottomBannerSection">
                                     <label class="form-label">
                                         <i class="fas fa-mobile-alt me-1"></i>Bottom Banner Image (Required)
                                     </label>
@@ -393,22 +412,22 @@
                                     <div id="bottomBannerPreview"></div>
                                 </div>
 
-                                <div class="col-12 mb-4">
-                                    <label class="form-label">
+                                <div class="col-12 mb-4" id="fullscreenSection">
+                                    <label class="form-label" id="fullscreenLabel">
                                         <i class="fas fa-expand me-1"></i>Fullscreen Image (Optional)
                                     </label>
-                                    <p class="text-muted small mb-2">
+                                    <p class="text-muted small mb-2" id="fullscreenHint">
                                         This image appears when user taps the bottom banner. Recommended size: <strong>624 × 1000 pixels</strong>
                                     </p>
-                                    <div class="alert alert-warning py-2 px-3 d-flex align-items-center" style="font-size: 0.9rem;">
+                                    <div class="alert alert-warning py-2 px-3 d-flex align-items-center" style="font-size: 0.9rem;" id="fullscreenInfo">
                                         <i class="fas fa-info-circle me-2"></i>
                                         If not provided, users will see Call/Message/Cancel buttons when they tap the banner.
                                     </div>
                                     <div class="upload-area" id="fullscreenArea">
                                         <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
-                                        <h5>Drag & Drop Fullscreen Image Here</h5>
+                                        <h5 id="fullscreenTitle">Drag & Drop Fullscreen Image Here</h5>
                                         <p class="text-muted mb-3">or click to browse</p>
-                                        <input type="file" id="fullscreenInput" accept="image/*" hidden>
+                                        <input type="file" id="fullscreenInput" accept="image/*,video/*" hidden>
                                         <button type="button" class="btn btn-primary" 
                                                 onclick="document.getElementById('fullscreenInput').click()">
                                             <i class="fas fa-folder-open me-2"></i>Choose File
@@ -426,21 +445,43 @@
                                     <small class="text-muted">Used for Call/Message buttons in the mobile app</small>
                                 </div>
 
-                                <div class="col-12 mb-3">
+                                <!-- Duration Selection -->
+                                <div class="col-md-6 mb-3">
                                     <label class="form-label">
-                                        <i class="fas fa-calendar me-1"></i>Schedule
+                                        <i class="fas fa-calendar-alt me-1"></i>Advertisement Duration <span class="text-danger">*</span>
                                     </label>
-                                    <p class="text-muted small">Ad will automatically become active between these dates</p>
+                                    <select class="form-select" id="adDuration" required onchange="updatePrice()">
+                                        <option value="">Select duration...</option>
+                                        <option value="1">1 Month</option>
+                                        <option value="2">2 Months</option>
+                                        <option value="3">3 Months</option>
+                                        <option value="4">4 Months</option>
+                                        <option value="5">5 Months</option>
+                                        <option value="6">6 Months</option>
+                                        <option value="12">12 Months (1 Year)</option>
+                                    </select>
+                                    <small class="text-muted">Select how long you want your ad to run</small>
                                 </div>
 
                                 <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-coins me-1"></i>Total Cost <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control bg-light" id="adCost" value="₹0 (0 credits)" readonly>
+                                    <small class="text-muted">₹1200 per month (1200 credits)</small>
+                                </div>
+
+                                <div class="col-md-12 mb-3">
                                     <label class="form-label">Start Date <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="startDate" required>
+                                    <input type="date" class="form-control" id="startDate" required onchange="updateEndDate()">
+                                    <small class="text-muted">Your ad will start on this date</small>
                                 </div>
 
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">End Date <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="endDate" required>
+                                <div class="col-md-12 mb-3">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>End Date:</strong> <span id="endDateDisplay">Select start date and duration</span>
+                                    </div>
                                 </div>
 
                                 <div class="col-12 mt-3">
@@ -512,10 +553,17 @@
             setupUploadAreas();
             setupFormSubmit();
             
-            // Set minimum dates to today
+            // Set minimum date to today
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('startDate').min = today;
-            document.getElementById('endDate').min = today;
+
+            // Add event listeners for media type radio buttons
+            document.querySelectorAll('input[name="mediaType"]').forEach(radio => {
+                radio.addEventListener('change', updateMediaType);
+            });
+
+            // Initialize media type sections
+            updateMediaType();
         });
 
         function checkAuth() {
@@ -610,6 +658,67 @@
             reader.readAsDataURL(file);
         }
 
+        // Price calculation based on duration
+        function updatePrice() {
+            const durationSelect = document.getElementById('adDuration');
+            const costInput = document.getElementById('adCost');
+            const duration = parseInt(durationSelect.value) || 0;
+            
+            if (duration > 0) {
+                const totalCost = duration * 1200;
+                costInput.value = `₹${totalCost.toLocaleString()} (${totalCost.toLocaleString()} credits)`;
+                // Update end date when duration changes
+                updateEndDate();
+            } else {
+                costInput.value = '₹0 (0 credits)';
+                document.getElementById('endDateDisplay').textContent = 'Select start date and duration';
+            }
+        }
+
+        // Auto-calculate end date based on start date + duration
+        function updateEndDate() {
+            const startDateInput = document.getElementById('startDate');
+            const durationSelect = document.getElementById('adDuration');
+            const endDateDisplay = document.getElementById('endDateDisplay');
+            
+            const startDate = startDateInput.value;
+            const duration = parseInt(durationSelect.value) || 0;
+            
+            if (startDate && duration > 0) {
+                const start = new Date(startDate);
+                const end = new Date(start);
+                end.setMonth(end.getMonth() + duration);
+                
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                const endDateFormatted = end.toLocaleDateString('en-IN', options);
+                
+                endDateDisplay.innerHTML = `<strong>${endDateFormatted}</strong> <span class="text-muted">(${duration} month${duration > 1 ? 's' : ''} from start date)</span>`;
+            } else {
+                endDateDisplay.textContent = 'Select start date and duration';
+            }
+        }
+
+        // Update media type sections based on selection
+        function updateMediaType() {
+            const mediaType = document.querySelector('input[name="mediaType"]:checked').value;
+            const fullscreenInput = document.getElementById('fullscreenInput');
+            const fullscreenLabel = document.getElementById('fullscreenLabel');
+            const fullscreenHint = document.getElementById('fullscreenHint');
+            const fullscreenTitle = document.getElementById('fullscreenTitle');
+            
+            if (mediaType === 'video') {
+                fullscreenInput.accept = 'video/*';
+                fullscreenLabel.innerHTML = '<i class="fas fa-video me-1"></i>Fullscreen Video (Optional)';
+                fullscreenHint.innerHTML = 'This video appears when user taps the bottom banner. Recommended size: <strong>MP4 format, max 50MB</strong>';
+                fullscreenTitle.textContent = 'Drag & Drop Fullscreen Video Here';
+            } else {
+                fullscreenInput.accept = 'image/*';
+                fullscreenLabel.innerHTML = '<i class="fas fa-expand me-1"></i>Fullscreen Image (Optional)';
+                fullscreenHint.innerHTML = 'This image appears when user taps the bottom banner. Recommended size: <strong>624 × 1000 pixels</strong>';
+                fullscreenTitle.textContent = 'Drag & Drop Fullscreen Image Here';
+            }
+        }
+
         function setupFormSubmit() {
             const form = document.getElementById('adUploadForm');
             
@@ -621,6 +730,18 @@
                     return;
                 }
 
+                // Validate duration selection
+                const duration = parseInt(document.getElementById('adDuration').value);
+                if (!duration || duration < 1) {
+                    alert('Please select advertisement duration');
+                    return;
+                }
+
+                // Calculate end date
+                const startDate = new Date(document.getElementById('startDate').value);
+                const endDate = new Date(startDate);
+                endDate.setMonth(endDate.getMonth() + duration);
+
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const originalHTML = submitBtn.innerHTML;
                 submitBtn.disabled = true;
@@ -630,7 +751,10 @@
                 formData.append('title', document.getElementById('adTitle').value);
                 formData.append('phoneNumber', document.getElementById('phoneNumber').value);
                 formData.append('startDate', document.getElementById('startDate').value);
-                formData.append('endDate', document.getElementById('endDate').value);
+                formData.append('endDate', endDate.toISOString().split('T')[0]); // Auto-calculated end date
+                formData.append('duration', duration); // Add duration field
+                formData.append('mediaType', document.querySelector('input[name="mediaType"]:checked').value); // Add media type
+                formData.append('cost', duration * 1200); // Add cost field
 
                 if (bottomBannerFile) {
                     formData.append('images', bottomBannerFile);
@@ -677,6 +801,14 @@
             document.getElementById('fullscreenPreview').innerHTML = '';
             bottomBannerFile = null;
             fullscreenFile = null;
+            
+            // Reset calculated fields
+            document.getElementById('adCost').value = '₹0 (0 credits)';
+            document.getElementById('endDateDisplay').textContent = 'Select start date and duration';
+            
+            // Reset to default media type
+            document.getElementById('mediaImage').checked = true;
+            updateMediaType();
         }
 
         async function loadMyAds() {
