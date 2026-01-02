@@ -877,34 +877,36 @@
                         ctx.fillText(userPhone, textStartX, textStartY + 65);
                         
                         // Build combined location and designation line (3rd line format)
-                        // Show parent locations only (not the current level since it's in designation)
+                        // Show full hierarchical path with all available location fields
                         let thirdLine = '';
-                        const isIndiaHead = userDesignation.includes('India Head');
                         
-                        // Determine which level user is at and show only parent locations
-                        if (userDistrict) {
-                            // District Head - show Country, Zone, State
-                            thirdLine = `Country: ${userCountry}`;
-                            if (userZone) thirdLine += `, Zone: ${userZone}`;
-                            if (userState) thirdLine += `, State: ${userState}`;
-                        } else if (userDivision) {
-                            // Division Head - show Country, Zone, State
-                            thirdLine = `Country: ${userCountry}`;
-                            if (userZone) thirdLine += `, Zone: ${userZone}`;
-                            if (userState) thirdLine += `, State: ${userState}`;
-                        } else if (userState) {
-                            // State Head - show Country, Zone only
-                            thirdLine = `Country: ${userCountry}`;
-                            if (userZone) thirdLine += `, Zone: ${userZone}`;
-                        } else if (userZone) {
-                            // Zone Head - show Country only
-                            thirdLine = `Country: ${userCountry}`;
-                        }
-                        // India Head - no location shown (isIndiaHead = true)
+                        // Always start with Country
+                        thirdLine = `Country: ${userCountry}`;
+                        
+                        // Add Zone if available
+                        if (userZone) thirdLine += `, Zone: ${userZone}`;
+                        
+                        // Add State if available
+                        if (userState) thirdLine += `, State: ${userState}`;
+                        
+                        // Add Division if available
+                        if (userDivision) thirdLine += `, Div: ${userDivision}`;
+                        
+                        // Add District if available
+                        if (userDistrict) thirdLine += `, District: ${userDistrict}`;
+                        
+                        // Add Tehsil if available
+                        if (userTehsil) thirdLine += `, Tehsil: ${userTehsil}`;
+                        
+                        // Add Pincode if available
+                        if (userPincode) thirdLine += `, Pincode: ${userPincode}`;
+                        
+                        // Add Village if available
+                        if (userVillage) thirdLine += `, Village: ${userVillage}`;
                         
                         // Add designation at the end
                         if (userDesignation) {
-                            thirdLine += (thirdLine ? ', ' : '') + `Designation- ${userDesignation}`;
+                            thirdLine += `, Designation- ${userDesignation}`;
                         }
                         
                         // Draw the combined 3rd line - may wrap to 2 lines if too long
