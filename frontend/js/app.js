@@ -3028,7 +3028,7 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
 }
 
 // Select a filter option
-function selectFilterOption(inputId, dropdownId, value) {
+async function selectFilterOption(inputId, dropdownId, value) {
     const input = document.getElementById(inputId);
     const clearBtn = document.getElementById(inputId.replace('filter', 'clear'));
 
@@ -3047,13 +3047,13 @@ function selectFilterOption(inputId, dropdownId, value) {
     // Clear child filters when parent filter changes (cascading behavior)
     clearChildFilters(inputId);
 
-    // Perform reverse mapping to auto-populate parent fields
-    performReverseMapping(inputId, value);
+    // WAIT for reverse mapping to complete before loading applications
+    await performReverseMapping(inputId, value);
 
     // Update selected filters display
     updateSelectedFiltersBadges();
 
-    // Trigger filter update
+    // Trigger filter update (now with parent fields populated)
     loadApplications();
 }
 
