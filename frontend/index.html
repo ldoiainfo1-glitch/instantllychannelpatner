@@ -1808,8 +1808,9 @@
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
         
-        // Load statistics when page loads
-        document.addEventListener('DOMContentLoaded', loadPositionStatistics);
+        // NOTE: loadPositionStatistics is called from app.js loadApplications() function
+        // DO NOT add DOMContentLoaded listener here to avoid duplicate calls
+        // The statistics will be loaded automatically when applications are loaded
     </script>
     
     <script src="js/app.js"></script>
