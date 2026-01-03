@@ -1565,12 +1565,13 @@ async function fetchPaymentPlans() {
             if (data.paymentPlans) {
                 DEFAULT_PRICING_TIERS = data.paymentPlans;
                 console.log('✅ Payment plans loaded from API:', DEFAULT_PRICING_TIERS);
+                console.log('📊 Available position levels:', Object.keys(DEFAULT_PRICING_TIERS));
             }
         } else {
-            console.log('Using default payment plans');
+            console.log('⚠️ API response not OK, using default payment plans');
         }
     } catch (error) {
-        console.log('Using default payment plans:', error);
+        console.log('⚠️ Error fetching payment plans, using default:', error);
     }
 }
 
@@ -1692,6 +1693,9 @@ async function showPaymentPlansModal() {
     
     // Get position level for pricing
     const positionLevel = tempApplicationData.positionLevel;
+    
+    console.log('🔍 Position level:', positionLevel);
+    console.log('🔍 Available plans for this level:', DEFAULT_PRICING_TIERS[positionLevel]);
     
     // Update subtitle
     subtitle.textContent = `Payment plans for ${positionLevel} Head position`;
