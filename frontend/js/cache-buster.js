@@ -145,8 +145,41 @@
          * @returns {string} URL with cache-busting header hint
          */
         getAPIUrl: function(url) {
-            return this.addCacheBuster(url);
-        }
+            return this.addCacheBuster(url);        },
+
+        /**
+         * Clear all cached data and force refresh
+         */
+        clearCache: function() {
+            // Clear sessionStorage
+            if (window.sessionStorage) {
+                console.log('🧹 Clearing sessionStorage...');
+                sessionStorage.clear();
+            }
+            
+            // Clear localStorage (except essential data like auth tokens)
+            if (window.localStorage) {
+                console.log('🧹 Clearing localStorage...');
+                // Store essential data before clearing
+                const authToken = localStorage.getItem('authToken');
+                const userId = localStorage.getItem('userId');
+                
+                localStorage.clear();
+                
+                // Restore essential data
+                if (authToken) localStorage.setItem('authToken', authToken);
+                if (userId) localStorage.setItem('userId', userId);
+            }
+            
+            console.log('✅ Cache cleared successfully');
+        },
+
+        /**
+         * Force reload page without cache
+         */
+        hardRefresh: function() {
+            console.log('🔄 Performing hard refresh...');
+            window.location.reload(true);        }
     };
 
     // Expose globally
