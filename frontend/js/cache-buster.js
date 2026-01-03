@@ -23,8 +23,8 @@
                 return url;
             }
 
-            // Skip if already a data URL (base64)
-            if (url.startsWith('data:')) {
+            // Skip if already a data URL (base64) or blob URL
+            if (url.startsWith('data:') || url.startsWith('blob:')) {
                 return url;
             }
 
