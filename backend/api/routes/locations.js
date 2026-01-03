@@ -576,19 +576,33 @@ router.get('/aggregated-stats', async (req, res) => {
         }, {})
       };
       
-      // 🚀 OPTIMIZED: Use aggregation to count given positions in ONE query
-      const givenCountPipeline = [
-        { $match: appFilter },
-        {
-          $group: {
-            _id: `$location.${childLevel.field}`,
-            count: { $sum: 1 }
-          }
-        }
-      ];
+      // � FIXED: Count total approved applications at this exact level
+      // An application is at "this level" if it has a value for this field
+      // but the field below it is null/empty (meaning this is their lowest level)
+      let givenCount = 0;
       
-      const givenResults = await Application.aggregate(givenCountPipeline);
-      const givenCount = givenResults.length; // Number of distinct child locations with approved applications
+      // Determine the next level down (if any)
+      const nextLevelField = i + 1 < hierarchy.length ? hierarchy[i + 1].field : null;
+      
+      if (nextLevelField) {
+        // Count applications where this level has value but next level is empty
+        // This means the application is specifically for this level
+        givenCount = await Application.countDocuments({
+          ...appFilter,
+          [`location.${childLevel.field}`]: { $ne: null, $ne: '' },
+          $or: [
+            { [`location.${nextLevelField}`]: { $exists: false } },
+            { [`location.${nextLevelField}`]: null },
+            { [`location.${nextLevelField}`]: '' }
+          ]
+        });
+      } else {
+        // For the lowest level (Village), just count all applications
+        givenCount = await Application.countDocuments({
+          ...appFilter,
+          [`location.${childLevel.field}`]: { $ne: null, $ne: '' }
+        });
+      }
       
       stats.push({
         level: childLevel.display,
