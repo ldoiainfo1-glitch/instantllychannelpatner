@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instantly Cards - Channel Partner Program</title>
+    <title>Instantlly Cards - Channel Partner Program</title>
     <link rel="icon" href="images/logo.jpeg" type="image/jpeg">
     <link rel="shortcut icon" href="images/logo.jpeg" type="image/jpeg">
     <!-- Updated for production deployment - v1.4 -->
@@ -20,9 +20,9 @@
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
         <div class="container">
             <a class="navbar-brand fw-bold d-flex align-items-center" href="#home">
-                <img src="images/logo.jpeg" alt="Instantly Cards Logo" height="50" class="me-3 navbar-logo">
+                <img src="images/logo.jpeg" alt="Instantlly Cards Logo" height="50" class="me-3 navbar-logo">
                 <div>
-                    <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">Instantly Channel Partner</div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">Instantlly Channel Partner</div>
                   
                 </div>
             </a>
@@ -81,7 +81,7 @@
                         Join Our Channel Partner Program
                     </h1>
                     <p class="lead text-white-50 mb-3">
-                        Become a part of Instantly Cards network and earn while helping others access instant digital cards and financial services.
+                        Become a part of Instantlly Cards network and earn while helping others access instant digital cards and financial services.
                     </p>
                     <div class="d-flex gap-3 mb-3">
                         <a href="#positions" class="btn btn-light btn-lg px-4">
@@ -114,11 +114,95 @@
                     <div class="hero-image text-center" style="position: relative;">
                         <img src="images/image.png" alt="Channel Partner" class="img-fluid">
                         <div class="hero-logo-overlay">
-                            <img src="images/logo.jpeg" alt="Instantly Cards Logo" class="img-fluid hero-main-logo">
+                            <img src="images/logo.jpeg" alt="Instantlly Cards Logo" class="img-fluid hero-main-logo">
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+        <!-- Position Statistics Section -->
+<section class="position-stats-section"
+         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 0; margin: 0;">
+
+                    <!-- 🔥 Container with descriptive text -->
+                    <div style="display: flex; flex-direction: column; align-items: center; padding: 30px 20px 20px;">
+                        
+                        <!-- Descriptive Header -->
+                        <div style="text-align: center; color: white; margin-bottom: 20px; max-width: 600px;">
+                            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                <i class="fas fa-chart-line me-2"></i>Live Position Analytics
+                            </h3>
+                            <p style="font-size: 0.9rem; opacity: 0.95; margin: 0; line-height: 1.5;">
+                                Real-time overview of available and assigned positions across all location levels in India
+                            </p>
+                        </div>
+
+                        <div class="card shadow-lg border-0"
+                            style="border-radius: 10px; overflow: hidden; display: inline-block;">
+
+                        <div class="card-header text-white text-center py-2"
+                            style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border: none;">
+                            <h5 class="mb-0 fw-bold" style="font-size: 0.9rem;">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Position Statistics - Real-time Overview
+                            </h5>
+                            <div id="statsFilterInfo" class="mt-1" style="font-size: 0.75rem; font-weight: 400; opacity: 0.9; display: none;">
+                                <i class="fas fa-filter me-1"></i>
+                                <span id="statsFilterText"></span>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-0">
+                            <table class="table mb-0" id="positionStatsTable"
+                                    style="table-layout:auto; border-collapse:collapse; width:auto; margin:0; font-size:0.85rem;">
+
+                                <thead style="background:#2c3e50;">
+                                    <tr>
+                                    <th style="color:#fff; padding:8px 12px; font-weight:600; border:none; text-align:left;">
+                                        Location Level
+                                    </th>
+                                    <th style="color:#fff; padding:8px 12px; font-weight:600; border:none; text-align:center;">
+                                        Total
+                                    </th>
+                                    <th style="color:#fff; padding:8px 12px; font-weight:600; border:none; text-align:center;">
+                                        Given
+                                    </th>
+                                    <th style="color:#fff; padding:8px 12px; font-weight:600; border:none; text-align:center;">
+                                        Remaining
+                                    </th>
+                                    </tr>
+                                </thead>
+
+                            <tbody id="positionStatsBody">
+                                <tr>
+                                    <td colspan="4" class="text-center py-3">
+                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted mb-0" style="font-size: 0.8rem;">Loading position statistics...</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Pagination Controls -->
+                    <div class="card-footer py-2" id="statsPaginationContainer" style="display:none; background:#f8f9fa;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button class="btn btn-sm btn-outline-primary" id="statsPrevBtn" disabled>
+                                <i class="fas fa-chevron-left"></i> Prev
+                            </button>
+                            <span class="text-muted" id="statsPageInfo" style="font-size:0.85rem;">Page 1</span>
+                            <button class="btn btn-sm btn-outline-primary" id="statsNextBtn" disabled>
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+ 
         </div>
     </section>
 
@@ -343,6 +427,104 @@
                                 }
                             </style>
 
+                            <style>
+                                /* Position Statistics Table Styles */
+                                .position-stats-section {
+                                    margin-top: 76px;
+                                }
+                                
+                                #positionStatsTable {
+                                    border-collapse: collapse;
+                                }
+                                
+                                #positionStatsTable tbody tr {
+                                    transition: all 0.15s ease;
+                                    border-bottom: 1px solid #e5e7eb;
+                                }
+                                
+                                #positionStatsTable tbody tr:hover {
+                                    background-color: #f8fafc !important;
+                                    box-shadow: inset 0 0 0 1px #3b82f6;
+                                }
+                                
+                                #positionStatsTable tbody tr:last-child {
+                                    border-bottom: none;
+                                }
+                                
+                                #positionStatsTable tbody td {
+                                    padding: 8px 0;
+                                    vertical-align: middle;
+                                    border: none;
+                                }
+                                
+                                #positionStatsTable tbody td:first-child {
+                                    padding-left: 6px;
+                                }
+                                
+                                #positionStatsTable tbody td:last-child {
+                                    padding-right: 6px;
+                                }
+                                
+                                #positionStatsTable .location-name {
+                                    font-weight: 600;
+                                    color: #1e293b;
+                                    font-size: 0.875rem;
+                                }
+                                
+                                #positionStatsTable .stat-number {
+                                    font-size: 0.85rem;
+                                    font-weight: 700;
+                                    padding: 2px 6px;
+                                    border-radius: 3px;
+                                    display: inline-block;
+                                    min-width: auto;
+                                }
+                                
+                                #positionStatsTable .total-col {
+                                    background: #dbeafe;
+                                    color: #1e40af;
+                                }
+                                
+                                #positionStatsTable .given-col {
+                                    background: #d1fae5;
+                                    color: #065f46;
+                                }
+                                
+                                #positionStatsTable .remaining-col {
+                                    background: #fed7aa;
+                                    color: #92400e;
+                                }
+                                
+                                #positionStatsTable .remaining-col.zero {
+                                    background: #f3f4f6;
+                                    color: #6b7280;
+                                }
+                                
+                                @media (max-width: 768px) {
+                                    #positionStatsTable .stat-number {
+                                        font-size: 0.8rem;
+                                        min-width: 45px;
+                                        padding: 3px 5px;
+                                    }
+                                    
+                                    #positionStatsTable tbody td {
+                                        padding: 8px 2px;
+                                    }
+                                    
+                                    #positionStatsTable tbody td:first-child {
+                                        padding-left: 8px;
+                                    }
+                                    
+                                    #positionStatsTable tbody td:last-child {
+                                        padding-right: 8px;
+                                    }
+                                    
+                                    #positionStatsTable .location-name {
+                                        font-size: 0.8rem;
+                                    }
+                                }
+                            </style>
+
                             <!-- Selected Filters Display (Desktop only) -->
                             <div class="row mt-3 d-none d-md-block" id="selectedFiltersContainer" style="display: none;">
                                 <div class="col-12">
@@ -401,8 +583,8 @@
         <div class="container">
             <div class="row mb-5">
                 <div class="col-lg-8 mx-auto text-center">
-                    <h2 class="display-5 fw-bold mb-3">How to Use Instantly Cards App</h2>
-                    <p class="lead text-muted">Complete guide on using the Instantly Cards mobile application</p>
+                    <h2 class="display-5 fw-bold mb-3">How to Use Instantlly Cards App</h2>
+                    <p class="lead text-muted">Complete guide on using the Instantlly Cards mobile application</p>
                 </div>
             </div>
 
@@ -417,7 +599,7 @@
                                 <i class="fas fa-download fa-2x"></i>
                             </div>
                             <h5 class="card-title">Download App</h5>
-                            <p class="card-text">Get the Instantly Cards app from Google Play Store. Available for Android devices.</p>
+                            <p class="card-text">Get the Instantlly Cards app from Google Play Store. Available for Android devices.</p>
                             <div class="mt-3">
                                 <a href="https://play.google.com/store/apps/details?id=com.instantllycards.www.twa" target="_blank" class="btn btn-success btn-sm">
                                     <i class="fab fa-google-play me-1"></i>
@@ -717,7 +899,7 @@
             <div class="row mb-5">
                 <div class="col-lg-8 mx-auto text-center">
                     <h2 class="display-5 fw-bold mb-3">User Feedback</h2>
-                    <p class="lead text-muted">What our channel partners are saying about the Instantly Cards app</p>
+                    <p class="lead text-muted">What our channel partners are saying about the Instantlly Cards app</p>
                 </div>
             </div>
 
@@ -741,7 +923,7 @@
                                 <span class="star active"><i class="fas fa-star"></i></span>
                                 <span class="star active"><i class="fas fa-star"></i></span>
                             </div>
-                            <p class="card-text">"The Instantly Cards app is amazing! Creating digital cards is so quick and easy. The interface is user-friendly and the card designs are professional. Highly recommended!"</p>
+                            <p class="card-text">"The Instantlly Cards app is amazing! Creating digital cards is so quick and easy. The interface is user-friendly and the card designs are professional. Highly recommended!"</p>
                             <small class="text-muted">Posted 2 days ago</small>
                         </div>
                     </div>
@@ -913,8 +1095,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="applicantPhone" class="form-label">Phone Number *</label>
-                                <input type="tel" class="form-control" id="applicantPhone" name="phone" pattern="[0-9]{10}" required>
-                                <small class="text-muted">10 digit phone number</small>
+                                <input type="tel" class="form-control" id="applicantPhone" name="phone" pattern="[0-9]{10}" maxlength="10" required oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value.length === 10) { this.setCustomValidity(''); } else { this.setCustomValidity('Phone number must be exactly 10 digits'); }">
+                                <small class="text-muted" id="phoneHelp">10 digit phone number only</small>
                             </div>
                             <div class="col-md-6">
                                 <label for="companyName" class="form-label">Company Name</label>
@@ -926,8 +1108,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="applicantPhoto" class="form-label">Photo</label>
-                                <input type="file" class="form-control" id="applicantPhoto" name="photo" accept="image/*">
-                                <small class="text-muted">Upload your photo (JPG, PNG) - Optional</small>
+                                <input type="file" class="form-control" id="applicantPhoto" name="photo" accept="image/*,application/pdf">
+                                <small class="text-muted">Upload your photo (JPG, PNG, PDF) - Optional</small>
                             </div>
                             <div class="col-md-6">
                                 <label for="introducedBy" class="form-label">Referred By (Optional)</label>
@@ -969,7 +1151,7 @@
                         <div class="d-flex align-items-center">
                             <i class="fas fa-gift fa-lg me-2 text-primary d-none d-md-inline"></i>
                             <div>
-                                <h6 class="mb-0 fw-bold" style="font-size: 0.85rem;">Pay 15% & Get 85% Commission + 100% Ad Credit</h6>
+                                <h6 class="mb-0 fw-bold" style="font-size: 0.85rem;">Pay 25% & Get 75% Commission + 100% Ad Credit</h6>
                                 <small class="d-none d-md-block" style="font-size: 0.7rem;">Invest smartly and maximize your returns</small>
                             </div>
                         </div>
@@ -998,16 +1180,76 @@
         </div>
     </div>
 
-    <!-- Payment Processing Modal -->
-    <div class="modal fade" id="paymentProcessingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
+    <!-- Payment Scanner Modal -->
+    <div class="modal fade" id="paymentScannerModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-body text-center p-5">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Loading...</span>
+                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="modal-title">
+                        <i class="fas fa-qrcode me-2"></i>Complete Payment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" onclick="cancelPayment()"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Payment Amount Info -->
+                    <div class="alert alert-success mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0"><i class="fas fa-rupee-sign me-2"></i>Amount to Pay</h6>
+                            </div>
+                            <div>
+                                <h4 class="mb-0 text-success" id="paymentAmountDisplay">₹0</h4>
+                            </div>
+                        </div>
                     </div>
-                    <h5>Processing Payment...</h5>
-                    <p class="text-muted">Please wait while we process your payment</p>
+
+                    <!-- Scanner Image -->
+                    <div class="text-center mb-4">
+                        <h6 class="mb-3"><i class="fas fa-mobile-alt me-2"></i>Scan QR Code to Pay</h6>
+                        <div class="scanner-image-container p-3 bg-light rounded">
+                            <img src="images/scanner.jpeg" alt="Payment QR Code" class="img-fluid" style="max-width: 300px; border: 3px solid #667eea; border-radius: 10px;" onerror="this.onerror=null; this.src='images/logo.jpeg'; this.style.padding='20px';">
+                        </div>
+                        <p class="text-muted mt-3 mb-0">
+                            <i class="fas fa-info-circle me-1"></i>Scan using any UPI app (PhonePe, Google Pay, Paytm, etc.)
+                        </p>
+                    </div>
+
+                    <!-- Upload Screenshot Section -->
+                    <div class="upload-section">
+                        <hr class="my-4">
+                        <h6 class="mb-3"><i class="fas fa-upload me-2"></i>Upload Payment Screenshot (Optional)</h6>
+                        <div class="mb-3">
+                            <input type="file" class="form-control" id="paymentScreenshot" accept="image/*,application/pdf">
+                            <small class="text-muted">Upload screenshot of successful payment (JPG, PNG, PDF) - Optional</small>
+                        </div>
+                        
+                        <!-- Screenshot Preview -->
+                        <div id="screenshotPreview" class="d-none mb-3">
+                            <label class="form-label fw-bold">Preview:</label>
+                            <div class="text-center" id="previewContainer">
+                                <img id="previewImage" src="" alt="Screenshot Preview" class="img-fluid rounded" style="max-height: 200px; border: 2px solid #ddd;">
+                                <div id="pdfPreview" class="d-none">
+                                    <i class="fas fa-file-pdf fa-4x text-danger mb-2"></i>
+                                    <p class="mb-0" id="pdfFileName"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="alert alert-info mt-3">
+                        <small>
+                            <strong>Note:</strong> After making the payment, you can optionally upload the payment screenshot for faster verification. Your application will be reviewed by admin.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="cancelPayment()">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-success" id="submitPaymentScreenshot">
+                        <i class="fas fa-check me-1"></i>Submit Application
+                    </button>
                 </div>
             </div>
         </div>
@@ -1018,11 +1260,11 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    <h5>Instantly Channel Partner</h5>
+                    <h5>Instantlly Channel Partner</h5>
                     <p class="mb-0">Channel Partner Program - Join the digital revolution</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <p class="mb-0">&copy; 2024 Instantly Cards. All rights reserved.</p>
+                    <p class="mb-0">&copy; 2024 Instantlly Cards. All rights reserved.</p>
                 </div>
             </div>
         </div>
@@ -1091,6 +1333,354 @@
             });
         });
     </script>
+    
+    <script>
+        // Position Statistics with Filter Integration and Pagination
+        let statsCurrentPage = 1;
+        let statsRowsPerPage = 10;
+        let allStatsData = [];
+        let currentFilters = {};
+
+        // Load Position Statistics
+        async function loadPositionStatistics(filters = {}) {
+            currentFilters = filters;
+            
+            // Show loading state
+            const tbody = document.getElementById('positionStatsBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-3">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted mb-0" style="font-size: 0.8rem;">Updating statistics...</p>
+                    </td>
+                </tr>
+            `;
+            
+            // Hide pagination during loading
+            document.getElementById('statsPaginationContainer').style.display = 'none';
+            
+            try {
+                const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+                
+                console.log('📊 Loading position statistics...');
+                
+                // Fetch statistics from optimized endpoint that counts ALL approved applications
+                const [statsResponse, locationsResponse] = await Promise.all([
+                    fetch(`${API_BASE_URL}/dynamic-positions/statistics?_t=${Date.now()}`),
+                    fetch(`${API_BASE_URL}/locations/all?_t=${Date.now()}`)
+                ]);
+                
+                console.log('✅ API responses received');
+                console.log('   Statistics status:', statsResponse.status, statsResponse.ok);
+                console.log('   Locations status:', locationsResponse.status, locationsResponse.ok);
+                
+                if (!statsResponse.ok || !locationsResponse.ok) {
+                    throw new Error(`API error: Statistics ${statsResponse.status}, Locations ${locationsResponse.status}`);
+                }
+                
+                const statsData = await statsResponse.json();
+                const locationsData = await locationsResponse.json();
+                
+                console.log('📦 Parsed data:', { 
+                    statsSuccess: statsData.success, 
+                    givenPositions: statsData.givenPositions,
+                    locationsSuccess: locationsData.success,
+                    hasLocationCounts: !!locationsData.locationCounts
+                });
+                
+                // Handle data
+                const givenPositions = statsData.givenPositions || {};
+                const locationCounts = locationsData.locationCounts || null;
+                
+                console.log('✅ Final data:', { 
+                    givenPositions: givenPositions, 
+                    locationCounts: locationCounts
+                });
+                
+                // Calculate statistics for each level
+                const stats = {
+                    'Country (India)': { total: 1, given: givenPositions.country || 0 },
+                    'Zone': { total: 0, given: givenPositions.zone || 0 },
+                    'State': { total: 0, given: givenPositions.state || 0 },
+                    'Division': { total: 0, given: givenPositions.division || 0 },
+                    'District': { total: 0, given: givenPositions.district || 0 },
+                    'Tehsil': { total: 0, given: givenPositions.tehsil || 0 },
+                    'Pincode': { total: 0, given: givenPositions.pincode || 0 },
+                    'Village': { total: 0, given: givenPositions.village || 0 }
+                };
+                
+                // Use location counts from optimized API response
+                if (locationCounts) {
+                    stats['Country (India)'].total = locationCounts.country || 1;
+                    stats['Zone'].total = locationCounts.zone || 0;
+                    stats['State'].total = locationCounts.state || 0;
+                    stats['Division'].total = locationCounts.division || 0;
+                    stats['District'].total = locationCounts.district || 0;
+                    stats['Tehsil'].total = locationCounts.tehsil || 0;
+                    stats['Pincode'].total = locationCounts.pincode || 0;
+                    stats['Village'].total = locationCounts.village || 0;
+                    console.log('✅ Using optimized location counts from API and given counts from statistics endpoint');
+                } else {
+                    console.warn('⚠️ Location counts not available, stats may be incomplete');
+                }
+                
+                // Get filtered statistics based on current filters
+                const filteredStats = await getFilteredStatistics(filters, statsData, locationsData);
+                allStatsData = filteredStats;
+                
+                // Update filter info display
+                updateStatsFilterInfo(filters);
+                
+                // Display with pagination
+                displayStatsPage(statsCurrentPage);
+                
+                console.log('✅ Position statistics table updated successfully');
+                
+            } catch (error) {
+                console.error('❌ Error loading position statistics:', error);
+                
+                // Show user-friendly error message
+                const tbody = document.getElementById('positionStatsBody');
+                let errorMessage = 'Failed to load statistics. ';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    errorMessage += 'The server may be starting up. Please wait 10 seconds and refresh the page.';
+                } else {
+                    errorMessage += error.message;
+                }
+                
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-danger">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p class="mb-0">${errorMessage}</p>
+                            <button class="btn btn-primary mt-3" onclick="location.reload()">
+                                <i class="fas fa-sync-alt me-1"></i>
+                                Refresh Page
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                
+                console.error('   Error details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+            }
+        }
+
+        // Get filtered statistics based on location filters
+        async function getFilteredStatistics(filters, statsData, locationsData) {
+            const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+            const givenPositions = statsData.givenPositions || {};
+            
+            // Check if any meaningful filter is selected (excluding just 'country: India')
+            const hasFilters = filters && Object.keys(filters).some(key => 
+                key !== 'country' && filters[key] && filters[key] !== ''
+            );
+            
+            // If no filters, show global statistics
+            if (!hasFilters) {
+                const locationCounts = locationsData.locationCounts || {};
+                return [
+                    { level: 'Country (India)', total: locationCounts.country || 1, given: givenPositions.country || 0 },
+                    { level: 'Zone', total: locationCounts.zone || 0, given: givenPositions.zone || 0 },
+                    { level: 'State', total: locationCounts.state || 0, given: givenPositions.state || 0 },
+                    { level: 'Division', total: locationCounts.division || 0, given: givenPositions.division || 0 },
+                    { level: 'District', total: locationCounts.district || 0, given: givenPositions.district || 0 },
+                    { level: 'Tehsil', total: locationCounts.tehsil || 0, given: givenPositions.tehsil || 0 },
+                    { level: 'Pincode', total: locationCounts.pincode || 0, given: givenPositions.pincode || 0 },
+                    { level: 'Village', total: locationCounts.village || 0, given: givenPositions.village || 0 }
+                ];
+            }
+
+            // Determine the deepest filter level
+            const filterHierarchy = ['village', 'pincode', 'tehsil', 'district', 'division', 'state', 'zone'];
+            let deepestLevel = null;
+            
+            for (const level of filterHierarchy) {
+                if (filters[level]) {
+                    deepestLevel = level;
+                    break;
+                }
+            }
+
+            // Fetch aggregated statistics for the selected location
+            try {
+                const queryParams = new URLSearchParams(filters);
+                const response = await fetch(`${API_BASE_URL}/locations/aggregated-stats?${queryParams}`);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    return [];
+                }
+
+                // Return aggregated statistics by level
+                return data.stats || [];
+                
+            } catch (error) {
+                console.error('Error fetching filtered statistics:', error);
+                return [];
+            }
+        }
+
+        // Display stats page with pagination
+        function displayStatsPage(page) {
+            const tbody = document.getElementById('positionStatsBody');
+            tbody.innerHTML = '';
+            
+            const start = (page - 1) * statsRowsPerPage;
+            const end = Math.min(start + statsRowsPerPage, allStatsData.length);
+            const pageData = allStatsData.slice(start, end);
+            
+            // Calculate totals for this page
+            let totalSum = 0;
+            let givenSum = 0;
+            let remainingSum = 0;
+            
+            // Display rows
+            pageData.forEach(item => {
+                const { level, total, given } = item;
+                const remaining = total - given;
+                
+                totalSum += total;
+                givenSum += given;
+                remainingSum += remaining;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="padding:6px 12px; border:none; text-align:left; font-weight:500;">${level}</td>
+                    <td style="padding:6px 12px; border:none; text-align:center;">
+                        <span class="stat-number total-col">${total}</span>
+                    </td>
+                    <td style="padding:6px 12px; border:none; text-align:center;">
+                        <span class="stat-number given-col">${given}</span>
+                    </td>
+                    <td style="padding:6px 12px; border:none; text-align:center;">
+                        <span class="stat-number remaining-col ${remaining === 0 ? 'zero' : ''}">${remaining}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Add total row for the page
+            const totalRow = document.createElement('tr');
+            totalRow.innerHTML = `
+                <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:left; font-weight:800; font-size:1.05rem; color:#fff; text-transform:uppercase;">Total</td>
+                <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:center; font-weight:800; font-size:1.05rem; color:#fff;">
+                    <span class="stat-number">${totalSum}</span>
+                </td>
+                <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:center; font-weight:800; font-size:1.05rem; color:#fff;">
+                    <span class="stat-number">${givenSum}</span>
+                </td>
+                <td style="padding:10px 12px; border-top:3px solid #fff; background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); text-align:center; font-weight:800; font-size:1.05rem; color:#fff;">
+                    <span class="stat-number">${remainingSum}</span>
+                </td>
+            `;
+            tbody.appendChild(totalRow);
+            
+            // Update pagination controls
+            updateStatsPagination();
+        }
+
+        // Update pagination controls
+        function updateStatsPagination() {
+            const totalPages = Math.ceil(allStatsData.length / statsRowsPerPage);
+            const container = document.getElementById('statsPaginationContainer');
+            const pageInfo = document.getElementById('statsPageInfo');
+            const prevBtn = document.getElementById('statsPrevBtn');
+            const nextBtn = document.getElementById('statsNextBtn');
+            
+            // Show/hide pagination based on data length
+            if (allStatsData.length <= statsRowsPerPage) {
+                container.style.display = 'none';
+                return;
+            } else {
+                container.style.display = 'block';
+            }
+            
+            pageInfo.textContent = `Page ${statsCurrentPage} of ${totalPages}`;
+            prevBtn.disabled = statsCurrentPage === 1;
+            nextBtn.disabled = statsCurrentPage === totalPages;
+        }
+
+        // Pagination button handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('statsPrevBtn').addEventListener('click', () => {
+                if (statsCurrentPage > 1) {
+                    statsCurrentPage--;
+                    displayStatsPage(statsCurrentPage);
+                }
+            });
+            
+            document.getElementById('statsNextBtn').addEventListener('click', () => {
+                const totalPages = Math.ceil(allStatsData.length / statsRowsPerPage);
+                if (statsCurrentPage < totalPages) {
+                    statsCurrentPage++;
+                    displayStatsPage(statsCurrentPage);
+                }
+            });
+        });
+
+        // Update filter info display
+        function updateStatsFilterInfo(filters) {
+            const filterInfoDiv = document.getElementById('statsFilterInfo');
+            const filterText = document.getElementById('statsFilterText');
+            
+            // Check if filters are applied (excluding default India)
+            const hasFilters = filters && Object.keys(filters).some(key => 
+                key !== 'country' && filters[key]
+            );
+            
+            if (!hasFilters) {
+                filterInfoDiv.style.display = 'none';
+                return;
+            }
+            
+            // Build filter text
+            const filterHierarchy = ['zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
+            let filterParts = [];
+            
+            for (const level of filterHierarchy) {
+                if (filters[level]) {
+                    const levelName = level.charAt(0).toUpperCase() + level.slice(1);
+                    filterParts.push(`${levelName}: ${filters[level]}`);
+                    break; // Only show the deepest filter
+                }
+            }
+            
+            if (filterParts.length > 0) {
+                filterText.innerHTML = `${filterParts[0]} <span style="opacity:0.7;">• Aggregated by level</span>`;
+                filterInfoDiv.style.display = 'block';
+            } else {
+                filterInfoDiv.style.display = 'none';
+            }
+        }
+        
+        // Get child level name based on filters
+        function getChildLevelName(filters) {
+            if (filters.pincode) return 'Village';
+            if (filters.tehsil) return 'Pincode';
+            if (filters.district) return 'Tehsil';
+            if (filters.division) return 'District';
+            if (filters.state) return 'Division';
+            if (filters.zone) return 'State';
+            return 'Zone';
+        }
+
+        // Helper function
+        function capitalize(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+        
+        // Load statistics when page loads
+        document.addEventListener('DOMContentLoaded', loadPositionStatistics);
+    </script>
+    
     <script src="js/app.js"></script>
 </body>
 </html>

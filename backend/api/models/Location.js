@@ -23,15 +23,15 @@ const locationSchema = new mongoose.Schema({
   },
   tehsil: {
     type: String,
-    required: true
+    required: false  // Optional - allows district-level locations
   },
   pincode: {
     type: String,
-    required: true
+    required: false  // Optional - allows district-level locations
   },
   village: {
     type: String,
-    required: true
+    required: false  // Optional - allows district-level locations
   }
 }, {
   timestamps: true

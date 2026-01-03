@@ -1,11 +1,22 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "echo 'No build required'",
+  "outputDirectory": "frontend",
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://instantlly-cards-backend-6ki0.onrender.com/api/$1"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     }
   ]
 }

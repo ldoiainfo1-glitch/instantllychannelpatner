@@ -33,11 +33,71 @@ const userSchema = new mongoose.Schema({
     required: true
     // Password for login (will be hashed)
   },
+  // NEW CREDIT SYSTEM: Separate cash and extra credits
   credits: {
     type: Number,
-    default: 500000,  // Default 5 lacs joining bonus
+    default: 0,  // Total credits (cash + extra)
     min: 0
   },
+  cashCredits: {
+    type: Number,
+    default: 0,  // Cash credits (paid amount converted to credits)
+    min: 0
+  },
+  extraCredits: {
+    type: Number,
+    default: 0,  // Bonus/Extra credits given free
+    min: 0
+  },
+  // Cash table transactions (paid credits)
+  cashHistory: [{
+    type: {
+      type: String,
+      enum: ['credit', 'debit'],
+      required: true
+    },
+    amount: {
+      type: Number,
+      required: true
+    },
+    balance: {
+      type: Number,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    date: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  // Extra credits table transactions (bonus credits)
+  extraHistory: [{
+    type: {
+      type: String,
+      enum: ['credit', 'debit'],
+      required: true
+    },
+    amount: {
+      type: Number,
+      required: true
+    },
+    balance: {
+      type: Number,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    date: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  // Legacy credits history (keep for backward compatibility)
   creditsHistory: [{
     type: {
       type: String,

@@ -5,7 +5,35 @@ const Location = require('../models/Location');
 // Get ALL location data in one optimized request (for performance)
 router.get('/all', async (req, res) => {
   try {
-    // Use Promise.all to fetch all distinct values in parallel
+    // Check if requesting distinct values for dropdowns
+    if (req.query.format === 'distinct') {
+      // Use Promise.all to fetch all distinct values in parallel
+      const [zones, states, divisions, districts, tehsils, pincodes, villages] = await Promise.all([
+        Location.distinct('zone', { zone: { $ne: null, $ne: '' } }),
+        Location.distinct('state', { state: { $ne: null, $ne: '' } }),
+        Location.distinct('division', { division: { $ne: null, $ne: '' } }),
+        Location.distinct('district', { district: { $ne: null, $ne: '' } }),
+        Location.distinct('tehsil', { tehsil: { $ne: null, $ne: '' } }),
+        Location.distinct('pincode', { pincode: { $ne: null, $ne: '' } }),
+        Location.distinct('village', { village: { $ne: null, $ne: '' } })
+      ]);
+      
+      // Return all data in one response (sorted for better UX)
+      return res.json({
+        zones: zones.sort(),
+        states: states.sort(),
+        divisions: divisions.sort(),
+        districts: districts.sort(),
+        tehsils: tehsils.sort(),
+        pincodes: pincodes.sort(),
+        villages: villages.sort()
+      });
+    }
+    
+    // OPTIMIZED: Return only distinct counts for statistics (prevents memory overflow)
+    // This endpoint was causing crashes by loading 158K+ records into memory
+    console.log('📊 Fetching location statistics (distinct counts only)...');
+    
     const [zones, states, divisions, districts, tehsils, pincodes, villages] = await Promise.all([
       Location.distinct('zone', { zone: { $ne: null, $ne: '' } }),
       Location.distinct('state', { state: { $ne: null, $ne: '' } }),
@@ -16,17 +44,24 @@ router.get('/all', async (req, res) => {
       Location.distinct('village', { village: { $ne: null, $ne: '' } })
     ]);
     
-    // Return all data in one response (sorted for better UX)
+    console.log(`✅ Location counts: Zones=${zones.length}, States=${states.length}, Divisions=${divisions.length}, Districts=${districts.length}, Tehsils=${tehsils.length}, Pincodes=${pincodes.length}, Villages=${villages.length}`);
+    
+    // Return statistics in a format compatible with frontend expectations
     res.json({
-      zones: zones.sort(),
-      states: states.sort(),
-      divisions: divisions.sort(),
-      districts: districts.sort(),
-      tehsils: tehsils.sort(),
-      pincodes: pincodes.sort(),
-      villages: villages.sort()
+      success: true,
+      locationCounts: {
+        country: 1, // India
+        zone: zones.length,
+        state: states.length,
+        division: divisions.length,
+        district: districts.length,
+        tehsil: tehsils.length,
+        pincode: pincodes.length,
+        village: villages.length
+      }
     });
   } catch (error) {
+    console.error('❌ Error fetching location statistics:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -241,18 +276,24 @@ router.post('/manage', async (req, res) => {
     
     console.log('[LOCATION-CREATE] Creating new location:', { zone, state, division, district, tehsil, pincode, village });
     
-    // Validate required fields
-    if (!zone || !state || !division || !district || !tehsil || !pincode || !village) {
+    // Validate required fields (tehsil, pincode, village are optional)
+    if (!zone || !state || !division || !district) {
       return res.status(400).json({ 
         success: false, 
-        error: 'All location fields are required' 
+        error: 'Zone, state, division, and district are required' 
       });
     }
     
+    // Build query object for duplicate check (only include fields that are provided)
+    const existingQuery = {
+      zone, state, division, district
+    };
+    if (tehsil) existingQuery.tehsil = tehsil;
+    if (pincode) existingQuery.pincode = pincode;
+    if (village) existingQuery.village = village;
+    
     // Check if location already exists
-    const existing = await Location.findOne({
-      zone, state, division, district, tehsil, pincode, village
-    });
+    const existing = await Location.findOne(existingQuery);
     
     if (existing) {
       return res.status(400).json({ 
@@ -261,17 +302,20 @@ router.post('/manage', async (req, res) => {
       });
     }
     
-    // Create new location
-    const location = new Location({
+    // Create new location (only include fields that are provided)
+    const locationData = {
       country: country || 'India',
       zone: zone.trim(),
       state: state.trim(),
       division: division.trim(),
-      district: district.trim(),
-      tehsil: tehsil.trim(),
-      pincode: pincode.trim(),
-      village: village.trim()
-    });
+      district: district.trim()
+    };
+    
+    if (tehsil) locationData.tehsil = tehsil.trim();
+    if (pincode) locationData.pincode = pincode.trim();
+    if (village) locationData.village = village.trim();
+    
+    const location = new Location(locationData);
     
     await location.save();
     
@@ -296,11 +340,11 @@ router.put('/manage/:id', async (req, res) => {
     
     console.log('[LOCATION-UPDATE] Updating location:', id);
     
-    // Validate required fields
-    if (!zone || !state || !division || !district || !tehsil || !pincode || !village) {
+    // Validate required fields (tehsil, pincode, village are optional)
+    if (!zone || !state || !division || !district) {
       return res.status(400).json({ 
         success: false, 
-        error: 'All location fields are required' 
+        error: 'Zone, state, division, and district are required' 
       });
     }
     
@@ -312,15 +356,16 @@ router.put('/manage/:id', async (req, res) => {
       });
     }
     
-    // Update fields
+    // Update fields (only set optional fields if provided)
     location.country = country || 'India';
     location.zone = zone.trim();
     location.state = state.trim();
     location.division = division.trim();
     location.district = district.trim();
-    location.tehsil = tehsil.trim();
-    location.pincode = pincode.trim();
-    location.village = village.trim();
+    
+    if (tehsil !== undefined) location.tehsil = tehsil ? tehsil.trim() : undefined;
+    if (pincode !== undefined) location.pincode = pincode ? pincode.trim() : undefined;
+    if (village !== undefined) location.village = village ? village.trim() : undefined;
     
     await location.save();
     
@@ -429,6 +474,224 @@ router.post('/manage/bulk-import', async (req, res) => {
     });
   } catch (error) {
     console.error('[LOCATION-BULK] ❌ Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get aggregated statistics by level for a filtered location
+router.get('/aggregated-stats', async (req, res) => {
+  try {
+    const { country, zone, state, division, district, tehsil, pincode } = req.query;
+    const Application = require('../models/Application');
+    
+    // Build filter for the selected location
+    let locationFilter = { country: country || 'India' };
+    if (zone) locationFilter.zone = zone;
+    if (state) locationFilter.state = state;
+    if (division) locationFilter.division = division;
+    if (district) locationFilter.district = district;
+    if (tehsil) locationFilter.tehsil = tehsil;
+    if (pincode) locationFilter.pincode = pincode;
+    
+    // Determine which level is selected and what child levels to aggregate
+    const stats = [];
+    
+    // Define the hierarchy in correct order
+    const hierarchy = [
+      { level: 'zone', field: 'zone', display: 'Zone' },
+      { level: 'state', field: 'state', display: 'State' },
+      { level: 'division', field: 'division', display: 'Division' },
+      { level: 'district', field: 'district', display: 'District' },
+      { level: 'tehsil', field: 'tehsil', display: 'Tehsil' },
+      { level: 'pincode', field: 'pincode', display: 'Pincode' },
+      { level: 'village', field: 'village', display: 'Village' }
+    ];
+    
+    // Find which level is selected
+    let selectedLevelIndex = -1;
+    let selectedLevelName = '';
+    let selectedLevelValue = '';
+    
+    if (pincode) {
+      selectedLevelIndex = 5;
+      selectedLevelName = 'Pincode';
+      selectedLevelValue = pincode;
+    } else if (tehsil) {
+      selectedLevelIndex = 4;
+      selectedLevelName = 'Tehsil';
+      selectedLevelValue = tehsil;
+    } else if (district) {
+      selectedLevelIndex = 3;
+      selectedLevelName = 'District';
+      selectedLevelValue = district;
+    } else if (division) {
+      selectedLevelIndex = 2;
+      selectedLevelName = 'Division';
+      selectedLevelValue = division;
+    } else if (state) {
+      selectedLevelIndex = 1;
+      selectedLevelName = 'State';
+      selectedLevelValue = state;
+    } else if (zone) {
+      selectedLevelIndex = 0;
+      selectedLevelName = 'Zone';
+      selectedLevelValue = zone;
+    }
+    
+    // Add the selected level itself (always 1 position)
+    const selectedLevelGiven = await Application.countDocuments({
+      ...Object.keys(locationFilter).reduce((acc, key) => {
+        if (key !== 'country') {
+          acc[`position.location.${key}`] = locationFilter[key];
+        }
+        return acc;
+      }, {}),
+      status: 'approved'
+    });
+    
+    stats.push({
+      level: `${selectedLevelName} (${selectedLevelValue})`,
+      total: 1,
+      given: selectedLevelGiven > 0 ? 1 : 0
+    });
+    
+    // Aggregate counts for all child levels
+    for (let i = selectedLevelIndex + 1; i < hierarchy.length; i++) {
+      const childLevel = hierarchy[i];
+      const childFilter = { ...locationFilter, [childLevel.field]: { $ne: null, $ne: '' } };
+      
+      // Count distinct child locations
+      const distinctChildren = await Location.distinct(childLevel.field, childFilter);
+      const totalCount = distinctChildren.length;
+      
+      // Count approved applications for this level
+      const appFilter = {
+        status: 'approved',
+        ...Object.keys(locationFilter).reduce((acc, key) => {
+          if (key !== 'country') {
+            acc[`position.location.${key}`] = locationFilter[key];
+          }
+          return acc;
+        }, {})
+      };
+      
+      // Count how many of these child locations have approved applications
+      let givenCount = 0;
+      for (const childName of distinctChildren) {
+        const hasApproved = await Application.countDocuments({
+          ...appFilter,
+          [`position.location.${childLevel.field}`]: childName
+        });
+        if (hasApproved > 0) givenCount++;
+      }
+      
+      stats.push({
+        level: childLevel.display,
+        total: totalCount,
+        given: givenCount
+      });
+    }
+    
+    res.json({
+      success: true,
+      stats
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching aggregated statistics:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get child locations for filtered statistics
+router.get('/children', async (req, res) => {
+  try {
+    const { country, zone, state, division, district, tehsil, pincode } = req.query;
+    const Application = require('../models/Application');
+    
+    // Build filter for parent level
+    let parentFilter = { country: country || 'India' };
+    if (zone) parentFilter.zone = zone;
+    if (state) parentFilter.state = state;
+    if (division) parentFilter.division = division;
+    if (district) parentFilter.district = district;
+    if (tehsil) parentFilter.tehsil = tehsil;
+    if (pincode) parentFilter.pincode = pincode;
+    
+    // Determine what child level to fetch
+    let childLevel, childField;
+    if (pincode) {
+      childLevel = 'village';
+      childField = 'village';
+    } else if (tehsil) {
+      childLevel = 'pincode';
+      childField = 'pincode';
+    } else if (district) {
+      childLevel = 'tehsil';
+      childField = 'tehsil';
+    } else if (division) {
+      childLevel = 'district';
+      childField = 'district';
+    } else if (state) {
+      childLevel = 'division';
+      childField = 'division';
+    } else if (zone) {
+      childLevel = 'state';
+      childField = 'state';
+    } else {
+      childLevel = 'zone';
+      childField = 'zone';
+    }
+    
+    // Get distinct children
+    const childFilter = { ...parentFilter, [childField]: { $ne: null, $ne: '' } };
+    const childNames = await Location.distinct(childField, childFilter);
+    
+    // Count given positions for each child
+    const children = await Promise.all(childNames.map(async (name) => {
+      const locationFilter = { ...parentFilter, [childField]: name };
+      
+      // Count total locations at this level
+      const totalCount = await Location.countDocuments(locationFilter);
+      
+      // Count approved applications for this location
+      const givenCount = await Application.countDocuments({
+        [`position.location.${childField}`]: name,
+        status: 'approved'
+      });
+      
+      return {
+        name,
+        total: totalCount,
+        given: givenCount
+      };
+    }));
+    
+    // Sort by name
+    children.sort((a, b) => a.name.localeCompare(b.name));
+    
+    // Get parent stats
+    const parentTotal = await Location.countDocuments(parentFilter);
+    const parentGiven = await Application.countDocuments({
+      status: 'approved',
+      ...Object.keys(parentFilter).reduce((acc, key) => {
+        if (key !== 'country') {
+          acc[`position.location.${key}`] = parentFilter[key];
+        }
+        return acc;
+      }, {})
+    });
+    
+    res.json({
+      success: true,
+      children,
+      parentTotal,
+      parentGiven,
+      childLevel
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching child locations:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

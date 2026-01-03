@@ -240,16 +240,20 @@
                         <tr>
                             <th>Sr.No</th>
                             <th>Date</th>
+                            <th>About</th>
                             <th>Hindi</th>
                             <th>English</th>
                             <th>Marathi</th>
                             <th>Gujarati</th>
+                            <th>Punjabi</th>
+                            <th>Bengali</th>
+                            <th>Odia</th>
                             <th>Tamil</th>
                             <th>Telugu</th>
                             <th>Kannada</th>
-                            <th>Bengali</th>
-                            <th>Odia</th>
+                            <th>Malayalam</th>
                             <th>Urdu</th>
+                            
                         </tr>
                     </thead>
                     <tbody id="promotionsTableBody">
@@ -349,7 +353,7 @@
         }
         
         // Languages supported
-        const languages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu'];
+        const languages = ['hindi', 'english', 'marathi', 'gujarati', 'tamil', 'telugu', 'kannada', 'bengali', 'odia', 'urdu', 'malayalam', 'punjabi'];
         const languageLabels = {
             'hindi': 'Hindi',
             'english': 'English',
@@ -360,7 +364,9 @@
             'kannada': 'Kannada',
             'bengali': 'Bengali',
             'odia': 'Odia',
-            'urdu': 'Urdu'
+            'urdu': 'Urdu',
+            'malayalam': 'Malayalam',
+            'punjabi': 'Punjabi'
         };
         
         // Initialize page
@@ -380,7 +386,14 @@
         // Load promotions from backend
         async function loadPromotions() {
             try {
-                const response = await fetch(`${API_BASE_URL}/promotions/user-promotions`);
+                // Add timestamp to prevent caching
+                const timestamp = new Date().getTime();
+                const response = await fetch(`${API_BASE_URL}/promotions/user-promotions?_t=${timestamp}`, {
+                    cache: 'no-store',
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error('Failed to load promotions');
@@ -430,6 +443,7 @@
                 let rowHTML = `
                     <td><strong>${index + 1}</strong></td>
                     <td><strong>${formattedDate}</strong></td>
+                    <td><span class="text-muted">${promo.about || '-'}</span></td>
                 `;
                 
                 // Add download buttons for each language
@@ -477,33 +491,121 @@
             previewImage.src = '';
             previewImage.alt = 'Generating preview...';
             
-            // Show modal
+            console.log(`🎯 [${new Date().toISOString()}] STEP 1: Clicked ${language} button for promotion ${promotionId}`);
+            console.log(`   Date: ${date}`);
+            
+            // Show modal with loading message
+            const modalStart = Date.now();
             const modal = new bootstrap.Modal(document.getElementById('imagePreviewModal'));
             modal.show();
+            console.log(`   ⏱️  Modal shown: ${Date.now() - modalStart}ms`);
+            
+            // Update preview text to show server status
+            previewImage.alt = '⏳ Waking up server... (Free tier takes 30-60 seconds)';
             
             try {
-                // Fetch promotion image from backend
-                const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
+                // Fetch promotion image from backend with 90 second timeout (for Render cold start)
+                console.log(`🌐 [${new Date().toISOString()}] STEP 2: Fetching image from API...`);
+                console.log(`   URL: ${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
+                console.log(`   ⚠️  Note: First request may take 30-60s (server cold start)`);
+                const fetchStart = Date.now();
                 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch promotion image');
+                // Create abort controller for timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => {
+                    console.error(`   ⏰ TIMEOUT after 90 seconds - aborting request`);
+                    controller.abort();
+                }, 90000); // 90 second timeout (handles Render cold start)
+                
+                // Update loading text at intervals
+                const loadingInterval = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - fetchStart) / 1000);
+                    if (elapsed < 30) {
+                        previewImage.alt = `⏳ Loading... ${elapsed}s`;
+                    } else if (elapsed < 60) {
+                        previewImage.alt = `⏳ Server is waking up... ${elapsed}s (Render free tier is slow)`;
+                    } else {
+                        previewImage.alt = `⏳ Almost there... ${elapsed}s`;
+                    }
+                }, 1000);
+                
+                try {
+                    const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`, {
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeoutId); // Clear timeout if request completes
+                    clearInterval(loadingInterval); // Stop loading updates
+                    
+                    const fetchTime = Date.now() - fetchStart;
+                    console.log(`   ⏱️  Fetch completed: ${fetchTime}ms`);
+                    console.log(`   Response status: ${response.status} ${response.statusText}`);
+                    
+                    if (!response.ok) {
+                        console.error(`   ❌ Response not OK: ${response.status}`);
+                        const errorText = await response.text();
+                        console.error(`   Error body:`, errorText);
+                        throw new Error('Failed to fetch promotion image');
+                    }
+                    
+                    // Convert to blob
+                    console.log(`📦 [${new Date().toISOString()}] STEP 3: Converting response to blob...`);
+                    const blobStart = Date.now();
+                    const blob = await response.blob();
+                    const blobTime = Date.now() - blobStart;
+                    console.log(`   ⏱️  Blob conversion: ${blobTime}ms`);
+                    console.log(`   Blob size: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+                    
+                    const promotionImageUrl = URL.createObjectURL(blob);
+                    console.log(`   ✅ Object URL created`);
+                    
+                    // Generate complete card preview with user details
+                    console.log(`🎨 [${new Date().toISOString()}] STEP 4: Generating preview card with user details...`);
+                    const canvasStart = Date.now();
+                    const previewDataUrl = await generatePromotionCardPreview(promotionImageUrl, language, date);
+                    const canvasTime = Date.now() - canvasStart;
+                    console.log(`   ⏱️  Canvas generation: ${canvasTime}ms`);
+                    
+                    currentPreviewDataUrl = previewDataUrl;
+                    
+                    // Set preview image to the complete card
+                    console.log(`🖼️  [${new Date().toISOString()}] STEP 5: Setting preview image...`);
+                    previewImage.src = previewDataUrl;
+                    previewImage.alt = 'Promotion Card Preview';
+                    
+                    const totalTime = fetchTime + blobTime + canvasTime;
+                    console.log(`✅ [${new Date().toISOString()}] COMPLETE! Total time: ${totalTime}ms`);
+                    console.log(`   Breakdown: Fetch=${fetchTime}ms, Blob=${blobTime}ms, Canvas=${canvasTime}ms`);
+                    
+                } catch (fetchError) {
+                    clearTimeout(timeoutId);
+                    clearInterval(loadingInterval); // Stop loading updates
+                    
+                    if (fetchError.name === 'AbortError') {
+                        console.error('❌ Request timed out after 90 seconds');
+                        previewImage.alt = 'Request timed out after 90 seconds';
+                        alert('⏰ Server took too long to respond (90+ seconds).\n\n' +
+                              'This happens when:\n' +
+                              '1. Render free tier is sleeping (cold start)\n' +
+                              '2. Database is very slow\n\n' +
+                              'Please try again in a moment - it should be faster now that server is awake.');
+                    } else {
+                        throw fetchError; // Re-throw to outer catch
+                    }
                 }
                 
-                const blob = await response.blob();
-                const promotionImageUrl = URL.createObjectURL(blob);
-                
-                // Generate complete card preview with user details
-                const previewDataUrl = await generatePromotionCardPreview(promotionImageUrl, language, date);
-                currentPreviewDataUrl = previewDataUrl;
-                
-                // Set preview image to the complete card
-                previewImage.src = previewDataUrl;
-                previewImage.alt = 'Promotion Card Preview';
-                
             } catch (error) {
-                console.error('Error generating preview:', error);
+                console.error('❌ Error generating preview:', error);
+                console.error('   Error name:', error.name);
+                console.error('   Error message:', error.message);
+                console.error('   Error stack:', error.stack);
                 previewImage.alt = 'Failed to load preview';
-                alert('Failed to load preview. Please try again.');
+                
+                // More specific error messages
+                if (error.name === 'AbortError') {
+                    alert('Request timed out. Please try again or contact support if the issue persists.');
+                } else {
+                    alert('Failed to load preview. Please try again.');
+                }
             }
         }
         

@@ -2,6 +2,175 @@ const express = require('express');
 const router = express.Router();
 const Application = require('../models/Application');
 const Position = require('../models/Position');
+const PaymentPlan = require('../models/PaymentPlan');
+
+// Initialize default payment plans in database (run once)
+async function initializePaymentPlans() {
+    try {
+        const count = await PaymentPlan.countDocuments();
+        if (count === 0) {
+            console.log('💰 Initializing default payment plans in database...');
+            
+            const defaultPlans = [
+                {
+                    positionLevel: 'India',
+                    options: [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['India'] }]
+                },
+                {
+                    positionLevel: 'Zone',
+                    options: [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Zone'] }]
+                },
+                {
+                    positionLevel: 'State',
+                    options: [{ pay: 90000, profit: 510000, credit: 600000, visibleFor: ['State'] }]
+                },
+                {
+                    positionLevel: 'Division',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Division'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Division'] }
+                    ]
+                },
+                {
+                    positionLevel: 'District',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['District'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['District'] },
+                        { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['District'] }
+                    ]
+                },
+                {
+                    positionLevel: 'Tehsil',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Tehsil'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Tehsil'] },
+                        { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Tehsil'] },
+                        { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Tehsil'] }
+                    ]
+                },
+                {
+                    positionLevel: 'Pincode',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Pincode'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Pincode'] },
+                        { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Pincode'] },
+                        { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Pincode'] },
+                        { pay: 30000, profit: 170000, credit: 200000, visibleFor: ['Pincode'] }
+                    ]
+                },
+                {
+                    positionLevel: 'Village',
+                    options: [
+                        { pay: 90000, profit: 510000, credit: 600000, visibleFor: ['Village'] },
+                        { pay: 75000, profit: 425000, credit: 500000, visibleFor: ['Village'] },
+                        { pay: 60000, profit: 340000, credit: 400000, visibleFor: ['Village'] },
+                        { pay: 45000, profit: 255000, credit: 300000, visibleFor: ['Village'] },
+                        { pay: 30000, profit: 170000, credit: 200000, visibleFor: ['Village'] },
+                        { pay: 15000, profit: 85000, credit: 100000, visibleFor: ['Village'] }
+                    ]
+                }
+            ];
+            
+            await PaymentPlan.insertMany(defaultPlans);
+            console.log('✅ Default payment plans initialized in database');
+        }
+    } catch (error) {
+        console.error('❌ Error initializing payment plans:', error);
+    }
+}
+
+// Call initialization when module loads
+initializePaymentPlans();
+
+// Get payment plans from MongoDB
+router.get('/payment-plans', async (req, res) => {
+  try {
+    const plans = await PaymentPlan.find();
+    
+    // Convert to the format expected by frontend
+    const paymentPlans = {};
+    plans.forEach(plan => {
+      paymentPlans[plan.positionLevel] = plan.options;
+    });
+    
+    res.json({ success: true, paymentPlans });
+  } catch (error) {
+    console.error('❌ Error fetching payment plans:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update payment plans in MongoDB
+router.post('/payment-plans', async (req, res) => {
+  try {
+    const { paymentPlans: newPlans } = req.body;
+    
+    if (!newPlans) {
+      return res.status(400).json({ error: 'Payment plans data required' });
+    }
+    
+    // Handle both formats: array (new) or object (old)
+    let plansToInsert = [];
+    
+    if (Array.isArray(newPlans)) {
+      // New format: array of plans with visibleFor property
+      console.log('📋 Received new format (array):', newPlans);
+      
+      // Convert new format to old format for storage
+      const allLevels = ['India', 'Zone', 'State', 'Division', 'District', 'Tehsil', 'Pincode', 'Village'];
+      const plansByLevel = {};
+      
+      // Initialize empty arrays for each level
+      allLevels.forEach(level => {
+        plansByLevel[level] = [];
+      });
+      
+      // Distribute plans to appropriate levels based on visibleFor
+      newPlans.forEach(plan => {
+        const visibleFor = plan.visibleFor || allLevels;
+        visibleFor.forEach(level => {
+          plansByLevel[level].push({
+            pay: plan.pay,
+            profit: plan.profit,
+            credit: plan.credit,
+            visibleFor: [level]
+          });
+        });
+      });
+      
+      // Create documents for storage
+      for (const [positionLevel, options] of Object.entries(plansByLevel)) {
+        plansToInsert.push({
+          positionLevel,
+          options
+        });
+      }
+    } else {
+      // Old format: object with position levels as keys
+      console.log('📋 Received old format (object)');
+      for (const [positionLevel, options] of Object.entries(newPlans)) {
+        plansToInsert.push({
+          positionLevel,
+          options
+        });
+      }
+    }
+    
+    // Delete all existing plans
+    await PaymentPlan.deleteMany({});
+    
+    // Insert new plans
+    await PaymentPlan.insertMany(plansToInsert);
+    
+    console.log('💰 Payment plans updated in database');
+    
+    res.json({ success: true, message: 'Payment plans updated successfully', paymentPlans: newPlans });
+  } catch (error) {
+    console.error('❌ Error updating payment plans:', error);
+    console.error('Error details:', error.stack);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Get dashboard statistics
 router.get('/dashboard', async (req, res) => {
@@ -174,8 +343,8 @@ router.put('/applications/:id/approve', async (req, res) => {
         positionId: application.positionId,
         appliedDate: application.appliedDate,
         approvedDate: new Date(),
-        credits: 500000, // START WITH 500,000 CREDITS (5 lacs joining bonus)
-        hasReceivedInitialCredits: true, // Mark as already received
+        credits: 0, // No default credits, admin will manually assign
+        hasReceivedInitialCredits: false, // No initial credits
         introducedCount: 0,
         isVerified: false,
         isFirstLogin: true
@@ -188,27 +357,10 @@ router.put('/applications/:id/approve', async (req, res) => {
         loginId: application.applicantInfo.phone,
         defaultPassword: defaultPassword,
         passwordLength: defaultPassword.length,
-        initialCredits: 500000
+        initialCredits: 0
       });
-    } else {
-      // User already exists - grant 500,000 credits on first approval if not already received
-      if (!user.hasReceivedInitialCredits) {
-        user.credits = (user.credits || 0) + 500000; // 5 lacs joining bonus
-        user.hasReceivedInitialCredits = true;
-        
-        // Add to credits history
-        if (!user.creditsHistory) user.creditsHistory = [];
-        user.creditsHistory.push({
-          type: 'initial',
-          amount: 500000,
-          description: 'Welcome bonus on first approval - 5 lacs joining bonus',
-          date: new Date()
-        });
-        
-        await user.save();
-        console.log(`💰 Granted 500,000 initial credits to ${user.name}. Total credits: ${user.credits}`);
-      }
     }
+    // Admin will manually assign credits using the Give Credits feature
     
     // Update introduced count and credits for introducer (100,000 credits per referral - 20% of 5 lacs)
     if (application.introducedBy && application.introducedBy !== 'Self') {
@@ -380,6 +532,86 @@ router.delete('/users/:id/delete', async (req, res) => {
   }
 });
 
+// Get single application by ID
+router.get('/applications/:id', async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id);
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    res.json({ application });
+  } catch (error) {
+    console.error('❌ Error fetching application:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Verify payment screenshot
+router.post('/applications/:id/verify-payment', async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.id);
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    if (!application.payment || !application.payment.paymentScreenshot) {
+      return res.status(400).json({ error: 'No payment screenshot found' });
+    }
+
+    // Update payment status to verified
+    application.payment.status = 'verified';
+    application.payment.verifiedAt = new Date();
+    application.payment.verifiedBy = 'Admin'; // You can pass admin info from auth token
+    
+    await application.save();
+    
+    console.log(`✅ Payment verified for application: ${application._id}`);
+
+    res.json({
+      message: 'Payment verified successfully',
+      application
+    });
+  } catch (error) {
+    console.error('❌ Error verifying payment:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Reject payment screenshot
+router.post('/applications/:id/reject-payment', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const application = await Application.findById(req.params.id);
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    if (!application.payment || !application.payment.paymentScreenshot) {
+      return res.status(400).json({ error: 'No payment screenshot found' });
+    }
+
+    // Update payment status to rejected
+    application.payment.status = 'rejected';
+    application.adminNotes = reason || 'Payment rejected';
+    
+    await application.save();
+    
+    console.log(`❌ Payment rejected for application: ${application._id}. Reason: ${reason}`);
+
+    res.json({
+      message: 'Payment rejected',
+      application
+    });
+  } catch (error) {
+    console.error('❌ Error rejecting payment:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Cleanup utility: Delete all users that don't have approved/pending applications
 router.post('/cleanup-orphaned-users', async (req, res) => {
   try {
@@ -387,14 +619,20 @@ router.post('/cleanup-orphaned-users', async (req, res) => {
     
     console.log('🧹 Starting orphaned users cleanup...');
     
-    // Get all users
-    const allUsers = await User.find({});
+    // Get all users - optimized with select
+    const allUsers = await User.find({})
+      .select('_id phone name')
+      .lean()
+      .maxTimeMS(10000); // 10 second timeout
     console.log(`📊 Total users in database: ${allUsers.length}`);
     
-    // Get all phone numbers from approved or pending applications
+    // Get all phone numbers from approved or pending applications - optimized
     const activeApplications = await Application.find({ 
       status: { $in: ['pending', 'approved'] }
-    });
+    })
+      .select('applicantInfo.phone')
+      .lean()
+      .maxTimeMS(10000);
     const activePhones = new Set(activeApplications.map(app => app.applicantInfo.phone));
     console.log(`📋 Active applications: ${activeApplications.length}`);
     
@@ -2235,5 +2473,348 @@ router.get('/users/:userId/details', async (req, res) => {
     });
   }
 });
+
+// Admin route to manually give credits to a user (NEW SYSTEM: Cash + Extra Credits)
+router.post('/users/:userId/give-credits', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { amountPaid, creditsToGive, description } = req.body;
+
+    console.log('💰 Give Credits Request:', { userId, amountPaid, creditsToGive, description });
+
+    // Validate inputs
+    if (!creditsToGive || creditsToGive <= 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Credits to give must be greater than 0.' 
+      });
+    }
+
+    if (!amountPaid || amountPaid < 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Amount paid must be 0 or greater.' 
+      });
+    }
+
+    // Find user
+    const User = require('../models/User');
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
+    }
+
+    // Calculate credit split
+    // Cash credits = amount paid (e.g., 25,000)
+    // Extra credits = remaining credits (e.g., 2,00,000 - 25,000 = 1,75,000)
+    const cashCreditsToAdd = parseInt(amountPaid);
+    const extraCreditsToAdd = parseInt(creditsToGive) - cashCreditsToAdd;
+
+    console.log('📊 Credit Split:', {
+      totalCredits: creditsToGive,
+      cashCredits: cashCreditsToAdd,
+      extraCredits: extraCreditsToAdd
+    });
+
+    if (extraCreditsToAdd < 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Credits to give must be greater than or equal to amount paid' 
+      });
+    }
+
+    // Update user credits
+    const oldTotalCredits = user.credits || 0;
+    const oldCashCredits = user.cashCredits || 0;
+    const oldExtraCredits = user.extraCredits || 0;
+
+    // Add cash credits
+    user.cashCredits = oldCashCredits + cashCreditsToAdd;
+    
+    // Add extra credits
+    user.extraCredits = oldExtraCredits + extraCreditsToAdd;
+    
+    // Update total
+    user.credits = user.cashCredits + user.extraCredits;
+
+    // Initialize arrays if they don't exist
+    if (!user.cashHistory) user.cashHistory = [];
+    if (!user.extraHistory) user.extraHistory = [];
+    if (!user.creditsHistory) user.creditsHistory = [];
+
+    // Add to cash history if cash credits were added
+    if (cashCreditsToAdd > 0) {
+      user.cashHistory.push({
+        type: 'credit',
+        amount: cashCreditsToAdd,
+        balance: user.cashCredits,
+        description: description || `Admin added ₹${amountPaid.toLocaleString('en-IN')} (${cashCreditsToAdd.toLocaleString('en-IN')} cash credits)`,
+        date: new Date()
+      });
+    }
+
+    // Add to extra history if extra credits were added
+    if (extraCreditsToAdd > 0) {
+      user.extraHistory.push({
+        type: 'credit',
+        amount: extraCreditsToAdd,
+        balance: user.extraCredits,
+        description: description || `Admin added ${extraCreditsToAdd.toLocaleString('en-IN')} bonus credits`,
+        date: new Date()
+      });
+    }
+
+    // Add to legacy credits history (for backward compatibility)
+    user.creditsHistory.push({
+      type: 'bonus',
+      amount: parseInt(creditsToGive),
+      description: description || `Admin granted ${creditsToGive.toLocaleString('en-IN')} credits (₹${amountPaid.toLocaleString('en-IN')} paid + ${extraCreditsToAdd.toLocaleString('en-IN')} bonus)`,
+      date: new Date()
+    });
+    
+    await user.save();
+    
+    console.log(`✅ Credits given to ${user.name}:`, {
+      total: user.credits,
+      cash: user.cashCredits,
+      extra: user.extraCredits,
+      oldTotal: oldTotalCredits
+    });
+    
+    res.json({ 
+      success: true,
+      message: `Successfully gave ${creditsToGive.toLocaleString('en-IN')} credits to ${user.name}`,
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        credits: user.credits,
+        cashCredits: user.cashCredits,
+        extraCredits: user.extraCredits
+      },
+      breakdown: {
+        amountPaid: amountPaid,
+        cashCredits: cashCreditsToAdd,
+        extraCredits: extraCreditsToAdd,
+        totalCredits: creditsToGive
+      }
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error giving credits:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// Get user credit details with cash and extra breakdown
+router.get('/users/:userId/credit-details', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const User = require('../models/User');
+    
+    const user = await User.findById(userId)
+      .select('name phone credits cashCredits extraCredits cashHistory extraHistory')
+      .lean();
+    
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
+    }
+    
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        phone: user.phone,
+        totalCredits: user.credits || 0,
+        cashCredits: user.cashCredits || 0,
+        extraCredits: user.extraCredits || 0,
+        cashHistory: user.cashHistory || [],
+        extraHistory: user.extraHistory || []
+      }
+    });
+  } catch (error) {
+    console.error('[ADMIN] Error fetching credit details:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
+// Distribute commission to position hierarchy
+router.post('/applications/:id/distribute-commission', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { positionId, totalAmount, distributions } = req.body;
+
+    console.log('💰 [COMMISSION] Distribution request:', { 
+      applicationId: id, 
+      positionId, 
+      totalAmount,
+      distributions 
+    });
+
+    // Get the application to find the position hierarchy
+    const application = await Application.findById(id);
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Parse position hierarchy from positionId
+    const hierarchy = parsePositionId(positionId);
+    console.log('📍 [COMMISSION] Position hierarchy:', hierarchy);
+
+    // Find approved applications for each level in the hierarchy
+    const commissionRecipients = [];
+    let totalDistributed = 0;
+    let successfulDistributions = 0;
+
+    for (const distribution of distributions) {
+      try {
+        // Find the position holder for this level
+        const recipientPosition = await findPositionHolder(hierarchy, distribution.level);
+        
+        if (recipientPosition && recipientPosition.application) {
+          const recipient = await User.findById(recipientPosition.application.userId);
+          
+          if (recipient) {
+            // Add credits to recipient
+            const creditsToAdd = Math.floor(distribution.amount);
+            recipient.credits = (recipient.credits || 0) + creditsToAdd;
+            
+            // Add commission transaction
+            recipient.creditsHistory = recipient.creditsHistory || [];
+            recipient.creditsHistory.push({
+              amount: creditsToAdd,
+              type: 'commission',
+              description: `Commission from ${hierarchy.level} position (${distribution.percentage}% of ₹${totalAmount})`,
+              date: new Date()
+            });
+
+            await recipient.save();
+            
+            commissionRecipients.push({
+              level: distribution.level,
+              name: recipient.name,
+              phone: recipient.phone,
+              amount: creditsToAdd,
+              percentage: distribution.percentage
+            });
+
+            totalDistributed += creditsToAdd;
+            successfulDistributions++;
+
+            console.log(`✅ [COMMISSION] Distributed ₹${creditsToAdd} to ${recipient.name} (${distribution.level})`);
+          }
+        } else {
+          console.log(`⚠️ [COMMISSION] No approved holder found for ${distribution.level} level`);
+        }
+      } catch (distError) {
+        console.error(`❌ [COMMISSION] Error distributing to ${distribution.level}:`, distError);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Commission distributed to ${successfulDistributions} recipients`,
+      totalAmount: totalAmount,
+      totalDistributed: totalDistributed,
+      distributedTo: successfulDistributions,
+      recipients: commissionRecipients
+    });
+
+  } catch (error) {
+    console.error('❌ [COMMISSION] Error distributing commission:', error);
+    res.status(500).json({ 
+      error: 'Failed to distribute commission',
+      details: error.message 
+    });
+  }
+});
+
+// Helper function to parse positionId into hierarchy
+function parsePositionId(positionId) {
+  const parts = positionId.replace('pos_', '').split('_');
+  
+  return {
+    level: parts[0].replace(/-/g, ' '),
+    country: parts.length > 1 ? parts[1] : null,
+    zone: parts.length > 2 && parts[2].includes('zone') ? parts[2] : null,
+    state: parts.length > 2 && !parts[2].includes('zone') ? parts[2] : parts.length > 3 ? parts[3] : null,
+    division: parts.length > 4 ? parts[4] : null,
+    district: parts.length > 5 ? parts[5] : null,
+    tehsil: parts.length > 6 ? parts[6] : null,
+    pincode: parts.length > 7 ? parts[7] : null,
+    village: parts.length > 8 ? parts[8] : null
+  };
+}
+
+// Helper function to find position holder for a specific level
+async function findPositionHolder(hierarchy, level) {
+  try {
+    let query = { status: 'approved' };
+    
+    // Build position query based on level
+    switch (level.toLowerCase()) {
+      case 'country':
+        query.positionId = { $regex: /^pos_president_/ };
+        break;
+      case 'zone':
+        if (hierarchy.zone) {
+          query.positionId = { $regex: new RegExp(`zone-head.*${hierarchy.zone.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'state':
+        if (hierarchy.state) {
+          query.positionId = { $regex: new RegExp(`state-head.*${hierarchy.state.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'division':
+        if (hierarchy.division) {
+          query.positionId = { $regex: new RegExp(`division-head.*${hierarchy.division.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'district':
+        if (hierarchy.district) {
+          query.positionId = { $regex: new RegExp(`district-head.*${hierarchy.district.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'tehsil':
+        if (hierarchy.tehsil) {
+          query.positionId = { $regex: new RegExp(`tehsil-head.*${hierarchy.tehsil.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+      case 'pincode':
+        if (hierarchy.pincode) {
+          query.positionId = { $regex: new RegExp(`pincode-head.*${hierarchy.pincode}`, 'i') };
+        }
+        break;
+      case 'village':
+        if (hierarchy.village) {
+          query.positionId = { $regex: new RegExp(`village-head.*${hierarchy.village.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        break;
+    }
+
+    console.log(`🔍 [COMMISSION] Searching for ${level} holder with query:`, query);
+    
+    const application = await Application.findOne(query);
+    
+    return application ? { application } : null;
+  } catch (error) {
+    console.error(`Error finding ${level} position holder:`, error);
+    return null;
+  }
+}
 
 module.exports = router;

@@ -14,6 +14,8 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(compression()); // Enable gzip compression to reduce memory
+
+// Enhanced CORS configuration
 app.use(cors({
   origin: [
     'http://localhost:3000', 
@@ -26,8 +28,41 @@ app.use(cors({
     'https://instantllycards.com',
     /\.vercel\.app$/
   ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cache-Control', 'Pragma', 'Expires'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600
 }));
+
+// Additional CORS headers for all requests
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5500',
+    'https://instantllychannelpatner.onrender.com',
+    'https://instantlly-channel-partner.vercel.app',
+    'https://instantllychannelpatner.vercel.app',
+    'https://instantllychannelpatneradmin.vercel.app',
+    'https://www.instantllycards.com',
+    'https://instantllycards.com'
+  ];
+  
+  if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+  
+  if (req.method === 'OPTIONS') {
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Cache-Control, Pragma, Expires');
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 app.use('/api/payments/webhook', express.raw({ type: '*/*' }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
@@ -35,26 +70,54 @@ app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Import index creation utility
+const ensureIndexes = require('../utils/ensureIndexes');
+
 // Connect to MongoDB Atlas with better error handling
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/instantly-cards', {
       retryWrites: true,
       w: 'majority',
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      maxPoolSize: 3, // Reduce to 3 connections to save memory
-      minPoolSize: 1,
-      maxIdleTimeMS: 10000, // Close idle connections after 10s
+      serverSelectionTimeoutMS: 30000, // 30s to select server
+      socketTimeoutMS: 120000, // 120s socket timeout (doubled for slow queries)
+      connectTimeoutMS: 30000, // 30s connection timeout
+      maxPoolSize: 5, // Increase pool for better concurrent handling
+      minPoolSize: 2,
+      maxIdleTimeMS: 30000, // 30s idle timeout
+      heartbeatFrequencyMS: 10000, // Check connection every 10s
+      family: 4, // Force IPv4 for better compatibility
     });
     console.log('✅ Connected to MongoDB Atlas');
     console.log('Database:', conn.connection.name);
+    
+    // Ensure indexes exist (runs in background, doesn't block startup)
+    ensureIndexes(mongoose).catch(err => 
+      console.error('⚠️ Index creation failed:', err.message)
+    );
+    
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
     // Don't exit the process, let the app run without DB for now
     console.log('⚠️ App will continue without database connection');
   }
 };
+
+// Set mongoose global timeout
+mongoose.set('bufferTimeoutMS', 30000); // 30 second buffer timeout
+
+// Enable MongoDB query debugging (shows all queries with timing)
+mongoose.set('debug', true);
+
+// Custom debug logger with timing
+mongoose.set('debug', (collectionName, method, query, doc, options) => {
+  const timestamp = new Date().toISOString();
+  console.log(`📊 [${timestamp}] MongoDB Query:`);
+  console.log(`   Collection: ${collectionName}`);
+  console.log(`   Method: ${method}`);
+  console.log(`   Query:`, JSON.stringify(query).substring(0, 200));
+  if (options) console.log(`   Options:`, JSON.stringify(options).substring(0, 100));
+});
 
 connectDB();
 
@@ -63,9 +126,16 @@ mongoose.connection.on('error', (err) => {
 });
 
 mongoose.connection.on('disconnected', () => {
-  console.log('⚠️ MongoDB disconnected');
+  console.log('⚠️ MongoDB disconnected - attempting reconnect in 5s...');
   // Attempt to reconnect after 5 seconds
-  setTimeout(connectDB, 5000);
+  setTimeout(() => {
+    console.log('🔄 Attempting MongoDB reconnection...');
+    connectDB();
+  }, 5000);
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('✅ MongoDB reconnected successfully');
 });
 
 // Health check endpoint

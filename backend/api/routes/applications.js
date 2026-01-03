@@ -24,7 +24,8 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const filename = 'photo-' + uniqueSuffix + path.extname(file.originalname);
+    const prefix = file.fieldname === 'paymentScreenshot' ? 'payment-' : 'photo-';
+    const filename = prefix + uniqueSuffix + path.extname(file.originalname);
     cb(null, filename);
   }
 });
@@ -453,8 +454,11 @@ router.put('/:id/payment', async (req, res) => {
   }
 });
 
-// Submit application with payment (new endpoint for payment flow)
-router.post('/with-payment', upload.single('photo'), async (req, res) => {
+// Submit application with payment (updated for manual payment with screenshot)
+router.post('/with-payment', upload.fields([
+  { name: 'photo', maxCount: 1 },
+  { name: 'paymentScreenshot', maxCount: 1 }
+]), async (req, res) => {
   try {
     const { 
       positionId, 
@@ -476,46 +480,37 @@ router.post('/with-payment', upload.single('photo'), async (req, res) => {
       paymentAmount,
       paymentProfit,
       paymentCredit,
-      razorpayOrderId,
-      razorpayPaymentId,
-      razorpaySignature
+      paymentStatus
     } = req.body;
     
     console.log('📝 Application with payment received:', { 
       positionId, 
       name, 
       phone, 
-      paymentAmount, 
-      razorpayPaymentId 
+      paymentAmount,
+      hasPaymentScreenshot: !!(req.files && req.files.paymentScreenshot)
     });
     
     // Validate required fields
-    if (!positionId || !name || !phone || !paymentAmount || !razorpayPaymentId) {
+    if (!positionId || !name || !phone || !paymentAmount) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
     
-    // Verify payment signature
-    const crypto = require('crypto');
-    const sign = razorpayOrderId + '|' + razorpayPaymentId;
-    const expectedSign = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || 'your_razorpay_key_secret')
-      .update(sign.toString())
-      .digest('hex');
-
-    if (razorpaySignature !== expectedSign) {
-      console.error('❌ Invalid payment signature');
-      return res.status(400).json({ error: 'Invalid payment signature' });
+    // Payment screenshot is now optional
+    const hasScreenshot = !!(req.files && req.files.paymentScreenshot && req.files.paymentScreenshot[0]);
+    if (hasScreenshot) {
+      console.log('✅ Payment screenshot uploaded');
+    } else {
+      console.log('ℹ️  No payment screenshot provided (optional)');
     }
     
-    console.log('✅ Payment signature verified');
-    
-    // Handle photo upload
+    // Handle photo upload (applicant photo)
     let photoBase64 = null;
-    if (req.file) {
-      console.log('📸 Photo uploaded:', req.file.filename);
-      const photoPath = path.join(uploadsDir, req.file.filename);
+    if (req.files && req.files.photo && req.files.photo[0]) {
+      console.log('📸 Applicant photo uploaded:', req.files.photo[0].filename);
+      const photoPath = path.join(uploadsDir, req.files.photo[0].filename);
       const photoBuffer = fs.readFileSync(photoPath);
-      photoBase64 = `data:${req.file.mimetype};base64,${photoBuffer.toString('base64')}`;
+      photoBase64 = `data:${req.files.photo[0].mimetype};base64,${photoBuffer.toString('base64')}`;
       fs.unlinkSync(photoPath);
       console.log('✅ Photo converted to base64 and file deleted');
     } else {
@@ -523,12 +518,24 @@ router.post('/with-payment', upload.single('photo'), async (req, res) => {
       photoBase64 = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iNDAiIGN5PSI0MCIgcj0iNDAiIGZpbGw9IiNlMmU4ZjAiLz4KPHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4PSIxNiIgeT0iMTYiPgo8cGF0aCBkPSJNMjQgMjRDMjguNDE4MyAyNCAzMiAyMC40MTgzIDMyIDE2QzMyIDExLjU4MTcgMjguNDE4MyA4IDI0IDhDMTkuNTgxNyA4IDE2IDExLjU4MTcgMTYgMTZDMTYgMjAuNDE4MyAxOS41ODE3IDI0IDI0IDI0WiIgZmlsbD0iIzYzNjM3NiIvPgo8cGF0aCBkPSJNMjQgMjhDMTguNjcgMjggMTQgMzIuNjcgMTQgMzhWNDBIMzRWMzhDMzQgMzIuNjcgMjkuMzMgMjggMjQgMjhaIiBmaWxsPSIjNjM2Mzc2Ii8+Cjwvc3ZnPgo8L3N2Zz4=';
     }
     
+    // Handle payment screenshot upload (optional)
+    let paymentScreenshotBase64 = null;
+    if (req.files && req.files.paymentScreenshot && req.files.paymentScreenshot[0]) {
+      const screenshotFile = req.files.paymentScreenshot[0];
+      console.log('💳 Payment screenshot uploaded:', screenshotFile.filename);
+      const screenshotPath = path.join(uploadsDir, screenshotFile.filename);
+      const screenshotBuffer = fs.readFileSync(screenshotPath);
+      paymentScreenshotBase64 = `data:${screenshotFile.mimetype};base64,${screenshotBuffer.toString('base64')}`;
+      fs.unlinkSync(screenshotPath);
+      console.log('✅ Payment screenshot converted to base64 and file deleted');
+    } else {
+      console.log('ℹ️  No payment screenshot to process');
+    }
+    
     // Generate unique person code
     const User = require('../models/User');
     function generatePersonCode() {
-      const timestamp = Date.now().toString(36);
-      const randomStr = Math.random().toString(36).substring(2, 6).toUpperCase();
-      return `IC-${timestamp}-${randomStr}`;
+      return Math.floor(100000 + Math.random() * 900000).toString();
     }
     
     let personCode = generatePersonCode();
@@ -550,7 +557,7 @@ router.post('/with-payment', upload.single('photo'), async (req, res) => {
     
     console.log('🎫 Generated unique person code:', personCode);
 
-    // Create new application with payment info
+    // Create new application with manual payment info
     const newApplication = new Application({
       positionId: positionId,
       personCode: personCode,
@@ -579,25 +586,23 @@ router.post('/with-payment', upload.single('photo'), async (req, res) => {
           profit: parseInt(paymentProfit),
           credit: parseInt(paymentCredit)
         },
-        razorpayOrderId: razorpayOrderId,
-        razorpayPaymentId: razorpayPaymentId,
-        razorpaySignature: razorpaySignature,
+        paymentScreenshot: paymentScreenshotBase64,
         amount: parseInt(paymentAmount),
-        status: 'completed',
+        status: paymentStatus || 'pending', // pending verification by admin
         paidAt: new Date()
       },
       introducedBy: introducedBy ? introducedBy.trim() : 'Self',
-      status: 'pending',
+      status: 'pending', // Application pending admin approval and payment verification
       appliedDate: new Date(),
       creditsAllocated: false
     });
     
     const savedApplication = await newApplication.save();
-    console.log('✅ Application with payment saved:', savedApplication._id);
+    console.log('✅ Application with payment screenshot saved:', savedApplication._id);
 
     res.status(201).json({
       success: true,
-      message: 'Application submitted successfully! Your application is pending admin approval.',
+      message: 'Application submitted successfully! Your payment will be verified by admin.',
       applicationId: savedApplication._id,
       application: savedApplication
     });

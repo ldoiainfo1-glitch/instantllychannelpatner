@@ -80,7 +80,7 @@ function setupEventListeners() {
 
     // Search and filters
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
-    document.getElementById('refreshBtn').addEventListener('click', refreshPositionsData);
+    document.getElementById('refreshBtn').addEventListener('click', handleSearch);
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
 
     // Setup searchable filters
@@ -88,6 +88,34 @@ function setupEventListeners() {
 
     // Application form
     document.getElementById('submitApplication').addEventListener('click', submitApplication);
+    
+    // Phone number validation with visual feedback
+    const phoneInput = document.getElementById('applicantPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            const phoneHelp = document.getElementById('phoneHelp');
+            const value = this.value.replace(/[^0-9]/g, '');
+            this.value = value; // Only allow numbers
+            
+            if (value.length === 0) {
+                phoneHelp.textContent = '10 digit phone number only';
+                phoneHelp.className = 'text-muted';
+                this.classList.remove('is-valid', 'is-invalid');
+            } else if (value.length < 10) {
+                phoneHelp.textContent = `Enter ${10 - value.length} more digit${10 - value.length > 1 ? 's' : ''}`;
+                phoneHelp.className = 'text-warning';
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            } else if (value.length === 10) {
+                phoneHelp.textContent = '✓ Valid phone number';
+                phoneHelp.className = 'text-success';
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.value = value.substring(0, 10); // Limit to 10 digits
+            }
+        });
+    }
 
     // Feedback form (now using dummy content, no form needed)
 
@@ -131,8 +159,8 @@ async function loadLocationData() {
     try {
         console.log('⚡ Loading location data with cache-busting...');
 
-        // Try new optimized endpoint first - with cache-busting
-        let response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all`);
+        // Use format=distinct to get actual location lists for filters (not counts)
+        let response = await fetchWithCacheBusting(`${API_BASE_URL}/locations/all?format=distinct`);
 
         if (response.ok) {
             const data = await response.json();
@@ -557,7 +585,10 @@ async function loadApplications() {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
-        const positions = await response.json();
+        const data = await response.json();
+        
+        // Handle both old array format and new {success, positions} format
+        const positions = data.positions || data || [];
 
         // Store positions directly - they are already formatted with application data
         currentPositions = positions.map((pos, index) => ({
@@ -569,6 +600,21 @@ async function loadApplications() {
 
         // Update selected filters display
         updateSelectedFiltersBadges();
+        
+        // Update Position Statistics table with same filters
+        const filters = {};
+        if (zone) filters.zone = zone;
+        if (state) filters.state = state;
+        if (division) filters.division = division;
+        if (district) filters.district = district;
+        if (tehsil) filters.tehsil = tehsil;
+        if (pincode) filters.pincode = pincode;
+        if (village) filters.village = village;
+        filters.country = country;
+        
+        if (typeof loadPositionStatistics === 'function') {
+            loadPositionStatistics(filters);
+        }
     } catch (error) {
         console.error('❌ Error loading applications:', error);
         showNotification('Error loading applications: ' + error.message, 'error');
@@ -1050,17 +1096,11 @@ function openApplicationModal(positionId, positionTitle, location) {
 let tempApplicationData = null;
 let selectedPaymentTier = null;
 
-// Default pricing tiers based on position level
-const DEFAULT_PRICING_TIERS = {
-    'India': [
-        { pay: 90000, profit: 510000, credit: 600000 }
-    ],
-    'Zone': [
-        { pay: 90000, profit: 510000, credit: 600000 }
-    ],
-    'State': [
-        { pay: 90000, profit: 510000, credit: 600000 }
-    ],
+// Default pricing tiers based on position level (will be fetched from API)
+let DEFAULT_PRICING_TIERS = {
+    'India': [{ pay: 90000, profit: 510000, credit: 600000 }],
+    'Zone': [{ pay: 90000, profit: 510000, credit: 600000 }],
+    'State': [{ pay: 90000, profit: 510000, credit: 600000 }],
     'Division': [
         { pay: 90000, profit: 510000, credit: 600000 },
         { pay: 75000, profit: 425000, credit: 500000 }
@@ -1093,6 +1133,30 @@ const DEFAULT_PRICING_TIERS = {
     ]
 };
 
+// Fetch payment plans from API on page load
+async function fetchPaymentPlans() {
+    try {
+        console.log('💰 Fetching payment plans from API...');
+        const response = await fetch(`${API_BASE_URL}/admin/payment-plans`);
+        if (response.ok) {
+            const data = await response.json();
+            if (data.paymentPlans) {
+                DEFAULT_PRICING_TIERS = data.paymentPlans;
+                console.log('✅ Payment plans loaded from API:', DEFAULT_PRICING_TIERS);
+            }
+        } else {
+            console.log('Using default payment plans');
+        }
+    } catch (error) {
+        console.log('Using default payment plans:', error);
+    }
+}
+
+// Load payment plans when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    fetchPaymentPlans();
+});
+
 // Submit application - Step 1: Validate form and show payment plans
 async function submitApplication(event) {
     // Prevent default form submission
@@ -1110,10 +1174,57 @@ async function submitApplication(event) {
         return;
     }
 
-    // Validate form
-    if (!form.checkValidity()) {
-        form.reportValidity();
+    // Get form fields
+    const name = document.getElementById('applicantName').value.trim();
+    const phone = document.getElementById('applicantPhone').value.trim();
+    const photoInput = document.getElementById('applicantPhoto');
+    
+    // Validate name
+    if (!name) {
+        showNotification('Please enter your full name', 'error');
+        document.getElementById('applicantName').focus();
         return;
+    }
+    
+    if (name.length < 3) {
+        showNotification('Name must be at least 3 characters long', 'error');
+        document.getElementById('applicantName').focus();
+        return;
+    }
+    
+    // Validate phone number
+    if (!phone) {
+        showNotification('Please enter your phone number', 'error');
+        document.getElementById('applicantPhone').focus();
+        return;
+    }
+    
+    if (!/^\d{10}$/.test(phone)) {
+        showNotification('Phone number must be exactly 10 digits', 'error');
+        document.getElementById('applicantPhone').focus();
+        return;
+    }
+    
+    // Validate photo file if uploaded
+    if (photoInput.files.length > 0) {
+        const photoFile = photoInput.files[0];
+        const isImage = photoFile.type.startsWith('image/');
+        const isPDF = photoFile.type === 'application/pdf';
+        
+        if (!isImage && !isPDF) {
+            showNotification('Photo must be an image file (JPG, PNG) or PDF', 'error');
+            photoInput.value = '';
+            photoInput.focus();
+            return;
+        }
+        
+        // Check file size (max 5MB)
+        if (photoFile.size > 5 * 1024 * 1024) {
+            showNotification('Photo file size must be less than 5MB', 'error');
+            photoInput.value = '';
+            photoInput.focus();
+            return;
+        }
     }
 
     try {
@@ -1124,13 +1235,13 @@ async function submitApplication(event) {
         const formData = new FormData(form);
         tempApplicationData = {
             positionId: window.currentPosition.id,
-            name: formData.get('name'),
-            phone: formData.get('phone'),
+            name: name,
+            phone: phone,
             companyName: formData.get('companyName'),
             businessName: formData.get('businessName'),
             address: formData.get('address'),
             introducedBy: formData.get('introducedBy'),
-            photo: form.querySelector('#applicantPhoto').files[0],
+            photo: photoInput.files[0],
             location: window.currentPosition.location,
             positionLevel: window.currentPosition.level
         };
@@ -1184,6 +1295,20 @@ async function showPaymentPlansModal() {
         console.log('⚠️ Error fetching custom pricing, using default:', error.message);
     }
     
+    // Filter pricing tiers based on visibleFor field
+    // Only show tiers that are marked as visible for this position level
+    if (!isCustomPricing) {
+        pricingTiers = pricingTiers.filter(tier => {
+            // If tier has visibleFor array, check if current position is included
+            if (tier.visibleFor && Array.isArray(tier.visibleFor)) {
+                return tier.visibleFor.includes(positionLevel);
+            }
+            // If no visibleFor specified, show it (backward compatibility)
+            return true;
+        });
+        console.log(`✅ Filtered ${pricingTiers.length} plans visible for ${positionLevel}`);
+    }
+    
     // Show/hide custom pricing notice
     if (isCustomPricing) {
         customNotice.classList.remove('d-none');
@@ -1231,7 +1356,7 @@ function createPaymentTierCard(tier, index, isRecommended) {
                             <i class="fas fa-chart-line"></i>
                         </div>
                         <div class="benefit-text">
-                            <div class="benefit-label">Commission (85%)</div>
+                            <div class="benefit-label">Commission (75%)</div>
                             <div class="benefit-value">₹${(tier.profit / 1000).toFixed(0)}K</div>
                         </div>
                     </div>
@@ -1278,7 +1403,7 @@ function selectPaymentTier(index, pay, profit, credit) {
     
     // Update button text with amount
     document.getElementById('proceedToPayment').innerHTML = `
-        <i class="fas fa-lock me-2"></i>Pay ₹${(pay / 1000).toFixed(0)}K with Razorpay
+        <i class="fas fa-lock me-2"></i>Pay ₹${(pay / 1000).toFixed(0)}K
     `;
 }
 
@@ -1296,99 +1421,153 @@ function backToApplicationForm() {
     submitBtn.innerHTML = 'Next: Select Payment Plan';
 }
 
-// Proceed to Razorpay payment
+// Proceed to manual payment with scanner
 document.addEventListener('DOMContentLoaded', function() {
     const proceedBtn = document.getElementById('proceedToPayment');
     if (proceedBtn) {
-        proceedBtn.addEventListener('click', initiateRazorpayPayment);
+        proceedBtn.addEventListener('click', showPaymentScanner);
+    }
+    
+    // Setup screenshot upload handler
+    const screenshotInput = document.getElementById('paymentScreenshot');
+    if (screenshotInput) {
+        screenshotInput.addEventListener('change', handleScreenshotSelect);
+    }
+    
+    // Setup submit button
+    const submitBtn = document.getElementById('submitPaymentScreenshot');
+    if (submitBtn) {
+        submitBtn.addEventListener('click', submitApplicationWithScreenshot);
     }
 });
 
-// Initiate Razorpay payment
-async function initiateRazorpayPayment() {
+// Show payment scanner modal
+function showPaymentScanner() {
     if (!selectedPaymentTier || !tempApplicationData) {
         showNotification('Please select a payment plan', 'error');
         return;
     }
     
-    try {
-        // Show processing modal
-        const processingModal = new bootstrap.Modal(document.getElementById('paymentProcessingModal'));
-        processingModal.show();
+    // Hide payment plans modal
+    const paymentPlansModal = bootstrap.Modal.getInstance(document.getElementById('paymentPlansModal'));
+    if (paymentPlansModal) {
+        paymentPlansModal.hide();
+    }
+    
+    // Show scanner modal
+    const scannerModal = new bootstrap.Modal(document.getElementById('paymentScannerModal'));
+    scannerModal.show();
+    
+    // Update payment amount display
+    const amountDisplay = document.getElementById('paymentAmountDisplay');
+    if (amountDisplay) {
+        amountDisplay.textContent = `₹${selectedPaymentTier.pay.toLocaleString('en-IN')}`;
+    }
+    
+    // Reset screenshot input and preview
+    const screenshotInput = document.getElementById('paymentScreenshot');
+    const screenshotPreview = document.getElementById('screenshotPreview');
+    const submitBtn = document.getElementById('submitPaymentScreenshot');
+    
+    if (screenshotInput) screenshotInput.value = '';
+    if (screenshotPreview) screenshotPreview.classList.add('d-none');
+    if (submitBtn) submitBtn.disabled = false; // Enable by default since screenshot is optional
+}
+
+// Handle screenshot file selection
+function handleScreenshotSelect(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById('screenshotPreview');
+    const previewImage = document.getElementById('previewImage');
+    const pdfPreview = document.getElementById('pdfPreview');
+    const pdfFileName = document.getElementById('pdfFileName');
+    const submitBtn = document.getElementById('submitPaymentScreenshot');
+    
+    if (file) {
+        // Validate file type (accept images and PDFs)
+        const isImage = file.type.startsWith('image/');
+        const isPDF = file.type === 'application/pdf';
         
-        // Create Razorpay order
-        const orderResponse = await fetch(`${API_BASE_URL}/payments/create-order`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                amount: selectedPaymentTier.pay,
-                // amount:1,
-                positionId: tempApplicationData.positionId,
-                applicantPhone: tempApplicationData.phone
-            })
-        });
-        
-        if (!orderResponse.ok) {
-            throw new Error('Failed to create payment order');
+        if (!isImage && !isPDF) {
+            showNotification('Please upload an image file (JPG, PNG) or PDF', 'error');
+            event.target.value = '';
+            return;
         }
         
-        const orderData = await orderResponse.json();
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification('File size must be less than 5MB', 'error');
+            event.target.value = '';
+            return;
+        }
         
-        // Hide processing modal
-        processingModal.hide();
-        
-        // Configure Razorpay options
-        const options = {
-            key: orderData.razorpayKeyId,
-            amount: selectedPaymentTier.pay * 100, 
-            // amount:1 * 100,
-            currency: 'INR',
-            name: 'Instantly Cards',
-            description: `${tempApplicationData.positionLevel} Head Position`,
-            image: 'images/logo.jpeg',
-            order_id: orderData.orderId,
-            handler: function (response) {
-                handlePaymentSuccess(response, orderData.orderId);
-            },
-            prefill: {
-                name: tempApplicationData.name,
-                contact: tempApplicationData.phone
-            },
-            theme: {
-                color: '#667eea'
-            },
-            modal: {
-                ondismiss: function() {
-                    showNotification('Payment cancelled', 'info');
-                }
+        // Show appropriate preview
+        if (isImage) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                previewImage.classList.remove('d-none');
+                if (pdfPreview) pdfPreview.classList.add('d-none');
+                preview.classList.remove('d-none');
+                submitBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        } else if (isPDF) {
+            // Show PDF preview
+            previewImage.classList.add('d-none');
+            if (pdfPreview) {
+                pdfPreview.classList.remove('d-none');
+                if (pdfFileName) pdfFileName.textContent = file.name;
             }
-        };
-        
-        // Open Razorpay checkout
-        const rzp = new Razorpay(options);
-        rzp.open();
-        
-    } catch (error) {
-        console.error('❌ Payment error:', error);
-        showNotification(error.message || 'Payment initialization failed', 'error');
-        
-        const processingModal = bootstrap.Modal.getInstance(document.getElementById('paymentProcessingModal'));
-        if (processingModal) {
-            processingModal.hide();
+            preview.classList.remove('d-none');
+            submitBtn.disabled = false;
         }
+    } else {
+        // No file selected - hide preview but keep button enabled (screenshot is optional)
+        preview.classList.add('d-none');
     }
 }
 
-// Handle payment success
-async function handlePaymentSuccess(razorpayResponse, orderId) {
-    try {
-        // Show processing modal
-        const processingModal = new bootstrap.Modal(document.getElementById('paymentProcessingModal'));
-        processingModal.show();
+// Cancel payment and go back
+function cancelPayment() {
+    const scannerModal = bootstrap.Modal.getInstance(document.getElementById('paymentScannerModal'));
+    if (scannerModal) {
+        scannerModal.hide();
+    }
+    
+    // Show payment plans modal again
+    const paymentPlansModal = new bootstrap.Modal(document.getElementById('paymentPlansModal'));
+    paymentPlansModal.show();
+}
+
+// Submit application with payment screenshot
+async function submitApplicationWithScreenshot() {
+    const screenshotInput = document.getElementById('paymentScreenshot');
+    const submitBtn = document.getElementById('submitPaymentScreenshot');
+    
+    // Validate screenshot if provided
+    if (screenshotInput.files[0]) {
+        const file = screenshotInput.files[0];
+        const isImage = file.type.startsWith('image/');
+        const isPDF = file.type === 'application/pdf';
         
-        // Prepare application data with payment info
+        if (!isImage && !isPDF) {
+            showNotification('Payment screenshot must be an image (JPG, PNG) or PDF', 'error');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification('File size must be less than 5MB', 'error');
+            return;
+        }
+    }
+    
+    try {
+        // Disable submit button
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+        
+        // Prepare application data with payment screenshot
         const formData = new FormData();
         formData.append('positionId', tempApplicationData.positionId);
         formData.append('name', tempApplicationData.name);
@@ -1417,14 +1596,16 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
         formData.append('paymentAmount', selectedPaymentTier.pay);
         formData.append('paymentProfit', selectedPaymentTier.profit);
         formData.append('paymentCredit', selectedPaymentTier.credit);
-        // formData.append('paymentAmount', 1);
-        // formData.append('paymentProfit', 0);
-        // formData.append('paymentCredit', 0);
-        formData.append('razorpayOrderId', orderId);
-        formData.append('razorpayPaymentId', razorpayResponse.razorpay_payment_id);
-        formData.append('razorpaySignature', razorpayResponse.razorpay_signature);
         
-        // Submit application with payment
+        // Add payment screenshot only if uploaded (optional)
+        if (screenshotInput.files[0]) {
+            formData.append('paymentScreenshot', screenshotInput.files[0]);
+            formData.append('paymentStatus', 'pending'); // Mark as pending verification
+        } else {
+            formData.append('paymentStatus', 'pending'); // Mark as pending even without screenshot
+        }
+        
+        // Submit application with payment screenshot
         const response = await fetch(`${API_BASE_URL}/applications/with-payment`, {
             method: 'POST',
             body: formData
@@ -1432,10 +1613,11 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
         
         const result = await response.json();
         
-        processingModal.hide();
-        
         if (response.ok) {
             // Close all modals
+            const scannerModal = bootstrap.Modal.getInstance(document.getElementById('paymentScannerModal'));
+            if (scannerModal) scannerModal.hide();
+            
             const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentPlansModal'));
             if (paymentModal) paymentModal.hide();
             
@@ -1444,7 +1626,7 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
             selectedPaymentTier = null;
             
             // Show success message
-            showNotification('✅ Payment successful! Application submitted. Awaiting admin approval.', 'success');
+            showNotification('✅ Application submitted successfully! Your payment will be verified by admin.', 'success');
             
             // Reload page after delay
             setTimeout(() => {
@@ -1458,10 +1640,9 @@ async function handlePaymentSuccess(razorpayResponse, orderId) {
         console.error('❌ Error:', error);
         showNotification(error.message || 'Failed to submit application', 'error');
         
-        const processingModal = bootstrap.Modal.getInstance(document.getElementById('paymentProcessingModal'));
-        if (processingModal) {
-            processingModal.hide();
-        }
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check me-1"></i>Submit Application';
     }
 }
 
@@ -3078,7 +3259,7 @@ function fallbackCopyTextToClipboard(text) {
 //                                         <div style="color: #000000; font-size: 0.65rem; line-height: 1.2; margin-bottom: 10px;">We Are Appointing Sole Head</div>
 //                                         <div style="color: #000000; font-size: 0.65rem; line-height: 1.2;">for India, Zone, State, Division,</div>
 //                                         <div style="color: #000000; font-size: 0.65rem; line-height: 1.2;">District, Tehsil, Pincode, Village</div>
-//                                         <div style="color: #000000; font-size: 0.7rem; font-weight: bold; margin-top: 10px;">Mob: ${phone}</div>
+//                                         <div style="color: #000000; font-size: 0.7rem; font-weight: bold; margin-top: 10px;">Mob: $9833752025</div>
 //                                         <div style="color: #000000; font-size: 0.65rem; margin-top: 5px;">Web: instantly.com</div>
 //                                     </div>
 
@@ -3504,7 +3685,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     padding:8px;
                     font-size:24px;
                     font-weight:700;
-                    margin:8px 0 10px 0;
+                    margin:6px 0;
                 ">
                     <b>${label}:</b> ${value}
                 </div>`;
@@ -3754,8 +3935,8 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                         width:100%;
                                         margin-bottom:0px;
                                     ">
-                                        <div style="font-weight:700;">Mob: ${phone}</div>
-                                        <div style="font-size:18px;">Web: instantly.com</div>
+                                        <div style="font-weight:700;">Mob: 9833752025</div>
+                                        <div style="font-size:18px;">Web: instantlly.com</div>
                                     </div>
 
                                 </div>
