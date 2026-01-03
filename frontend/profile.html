@@ -1665,7 +1665,10 @@
 
                 const icon = typeIcons[entry.type] || 'circle';
                 const color = typeColors[entry.type] || 'secondary';
-                const sign = entry.amount > 0 ? '+' : '';
+                // For deductions, always show negative sign. For positive amounts, show + sign
+                const sign = entry.type === 'deduction' ? '-' : (entry.amount > 0 ? '+' : '');
+                // Use absolute value for deductions to avoid double negative
+                const displayAmount = entry.type === 'deduction' ? Math.abs(entry.amount) : entry.amount;
 
                 return `
                             <div class="list-group-item">
@@ -1681,7 +1684,7 @@
                                         </small>
                                     </div>
                                     <div class="text-end">
-                                        <h5 class="mb-0 text-${color}">${sign}${entry.amount}</h5>
+                                        <h5 class="mb-0 text-${color}">${sign}${displayAmount}</h5>
                                         <small class="text-muted">${new Date(entry.date).toLocaleDateString()}</small>
                                     </div>
                                 </div>
