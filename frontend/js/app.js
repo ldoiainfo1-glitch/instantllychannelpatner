@@ -753,9 +753,9 @@ function createPositionRow(position) {
         // Add cache-busting timestamp to force fresh photo load
         const photoSrc = position.applicantDetails.photo.startsWith('data:') 
             ? position.applicantDetails.photo 
-            : `${position.applicantDetails.photo}?t=${Date.now()}`;
-        
-        photoCell = `<img src="${photoSrc}" 
+            : (window.CacheBuster ? window.CacheBuster.addCacheBuster(position.applicantDetails.photo) : `${position.applicantDetails.photo}?t=${Date.now()}`);
+
+        photoCell = `<img src="${photoSrc}"
                          alt="${position.applicantDetails.name || 'Applicant'}" 
                          class="rounded-circle"
                          style="width: 50px; height: 50px; object-fit: cover;"
@@ -1108,7 +1108,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
     if (position.applicantDetails && position.applicantDetails.photo) {
         const photoSrc = position.applicantDetails.photo.startsWith('data:') 
             ? position.applicantDetails.photo 
-            : `${position.applicantDetails.photo}?t=${Date.now()}`;
+            : (window.CacheBuster ? window.CacheBuster.addCacheBuster(position.applicantDetails.photo) : `${position.applicantDetails.photo}?t=${Date.now()}`);
         photoCell = `<img src="${photoSrc}" alt="${position.applicantDetails.name || 'Applicant'}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">`;
     } else {
         photoCell = '<i class="fas fa-user-circle fa-3x text-muted"></i>';
@@ -2531,7 +2531,7 @@ async function showProfile() {
             // Set profile photo
             const profilePhoto = document.getElementById('profilePhoto');
             if (user.photo) {
-                profilePhoto.src = user.photo;
+                profilePhoto.src = window.CacheBuster ? window.CacheBuster.addCacheBuster(user.photo) : user.photo;
             } else {
                 profilePhoto.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjUwIiBmaWxsPSIjZTJlOGYwIi8+Cjwvc3ZnPg==';
             }
@@ -4396,7 +4396,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                             margin:0 auto;
                                             border:4px solid white;
                                         ">
-                                            <img src="${photo}" style="width:100%; height:100%; object-fit:cover;">
+                                            <img src="${window.CacheBuster ? window.CacheBuster.addCacheBuster(photo) : photo}" style="width:100%; height:100%; object-fit:cover;">
                                         </div>
                                     </div>
 

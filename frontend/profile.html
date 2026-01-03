@@ -1062,6 +1062,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/cache-buster.js"></script>
     <script>
         const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
             ? 'http://localhost:5000/api'
@@ -1300,7 +1301,7 @@
             const profilePhoto = document.getElementById('profilePhoto');
             if (profilePhoto) {
                 if (user.photo) {
-                    profilePhoto.src = user.photo;
+                    profilePhoto.src = window.CacheBuster ? window.CacheBuster.addCacheBuster(user.photo) : user.photo;
                 } else {
                     profilePhoto.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNzUiIHI9Ijc1IiBmaWxsPSIjZTJlOGYwIi8+Cjwvc3ZnPg==';
                 }
@@ -1333,7 +1334,7 @@
         function displayDocuments(documents) {
             // PAN Card
             if (documents.panCard) {
-                document.getElementById('panPreview').src = documents.panCard;
+                document.getElementById('panPreview').src = window.CacheBuster ? window.CacheBuster.addCacheBuster(documents.panCard) : documents.panCard;
                 document.getElementById('panPreview').style.display = 'block';
                 document.getElementById('panPlaceholder').style.display = 'none';
                 document.getElementById('panUploadText').textContent = 'Change PAN Card';
@@ -1342,7 +1343,7 @@
             
             // Aadhaar Card
             if (documents.aadhaarCard) {
-                document.getElementById('aadhaarPreview').src = documents.aadhaarCard;
+                document.getElementById('aadhaarPreview').src = window.CacheBuster ? window.CacheBuster.addCacheBuster(documents.aadhaarCard) : documents.aadhaarCard;
                 document.getElementById('aadhaarPreview').style.display = 'block';
                 document.getElementById('aadhaarPlaceholder').style.display = 'none';
                 document.getElementById('aadhaarUploadText').textContent = 'Change Aadhaar Card';
