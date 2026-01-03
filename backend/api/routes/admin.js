@@ -2578,6 +2578,19 @@ router.post('/users/:userId/give-credits', async (req, res) => {
     
     await user.save();
     
+    // Also update the application document to show in the table
+    const Application = require('../models/Application');
+    const application = await Application.findOne({ 'applicantInfo.phone': user.phone, status: 'approved' });
+    
+    if (application) {
+      application.cashCreditsGiven = cashCreditsToAdd;
+      application.extraCreditsGiven = extraCreditsToAdd;
+      await application.save();
+      console.log(`✅ Application updated with credit details for ${user.name}`);
+    } else {
+      console.log(`⚠️ No approved application found for ${user.name} (${user.phone})`);
+    }
+    
     console.log(`✅ Credits given to ${user.name}:`, {
       total: user.credits,
       cash: user.cashCredits,
