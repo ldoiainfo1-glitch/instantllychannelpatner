@@ -4081,7 +4081,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
             if (loc.pincode)  return { level: "Pincode", value: loc.pincode };
             if (loc.tehsil)   return { level: "Tehsil", value: loc.tehsil };
             if (loc.district) return { level: "District", value: loc.district };
-            if (loc.division) return { level: "Division", value: loc.division };
+            if (loc.division) return { level: "Div", value: loc.division };
             if (loc.state)    return { level: "State", value: loc.state };
             if (loc.zone)     return { level: "Zone", value: loc.zone };
             return { level: "Country", value: loc.country || "India" };
