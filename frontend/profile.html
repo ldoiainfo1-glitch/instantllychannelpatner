@@ -1,25 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - Instantlly Channel Partner</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/style.css">
-    
+
     <style>
         body {
-            padding-top: 70px; /* Account for fixed navbar */
+            padding-top: 70px;
+            /* Account for fixed navbar */
             background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
         }
-        
+
         .profile-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -29,7 +31,7 @@
             border-radius: 0 0 20px 20px;
             box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
         }
-        
+
         .profile-header::before {
             content: '';
             position: absolute;
@@ -40,28 +42,28 @@
             background: linear-gradient(135deg, rgba(102, 126, 234, 0.9) 0%, rgba(118, 75, 162, 0.9) 100%);
             z-index: 0;
         }
-        
-        .profile-header > * {
+
+        .profile-header>* {
             position: relative;
             z-index: 1;
         }
-        
+
         .profile-photo-container {
             position: relative;
             width: 120px;
             height: 120px;
             margin: 0 auto;
         }
-        
+
         .profile-photo {
             width: 120px;
             height: 120px;
             object-fit: cover;
             border: 4px solid white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             border-radius: 50%;
         }
-        
+
         .photo-upload-btn {
             position: absolute;
             bottom: 5px;
@@ -78,76 +80,77 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        
+
         .photo-upload-btn:hover {
             background: #764ba2;
             transform: scale(1.1);
         }
-        
+
         .credits-card {
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
             border: none;
             color: #333;
             box-shadow: 0 4px 15px rgba(255, 154, 158, 0.3);
         }
-        
+
         .stats-card {
             border: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             transition: all 0.3s;
         }
-        
+
         .stats-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
-        
+
         .info-card {
             background: white;
             border-radius: 10px;
             padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-        
+
         .edit-mode input,
         .edit-mode textarea {
             background: #f8f9fa;
             border: 2px dashed #dee2e6;
         }
-        
+
         .nav-tabs .nav-link {
             color: #3b82f6;
             font-weight: 500;
             border: none;
         }
-        
+
         .nav-tabs .nav-link.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border-color: #667eea;
         }
-        
+
         /* Login Form Styles */
         #loginForm input:focus {
             border-color: #667eea !important;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
             outline: none;
         }
-        
+
         #loginForm button[type="submit"]:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
-        
+
         #loginForm button[type="submit"]:active {
             transform: translateY(0);
         }
-        
+
         .login-card-shadow {
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white fixed-top shadow-sm">
@@ -180,7 +183,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <button class="btn btn-danger btn-sm ms-2" onclick="logout()" style="color: white; border-color: #dc3545;">
+                        <button class="btn btn-danger btn-sm ms-2" onclick="logout()"
+                            style="color: white; border-color: #dc3545;">
                             <i class="fas fa-sign-out-alt me-1"></i>Logout
                         </button>
                     </li>
@@ -196,51 +200,54 @@
                 <div class="col-md-5 col-lg-4">
                     <div class="card shadow-lg border-0" style="border-radius: 16px; overflow: hidden;">
                         <!-- Card Header -->
-                        <div class="card-header text-center py-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        <div class="card-header text-center py-4"
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
                             <div class="mb-2">
                                 <i class="fas fa-user-circle fa-3x text-white"></i>
                             </div>
                             <h4 class="mb-1 text-white fw-bold">Channel Partner Login</h4>
                             <p class="mb-0 text-white-50" style="font-size: 14px;">Access your dashboard</p>
                         </div>
-                        
+
                         <!-- Card Body -->
                         <div class="card-body p-4">
                             <div id="loginError" class="alert alert-danger d-none" style="font-size: 13px;"></div>
-                            
+
                             <form id="loginForm">
                                 <div class="mb-3">
-                                    <label for="loginPhone" class="form-label fw-semibold" style="font-size: 14px; color: #374151;">
+                                    <label for="loginPhone" class="form-label fw-semibold"
+                                        style="font-size: 14px; color: #374151;">
                                         <i class="fas fa-phone me-2 text-primary"></i>Phone Number
                                     </label>
-                                    <input type="tel" class="form-control form-control-lg" id="loginPhone" 
-                                           placeholder="Enter your phone number" required 
-                                           style="font-size: 15px; border: 2px solid #e5e7eb; border-radius: 8px; padding: 12px;">
+                                    <input type="tel" class="form-control form-control-lg" id="loginPhone"
+                                        placeholder="Enter your phone number" required
+                                        style="font-size: 15px; border: 2px solid #e5e7eb; border-radius: 8px; padding: 12px;">
                                     <small class="form-text text-muted" style="font-size: 12px;">
                                         <i class="fas fa-info-circle me-1"></i>Use your registered phone number
                                     </small>
                                 </div>
-                                
+
                                 <div class="mb-3">
-                                    <label for="loginPassword" class="form-label fw-semibold" style="font-size: 14px; color: #374151;">
+                                    <label for="loginPassword" class="form-label fw-semibold"
+                                        style="font-size: 14px; color: #374151;">
                                         <i class="fas fa-lock me-2 text-primary"></i>Password
                                     </label>
                                     <div class="input-group">
-                                        <input type="password" class="form-control form-control-lg" id="loginPassword" 
-                                               placeholder="Enter your password" required
-                                               style="font-size: 15px; border: 2px solid #e5e7eb; border-radius: 8px 0 0 8px; padding: 12px;">
-                                        <button class="btn btn-outline-secondary" type="button" id="toggleLoginPassword" 
-                                                style="border: 2px solid #e5e7eb; border-left: none; border-radius: 0 8px 8px 0;">
+                                        <input type="password" class="form-control form-control-lg" id="loginPassword"
+                                            placeholder="Enter your password" required
+                                            style="font-size: 15px; border: 2px solid #e5e7eb; border-radius: 8px 0 0 8px; padding: 12px;">
+                                        <button class="btn btn-outline-secondary" type="button" id="toggleLoginPassword"
+                                            style="border: 2px solid #e5e7eb; border-left: none; border-radius: 0 8px 8px 0;">
                                             <i class="fas fa-eye" id="toggleLoginPasswordIcon"></i>
                                         </button>
                                     </div>
                                     <small class="form-text text-muted" style="font-size: 12px;">
-                                        <i class="fas fa-key me-1"></i>Default: First 4 letters of name in CAPITAL (e.g., "MUSK")
+                                        <i class="fas fa-key me-1"></i>Default: First 4 letters of name in CAPITAL
+                                        (e.g., "MUSK")
                                     </small>
                                 </div>
-                                
-                                <button type="submit" class="btn btn-lg w-100 mt-3" 
-                                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+
+                                <button type="submit" class="btn btn-lg w-100 mt-3" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                                                border: none; 
                                                color: white; 
                                                font-size: 16px; 
@@ -252,15 +259,16 @@
                                 </button>
                             </form>
                         </div>
-                        
+
                         <!-- Card Footer -->
-                        <div class="card-footer text-center py-3" style="background: #f9fafb; border-top: 1px solid #e5e7eb;">
+                        <div class="card-footer text-center py-3"
+                            style="background: #f9fafb; border-top: 1px solid #e5e7eb;">
                             <small class="text-muted d-block mb-2" style="font-size: 12px;">
                                 <i class="fas fa-shield-alt me-1 text-success"></i>
                                 Account created automatically when your application is approved
                             </small>
-                            <a href="index.html" class="btn btn-outline-secondary btn-sm" 
-                               style="font-size: 13px; border-radius: 6px; padding: 6px 20px;">
+                            <a href="index.html" class="btn btn-outline-secondary btn-sm"
+                                style="font-size: 13px; border-radius: 6px; padding: 6px 20px;">
                                 <i class="fas fa-arrow-left me-2"></i>Back to Home
                             </a>
                         </div>
@@ -471,11 +479,12 @@
                         <h4 class="mb-4">
                             <i class="fas fa-wallet me-2"></i>Credits Dashboard
                         </h4>
-                        
+
                         <!-- Total Credits Card -->
                         <div class="row mb-4">
                             <div class="col-md-12">
-                                <div class="card bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <div class="card bg-gradient text-white"
+                                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                     <div class="card-body text-center py-4">
                                         <h5 class="mb-2"><i class="fas fa-coins me-2"></i>Total Available Credits</h5>
                                         <h1 class="mb-0" id="totalCreditsDisplay2">0</h1>
@@ -484,12 +493,13 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>New Credit System:</strong> When you create ads, cash credits are deducted first. Once cash credits finish, extra credits will be used.
+                            <strong>New Credit System:</strong> When you create ads, cash credits are deducted first.
+                            Once cash credits finish, extra credits will be used.
                         </div>
-                        
+
                         <!-- Two Tables Side by Side -->
                         <div class="row">
                             <!-- Cash Credits Table -->
@@ -498,7 +508,8 @@
                                     <div class="card-header bg-primary text-white">
                                         <h5 class="mb-0">
                                             <i class="fas fa-money-bill-wave me-2"></i>Cash Credits
-                                            <span class="badge bg-light text-primary float-end" id="cashCreditsBalance2">0</span>
+                                            <span class="badge bg-light text-primary float-end"
+                                                id="cashCreditsBalance2">0</span>
                                         </h5>
                                         <small>Paid Amount - Used First</small>
                                     </div>
@@ -524,14 +535,15 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Extra Credits Table -->
                             <div class="col-lg-6 mb-4">
                                 <div class="card border-success">
                                     <div class="card-header bg-success text-white">
                                         <h5 class="mb-0">
                                             <i class="fas fa-gift me-2"></i>Extra Credits
-                                            <span class="badge bg-light text-success float-end" id="extraCreditsBalance2">0</span>
+                                            <span class="badge bg-light text-success float-end"
+                                                id="extraCreditsBalance2">0</span>
                                         </h5>
                                         <small>Bonus Credits - Used After Cash</small>
                                     </div>
@@ -567,12 +579,13 @@
                         <h4 class="mb-4">
                             <i class="fas fa-history me-2"></i>Credits History
                         </h4>
-                        
+
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Credits:</strong> Your credits are managed by the admin. Check your credits history below.
+                            <strong>Credits:</strong> Your credits are managed by the admin. Check your credits history
+                            below.
                         </div>
-                        
+
                         <!-- Legacy Credits History (for backward compatibility) -->
                         <div class="card">
                             <div class="card-header bg-light">
@@ -595,10 +608,11 @@
                         <h4 class="mb-4">
                             <i class="fas fa-exchange-alt me-2"></i>Transfer Credits
                         </h4>
-                        
+
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Available Balance:</strong> <span id="transferAvailableCredits" class="fw-bold">0</span> credits
+                            <strong>Available Balance:</strong> <span id="transferAvailableCredits"
+                                class="fw-bold">0</span> credits
                         </div>
 
                         <form id="transferForm" onsubmit="handleTransferCredits(event)">
@@ -607,16 +621,15 @@
                                     <label class="form-label fw-bold">
                                         <i class="fas fa-phone me-2"></i>Recipient Phone Number
                                     </label>
-                                    <input 
-                                        type="text" 
-                                        class="form-control" 
-                                        id="transferPhone" 
-                                        placeholder="Type any digits to search (e.g., 700, 88, 996...)" 
+                                    <input type="text" class="form-control" id="transferPhone"
+                                        placeholder="Type any digits to search (e.g., 700, 88, 996...)"
                                         autocomplete="off">
-                                    <small class="text-muted">Search users by typing any part of their phone number</small>
-                                    
+                                    <small class="text-muted">Search users by typing any part of their phone
+                                        number</small>
+
                                     <!-- User dropdown -->
-                                    <div id="userDropdown" class="list-group mt-2" style="display: none; max-height: 300px; overflow-y: auto;"></div>
+                                    <div id="userDropdown" class="list-group mt-2"
+                                        style="display: none; max-height: 300px; overflow-y: auto;"></div>
                                 </div>
 
                                 <!-- Selected user display -->
@@ -625,13 +638,16 @@
                                         <div class="card-body">
                                             <div class="d-flex align-items-center justify-content-between">
                                                 <div class="d-flex align-items-center">
-                                                    <img id="selectedUserPhoto" src="" alt="User" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    <img id="selectedUserPhoto" src="" alt="User"
+                                                        class="rounded-circle me-3"
+                                                        style="width: 50px; height: 50px; object-fit: cover;">
                                                     <div>
                                                         <h6 class="mb-0" id="selectedUserName"></h6>
                                                         <small class="text-muted" id="selectedUserPhone"></small>
                                                     </div>
                                                 </div>
-                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearSelectedUser()">
+                                                <button type="button" class="btn btn-sm btn-outline-danger"
+                                                    onclick="clearSelectedUser()">
                                                     <i class="fas fa-times me-1"></i>Cancel
                                                 </button>
                                             </div>
@@ -643,13 +659,8 @@
                                     <label class="form-label fw-bold">
                                         <i class="fas fa-coins me-2"></i>Amount to Transfer
                                     </label>
-                                    <input 
-                                        type="number" 
-                                        class="form-control" 
-                                        id="transferAmount" 
-                                        placeholder="Enter amount" 
-                                        min="1"
-                                        required>
+                                    <input type="number" class="form-control" id="transferAmount"
+                                        placeholder="Enter amount" min="1" required>
                                     <small class="text-muted">Minimum: 1 credit</small>
                                 </div>
 
@@ -657,10 +668,7 @@
                                     <label class="form-label fw-bold">
                                         <i class="fas fa-comment me-2"></i>Description (Optional)
                                     </label>
-                                    <textarea 
-                                        class="form-control" 
-                                        id="transferDescription" 
-                                        rows="2" 
+                                    <textarea class="form-control" id="transferDescription" rows="2"
                                         placeholder="Add a note about this transfer"></textarea>
                                 </div>
                             </div>
@@ -687,11 +695,11 @@
                         <h4 class="mb-4">
                             <i class="fas fa-lock me-2"></i>Security Settings
                         </h4>
-                        
+
                         <div class="mb-4">
                             <h5>Change Password</h5>
                             <p class="text-muted">Update your password to keep your account secure</p>
-                            
+
                             <form id="passwordForm">
                                 <div class="row">
                                     <div class="col-md-12 mb-3">
@@ -700,7 +708,8 @@
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">New Password</label>
-                                        <input type="password" class="form-control" id="newPassword" required minlength="6">
+                                        <input type="password" class="form-control" id="newPassword" required
+                                            minlength="6">
                                         <small class="text-muted">Minimum 6 characters</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
@@ -718,7 +727,8 @@
 
                         <div class="alert alert-warning">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Security Tip:</strong> Never share your password with anyone. Instantlly Cards will never ask for your password via email or phone.
+                            <strong>Security Tip:</strong> Never share your password with anyone. Instantlly Cards will
+                            never ask for your password via email or phone.
                         </div>
                     </div>
                 </div>
@@ -729,7 +739,7 @@
                         <h4 class="mb-4">
                             <i class="fas fa-file-upload me-2"></i>Identity Documents
                         </h4>
-                        
+
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
                             Document upload is optional but recommended for verification purposes.
@@ -744,22 +754,24 @@
                                             <i class="fas fa-id-card me-2 text-primary"></i>PAN Card
                                         </h5>
                                         <p class="text-muted small">Upload a clear image of your PAN card</p>
-                                        
+
                                         <div class="text-center mb-3" id="panPreviewContainer">
-                                            <img id="panPreview" src="" alt="PAN Card" class="img-fluid rounded border" style="max-height: 200px; display: none;">
+                                            <img id="panPreview" src="" alt="PAN Card" class="img-fluid rounded border"
+                                                style="max-height: 200px; display: none;">
                                             <div id="panPlaceholder" class="border rounded p-4 bg-light">
                                                 <i class="fas fa-id-card fa-3x text-muted mb-2"></i>
                                                 <p class="text-muted mb-0">No PAN card uploaded</p>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="d-grid gap-2">
                                             <label for="panUpload" class="btn btn-outline-primary">
                                                 <i class="fas fa-upload me-2"></i>
                                                 <span id="panUploadText">Upload PAN Card</span>
                                             </label>
                                             <input type="file" id="panUpload" accept="image/*" style="display: none;">
-                                            <button class="btn btn-sm btn-outline-danger d-none" id="removePanBtn" onclick="removeDocument('pan')">
+                                            <button class="btn btn-sm btn-outline-danger d-none" id="removePanBtn"
+                                                onclick="removeDocument('pan')">
                                                 <i class="fas fa-trash me-2"></i>Remove
                                             </button>
                                         </div>
@@ -775,22 +787,26 @@
                                             <i class="fas fa-address-card me-2 text-success"></i>Aadhaar Card
                                         </h5>
                                         <p class="text-muted small">Upload a clear image of your Aadhaar card</p>
-                                        
+
                                         <div class="text-center mb-3" id="aadhaarPreviewContainer">
-                                            <img id="aadhaarPreview" src="" alt="Aadhaar Card" class="img-fluid rounded border" style="max-height: 200px; display: none;">
+                                            <img id="aadhaarPreview" src="" alt="Aadhaar Card"
+                                                class="img-fluid rounded border"
+                                                style="max-height: 200px; display: none;">
                                             <div id="aadhaarPlaceholder" class="border rounded p-4 bg-light">
                                                 <i class="fas fa-address-card fa-3x text-muted mb-2"></i>
                                                 <p class="text-muted mb-0">No Aadhaar card uploaded</p>
                                             </div>
                                         </div>
-                                        
+
                                         <div class="d-grid gap-2">
                                             <label for="aadhaarUpload" class="btn btn-outline-success">
                                                 <i class="fas fa-upload me-2"></i>
                                                 <span id="aadhaarUploadText">Upload Aadhaar Card</span>
                                             </label>
-                                            <input type="file" id="aadhaarUpload" accept="image/*" style="display: none;">
-                                            <button class="btn btn-sm btn-outline-danger d-none" id="removeAadhaarBtn" onclick="removeDocument('aadhaar')">
+                                            <input type="file" id="aadhaarUpload" accept="image/*"
+                                                style="display: none;">
+                                            <button class="btn btn-sm btn-outline-danger d-none" id="removeAadhaarBtn"
+                                                onclick="removeDocument('aadhaar')">
                                                 <i class="fas fa-trash me-2"></i>Remove
                                             </button>
                                         </div>
@@ -801,7 +817,8 @@
 
                         <div class="alert alert-warning mt-3">
                             <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Privacy Note:</strong> Your documents are securely stored and only visible to administrators for verification purposes.
+                            <strong>Privacy Note:</strong> Your documents are securely stored and only visible to
+                            administrators for verification purposes.
                         </div>
                     </div>
                 </div>
@@ -855,7 +872,8 @@
 
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-2"></i>
-                            <strong>Cost:</strong> 1200 credits will be deducted upon submission. Your ad will be reviewed by admin before appearing in the app.
+                            <strong>Cost:</strong> 1200 credits will be deducted upon submission. Your ad will be
+                            reviewed by admin before appearing in the app.
                         </div>
 
                         <form id="adCreationForm" onsubmit="submitAdvertisement(event)">
@@ -864,7 +882,8 @@
                                     <label class="form-label fw-bold">
                                         <i class="fas fa-heading me-2"></i>Advertisement Title *
                                     </label>
-                                    <input type="text" class="form-control" id="adTitle" required placeholder="e.g., Summer Sale 2024">
+                                    <input type="text" class="form-control" id="adTitle" required
+                                        placeholder="e.g., Summer Sale 2024">
                                 </div>
 
                                 <!-- Media Type Selection -->
@@ -873,24 +892,29 @@
                                         <i class="fas fa-photo-video me-2"></i>Media Type *
                                     </label>
                                     <div class="btn-group w-100" role="group">
-                                        <input type="radio" class="btn-check" name="adMediaType" id="adMediaImage" value="image" checked>
+                                        <input type="radio" class="btn-check" name="adMediaType" id="adMediaImage"
+                                            value="image" checked>
                                         <label class="btn btn-outline-primary" for="adMediaImage">
                                             <i class="fas fa-image me-2"></i>Image
                                         </label>
-                                        <input type="radio" class="btn-check" name="adMediaType" id="adMediaVideo" value="video">
+                                        <input type="radio" class="btn-check" name="adMediaType" id="adMediaVideo"
+                                            value="video">
                                         <label class="btn btn-outline-primary" for="adMediaVideo">
                                             <i class="fas fa-video me-2"></i>Video
                                         </label>
                                     </div>
-                                    <small class="text-muted d-block mt-2">Select whether your advertisement is an image or video</small>
+                                    <small class="text-muted d-block mt-2">Select whether your advertisement is an image
+                                        or video</small>
                                 </div>
 
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label fw-bold">
                                         <i class="fas fa-phone me-2"></i>Contact Phone Number *
                                     </label>
-                                    <input type="tel" class="form-control" id="adPhone" required placeholder="+919876543210">
-                                    <small class="text-muted">Users will see Call/Message buttons with this number</small>
+                                    <input type="tel" class="form-control" id="adPhone" required
+                                        placeholder="+919876543210">
+                                    <small class="text-muted">Users will see Call/Message buttons with this
+                                        number</small>
                                 </div>
 
                                 <!-- Duration Selection -->
@@ -915,7 +939,8 @@
                                     <label class="form-label fw-bold">
                                         <i class="fas fa-coins me-2"></i>Total Cost *
                                     </label>
-                                    <input type="text" class="form-control bg-light" id="adCost" value="₹0 (0 credits)" readonly>
+                                    <input type="text" class="form-control bg-light" id="adCost" value="₹0 (0 credits)"
+                                        readonly>
                                     <small class="text-muted">₹1200 per month (1200 credits)</small>
                                 </div>
 
@@ -923,14 +948,16 @@
                                     <label class="form-label fw-bold">
                                         <i class="fas fa-calendar me-2"></i>Start Date *
                                     </label>
-                                    <input type="date" class="form-control" id="adStartDate" required onchange="updateAdEndDate()">
+                                    <input type="date" class="form-control" id="adStartDate" required
+                                        onchange="updateAdEndDate()">
                                     <small class="text-muted">Your ad will start on this date</small>
                                 </div>
 
                                 <div class="col-md-12 mb-3">
                                     <div class="alert alert-info">
                                         <i class="fas fa-info-circle me-2"></i>
-                                        <strong>End Date:</strong> <span id="adEndDateDisplay">Select start date and duration</span>
+                                        <strong>End Date:</strong> <span id="adEndDateDisplay">Select start date and
+                                            duration</span>
                                     </div>
                                 </div>
 
@@ -938,10 +965,13 @@
                                     <label class="form-label fw-bold" id="adBottomLabel">
                                         <i class="fas fa-image me-2"></i>Bottom Banner Image * (624 × 174px)
                                     </label>
-                                    <input type="file" class="form-control" id="adBottomImage" accept="image/*,video/*" required>
-                                    <small class="text-muted" id="adBottomHint">This appears in the bottom carousel</small>
+                                    <input type="file" class="form-control" id="adBottomImage" accept="image/*,video/*"
+                                        required>
+                                    <small class="text-muted" id="adBottomHint">This appears in the bottom
+                                        carousel</small>
                                     <div id="bottomImagePreview" class="mt-2" style="display: none;">
-                                        <img id="bottomImagePreviewImg" src="" class="img-fluid rounded border" style="max-height: 150px;">
+                                        <img id="bottomImagePreviewImg" src="" class="img-fluid rounded border"
+                                            style="max-height: 150px;">
                                     </div>
                                 </div>
 
@@ -949,17 +979,20 @@
                                     <label class="form-label fw-bold" id="adFullscreenLabel">
                                         <i class="fas fa-image me-2"></i>Fullscreen Image (Optional) (624 × 1000px)
                                     </label>
-                                    <input type="file" class="form-control" id="adFullscreenImage" accept="image/*,video/*">
-                                    <small class="text-muted" id="adFullscreenHint">Shown when user taps the banner</small>
+                                    <input type="file" class="form-control" id="adFullscreenImage"
+                                        accept="image/*,video/*">
+                                    <small class="text-muted" id="adFullscreenHint">Shown when user taps the
+                                        banner</small>
                                     <div id="fullscreenImagePreview" class="mt-2" style="display: none;">
-                                        <img id="fullscreenImagePreviewImg" src="" class="img-fluid rounded border" style="max-height: 200px;">
+                                        <img id="fullscreenImagePreviewImg" src="" class="img-fluid rounded border"
+                                            style="max-height: 200px;">
                                     </div>
                                 </div>
                             </div>
 
                             <div class="alert alert-warning">
                                 <i class="fas fa-coins me-2"></i>
-                                <strong>Current Credits:</strong> <span id="adFormCredits">0</span> 
+                                <strong>Current Credits:</strong> <span id="adFormCredits">0</span>
                                 | <strong>Cost:</strong> <span id="adFormCostDisplay">Select duration</span>
                             </div>
 
@@ -974,21 +1007,24 @@
     </section>
 
     <!-- Ad Confirmation Modal -->
-    <div class="modal fade" id="adConfirmationModal" tabindex="-1" aria-labelledby="adConfirmationModalLabel" aria-hidden="true">
+    <div class="modal fade" id="adConfirmationModal" tabindex="-1" aria-labelledby="adConfirmationModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg border-0">
-                <div class="modal-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="modal-header bg-gradient text-white"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <h5 class="modal-title" id="adConfirmationModalLabel">
                         <i class="fas fa-bullhorn me-2"></i>Ad Submission Confirmation
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="text-center mb-4">
                         <div class="mb-3">
                             <i class="fas fa-credit-card fa-3x text-primary mb-3"></i>
                         </div>
-                        
+
                         <div class="row g-3 mb-3">
                             <div class="col-6">
                                 <div class="card border-0 bg-light">
@@ -1025,7 +1061,8 @@
                     <div class="timeline">
                         <div class="d-flex align-items-start mb-3">
                             <div class="flex-shrink-0">
-                                <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <div class="rounded-circle bg-warning text-white d-flex align-items-center justify-content-center"
+                                    style="width: 40px; height: 40px;">
                                     <i class="fas fa-hourglass-half"></i>
                                 </div>
                             </div>
@@ -1034,16 +1071,18 @@
                                 <p class="text-muted small mb-0">Your ad will be sent for admin review</p>
                             </div>
                         </div>
-                        
+
                         <div class="d-flex align-items-start">
                             <div class="flex-shrink-0">
-                                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                                    style="width: 40px; height: 40px;">
                                     <i class="fas fa-check"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1 ms-3">
                                 <h6 class="mb-1">Go Live</h6>
-                                <p class="text-muted small mb-0">After approval, it will appear in Instantlly Cards App</p>
+                                <p class="text-muted small mb-0">After approval, it will appear in Instantlly Cards App
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -1076,14 +1115,14 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Clear old promotion data cache to ensure fresh designation
             sessionStorage.removeItem('promotionData');
-            
+
             // DEBUG: Check if Credits tab exists
             console.log('🔍 DEBUG: Checking for Credits tab...');
             const creditsTabButton = document.querySelector('button[data-bs-target="#creditsTableTab"]');
             const creditsTabContent = document.getElementById('creditsTableTab');
             console.log('🔍 Credits tab button exists:', !!creditsTabButton);
             console.log('🔍 Credits tab content exists:', !!creditsTabContent);
-            
+
             // DEBUG: List all tab buttons
             const allTabButtons = document.querySelectorAll('.nav-link[data-bs-toggle="tab"]');
             console.log('🔍 Total tabs found:', allTabButtons.length);
@@ -1092,7 +1131,7 @@
                 const text = btn.textContent.trim();
                 console.log(`🔍 Tab ${index + 1}: "${text}" -> ${target}`);
             });
-            
+
             if (!authToken) {
                 // Show login section
                 document.getElementById('loginSection').style.display = 'block';
@@ -1100,16 +1139,16 @@
                 document.querySelector('.bg-light').style.display = 'none';
                 return;
             }
-            
+
             // Hide login, show profile
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('profileSection').style.display = 'block';
             document.querySelector('.bg-light').style.display = 'block';
-            
+
             loadUserProfile();
             loadUserApplications();
             loadCreditsHistory();
-            
+
             // Auto-refresh credits every 30 seconds
             setInterval(() => {
                 if (authToken && currentUser) {
@@ -1145,12 +1184,12 @@
                 if (response.ok) {
                     // Clear all cached data before storing new login
                     sessionStorage.clear();
-                    
+
                     // Store token
                     authToken = data.token;
                     localStorage.setItem('authToken', authToken);
                     currentUser = data.user;
-                    
+
                     console.log('✅ Login successful');
                     console.log('🔑 Token stored:', authToken.substring(0, 30) + '...');
                     console.log('👤 User:', currentUser.name, currentUser.phone);
@@ -1187,17 +1226,17 @@
                 if (response.ok) {
                     const data = await response.json();
                     currentUser = data.user || data; // Support both formats
-                    
+
                     console.log('✅ Profile loaded:', currentUser);
                     console.log('💰 Credits from API:', currentUser.credits);
                     console.log('📅 Credits expiry:', currentUser.creditsExpiryDate);
-                    
+
                     // Check if credits are expired
                     if (currentUser.creditsExpiryDate) {
                         const expiryDate = new Date(currentUser.creditsExpiryDate);
                         const now = new Date();
                         const isExpired = now > expiryDate;
-                        
+
                         if (isExpired) {
                             console.log('⏰ Credits expired on:', expiryDate.toLocaleDateString());
                         } else {
@@ -1205,12 +1244,12 @@
                             console.log('✅ Credits valid for', daysLeft, 'more days');
                         }
                     }
-                    
+
                     // Store fresh data in sessionStorage for this session
                     sessionStorage.setItem('userProfile', JSON.stringify(currentUser));
-                    
+
                     displayUserProfile(currentUser);
-                    
+
                     // IMPORTANT: Fetch real-time credits from credits API
                     await fetchAndUpdateCredits();
                 } else {
@@ -1239,23 +1278,23 @@
                 if (response.ok) {
                     const data = await response.json();
                     console.log('✅ Credits API response:', data);
-                    
+
                     // Update credits in UI
                     const userCreditsEl = document.getElementById('userCredits');
                     if (userCreditsEl) {
                         userCreditsEl.textContent = (data.credits || 0).toLocaleString('en-IN');
                     }
-                    
+
                     // Update in currentUser object
                     if (currentUser) {
                         currentUser.credits = data.credits || 0;
                         currentUser.creditsExpiryDate = data.creditsExpiryDate;
-                        
+
                         // Store updated data
                         localStorage.setItem('currentUserCredits', currentUser.credits);
                         sessionStorage.setItem('userProfile', JSON.stringify(currentUser));
                     }
-                    
+
                     // Log expiry info
                     if (data.isExpired) {
                         console.log('⏰ Credits are EXPIRED');
@@ -1277,25 +1316,25 @@
             const userPhoneEl = document.getElementById('userPhone');
             const userEmailEl = document.getElementById('userEmail');
             const userCreditsEl = document.getElementById('userCredits');
-            
+
             if (userNameEl) userNameEl.textContent = user.name;
             if (userPhoneEl) userPhoneEl.textContent = user.phone;
             if (userEmailEl) userEmailEl.textContent = user.email || 'Not provided';
             if (userCreditsEl) {
                 userCreditsEl.textContent = (user.credits || 0).toLocaleString('en-IN');
-                
+
                 // Store credits in localStorage for cross-page sync
                 localStorage.setItem('currentUserCredits', user.credits || 0);
                 localStorage.setItem('currentUserName', user.name || '');
                 localStorage.setItem('currentUserPhone', user.phone || '');
-                
+
                 console.log('💰 Profile credits updated:', user.credits);
             }
 
             // Stats
             const introducedCountEl = document.getElementById('introducedCount');
             if (introducedCountEl) introducedCountEl.textContent = user.introducedCount || 0;
-            
+
             // Profile photo
             const profilePhoto = document.getElementById('profilePhoto');
             if (profilePhoto) {
@@ -1311,7 +1350,7 @@
             const editPhoneEl = document.getElementById('editPhone');
             const editEmailEl = document.getElementById('editEmail');
             const editIntroducedByEl = document.getElementById('editIntroducedBy');
-            
+
             if (editNameEl) editNameEl.value = user.name;
             if (editPhoneEl) editPhoneEl.value = user.phone;
             if (editEmailEl) editEmailEl.value = user.email || '';
@@ -1322,7 +1361,7 @@
             if (creditsDateEl && user.createdAt) {
                 creditsDateEl.textContent = new Date(user.createdAt).toLocaleDateString();
             }
-            
+
             // Load documents if available
             if (user.documents) {
                 displayDocuments(user.documents);
@@ -1339,7 +1378,7 @@
                 document.getElementById('panUploadText').textContent = 'Change PAN Card';
                 document.getElementById('removePanBtn').classList.remove('d-none');
             }
-            
+
             // Aadhaar Card
             if (documents.aadhaarCard) {
                 document.getElementById('aadhaarPreview').src = documents.aadhaarCard;
@@ -1362,12 +1401,12 @@
 
                 if (response.ok) {
                     const applications = await response.json();
-                    
+
                     // Store the approved application for later use
                     currentApplication = applications.find(app => app.status === 'approved');
-                    
+
                     displayApplications(applications);
-                    
+
                     // Update stats
                     const approved = applications.filter(app => app.status === 'approved').length;
                     document.getElementById('totalApplications').textContent = applications.length;
@@ -1404,13 +1443,13 @@
                     console.log('💰 Total Credits:', user.credits);
                     console.log('💵 Cash Credits:', user.cashCredits);
                     console.log('🎁 Extra Credits:', user.extraCredits);
-                    
+
                     // Update total credits display (new Credits tab)
                     const totalCreditsEl2 = document.getElementById('totalCreditsDisplay2');
                     if (totalCreditsEl2) {
                         totalCreditsEl2.textContent = (user.credits || 0).toLocaleString('en-IN');
                     }
-                    
+
                     // Update cash and extra balances (new Credits tab)
                     const cashBalanceEl2 = document.getElementById('cashCreditsBalance2');
                     const extraBalanceEl2 = document.getElementById('extraCreditsBalance2');
@@ -1420,11 +1459,11 @@
                     if (extraBalanceEl2) {
                         extraBalanceEl2.textContent = (user.extraCredits || 0).toLocaleString('en-IN');
                     }
-                    
+
                     // Display cash and extra history tables (new Credits tab)
                     displayCashHistory2(user.cashHistory || []);
                     displayExtraHistory2(user.extraHistory || []);
-                    
+
                     // Display legacy combined history (Credits History tab)
                     displayCreditsHistory(user.creditsHistory || [], user.approvedDate || user.createdAt);
                 } else {
@@ -1434,11 +1473,11 @@
                 console.error('Credits history load error:', error);
             }
         }
-        
+
         // Display cash credits table
         function displayCashHistory(history) {
             const tbody = document.getElementById('cashHistoryTable');
-            
+
             if (!history || history.length === 0) {
                 tbody.innerHTML = `
                     <tr>
@@ -1449,15 +1488,15 @@
                 `;
                 return;
             }
-            
+
             // Sort by date (newest first)
             const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-            
+
             tbody.innerHTML = sorted.map(entry => {
                 const isDebit = entry.type === 'debit';
                 const debitAmount = isDebit ? entry.amount : '-';
                 const creditAmount = !isDebit ? entry.amount : '-';
-                
+
                 return `
                     <tr>
                         <td class="text-center ${isDebit ? 'text-danger fw-bold' : ''}">
@@ -1471,11 +1510,11 @@
                 `;
             }).join('');
         }
-        
+
         // Display extra credits table
         function displayExtraHistory(history) {
             const tbody = document.getElementById('extraHistoryTable');
-            
+
             if (!history || history.length === 0) {
                 tbody.innerHTML = `
                     <tr>
@@ -1486,15 +1525,15 @@
                 `;
                 return;
             }
-            
+
             // Sort by date (newest first)
             const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-            
+
             tbody.innerHTML = sorted.map(entry => {
                 const isDebit = entry.type === 'debit';
                 const debitAmount = isDebit ? entry.amount : '-';
                 const creditAmount = !isDebit ? entry.amount : '-';
-                
+
                 return `
                     <tr>
                         <td class="text-center ${isDebit ? 'text-danger fw-bold' : ''}">
@@ -1512,7 +1551,7 @@
         // Display cash credits table for NEW Credits tab
         function displayCashHistory2(history) {
             const tbody = document.getElementById('cashHistoryTable2');
-            
+
             if (!history || history.length === 0) {
                 tbody.innerHTML = `
                     <tr>
@@ -1523,15 +1562,15 @@
                 `;
                 return;
             }
-            
+
             // Sort by date (newest first)
             const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-            
+
             tbody.innerHTML = sorted.map(entry => {
                 const isDebit = entry.type === 'debit';
                 const debitAmount = isDebit ? entry.amount : '-';
                 const creditAmount = !isDebit ? entry.amount : '-';
-                
+
                 return `
                     <tr>
                         <td class="text-center ${isDebit ? 'text-danger fw-bold' : ''}">
@@ -1545,11 +1584,11 @@
                 `;
             }).join('');
         }
-        
+
         // Display extra credits table for NEW Credits tab
         function displayExtraHistory2(history) {
             const tbody = document.getElementById('extraHistoryTable2');
-            
+
             if (!history || history.length === 0) {
                 tbody.innerHTML = `
                     <tr>
@@ -1560,15 +1599,15 @@
                 `;
                 return;
             }
-            
+
             // Sort by date (newest first)
             const sorted = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
-            
+
             tbody.innerHTML = sorted.map(entry => {
                 const isDebit = entry.type === 'debit';
                 const debitAmount = isDebit ? entry.amount : '-';
                 const creditAmount = !isDebit ? entry.amount : '-';
-                
+
                 return `
                     <tr>
                         <td class="text-center ${isDebit ? 'text-danger fw-bold' : ''}">
@@ -1586,7 +1625,7 @@
         // Display credits history (legacy combined view)
         function displayCreditsHistory(history, userCreatedDate) {
             const container = document.getElementById('creditsHistory');
-            
+
             if (!history || history.length === 0) {
                 // Show no credits history message
                 container.innerHTML = `
@@ -1604,27 +1643,27 @@
             container.innerHTML = `
                 <div class="list-group">
                     ${sortedHistory.map(entry => {
-                        const typeIcons = {
-                            'initial': 'plus-circle',
-                            'referral': 'users',
-                            'purchase': 'shopping-cart',
-                            'deduction': 'minus-circle',
-                            'bonus': 'gift'
-                        };
-                        
-                        const typeColors = {
-                            'initial': 'success',
-                            'referral': 'info',
-                            'purchase': 'primary',
-                            'deduction': 'danger',
-                            'bonus': 'warning'
-                        };
-                        
-                        const icon = typeIcons[entry.type] || 'circle';
-                        const color = typeColors[entry.type] || 'secondary';
-                        const sign = entry.amount > 0 ? '+' : '';
-                        
-                        return `
+                const typeIcons = {
+                    'initial': 'plus-circle',
+                    'referral': 'users',
+                    'purchase': 'shopping-cart',
+                    'deduction': 'minus-circle',
+                    'bonus': 'gift'
+                };
+
+                const typeColors = {
+                    'initial': 'success',
+                    'referral': 'info',
+                    'purchase': 'primary',
+                    'deduction': 'danger',
+                    'bonus': 'warning'
+                };
+
+                const icon = typeIcons[entry.type] || 'circle';
+                const color = typeColors[entry.type] || 'secondary';
+                const sign = entry.amount > 0 ? '+' : '';
+
+                return `
                             <div class="list-group-item">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
@@ -1632,9 +1671,9 @@
                                         <strong>${entry.description}</strong>
                                         <br>
                                         <small class="text-muted">
-                                            ${entry.type === 'referral' && entry.referredUser ? 
-                                                `Referred: ${entry.referredUser}` : 
-                                                entry.type.charAt(0).toUpperCase() + entry.type.slice(1) + ' credits'}
+                                            ${entry.type === 'referral' && entry.referredUser ?
+                        `Referred: ${entry.referredUser}` :
+                        entry.type.charAt(0).toUpperCase() + entry.type.slice(1) + ' credits'}
                                         </small>
                                     </div>
                                     <div class="text-end">
@@ -1644,7 +1683,7 @@
                                 </div>
                             </div>
                         `;
-                    }).join('')}
+            }).join('')}
                 </div>
             `;
         }
@@ -1652,12 +1691,12 @@
         // Display applications
         function displayApplications(applications) {
             const container = document.getElementById('applicationsList');
-            
+
             if (!container) {
                 console.error('applicationsList container not found');
                 return;
             }
-            
+
             if (applications.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-5">
@@ -1673,10 +1712,10 @@
             }
 
             container.innerHTML = applications.map(app => {
-                const statusClass = app.status === 'approved' ? 'success' : 
-                                  app.status === 'rejected' ? 'danger' : 'warning';
-                const statusIcon = app.status === 'approved' ? 'check-circle' : 
-                                 app.status === 'rejected' ? 'times-circle' : 'clock';
+                const statusClass = app.status === 'approved' ? 'success' :
+                    app.status === 'rejected' ? 'danger' : 'warning';
+                const statusIcon = app.status === 'approved' ? 'check-circle' :
+                    app.status === 'rejected' ? 'times-circle' : 'clock';
 
                 return `
                     <div class="card mb-3">
@@ -1726,7 +1765,7 @@
             document.getElementById('profileForm').classList.remove('edit-mode');
             document.getElementById('profileActions').classList.add('d-none');
             document.getElementById('editProfileBtn').classList.remove('d-none');
-            
+
             // Reset values
             displayUserProfile(currentUser);
         }
@@ -1734,7 +1773,7 @@
         // Profile form submit
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const name = document.getElementById('editName').value;
             const email = document.getElementById('editEmail').value;
 
@@ -1765,7 +1804,7 @@
         // Password form submit
         document.getElementById('passwordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
@@ -1939,7 +1978,7 @@
 
             try {
                 const body = type === 'pan' ? { panCard: '' } : { aadhaarCard: '' };
-                
+
                 const response = await fetch(`${API_BASE_URL}/auth/profile`, {
                     method: 'PUT',
                     headers: {
@@ -1977,7 +2016,7 @@
         // Generate designation based on location (includes location name in designation)
         function getDesignationFromLocation(location) {
             if (!location) return 'India Head';
-            
+
             // Determine the lowest filled level and include location name in designation
             if (location.village && location.village.trim()) {
                 return `Village ${location.village} Head`;
@@ -2002,24 +2041,24 @@
         // Parse location from positionId
         function parseLocationFromPositionId(positionId) {
             if (!positionId) return {};
-            
+
             // Position ID format: pos_<role>_<country>_<location_parts>
             // Examples:
             // pos_district-head_india_mumbai
             // pos_zone-head_india_west
             // pos_state-head_india_maharashtra
-            
+
             const parts = positionId.split('_');
             if (parts.length < 3) return {};
-            
+
             const role = parts[1]; // district-head, zone-head, etc.
             const country = parts[2]; // india
             const locationPart = parts.slice(3).join('_'); // mumbai, west, maharashtra, etc.
-            
+
             const location = {
                 country: country.charAt(0).toUpperCase() + country.slice(1)
             };
-            
+
             // Parse based on role
             if (role.includes('district-head')) {
                 location.district = locationPart.toUpperCase();
@@ -2036,7 +2075,7 @@
             } else if (role.includes('division-head') || role.includes('tehsil-head')) {
                 location.division = locationPart.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
             }
-            
+
             return location;
         }
 
@@ -2044,7 +2083,7 @@
         async function getCompleteLocationPath(location) {
             try {
                 console.log('🔍 Getting complete path for:', location);
-                
+
                 // Determine the person's area head level (the lowest level that has a value)
                 let personLevel = null;
                 if (location.village) personLevel = 'village';
@@ -2055,29 +2094,29 @@
                 else if (location.state) personLevel = 'state';
                 else if (location.zone) personLevel = 'zone';
                 else personLevel = 'country';
-                
+
                 console.log('👤 Person is Area Head at level:', personLevel);
-                
+
                 // Get the value to lookup
-                const lookupValue = location.village || location.pincode || location.tehsil || 
-                                   location.district || location.division || location.state || 
-                                   location.zone || location.country;
-                
+                const lookupValue = location.village || location.pincode || location.tehsil ||
+                    location.district || location.division || location.state ||
+                    location.zone || location.country;
+
                 if (!lookupValue) {
                     return location; // Return as-is if nothing is set
                 }
-                
+
                 // Call backend API to get reverse lookup
                 const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lookupValue)}`);
-                
+
                 if (!response.ok) {
                     console.warn('⚠️ Could not fetch location hierarchy, using provided data');
                     return location;
                 }
-                
+
                 const fullPath = await response.json();
                 console.log('✅ Got complete path from API:', fullPath);
-                
+
                 // Build the result - fill hierarchy UP TO person's level
                 const result = {
                     country: "India", // Always show country
@@ -2089,19 +2128,19 @@
                     pincode: "",
                     village: ""
                 };
-                
+
                 // Fill hierarchy from top down, UP TO the person's level only
                 const hierarchy = ['country', 'zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
                 const personLevelIndex = hierarchy.indexOf(personLevel);
-                
+
                 for (let i = 0; i <= personLevelIndex; i++) {
                     const level = hierarchy[i];
                     // Use original location value first, then fullPath, then empty
                     result[level] = location[level] || fullPath[level] || "";
                 }
-                
+
                 console.log('📍 Final hierarchy (up to', personLevel + '):', result);
-                
+
                 return result;
             } catch (error) {
                 console.error('❌ Error getting location path:', error);
@@ -2115,25 +2154,25 @@
                 alert('Please wait while we load your profile data');
                 return;
             }
-            
+
             // Get location from application if available, otherwise parse from positionId
             let location = currentApplication?.location || {};
-            
+
             // If location is empty or incomplete, try to parse from positionId
             if (!location.zone && !location.state && !location.district && !location.division) {
                 const positionId = currentApplication?.positionId || currentUser.positionId;
                 location = parseLocationFromPositionId(positionId);
                 console.log('📍 Parsed location from positionId:', location);
             }
-            
+
             // Fetch complete location hierarchy from backend API (same as ID card)
             const completeLocation = await getCompleteLocationPath(location);
             console.log('📍 Complete location hierarchy:', completeLocation);
-            
+
             // Generate proper designation from location (includes location name)
             const designation = getDesignationFromLocation(completeLocation);
             console.log('🎯 Generated Designation:', designation);
-            
+
             // Store promotion data in sessionStorage (NOT in URL - photos are too large and cause URI_TOO_LONG error)
             const promotionData = {
                 userId: currentUser._id || '',
@@ -2150,10 +2189,10 @@
                 village: completeLocation.village || '',
                 designation: designation
             };
-            
+
             console.log('📦 Storing promotion data in sessionStorage:', promotionData);
             sessionStorage.setItem('promotionData', JSON.stringify(promotionData));
-            
+
             window.location.href = 'promotion.html';
         }
 
@@ -2209,10 +2248,10 @@
         // Phone number input listener for user search
         document.getElementById('transferPhone').addEventListener('input', async (e) => {
             const phonePrefix = e.target.value.trim();
-            
+
             // Clear previous timeout
             if (searchTimeout) clearTimeout(searchTimeout);
-            
+
             // Hide dropdown if input is empty or too short
             if (phonePrefix.length < 2) {
                 document.getElementById('userDropdown').style.display = 'none';
@@ -2237,7 +2276,7 @@
                 });
 
                 const data = await response.json();
-                
+
                 if (data.success && data.users.length > 0) {
                     displayUserDropdown(data.users);
                 } else {
@@ -2275,13 +2314,13 @@
 
         function selectUser(user) {
             selectedUser = user;
-            
+
             // Hide dropdown
             document.getElementById('userDropdown').style.display = 'none';
-            
+
             // Clear phone input
             document.getElementById('transferPhone').value = '';
-            
+
             // Show selected user card
             document.getElementById('selectedUserCard').style.display = 'block';
             document.getElementById('selectedUserPhoto').src = user.profilePicture || 'images/default-avatar.png';
@@ -2297,7 +2336,7 @@
 
         async function handleTransferCredits(event) {
             event.preventDefault();
-            
+
             if (!selectedUser) {
                 showNotification('Please select a recipient', 'error');
                 return;
@@ -2334,11 +2373,11 @@
 
                 if (data.success) {
                     showNotification(`Successfully transferred ${amount} credits to ${selectedUser.name}`, 'success');
-                    
+
                     // Reset form
                     document.getElementById('transferForm').reset();
                     clearSelectedUser();
-                    
+
                     // Reload data
                     await loadUserProfile();
                     await loadRecentTransfers();
@@ -2370,7 +2409,7 @@
                     container.innerHTML = data.transactions.map(t => {
                         const isReceived = t.type === 'transfer_received';
                         const isSent = t.type === 'transfer_sent';
-                        
+
                         if (!isReceived && !isSent) return '';
 
                         const otherUser = isReceived ? t.fromUser : t.toUser;
@@ -2395,7 +2434,7 @@
                         `;
                     }).join('');
                 } else {
-                    document.getElementById('recentTransfers').innerHTML = 
+                    document.getElementById('recentTransfers').innerHTML =
                         '<p class="text-muted text-center">No recent transfers</p>';
                 }
             } catch (error) {
@@ -2417,7 +2456,7 @@
         const toggleLoginPasswordIcon = document.getElementById('toggleLoginPasswordIcon');
 
         if (toggleLoginPassword) {
-            toggleLoginPassword.addEventListener('click', function() {
+            toggleLoginPassword.addEventListener('click', function () {
                 const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                 loginPasswordInput.setAttribute('type', type);
                 toggleLoginPasswordIcon.classList.toggle('fa-eye');
@@ -2435,11 +2474,11 @@
         });
 
         // Image preview handlers for ad creation
-        document.getElementById('adBottomImage')?.addEventListener('change', function(e) {
+        document.getElementById('adBottomImage')?.addEventListener('change', function (e) {
             previewAdImage(e.target.files[0], 'bottomImagePreview', 'bottomImagePreviewImg');
         });
 
-        document.getElementById('adFullscreenImage')?.addEventListener('change', function(e) {
+        document.getElementById('adFullscreenImage')?.addEventListener('change', function (e) {
             previewAdImage(e.target.files[0], 'fullscreenImagePreview', 'fullscreenImagePreviewImg');
         });
 
@@ -2451,7 +2490,7 @@
         function previewAdImage(file, previewDivId, previewImgId) {
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     document.getElementById(previewImgId).src = e.target.result;
                     document.getElementById(previewDivId).style.display = 'block';
                 };
@@ -2467,7 +2506,7 @@
             const costDisplay = document.getElementById('adFormCostDisplay');
             const duration = parseInt(durationSelect.value) || 0;
             console.log('📊 Selected duration:', duration, 'months');
-            
+
             if (duration > 0) {
                 const totalCost = duration * 1200;
                 console.log('💵 Calculated cost:', totalCost, 'credits');
@@ -2494,22 +2533,22 @@
             const startDateInput = document.getElementById('adStartDate');
             const durationSelect = document.getElementById('adDuration');
             const endDateDisplay = document.getElementById('adEndDateDisplay');
-            
+
             const startDate = startDateInput.value;
             const duration = parseInt(durationSelect.value) || 0;
             console.log('📆 Start date:', startDate);
             console.log('📊 Duration:', duration, 'months');
-            
+
             if (startDate && duration > 0) {
                 const start = new Date(startDate);
                 const end = new Date(start);
                 end.setMonth(end.getMonth() + duration);
                 console.log('🎯 Calculated end date:', end.toISOString());
-                
+
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
                 const endDateFormatted = end.toLocaleDateString('en-IN', options);
                 console.log('✅ Formatted end date:', endDateFormatted);
-                
+
                 endDateDisplay.innerHTML = `<strong>${endDateFormatted}</strong> <span class="text-muted">(${duration} month${duration > 1 ? 's' : ''} from start date)</span>`;
             } else {
                 console.log('⚠️ Missing start date or duration');
@@ -2522,14 +2561,14 @@
             console.log('🎬 updateAdMediaType() called');
             const mediaType = document.querySelector('input[name="adMediaType"]:checked')?.value || 'image';
             console.log('📺 Selected media type:', mediaType);
-            
+
             const bottomInput = document.getElementById('adBottomImage');
             const bottomLabel = document.getElementById('adBottomLabel');
             const bottomHint = document.getElementById('adBottomHint');
             const fullscreenInput = document.getElementById('adFullscreenImage');
             const fullscreenLabel = document.getElementById('adFullscreenLabel');
             const fullscreenHint = document.getElementById('adFullscreenHint');
-            
+
             if (mediaType === 'video') {
                 console.log('🎥 Switching to video mode');
                 // Update bottom banner for video
@@ -2558,7 +2597,7 @@
         function showCreateAdForm() {
             // Update credits display
             document.getElementById('adFormCredits').textContent = (currentUser?.credits || 0).toLocaleString('en-IN');
-            
+
             // Check if user has enough credits (minimum 1200 for 1 month)
             if (!currentUser || currentUser.credits < 1200) {
                 showNotification(
@@ -2567,16 +2606,16 @@
                 );
                 return;
             }
-            
+
             // Set minimum date to today
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('adStartDate').min = today;
             console.log('📅 Minimum start date set to:', today);
-            
+
             // Initialize media type
             document.getElementById('adMediaImage').checked = true;
             updateAdMediaType();
-            
+
             document.getElementById('createAdForm').style.display = 'block';
             document.getElementById('createAdForm').scrollIntoView({ behavior: 'smooth' });
         }
@@ -2586,16 +2625,16 @@
             document.getElementById('adCreationForm').reset();
             document.getElementById('bottomImagePreview').style.display = 'none';
             document.getElementById('fullscreenImagePreview').style.display = 'none';
-            
+
             // Reset calculated fields
             document.getElementById('adCost').value = '₹0 (0 credits)';
             document.getElementById('adEndDateDisplay').textContent = 'Select start date and duration';
             document.getElementById('adFormCostDisplay').textContent = 'Select duration';
-            
+
             // Reset to default media type
             document.getElementById('adMediaImage').checked = true;
             updateAdMediaType();
-            
+
             console.log('🧹 Ad form cleared');
         }
 
@@ -2609,7 +2648,7 @@
 
                 // Always try to parse JSON response
                 const data = await response.json();
-                
+
                 // Handle both success and error cases gracefully
                 if (!response.ok && !data.ads) {
                     console.warn('Ads endpoint returned error, showing empty state');
@@ -2634,11 +2673,11 @@
                         'approved': '<span class="badge bg-success"><i class="fas fa-check me-1"></i>Live</span>',
                         'rejected': '<span class="badge bg-danger"><i class="fas fa-times me-1"></i>Rejected</span>'
                     };
-                    
+
                     const startDate = new Date(ad.startDate).toLocaleDateString();
                     const endDate = new Date(ad.endDate).toLocaleDateString();
                     const statusBadge = statusBadges[ad.status] || statusBadges[ad.approvalStatus] || '<span class="badge bg-secondary">Unknown</span>';
-                    
+
                     return `
                         <tr>
                             <td><strong>${ad.title}</strong></td>
@@ -2682,15 +2721,15 @@
             const startDate = document.getElementById('adStartDate').value;
             const duration = parseInt(document.getElementById('adDuration').value);
             const mediaType = document.querySelector('input[name="adMediaType"]:checked')?.value || 'image';
-            const bottomImageFile = document.getElementById('adBottomImage').files[0];
-            const fullscreenImageFile = document.getElementById('adFullscreenImage').files[0];
+            const bottomFile = document.getElementById('adBottomImage').files[0];
+            const fullscreenFile = document.getElementById('adFullscreenImage').files[0];
 
             console.log('📝 Form data:', { title, phone, startDate, duration, mediaType });
 
             // Validation
-            if (!title || !phone || !startDate || !duration || !bottomImageFile) {
+            if (!title || !phone || !startDate || !duration || !bottomFile) {
                 console.error('❌ Missing required fields');
-                showNotification('Please fill all required fields: title, phone, start date, duration, and bottom banner image', 'error');
+                showNotification('Please fill all required fields: title, phone, start date, duration, and bottom banner image/video', 'error');
                 return;
             }
 
@@ -2730,12 +2769,25 @@
             formData.append('endDate', endDate); // Auto-calculated
             formData.append('duration', duration); // Add duration
             formData.append('cost', cost); // Add cost
-            formData.append('mediaType', mediaType); // Add media type
             formData.append('uploaderName', currentUser?.name || 'Channel Partner');
             formData.append('uploaderPhone', currentUser?.phone || phone);
-            formData.append('images', bottomImageFile);
-            if (fullscreenImageFile) {
-                formData.append('images', fullscreenImageFile);
+            if (mediaType === 'video') {
+                formData.append('bottomMediaType', 'video');
+                formData.append('bottomVideo', bottomFile);
+            } else {
+                formData.append('bottomMediaType', 'image');
+                formData.append('bottomImage', bottomFile);
+            }
+
+            // 🔹 Fullscreen media (OPTIONAL)
+            if (fullscreenFile) {
+                if (mediaType === 'video') {
+                    formData.append('fullscreenMediaType', 'video');
+                    formData.append('fullscreenVideo', fullscreenFile);
+                } else {
+                    formData.append('fullscreenMediaType', 'image');
+                    formData.append('fullscreenImage', fullscreenFile);
+                }
             }
 
             console.log('📦 FormData prepared with duration:', duration, 'cost:', cost, 'mediaType:', mediaType);
@@ -2743,7 +2795,7 @@
             // Show confirmation modal with updated cost
             document.getElementById('modalCurrentBalance').textContent = currentCredits.toLocaleString('en-IN');
             document.getElementById('modalAfterBalance').textContent = (currentCredits - cost).toLocaleString('en-IN') + ' credits';
-            
+
             const confirmModal = new bootstrap.Modal(document.getElementById('adConfirmationModal'));
             confirmModal.show();
 
@@ -2752,23 +2804,23 @@
             // Wait for user confirmation
             const confirmBtn = document.getElementById('confirmAdSubmissionBtn');
             const modalElement = document.getElementById('adConfirmationModal');
-            
+
             const handleConfirm = async () => {
                 confirmModal.hide();
                 await proceedWithAdSubmission(formData, currentCredits, submitBtn, cost, duration);
                 cleanup();
             };
-            
+
             const handleCancel = () => {
                 console.log('❌ User cancelled submission');
                 cleanup();
             };
-            
+
             const cleanup = () => {
                 confirmBtn.removeEventListener('click', handleConfirm);
                 modalElement.removeEventListener('hidden.bs.modal', handleCancel);
             };
-            
+
             confirmBtn.addEventListener('click', handleConfirm, { once: true });
             modalElement.addEventListener('hidden.bs.modal', handleCancel, { once: true });
         }
@@ -2800,7 +2852,7 @@
                         `⏳ Your ad is pending admin approval.`,
                         'success'
                     );
-                    
+
                     hideCreateAdForm();
                     loadUserAdvertisements();
                     loadUserProfile(); // Refresh credits
@@ -2840,4 +2892,5 @@
         }
     </script>
 </body>
+
 </html>
