@@ -4666,7 +4666,7 @@ document.addEventListener('DOMContentLoaded', function () {
             clearTimeout(searchTimeout);
 
             // Hide dropdown if search is empty or too short
-            if (searchTerm.length < 2) {
+            if (searchTerm.length < 1) {
                 dropdown.style.display = 'none';
                 return;
             }
@@ -4674,44 +4674,77 @@ document.addEventListener('DOMContentLoaded', function () {
             // Debounce search
             searchTimeout = setTimeout(async () => {
                 try {
-                    // Fetch all users and filter by phone containing search term
-                    const response = await fetch(`${API_BASE_URL}/admin/users-stats`, {
+                    // Fetch all approved applications to get phone numbers and names
+                    const response = await fetch(`${API_BASE_URL}/dynamic-positions?country=India`, {
                         method: 'GET',
-                        headers: { 'Content-Type': 'application/json' }
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Cache-Control': 'no-cache'
+                        }
                     });
 
                     if (!response.ok) {
                         console.error('Failed to fetch users');
-                        return;
-                    }
-
-                    const data = await response.json();
-                    const users = data.users || [];
-
-                    // Filter users whose phone contains the search term
-                    const matchingUsers = users.filter(user =>
-                        user.phone && user.phone.includes(searchTerm)
-                    ).slice(0, 10); // Limit to 10 results
-
-                    if (matchingUsers.length === 0) {
                         dropdown.style.display = 'none';
                         return;
                     }
 
-                    // Build dropdown HTML
+                    const data = await response.json();
+                    const positions = data.positions || data || [];
+
+                    // Extract unique users with phone and name from applicantDetails
+                    const usersMap = new Map();
+                    positions.forEach(position => {
+                        if (position.applicantDetails && position.applicantDetails.phone) {
+                            const phone = position.applicantDetails.phone;
+                            const name = position.applicantDetails.name || 'Unknown';
+                            const introducedCount = position.applicantDetails.introducedCount || 0;
+                            
+                            // Only add if not already in map (avoid duplicates)
+                            if (!usersMap.has(phone)) {
+                                usersMap.set(phone, { phone, name, introducedCount });
+                            }
+                        }
+                    });
+
+                    // Convert map to array and filter by search term
+                    const allUsers = Array.from(usersMap.values());
+                    const matchingUsers = allUsers.filter(user =>
+                        user.phone.includes(searchTerm) || 
+                        (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                    ).slice(0, 10); // Limit to 10 results
+
+                    if (matchingUsers.length === 0) {
+                        dropdown.innerHTML = '<div class="dropdown-item text-muted">No matching users found</div>';
+                        dropdown.style.display = 'block';
+                        dropdown.classList.add('show');
+                        return;
+                    }
+
+                    // Build dropdown HTML with better formatting
                     const dropdownHTML = matchingUsers.map(user => `
-                        <a href="#" class="dropdown-item py-2" onclick="selectReferrer('${user.phone}', '${user.name || 'Unknown'}'); return false;">
-                            <div>
-                                <strong>+91 ${user.phone}</strong>
-                                <div class="text-muted small">${user.name || 'Unknown'}</div>
+                        <a href="#" class="dropdown-item py-2 px-3" onclick="selectReferrer('${user.phone}', '${user.name.replace(/'/g, "\\'")}'); return false;" style="border-bottom: 1px solid #f0f0f0;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div><strong>${user.phone}</strong></div>
+                                    <div class="text-muted small">${user.name}</div>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-success" style="font-size: 0.7rem;">
+                                        ${user.introducedCount} referrals
+                                    </span>
+                                </div>
                             </div>
                         </a>
                     `).join('');
 
                     dropdown.innerHTML = dropdownHTML;
                     dropdown.style.display = 'block';
+                    dropdown.classList.add('show');
                     dropdown.style.position = 'absolute';
-                    dropdown.style.zIndex = '1000';
+                    dropdown.style.zIndex = '1050';
+                    dropdown.style.maxHeight = '300px';
+                    dropdown.style.overflowY = 'auto';
 
                 } catch (error) {
                     console.error('Error searching users:', error);
