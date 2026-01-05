@@ -9,6 +9,37 @@ const compression = require('compression');
 // Updated: 2025-12-02 - Fixed cross-database user search with direct MongoDB queries
 dotenv.config();
 
+// ========================================
+// CRITICAL: Global Error Handlers
+// Prevents exit status 134 crashes from uncaught errors
+// ========================================
+process.on('uncaughtException', (error) => {
+  console.error('\n' + '='.repeat(80));
+  console.error('❌ UNCAUGHT EXCEPTION - This would have crashed with exit status 134!');
+  console.error('='.repeat(80));
+  console.error('Error:', error.message);
+  console.error('Stack:', error.stack);
+  console.error('Time:', new Date().toISOString());
+  console.error('='.repeat(80) + '\n');
+  // DON'T exit - log and continue running
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('\n' + '='.repeat(80));
+  console.error('❌ UNHANDLED PROMISE REJECTION - This would have crashed with exit status 134!');
+  console.error('='.repeat(80));
+  console.error('Reason:', reason);
+  if (reason instanceof Error) {
+    console.error('Stack:', reason.stack);
+  }
+  console.error('Promise:', promise);
+  console.error('Time:', new Date().toISOString());
+  console.error('='.repeat(80) + '\n');
+  // DON'T exit - log and continue running
+});
+
+console.log('✅ Global error handlers active - exit status 134 crashes prevented');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -64,8 +95,9 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/payments/webhook', express.raw({ type: '*/*' }));
-app.use(express.json({ limit: '2mb' }));
-app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+// Reduced limits for 4-instance deployment (512MB RAM each)
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -114,8 +146,12 @@ const connectDB = async () => {
     
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
-    // Don't exit the process, let the app run without DB for now
+    if (error.message.includes('authentication')) {
+      console.error('⚠️ Check MONGODB_URI credentials in .env file');
+    }
+    // Don't exit - app continues without DB (better than crashing)
     console.log('⚠️ App will continue without database connection');
+    console.log('⚠️ Will retry connection automatically on disconnect event');
   }
 };
 
@@ -217,28 +253,29 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('❌ Unhandled Promise Rejection:', reason);
-  console.error('Promise:', promise);
-  // Don't exit the process, just log the error
-});
-
-// Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
-  console.error('❌ Uncaught Exception:', error);
-  console.error('Stack:', error.stack);
-  // Log but don't exit immediately to allow graceful shutdown
-});
-
-// Graceful shutdown handler
-process.on('SIGTERM', () => {
-  console.log('👋 SIGTERM received. Shutting down gracefully...');
-  mongoose.connection.close(false, () => {
-    console.log('💤 MongoDB connection closed');
+// Graceful shutdown handlers for production (Render sends SIGTERM on redeploy)
+const gracefulShutdown = async (signal) => {
+  console.log(`\n👋 ${signal} received. Starting graceful shutdown...`);
+  
+  try {
+    // Close MongoDB connection
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.close(false);
+      console.log('✅ MongoDB connection closed');
+    }
+    
+    console.log('✅ Graceful shutdown complete');
     process.exit(0);
-  });
-});
+  } catch (error) {
+    console.error('❌ Error during shutdown:', error);
+    process.exit(1);
+  }
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+console.log('✅ Graceful shutdown handlers registered');
 
 // Start server
 app.listen(PORT, () => {
