@@ -161,11 +161,13 @@ router.get('/image/:promotionId/:language', async (req, res) => {
         const bufferSizeMB = (bufferSize / (1024 * 1024)).toFixed(2);
         console.log(`   📦 Image size: ${bufferSizeMB}MB (${bufferSize} bytes)`);
         
-        // Step 3: Set headers and send
+        // Step 3: Set headers and send (NO CACHE for Windows browser compatibility)
         const sendStart = Date.now();
         res.set('Content-Type', promotion.contentType || 'image/png');
-        res.set('Cache-Control', 'public, max-age=604800'); // Cache for 7 days
-        res.set('ETag', `${promotionId}-${language}`);
+        // CRITICAL: No caching to prevent Windows browser stale images
+        res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
         res.set('Content-Length', bufferSize);
         
         res.send(promotion.imageData);
