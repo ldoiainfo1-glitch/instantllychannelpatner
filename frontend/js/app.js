@@ -1350,34 +1350,44 @@ async function handleSearch() {
             console.log(`   Search term: "${searchName}" (name) or "${searchPhone}" (phone)`);
             
             filteredPositions = currentPositions.filter(position => {
-                // Must have applicant details
-                if (!position.applicantDetails) {
-                    return false;
-                }
-
-                // Name search - check if any part of the name matches
+                // Name search - check applicant name OR location names (zone, state, division, district, etc.)
                 if (searchName) {
-                    const positionName = (position.applicantDetails.name || '').toLowerCase();
-                    const matches = positionName.includes(searchName);
+                    let nameMatches = false;
                     
-                    // Log first 10 comparisons
-                    if (filteredPositions.length < 10) {
-                        console.log(`  Name: "${positionName}" includes "${searchName}" = ${matches}`);
+                    // Check applicant name
+                    if (position.applicantDetails && position.applicantDetails.name) {
+                        const positionName = (position.applicantDetails.name || '').toLowerCase();
+                        nameMatches = positionName.includes(searchName);
                     }
                     
-                    if (!matches) {
+                    // Check location fields if applicant name doesn't match
+                    if (!nameMatches) {
+                        const locationFields = [
+                            position.zone,
+                            position.state,
+                            position.division,
+                            position.district,
+                            position.tehsil,
+                            position.pincode,
+                            position.village
+                        ].filter(Boolean).map(val => (val || '').toLowerCase());
+                        
+                        nameMatches = locationFields.some(field => field.includes(searchName));
+                    }
+                    
+                    if (!nameMatches) {
                         return false;
                     }
                 }
 
-                // Phone search
+                // Phone search - only check if position has applicant
                 if (searchPhone) {
+                    if (!position.applicantDetails) {
+                        return false; // Can't search by phone if no applicant
+                    }
+                    
                     const positionPhone = position.applicantDetails.phone || '';
                     const matches = positionPhone.includes(searchPhone);
-                    
-                    if (filteredPositions.length < 10) {
-                        console.log(`  Phone: "${positionPhone}" includes "${searchPhone}" = ${matches}`);
-                    }
                     
                     if (!matches) {
                         return false;
