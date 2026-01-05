@@ -461,6 +461,18 @@ router.delete('/applications/:id/delete', async (req, res) => {
     console.log(`👤 Applicant: ${application.applicantInfo.name}`);
     console.log(`📞 Phone: ${application.applicantInfo.phone}`);
 
+    // IMPORTANT: Decrement introducer's count if this was a referred application
+    if (application.introducedBy && application.introducedBy !== 'Self' && application.status === 'approved') {
+      const introducer = await User.findOne({ phone: application.introducedBy });
+      if (introducer) {
+        introducer.introducedCount = Math.max(0, (introducer.introducedCount || 0) - 1);
+        await introducer.save();
+        console.log(`✅ Decremented introducer ${introducer.name} (${introducer.phone}) count to ${introducer.introducedCount}`);
+      } else {
+        console.log(`⚠️ Introducer not found with phone: ${application.introducedBy}`);
+      }
+    }
+
     // IMPORTANT: Also delete the associated user account if it exists
     const associatedUser = await User.findOne({ phone: application.applicantInfo.phone });
     if (associatedUser) {
