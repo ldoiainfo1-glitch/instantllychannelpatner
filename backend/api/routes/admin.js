@@ -2913,4 +2913,70 @@ router.post('/sync-position-ids', async (req, res) => {
   }
 });
 
+// Fix introducedCount for all users (admin maintenance endpoint)
+router.post('/fix-introduced-counts', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    console.log('🔧 Starting introducedCount fix...');
+    
+    // Get all users with phone numbers
+    const users = await User.find({ phone: { $exists: true, $ne: null } }).select('phone name introducedCount');
+    console.log(`📋 Found ${users.length} users with phone numbers`);
+
+    let updatedCount = 0;
+    let unchangedCount = 0;
+    const updates = [];
+
+    for (const user of users) {
+      // Count how many APPROVED applications have this user's phone as introducedBy
+      const referralCount = await Application.countDocuments({
+        introducedBy: user.phone,
+        status: 'approved'
+      });
+
+      const currentCount = user.introducedCount || 0;
+
+      if (referralCount !== currentCount) {
+        user.introducedCount = referralCount;
+        await user.save();
+        
+        updates.push({
+          name: user.name,
+          phone: user.phone,
+          oldCount: currentCount,
+          newCount: referralCount
+        });
+        
+        console.log(`✅ Updated ${user.name} (${user.phone}): ${currentCount} → ${referralCount}`);
+        updatedCount++;
+      } else {
+        unchangedCount++;
+      }
+    }
+
+    // Get top referrers
+    const topReferrers = await User.find({ introducedCount: { $gt: 0 } })
+      .select('name phone introducedCount')
+      .sort({ introducedCount: -1 })
+      .limit(10)
+      .lean();
+
+    res.json({
+      success: true,
+      message: 'introducedCount fixed successfully',
+      summary: {
+        totalUsers: users.length,
+        updated: updatedCount,
+        unchanged: unchangedCount
+      },
+      updates: updates,
+      topReferrers: topReferrers
+    });
+  } catch (error) {
+    console.error('❌ Error fixing introducedCount:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
