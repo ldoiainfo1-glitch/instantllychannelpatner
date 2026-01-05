@@ -4741,10 +4741,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     dropdown.innerHTML = dropdownHTML;
                     dropdown.style.display = 'block';
                     dropdown.classList.add('show');
-                    dropdown.style.position = 'absolute';
-                    dropdown.style.zIndex = '1050';
-                    dropdown.style.maxHeight = '300px';
-                    dropdown.style.overflowY = 'auto';
 
                 } catch (error) {
                     console.error('Error searching users:', error);
