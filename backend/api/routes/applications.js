@@ -393,12 +393,16 @@ router.put('/:id/status', async (req, res) => {
       }
       
       // Update introduced count and credits for introducer
+      console.log(`🔍 REFERRAL CHECK: introducedBy = "${application.introducedBy}"`);
       if (application.introducedBy && application.introducedBy !== 'Self') {
+        console.log(`🔍 Looking for introducer with phone: ${application.introducedBy}`);
         // Find introducer by phone number (introducedBy contains phone number, not personCode)
         const introducer = await User.findOne({ phone: application.introducedBy });
         if (introducer) {
+          const oldCount = introducer.introducedCount || 0;
           // Increment introduced count (always, no limit)
-          introducer.introducedCount = (introducer.introducedCount || 0) + 1;
+          introducer.introducedCount = oldCount + 1;
+          console.log(`🎯 INCREMENTING introducedCount: ${introducer.name} (${introducer.phone}) ${oldCount} → ${introducer.introducedCount}`);
           
           // Add 100 credits only for first 20 referrals
           const maxPaidReferrals = 20;
@@ -412,10 +416,12 @@ router.put('/:id/status', async (req, res) => {
           }
           
           await introducer.save();
-          console.log(`✅ Saved introducer ${introducer.name} with introducedCount: ${introducer.introducedCount}`);
+          console.log(`✅ SAVED introducer ${introducer.name} with introducedCount: ${introducer.introducedCount}`);
         } else {
           console.log(`⚠️ Introducer not found with phone: ${application.introducedBy}`);
         }
+      } else {
+        console.log(`⏭️ No referral to process (introducedBy = "${application.introducedBy}")`);
       }
     }
 
