@@ -3333,6 +3333,145 @@ function showLoginCredentials(phone, name) {
     window.location.href = 'profile.html';
 }
 
+// Show referral code (phone number) in a modal
+function showReferralCode(positionId, phone) {
+    if (!phone) {
+        alert('Phone number not available');
+        return;
+    }
+
+    // Create modern modal for referral code display
+    const modalHTML = `
+        <div class="modal fade" id="referralCodeModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                    <div class="modal-body p-0">
+                        <!-- Header -->
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; position: relative;">
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="position: absolute; top: 15px; right: 15px;"></button>
+                            <div style="margin-top: 10px;">
+                                <i class="fas fa-users" style="font-size: 3rem; color: white; margin-bottom: 10px;"></i>
+                                <h4 class="text-white fw-bold mb-0">Your Referral Code</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div style="padding: 30px; background: white;">
+                            <p class="text-center text-muted mb-4">Share this code with others to refer them</p>
+                            
+                            <!-- Referral Code Display -->
+                            <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                                <div class="text-center mb-2">
+                                    <small class="text-muted d-block mb-2" style="font-size: 0.85rem;">REFERRAL CODE</small>
+                                    <div style="font-size: 2rem; font-weight: bold; color: #667eea; letter-spacing: 2px; font-family: 'Courier New', monospace;">
+                                        ${phone}
+                                    </div>
+                                </div>
+                                
+                                <!-- Copy Button -->
+                                <div class="text-center mt-3">
+                                    <button class="btn btn-primary" onclick="copyReferralCode('${phone}')" style="border-radius: 25px; padding: 10px 30px;">
+                                        <i class="fas fa-copy me-2"></i>Copy Code
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Instructions -->
+                            <div class="alert alert-info" style="border-radius: 15px; border: none; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-info-circle me-3 mt-1" style="color: #1976d2; font-size: 1.2rem;"></i>
+                                    <div>
+                                        <strong style="color: #1976d2;">How to use:</strong>
+                                        <p class="mb-0 mt-1" style="font-size: 0.9rem; color: #333;">
+                                            When someone applies for a position, they can enter your phone number (${phone}) in the "Referred By" field to credit you as their referrer.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Share Options -->
+                            <div class="text-center mt-4">
+                                <p class="text-muted mb-2" style="font-size: 0.9rem;">Share via:</p>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button class="btn btn-success btn-sm" onclick="shareViaWhatsApp('${phone}')" style="border-radius: 20px; padding: 8px 20px;">
+                                        <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                                    </button>
+                                    <button class="btn btn-primary btn-sm" onclick="shareViaSMS('${phone}')" style="border-radius: 20px; padding: 8px 20px;">
+                                        <i class="fas fa-sms me-1"></i>SMS
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('referralCodeModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('referralCodeModal'));
+    modal.show();
+
+    // Remove modal from DOM after it's hidden
+    document.getElementById('referralCodeModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+// Copy referral code to clipboard
+function copyReferralCode(phone) {
+    navigator.clipboard.writeText(phone).then(() => {
+        // Show success message
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+        }, 2000);
+    }).catch(err => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = phone;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert('Referral code copied: ' + phone);
+        } catch (err) {
+            alert('Failed to copy. Your referral code is: ' + phone);
+        }
+        document.body.removeChild(textArea);
+    });
+}
+
+// Share referral code via WhatsApp
+function shareViaWhatsApp(phone) {
+    const message = `Join as a Channel Partner! Use my referral code: ${phone} when applying.\n\nApply here: ${window.location.origin}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+}
+
+// Share referral code via SMS
+function shareViaSMS(phone) {
+    const message = `Join as a Channel Partner! Use my referral code: ${phone} when applying. Apply here: ${window.location.origin}`;
+    const smsUrl = `sms:?body=${encodeURIComponent(message)}`;
+    window.location.href = smsUrl;
+}
+
 // Show referral info with phone number and credits info
 async function showReferralInfo(positionId, phone, name) {
     try {
