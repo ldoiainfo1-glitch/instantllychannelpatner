@@ -435,6 +435,12 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">
+                                        <i class="fas fa-map-pin me-2"></i>Pincode <span class="text-muted">(Editable)</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="editPincode" pattern="[0-9]{6}" maxlength="6" placeholder="Enter 6-digit pincode" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">
                                         <i class="fas fa-envelope me-2"></i>Email Address
                                     </label>
                                     <input type="email" class="form-control" id="editEmail" readonly>
@@ -1389,11 +1395,13 @@
             // Form fields
             const editNameEl = document.getElementById('editName');
             const editPhoneEl = document.getElementById('editPhone');
+            const editPincodeEl = document.getElementById('editPincode');
             const editEmailEl = document.getElementById('editEmail');
             const editIntroducedByEl = document.getElementById('editIntroducedBy');
 
             if (editNameEl) editNameEl.value = user.name;
             if (editPhoneEl) editPhoneEl.value = user.phone;
+            if (editPincodeEl) editPincodeEl.value = user.pincode || '';
             if (editEmailEl) editEmailEl.value = user.email || '';
             if (editIntroducedByEl) editIntroducedByEl.value = user.introducedBy || 'Self';
 
@@ -1795,6 +1803,7 @@
         function toggleEditMode() {
             isEditMode = true;
             document.getElementById('editName').removeAttribute('readonly');
+            document.getElementById('editPincode').removeAttribute('readonly');
             document.getElementById('editEmail').removeAttribute('readonly');
             document.getElementById('profileForm').classList.add('edit-mode');
             document.getElementById('profileActions').classList.remove('d-none');
@@ -1805,6 +1814,7 @@
         function cancelEditMode() {
             isEditMode = false;
             document.getElementById('editName').setAttribute('readonly', true);
+            document.getElementById('editPincode').setAttribute('readonly', true);
             document.getElementById('editEmail').setAttribute('readonly', true);
             document.getElementById('profileForm').classList.remove('edit-mode');
             document.getElementById('profileActions').classList.add('d-none');
@@ -1819,7 +1829,14 @@
             e.preventDefault();
 
             const name = document.getElementById('editName').value;
+            const pincode = document.getElementById('editPincode').value;
             const email = document.getElementById('editEmail').value;
+
+            // Validate pincode if provided
+            if (pincode && !/^[0-9]{6}$/.test(pincode)) {
+                showNotification('Please enter a valid 6-digit pincode', 'error');
+                return;
+            }
 
             try {
                 const response = await fetch(`${API_BASE_URL}/auth/profile`, {
@@ -1828,7 +1845,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ name, email })
+                    body: JSON.stringify({ name, pincode, email })
                 });
 
                 if (response.ok) {

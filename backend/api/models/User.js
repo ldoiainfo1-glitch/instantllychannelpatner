@@ -16,6 +16,16 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: false
   },
+  pincode: {
+    type: String,
+    required: false,
+    validate: {
+      validator: function(v) {
+        return !v || /^[0-9]{6}$/.test(v);
+      },
+      message: 'Pincode must be 6 digits'
+    }
+  },
   personCode: {
     type: String,
     required: false,
