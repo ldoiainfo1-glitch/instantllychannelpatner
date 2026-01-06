@@ -510,10 +510,11 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       console.log(`\n🔍 ===== REFERRAL COUNT DEBUG for ${existingApplication.applicantInfo.name} =====`);
       console.log(`   📱 Phone: ${phone}`);
       
-      // Count approved applications where introducedBy matches this person's phone
+      // CRITICAL FIX: Count approved applications (case-insensitive check)
+      // Database stores 'approved' but some might have 'Approved' (capital A)
       const referralCount = await Application.countDocuments({ 
         introducedBy: phone,
-        status: 'approved' // Only count approved referrals
+        status: { $in: ['approved', 'Approved'] } // Handle both cases
       });
       
       // DEBUG: Also check what applications exist with this introducedBy
