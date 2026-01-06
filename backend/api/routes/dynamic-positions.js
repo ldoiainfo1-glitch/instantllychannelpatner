@@ -507,7 +507,8 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       const User = require('../models/User');
       
       const phone = existingApplication.applicantInfo.phone;
-      console.log(`🔍 Calculating REAL-TIME introducedCount for ${existingApplication.applicantInfo.name} (${phone})`);
+      console.log(`\n🔍 ===== REFERRAL COUNT DEBUG for ${existingApplication.applicantInfo.name} =====`);
+      console.log(`   📱 Phone: ${phone}`);
       
       // Count approved applications where introducedBy matches this person's phone
       const referralCount = await Application.countDocuments({ 
@@ -515,8 +516,15 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
         status: 'approved' // Only count approved referrals
       });
       
+      // DEBUG: Also check what applications exist with this introducedBy
+      const debugApps = await Application.find({ introducedBy: phone }).select('applicantInfo.name status introducedBy').limit(5);
+      console.log(`   🔎 Found ${debugApps.length} applications with introducedBy="${phone}":`);
+      debugApps.forEach(app => {
+        console.log(`      - ${app.applicantInfo.name}, status: ${app.status}`);
+      });
+      
       applicantIntroducedCount = referralCount;
-      console.log(`✅ Real-time count: ${applicantIntroducedCount} approved referrals`);
+      console.log(`   ✅ FINAL COUNT: ${applicantIntroducedCount} approved referrals\n`);
       
       // Also get User record for photo (if exists)
       const applicantUser = await User.findOne({ phone: phone });
