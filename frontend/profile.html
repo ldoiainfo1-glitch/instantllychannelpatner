@@ -2939,6 +2939,23 @@
         async function showReferredPeople(referrerPhone, referrerName) {
             console.log(`📊 Fetching referred people for ${referrerName} (${referrerPhone})`);
             
+            // Show loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'referredPeopleLoadingOverlay';
+            loadingOverlay.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                            background: rgba(0, 0, 0, 0.7); z-index: 9999; 
+                            display: flex; justify-content: center; align-items: center;">
+                    <div style="text-align: center; color: white;">
+                        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem; border-width: 0.3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p style="margin-top: 1rem; font-size: 1.1rem; font-weight: 500;">Loading Referred People...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(loadingOverlay);
+            
             try {
                 const url = `${API_BASE_URL}/applications?introducedBy=${referrerPhone}&status=approved`;
                 console.log(`🌐 API URL:`, url);
@@ -3058,6 +3075,12 @@
                 // Add modal to page
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
 
+                // Remove loading overlay
+                const loadingOverlay = document.getElementById('referredPeopleLoadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.remove();
+                }
+
                 // Show modal using Bootstrap
                 const modal = new bootstrap.Modal(document.getElementById('referredPeopleModal'));
                 modal.show();
@@ -3068,6 +3091,12 @@
                 });
 
             } catch (error) {
+                // Remove loading overlay on error
+                const loadingOverlay = document.getElementById('referredPeopleLoadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.remove();
+                }
+                
                 console.error('❌ Error fetching referred people:', error);
                 alert('Failed to load referred people. Please try again.');
             }
