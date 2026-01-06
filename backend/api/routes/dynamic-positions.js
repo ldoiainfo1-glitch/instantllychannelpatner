@@ -502,24 +502,24 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
                        existingApplication.status === 'approved' ? 'Approved' : 'Verified';
       
       // Get THIS applicant's introduced count (how many people they referred)
+      // REAL-TIME CALCULATION: Always count from Application collection for accurate, up-to-date results
       let applicantIntroducedCount = 0;
       const User = require('../models/User');
       
-      // Try to find the applicant in Users collection (if approved)
-      console.log(`🔍 Checking introducedCount for ${existingApplication.applicantInfo.name}`);
-      const applicantUser = await User.findOne({ phone: existingApplication.applicantInfo.phone });
-      if (applicantUser) {
-        applicantIntroducedCount = applicantUser.introducedCount || 0;
-      } else {
-        // If not in Users (pending), check their person code in Application
-        if (existingApplication.personCode) {
-          // Count how many people used THIS applicant's referral code
-          const referralCount = await Application.countDocuments({ 
-            introducedBy: existingApplication.personCode 
-          });
-          applicantIntroducedCount = referralCount;
-        }
-      }
+      const phone = existingApplication.applicantInfo.phone;
+      console.log(`🔍 Calculating REAL-TIME introducedCount for ${existingApplication.applicantInfo.name} (${phone})`);
+      
+      // Count approved applications where introducedBy matches this person's phone
+      const referralCount = await Application.countDocuments({ 
+        introducedBy: phone,
+        status: 'approved' // Only count approved referrals
+      });
+      
+      applicantIntroducedCount = referralCount;
+      console.log(`✅ Real-time count: ${applicantIntroducedCount} approved referrals`);
+      
+      // Also get User record for photo (if exists)
+      const applicantUser = await User.findOne({ phone: phone });
       
       // CRITICAL FIX: Get updated photo from User model if available
       let userPhoto = existingApplication.applicantInfo.photo; // Default from application
