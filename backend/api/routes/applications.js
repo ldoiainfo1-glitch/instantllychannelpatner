@@ -218,14 +218,16 @@ router.get('/', async (req, res) => {
       district, 
       tehsil, 
       pincode, 
-      village 
+      village,
+      introducedBy 
     } = req.query;
     
-    console.log('📋 Loading applications with filters:', { status, country, zone, state, division, district, tehsil, pincode, village });
+    console.log('📋 Loading applications with filters:', { status, country, zone, state, division, district, tehsil, pincode, village, introducedBy });
     
     // Build application filter
     let applicationFilter = {};
     if (status) applicationFilter.status = status;
+    if (introducedBy) applicationFilter.introducedBy = introducedBy;
     
     // Get all applications from applications collection (no position population needed)
     const applications = await Application.find(applicationFilter)
@@ -234,6 +236,7 @@ router.get('/', async (req, res) => {
       .sort({ appliedDate: -1 });
     
     console.log(`📊 Found ${applications.length} applications in database`);
+
     
     // Since applications don't have location data, we'll return all applications
     // In a real system, you'd add location fields to the Application model

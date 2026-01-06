@@ -773,9 +773,14 @@ function createPositionRow(position) {
         : '-';
 
     // Handle introduced count - show how many people joined using this person's referral code
-    const introducedBy = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
+    const introducedCount = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
         ? position.applicantDetails.introducedCount
         : (position.applicantDetails ? 0 : '-');
+    
+    // Make introduced count clickable if > 0
+    const introducedBy = introducedCount > 0 && position.applicantDetails?.phone
+        ? `<a href="#" onclick="showReferredPeople('${position.applicantDetails.phone}', '${position.applicantDetails.name || ''}'); return false;" class="text-primary fw-bold" style="text-decoration: underline; cursor: pointer;">${introducedCount}</a>`
+        : introducedCount;
 
     // Handle days since application
     const days = position.applicantDetails && position.applicantDetails.days !== undefined
@@ -1116,8 +1121,13 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
     
     // Phone, Introduced, Days
     const phoneNo = position.applicantDetails && position.applicantDetails.phone ? position.applicantDetails.phone : '-';
-    const introducedBy = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
+    const introducedCount = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
         ? position.applicantDetails.introducedCount : (position.applicantDetails ? 0 : '-');
+    
+    // Make introduced count clickable if > 0
+    const introducedBy = introducedCount > 0 && position.applicantDetails?.phone
+        ? `<a href="#" onclick="showReferredPeople('${position.applicantDetails.phone}', '${position.applicantDetails.name || ''}'); return false;" class="text-primary fw-bold" style="text-decoration: underline; cursor: pointer;">${introducedCount}</a>`
+        : introducedCount;
     const days = position.applicantDetails && position.applicantDetails.days !== undefined ? position.applicantDetails.days : '-';
     
     // Check if this nested row can also expand
@@ -5120,3 +5130,104 @@ if (document.getElementById('forgotPasswordModal')) {
     document.getElementById('forgotPasswordModal').addEventListener('hidden.bs.modal', resetForgotPasswordForm);
 }
 
+// Show referred people modal
+async function showReferredPeople(referrerPhone, referrerName) {
+    try {
+        console.log(`📊 Fetching referred people for ${referrerName} (${referrerPhone})...`);
+        
+        // Fetch all applications where introducedBy matches this phone
+        const response = await fetch(`${API_BASE_URL}/applications?introducedBy=${referrerPhone}&status=approved`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to fetch referred people');
+        }
+        
+        const data = await response.json();
+        const applications = data.applications || [];
+        
+        console.log(`✅ Found ${applications.length} referred people`);
+        
+        // Create modal HTML
+        const modalHtml = `
+            <div class="modal fade" id="referredPeopleModal" tabindex="-1" aria-labelledby="referredPeopleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="referredPeopleModalLabel">
+                                <i class="fas fa-users me-2"></i>People Introduced by ${referrerName}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${applications.length === 0 ? `
+                                <div class="text-center py-5">
+                                    <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No approved referrals found</p>
+                                </div>
+                            ` : `
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Sr No.</th>
+                                                <th>Name</th>
+                                                <th>Phone</th>
+                                                <th>Position</th>
+                                                <th>Applied Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${applications.map((app, index) => {
+                                                const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
+                                                const designation = app.positionId ? app.positionId.split('_').slice(1, 2).join(' ').replace(/-/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase()) : '-';
+                                                return `
+                                                    <tr>
+                                                        <td><strong>${index + 1}</strong></td>
+                                                        <td>${app.applicantInfo?.name || '-'}</td>
+                                                        <td>${app.applicantInfo?.phone || '-'}</td>
+                                                        <td>${designation}</td>
+                                                        <td>${appliedDate}</td>
+                                                    </tr>
+                                                `;
+                                            }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('referredPeopleModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add new modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show the modal
+        const modalElement = document.getElementById('referredPeopleModal');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        
+        // Clean up modal after it's hidden
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+        });
+        
+    } catch (error) {
+        console.error('❌ Error fetching referred people:', error);
+        alert('Failed to load referred people. Please try again.');
+    }
+}
