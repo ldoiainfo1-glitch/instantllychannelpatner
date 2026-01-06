@@ -367,6 +367,7 @@ router.put('/:id/status', async (req, res) => {
           name: application.applicantInfo.name,
           phone: application.applicantInfo.phone,
           email: application.applicantInfo.email,
+          pincode: application.applicantInfo.pincode,
           personCode: personCode,
           loginId: application.applicantInfo.phone, // Login ID is phone number
           password: defaultPassword, // First 4 letters of name in CAPITAL
