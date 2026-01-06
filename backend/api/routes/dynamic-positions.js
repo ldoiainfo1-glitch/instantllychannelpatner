@@ -275,7 +275,14 @@ router.get('/', async (req, res) => {
         // Get user data from pre-fetched map
         const user = userMap[application.applicantInfo.phone];
         const userPhoto = user?.photo || application.applicantInfo.photo;
-        const introducedCount = user?.introducedCount || 0;
+        
+        // CRITICAL FIX: Real-time referral count calculation
+        const phone = application.applicantInfo.phone;
+        const referralCount = await Application.countDocuments({ 
+          introducedBy: phone,
+          status: 'approved'
+        });
+        console.log(`🔢 [BATCH] ${application.applicantInfo.name} (${phone}) introduced count: ${referralCount}`);
         
         position.applicantDetails = {
           name: application.applicantInfo.name,
@@ -287,7 +294,7 @@ router.get('/', async (req, res) => {
           businessName: application.applicantInfo.businessName,
           appliedDate: application.appliedDate,
           introducedBy: application.introducedBy || 'Self',
-          introducedCount: introducedCount,
+          introducedCount: referralCount, // Real-time count from Application collection
           days: Math.floor((new Date() - new Date(application.appliedDate)) / (1000 * 60 * 60 * 24)),
           applicationId: application._id,
           isVerified: application.isVerified || false
