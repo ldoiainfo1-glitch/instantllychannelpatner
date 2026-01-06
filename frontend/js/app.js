@@ -5194,7 +5194,7 @@ async function showReferredPeople(referrerPhone, referrerName) {
                                             ${applicationsArray.map((app, index) => {
                                                 const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
                                                 
-                                                // Extract position level and location from positionId
+                                                // Extract position level and actual area from positionId
                                                 let positionDisplay = '-';
                                                 if (app.positionId) {
                                                     const parts = app.positionId.split('_');
@@ -5209,7 +5209,12 @@ async function showReferredPeople(referrerPhone, referrerName) {
                                                         else if (level.includes('tehsil')) levelName = 'Tehsil';
                                                         else if (level.includes('village')) levelName = 'Village';
                                                         
-                                                        const location = app.location?.state || app.location?.division || app.location?.district || app.location?.tehsil || app.location?.village || '-';
+                                                        // Extract the actual area from the LAST part of positionId
+                                                        // e.g., pos_division-head_india_east-zone_bihar_begusarai -> "begusarai"
+                                                        const locationRaw = parts[parts.length - 1] || '-';
+                                                        const location = locationRaw.split('-').map(word => 
+                                                            word.charAt(0).toUpperCase() + word.slice(1)
+                                                        ).join(' ');
                                                         
                                                         if (levelName && location !== '-') {
                                                             positionDisplay = `${levelName}(${location})`;
