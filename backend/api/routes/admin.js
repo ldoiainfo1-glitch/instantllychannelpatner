@@ -3171,5 +3171,110 @@ router.post('/fix-user-password', async (req, res) => {
   }
 });
 
+// Create missing user accounts for approved applications
+router.post('/create-missing-users', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Find all approved applications
+    const approvedApps = await Application.find({ 
+      status: 'Approved'
+    });
+    
+    console.log(`🔍 Found ${approvedApps.length} approved applications`);
+    
+    const created = [];
+    const alreadyExists = [];
+    const errors = [];
+    
+    for (const application of approvedApps) {
+      try {
+        const phone = application.applicantInfo.phone;
+        
+        // Check if user already exists
+        const existingUser = await User.findOne({ phone: phone });
+        
+        if (existingUser) {
+          alreadyExists.push({
+            name: application.applicantInfo.name,
+            phone: phone,
+            userId: existingUser._id
+          });
+          console.log(`✓ User already exists: ${application.applicantInfo.name} (${phone})`);
+          continue;
+        }
+        
+        // Generate person code
+        const personCode = `CP${Date.now()}${Math.floor(Math.random() * 1000)}`;
+        
+        // Generate password: First 4 letters of name in CAPITAL
+        const nameForPassword = application.applicantInfo.name.replace(/\s+/g, '');
+        const defaultPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
+        
+        // Create user account
+        const newUser = new User({
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          email: application.applicantInfo.email || '',
+          pincode: application.applicantInfo.pincode,
+          personCode: personCode,
+          loginId: application.applicantInfo.phone,
+          password: defaultPassword,
+          photo: application.applicantInfo.photo,
+          introducedBy: application.introducedBy,
+          positionId: application.positionId,
+          appliedDate: application.appliedDate,
+          approvedDate: application.approvedDate || new Date(),
+          credits: 0,
+          hasReceivedInitialCredits: false,
+          introducedCount: 0,
+          isVerified: false,
+          isFirstLogin: true
+        });
+        
+        await newUser.save();
+        
+        // Update application with userId
+        application.userId = newUser._id;
+        await application.save();
+        
+        created.push({
+          name: application.applicantInfo.name,
+          phone: phone,
+          userId: newUser._id,
+          personCode: personCode,
+          password: defaultPassword
+        });
+        
+        console.log(`✅ Created user: ${application.applicantInfo.name} (${phone}) - Password: ${defaultPassword}`);
+        
+      } catch (error) {
+        errors.push({
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          error: error.message
+        });
+        console.error(`❌ Error creating user for ${application.applicantInfo.name}:`, error.message);
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: 'User account creation completed',
+      totalApproved: approvedApps.length,
+      created: created.length,
+      alreadyExists: alreadyExists.length,
+      errors: errors.length,
+      createdList: created,
+      alreadyExistsList: alreadyExists,
+      errorsList: errors
+    });
+    
+  } catch (error) {
+    console.error('❌ Error creating missing users:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
 
