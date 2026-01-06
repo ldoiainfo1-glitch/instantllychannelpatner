@@ -831,6 +831,7 @@ function createPositionRow(position) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
+        const pincode = position.applicantDetails.pincode || '';
         const locationJson = JSON.stringify(position.location).replace(/"/g, '&quot;');
         
         othersCell = `
@@ -857,7 +858,7 @@ function createPositionRow(position) {
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${locationJson}); return false;">
+                            <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${pincode}', '${photo}', ${locationJson}); return false;">
                                 <i class="fas fa-id-card me-2"></i>ID Card
                             </a>
                         </li>
@@ -875,6 +876,7 @@ function createPositionRow(position) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
+        const pincode = position.applicantDetails.pincode || '';
 
         othersCell = `
             <div class="dropdown">
@@ -894,7 +896,7 @@ function createPositionRow(position) {
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})" return false;">
+                        <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${pincode}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}); return false;">
                             <i class="fas fa-id-card me-2"></i>ID Card
                         </a>
                     </li>
@@ -1159,6 +1161,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
+        const pincode = position.applicantDetails.pincode || '';
         const locationJson = JSON.stringify(position.location).replace(/"/g, '&quot;');
         
         othersCell = `
@@ -1175,7 +1178,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
                     <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
                         <li><a class="dropdown-item" href="#" onclick="showLoginCredentials('${phone}', '${name}'); return false;"><i class="fas fa-key me-2"></i>Login Credentials</a></li>
                         <li><a class="dropdown-item" href="#" onclick="showReferralCode('${position._id}', '${phone}'); return false;"><i class="fas fa-users me-2"></i>Referral Code</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${locationJson}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${pincode}', '${photo}', ${locationJson}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
                         <li><a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${locationJson}, '${position.designation || ''}'); return false;"><i class="fas fa-bullhorn me-2"></i>Promotion</a></li>
                     </ul>
                 </div>
@@ -1185,6 +1188,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
+        const pincode = position.applicantDetails.pincode || '';
         
         othersCell = `
             <div class="dropdown">
@@ -1194,7 +1198,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
                 <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
                     <li><a class="dropdown-item" href="#" onclick="showLoginCredentials('${phone}', '${name}'); return false;"><i class="fas fa-key me-2"></i>Login Credentials</a></li>
                     <li><a class="dropdown-item" href="#" onclick="showReferralCode('${position._id}', '${phone}'); return false;"><i class="fas fa-users me-2"></i>Referral Code</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${pincode}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
                     <li><a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}, '${position.designation || ''}'); return false;"><i class="fas fa-bullhorn me-2"></i>Promotion</a></li>
                 </ul>
             </div>
@@ -4232,7 +4236,7 @@ async function getCompleteLocationPath(location) {
     }
 }
 
-async function showIDCard(name, phone, photo, positionLocation) {
+async function showIDCard(name, phone, pincode, photo, positionLocation) {
     // Show loading overlay
     const loadingOverlay = document.createElement('div');
     loadingOverlay.id = 'idCardLoadingOverlay';
@@ -4579,13 +4583,16 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                         </div>
                                     </div>
 
-                                    <!-- NAME & MOBILE -->
+                                    <!-- NAME & MOBILE & PINCODE -->
                                     <div style="font-size:26px; line-height:1.25;">
                                         <div style="margin-bottom:8px;">
                                             <b>Name:</b> ${name}
                                         </div>
-                                        <div style="margin-bottom:15px;">
+                                        <div style="margin-bottom:8px;">
                                             <b>Mob:</b> ${phone}
+                                        </div>
+                                        <div style="margin-bottom:15px;">
+                                            <b>Pincode:</b> ${pincode || 'N/A'}
                                         </div>
                                     </div>
 
