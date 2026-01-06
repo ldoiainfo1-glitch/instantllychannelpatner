@@ -5135,21 +5135,31 @@ async function showReferredPeople(referrerPhone, referrerName) {
     try {
         console.log(`📊 Fetching referred people for ${referrerName} (${referrerPhone})...`);
         
+        const url = `${API_BASE_URL}/applications?introducedBy=${referrerPhone}&status=approved`;
+        console.log(`🌐 API URL:`, url);
+        
         // Fetch all applications where introducedBy matches this phone
-        const response = await fetch(`${API_BASE_URL}/applications?introducedBy=${referrerPhone}&status=approved`, {
+        const response = await fetch(url, {
             headers: {
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             }
         });
         
+        console.log(`📡 Response status:`, response.status, response.statusText);
+        
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ API Error:`, errorText);
             throw new Error('Failed to fetch referred people');
         }
         
-        const data = await response.json();
-        const applications = data.applications || [];
+        const applications = await response.json();
+        console.log(`✅ Applications response:`, applications);
+        console.log(`📝 Response type:`, typeof applications, Array.isArray(applications));
         
-        console.log(`✅ Found ${applications.length} referred people`);
+        // Ensure applications is an array
+        const applicationsArray = Array.isArray(applications) ? applications : [];
+        console.log(`✅ Found ${applicationsArray.length} referred people`);
         
         // Create modal HTML
         const modalHtml = `
@@ -5163,7 +5173,7 @@ async function showReferredPeople(referrerPhone, referrerName) {
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            ${applications.length === 0 ? `
+                            ${applicationsArray.length === 0 ? `
                                 <div class="text-center py-5">
                                     <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
                                     <p class="text-muted">No approved referrals found</p>
@@ -5181,7 +5191,7 @@ async function showReferredPeople(referrerPhone, referrerName) {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            ${applications.map((app, index) => {
+                                            ${applicationsArray.map((app, index) => {
                                                 const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
                                                 const designation = app.positionId ? app.positionId.split('_').slice(1, 2).join(' ').replace(/-/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase()) : '-';
                                                 return `
