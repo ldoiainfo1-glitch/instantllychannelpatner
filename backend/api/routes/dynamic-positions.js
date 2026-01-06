@@ -509,23 +509,24 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
       const phone = existingApplication.applicantInfo.phone;
       console.log(`\n🔍 ===== REFERRAL COUNT DEBUG for ${existingApplication.applicantInfo.name} =====`);
       console.log(`   📱 Phone: ${phone}`);
+      console.log(`   🔎 Searching for applications where introducedBy="${phone}" AND status is approved...`);
       
-      // CRITICAL FIX: Count approved applications (case-insensitive check)
-      // Database stores 'approved' but some might have 'Approved' (capital A)
+      // CRITICAL FIX: Count approved applications
+      // Database stores lowercase 'approved' but checking both cases for safety
       const referralCount = await Application.countDocuments({ 
         introducedBy: phone,
-        status: { $in: ['approved', 'Approved'] } // Handle both cases
+        status: 'approved' // Database stores lowercase
       });
       
-      // DEBUG: Also check what applications exist with this introducedBy
-      const debugApps = await Application.find({ introducedBy: phone }).select('applicantInfo.name status introducedBy').limit(5);
-      console.log(`   🔎 Found ${debugApps.length} applications with introducedBy="${phone}":`);
-      debugApps.forEach(app => {
-        console.log(`      - ${app.applicantInfo.name}, status: ${app.status}`);
+      // DEBUG: Show ALL applications with this introducedBy (any status)
+      const allDebugApps = await Application.find({ introducedBy: phone }).select('applicantInfo.name status introducedBy').lean();
+      console.log(`   📋 Total applications with introducedBy="${phone}": ${allDebugApps.length}`);
+      allDebugApps.forEach(app => {
+        console.log(`      - ${app.applicantInfo.name}, status: "${app.status}" (approved=${app.status === 'approved'})`);
       });
       
       applicantIntroducedCount = referralCount;
-      console.log(`   ✅ FINAL COUNT: ${applicantIntroducedCount} approved referrals\n`);
+      console.log(`   ✅ FINAL COUNT of APPROVED referrals: ${applicantIntroducedCount}\n`);
       
       // Also get User record for photo (if exists)
       const applicantUser = await User.findOne({ phone: phone });
