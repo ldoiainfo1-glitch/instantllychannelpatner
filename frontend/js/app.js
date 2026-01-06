@@ -5193,13 +5193,17 @@ async function showReferredPeople(referrerPhone, referrerName) {
                                         <tbody>
                                             ${applicationsArray.map((app, index) => {
                                                 const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
-                                                const designation = app.positionId ? app.positionId.split('_').slice(1, 2).join(' ').replace(/-/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase()) : '-';
+                                                // Show state/location instead of position title
+                                                const locationDisplay = app.location?.state || 
+                                                                       app.location?.district || 
+                                                                       app.location?.tehsil || 
+                                                                       (app.positionId ? app.positionId.split('_').slice(1, 2).join(' ').replace(/-/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase()) : '-');
                                                 return `
                                                     <tr>
                                                         <td><strong>${index + 1}</strong></td>
                                                         <td>${app.applicantInfo?.name || '-'}</td>
                                                         <td>${app.applicantInfo?.phone || '-'}</td>
-                                                        <td>${designation}</td>
+                                                        <td>${locationDisplay}</td>
                                                         <td>${appliedDate}</td>
                                                     </tr>
                                                 `;
