@@ -45,6 +45,16 @@ const applicationSchema = new mongoose.Schema({
       type: String,
       required: false,
       default: ''
+    },
+    pincode: {
+      type: String,
+      required: true,
+      validate: {
+        validator: function(v) {
+          return /^\d{6}$/.test(v);
+        },
+        message: 'Pincode must be exactly 6 digits'
+      }
     }
   },
   // Add location information to the application itself

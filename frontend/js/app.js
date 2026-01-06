@@ -1620,6 +1620,7 @@ async function submitApplication(event) {
     // Get form fields
     const name = document.getElementById('applicantName').value.trim();
     const phone = document.getElementById('applicantPhone').value.trim();
+    const pincode = document.getElementById('applicantPincode').value.trim();
     const photoInput = document.getElementById('applicantPhoto');
     
     // Validate name
@@ -1645,6 +1646,19 @@ async function submitApplication(event) {
     if (!/^\d{10}$/.test(phone)) {
         showNotification('Phone number must be exactly 10 digits', 'error');
         document.getElementById('applicantPhone').focus();
+        return;
+    }
+    
+    // Validate pincode
+    if (!pincode) {
+        showNotification('Please enter your pincode', 'error');
+        document.getElementById('applicantPincode').focus();
+        return;
+    }
+    
+    if (!/^\d{6}$/.test(pincode)) {
+        showNotification('Pincode must be exactly 6 digits', 'error');
+        document.getElementById('applicantPincode').focus();
         return;
     }
     
@@ -1680,6 +1694,7 @@ async function submitApplication(event) {
             positionId: window.currentPosition.id,
             name: name,
             phone: phone,
+            pincode: pincode,
             companyName: formData.get('companyName'),
             businessName: formData.get('businessName'),
             address: formData.get('address'),
@@ -2018,6 +2033,7 @@ async function submitApplicationWithScreenshot() {
         formData.append('positionId', tempApplicationData.positionId);
         formData.append('name', tempApplicationData.name);
         formData.append('phone', tempApplicationData.phone);
+        formData.append('pincode', tempApplicationData.pincode);
         formData.append('companyName', tempApplicationData.companyName || '');
         formData.append('businessName', tempApplicationData.businessName || '');
         formData.append('address', tempApplicationData.address || '');

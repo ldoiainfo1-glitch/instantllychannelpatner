@@ -497,14 +497,20 @@ router.post('/with-payment', upload.fields([
     console.log('📝 Application with payment received:', { 
       positionId, 
       name, 
-      phone, 
+      phone,
+      pincode,
       paymentAmount,
       hasPaymentScreenshot: !!(req.files && req.files.paymentScreenshot)
     });
     
     // Validate required fields
-    if (!positionId || !name || !phone || !paymentAmount) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!positionId || !name || !phone || !pincode || !paymentAmount) {
+      return res.status(400).json({ error: 'Missing required fields (name, phone, pincode, paymentAmount)' });
+    }
+    
+    // Validate pincode format
+    if (!/^\d{6}$/.test(pincode)) {
+      return res.status(400).json({ error: 'Pincode must be exactly 6 digits' });
     }
     
     // Payment screenshot is now optional
@@ -575,6 +581,7 @@ router.post('/with-payment', upload.fields([
       applicantInfo: {
         name: name.trim(),
         phone: phone.trim(),
+        pincode: pincode.trim(),
         email: email ? email.trim() : '',
         photo: photoBase64,
         address: address ? address.trim() : '',

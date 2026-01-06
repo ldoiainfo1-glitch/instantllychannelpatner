@@ -1233,6 +1233,11 @@
                                 <small class="text-muted" id="phoneHelp">10 digit phone number only</small>
                             </div>
                             <div class="col-md-6">
+                                <label for="applicantPincode" class="form-label">Pincode *</label>
+                                <input type="text" class="form-control" id="applicantPincode" name="pincode" pattern="[0-9]{6}" maxlength="6" required oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value.length === 6) { this.setCustomValidity(''); } else { this.setCustomValidity('Pincode must be exactly 6 digits'); }">
+                                <small class="text-muted">6 digit pincode</small>
+                            </div>
+                            <div class="col-md-6">
                                 <label for="companyName" class="form-label">Company Name</label>
                                 <input type="text" class="form-control" id="companyName" name="companyName" placeholder="Optional">
                             </div>
