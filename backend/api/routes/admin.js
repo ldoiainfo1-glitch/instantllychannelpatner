@@ -2993,4 +2993,183 @@ router.post('/fix-introduced-counts', async (req, res) => {
   }
 });
 
+// Migrate pincode from applications to users
+router.get('/migrate-pincodes', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Find all users without pincode
+    const users = await User.find({ pincode: { $exists: false } });
+    
+    console.log(`📍 Found ${users.length} users without pincode`);
+    
+    const updated = [];
+    const notFound = [];
+    
+    for (const user of users) {
+      // Find their application
+      const application = await Application.findOne({ 
+        'applicantInfo.phone': user.phone 
+      });
+      
+      if (application && application.applicantInfo.pincode) {
+        user.pincode = application.applicantInfo.pincode;
+        await user.save();
+        updated.push({
+          name: user.name,
+          phone: user.phone,
+          pincode: application.applicantInfo.pincode
+        });
+        console.log(`✅ Updated ${user.name} (${user.phone}) with pincode: ${application.applicantInfo.pincode}`);
+      } else {
+        notFound.push({
+          name: user.name,
+          phone: user.phone,
+          reason: application ? 'No pincode in application' : 'Application not found'
+        });
+        console.log(`⚠️ Could not find pincode for ${user.name} (${user.phone})`);
+      }
+    }
+    
+    res.json({
+      message: 'Pincode migration completed',
+      totalUsers: users.length,
+      updated: updated.length,
+      notFound: notFound.length,
+      updatedList: updated,
+      notFoundList: notFound
+    });
+  } catch (error) {
+    console.error('❌ Error migrating pincodes:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug user login issue
+router.post('/debug-user-login', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const bcrypt = require('bcryptjs');
+    const { phone, password } = req.body;
+    
+    console.log(`🔍 DEBUG: Checking login for phone: ${phone}, password: ${password}`);
+    
+    // Find user by phone
+    const user = await User.findOne({ phone: phone });
+    
+    if (!user) {
+      return res.json({
+        success: false,
+        issue: 'USER_NOT_FOUND',
+        message: `No user found with phone ${phone}`,
+        suggestion: 'User account may not have been created. Check applications table.'
+      });
+    }
+    
+    console.log(`✅ User found:`, {
+      id: user._id,
+      name: user.name,
+      phone: user.phone,
+      loginId: user.loginId,
+      hasPassword: !!user.password,
+      passwordLength: user.password ? user.password.length : 0,
+      isHashed: user.password ? user.password.startsWith('$2') : false
+    });
+    
+    // Check if password is hashed
+    const isHashed = user.password.startsWith('$2');
+    
+    let passwordMatch = false;
+    if (isHashed) {
+      // Compare with bcrypt
+      passwordMatch = await bcrypt.compare(password, user.password);
+    } else {
+      // Direct comparison
+      passwordMatch = user.password === password;
+    }
+    
+    console.log(`🔐 Password check:`, {
+      provided: password,
+      stored: user.password.substring(0, 20) + '...',
+      isHashed: isHashed,
+      match: passwordMatch
+    });
+    
+    if (!passwordMatch) {
+      // Try to regenerate correct password
+      const nameForPassword = user.name.replace(/\s+/g, '');
+      const correctPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
+      
+      return res.json({
+        success: false,
+        issue: 'PASSWORD_MISMATCH',
+        message: 'Password does not match',
+        userDetails: {
+          name: user.name,
+          phone: user.phone,
+          storedPassword: isHashed ? 'HASHED' : user.password,
+          isHashed: isHashed,
+          shouldBePassword: correctPassword
+        },
+        suggestion: `Expected password should be: ${correctPassword}. Use /admin/fix-user-password endpoint to reset.`
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'User and password are correct',
+      userDetails: {
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        pincode: user.pincode,
+        credits: user.credits
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error debugging user:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fix user password
+router.post('/fix-user-password', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const { phone } = req.body;
+    
+    const user = await User.findOne({ phone: phone });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Generate correct password
+    const nameForPassword = user.name.replace(/\s+/g, '');
+    const correctPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
+    
+    // Store as plain text (not hashed)
+    user.password = correctPassword;
+    await user.save();
+    
+    console.log(`✅ Password reset for ${user.name} (${user.phone}) to: ${correctPassword}`);
+    
+    res.json({
+      success: true,
+      message: 'Password reset successfully',
+      userDetails: {
+        name: user.name,
+        phone: user.phone,
+        newPassword: correctPassword
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fixing password:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
+
