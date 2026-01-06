@@ -2995,17 +2995,38 @@
                                                 <tbody>
                                                     ${applicationsArray.map((app, index) => {
                                                         const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
-                                                        // Show state/location instead of position title
-                                                        const locationDisplay = app.location?.state || 
-                                                                               app.location?.district || 
-                                                                               app.location?.tehsil || 
-                                                                               (app.positionId ? app.positionId.split('_').slice(1, 2).join(' ').replace(/-/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase()) : '-');
+                                                        
+                                                        // Extract position level and location from positionId
+                                                        let positionDisplay = '-';
+                                                        if (app.positionId) {
+                                                            const parts = app.positionId.split('_');
+                                                            if (parts.length >= 2) {
+                                                                const level = parts[1]; // e.g., 'state-head', 'division-head', 'district-head'
+                                                                let levelName = '';
+                                                                
+                                                                if (level.includes('state')) levelName = 'State';
+                                                                else if (level.includes('division')) levelName = 'Division';
+                                                                else if (level.includes('district')) levelName = 'District';
+                                                                else if (level.includes('zone')) levelName = 'Zone';
+                                                                else if (level.includes('tehsil')) levelName = 'Tehsil';
+                                                                else if (level.includes('village')) levelName = 'Village';
+                                                                
+                                                                const location = app.location?.state || app.location?.division || app.location?.district || app.location?.tehsil || app.location?.village || '-';
+                                                                
+                                                                if (levelName && location !== '-') {
+                                                                    positionDisplay = `${levelName}(${location})`;
+                                                                } else {
+                                                                    positionDisplay = location;
+                                                                }
+                                                            }
+                                                        }
+                                                        
                                                         return `
                                                             <tr>
                                                                 <td><strong>${index + 1}</strong></td>
                                                                 <td>${app.applicantInfo?.name || '-'}</td>
                                                                 <td>${app.applicantInfo?.phone || '-'}</td>
-                                                                <td>${locationDisplay}</td>
+                                                                <td>${positionDisplay}</td>
                                                                 <td>${appliedDate}</td>
                                                             </tr>
                                                         `;
