@@ -4255,6 +4255,23 @@ async function showIDCard(name, phone, pincode, photo, positionLocation) {
     document.body.appendChild(loadingOverlay);
 
     try {
+        // If pincode is not provided, try to fetch from user profile
+        if (!pincode || pincode === '' || pincode === 'N/A') {
+            try {
+                console.log('📍 Fetching pincode from user profile for phone:', phone);
+                const userResponse = await fetch(`${API_BASE_URL}/positions/user-by-phone/${phone}`);
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    if (userData.user && userData.user.pincode) {
+                        pincode = userData.user.pincode;
+                        console.log('✅ Found pincode from user profile:', pincode);
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch pincode from user profile:', error);
+            }
+        }
+        
         // Get complete location hierarchy path
         const completeLocation = await getCompleteLocationPath(positionLocation);
         console.log('📍 Complete location for ID card:', completeLocation);
