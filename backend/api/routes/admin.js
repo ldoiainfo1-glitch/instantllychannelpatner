@@ -3176,9 +3176,9 @@ router.post('/create-missing-users', async (req, res) => {
   try {
     const User = require('../models/User');
     
-    // Find all approved applications
+    // Find all approved applications (status is lowercase)
     const approvedApps = await Application.find({ 
-      status: 'Approved'
+      status: 'approved'
     });
     
     console.log(`🔍 Found ${approvedApps.length} approved applications`);
