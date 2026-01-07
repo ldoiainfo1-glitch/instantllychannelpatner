@@ -48,10 +48,10 @@ const applicationSchema = new mongoose.Schema({
     },
     pincode: {
       type: String,
-      required: true,
+      required: false, // Made optional for backward compatibility with old applications
       validate: {
         validator: function(v) {
-          return /^\d{6}$/.test(v);
+          return !v || /^\d{6}$/.test(v); // Allow empty or 6 digits
         },
         message: 'Pincode must be exactly 6 digits'
       }
