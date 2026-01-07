@@ -544,11 +544,12 @@ router.get('/aggregated-stats', async (req, res) => {
     if (tehsil) locationFilter['location.tehsil'] = tehsil;
     if (pincode) locationFilter['location.pincode'] = pincode;
     
-    // Get all approved applications within the filtered location
+    // OPTIMIZED: Get all approved applications within the filtered location
+    // Only select minimal fields needed to reduce memory usage
     const approvedApplications = await Application.find({ 
       status: 'approved',
       ...locationFilter
-    }).select('positionId location').lean();
+    }).select('positionId').lean().maxTimeMS(10000); // 10 second timeout
     
     console.log(`✅ Found ${approvedApplications.length} approved applications in filtered location`);
     
@@ -566,25 +567,41 @@ router.get('/aggregated-stats', async (req, res) => {
       given: selectedLevelGiven > 0 ? 1 : 0
     });
     
+    // OPTIMIZED: Build base filter once for Location queries
+    const baseLocationFilter = { country: country || 'India' };
+    if (zone) baseLocationFilter.zone = zone;
+    if (state) baseLocationFilter.state = state;
+    if (division) baseLocationFilter.division = division;
+    if (district) baseLocationFilter.district = district;
+    if (tehsil) baseLocationFilter.tehsil = tehsil;
+    if (pincode) baseLocationFilter.pincode = pincode;
+    
+    // OPTIMIZED: Batch all Location.distinct queries in parallel
+    const distinctPromises = [];
+    for (let i = selectedLevelIndex + 1; i < hierarchy.length; i++) {
+      const childLevel = hierarchy[i];
+      const childFilter = { 
+        ...baseLocationFilter, 
+        [childLevel.level]: { $ne: null, $ne: '' } 
+      };
+      distinctPromises.push(
+        Location.distinct(childLevel.level, childFilter)
+          .maxTimeMS(5000) // 5 second timeout per query
+          .catch(err => {
+            console.error(`⚠️ Failed to get distinct ${childLevel.display}:`, err.message);
+            return []; // Return empty array on error
+          })
+      );
+    }
+    
+    // Execute all Location queries in parallel
+    const distinctResults = await Promise.all(distinctPromises);
+    
     // Aggregate counts for all child levels
     for (let i = selectedLevelIndex + 1; i < hierarchy.length; i++) {
       const childLevel = hierarchy[i];
-      
-      // Get distinct locations at this level from Location model
-      const childFilter = { country: country || 'India' };
-      if (zone) childFilter.zone = zone;
-      if (state) childFilter.state = state;
-      if (division) childFilter.division = division;
-      if (district) childFilter.district = district;
-      if (tehsil) childFilter.tehsil = tehsil;
-      if (pincode) childFilter.pincode = pincode;
-      
-      // Add filter for non-null/non-empty child field
-      childFilter[childLevel.level] = { $ne: null, $ne: '' };
-      
-      // Count distinct child locations
-      const distinctChildren = await Location.distinct(childLevel.level, childFilter);
-      const totalCount = distinctChildren.length;
+      const resultIndex = i - selectedLevelIndex - 1;
+      const totalCount = distinctResults[resultIndex].length;
       
       // Count approved applications at this level by checking positionId
       const givenCount = approvedApplications.filter(app => 
