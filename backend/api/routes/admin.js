@@ -2035,14 +2035,23 @@ router.put('/applications/:id/transfer', async (req, res) => {
 
     console.log(`🔄 Transferring application ${id} to position:`, newPositionId);
 
+    // Validate inputs
+    if (!newPositionId) {
+      console.error('❌ newPositionId is missing');
+      return res.status(400).json({ message: "newPositionId is required" });
+    }
+
     // Find the application
     const application = await Application.findById(id);
     
     if (!application) {
+      console.error(`❌ Application not found: ${id}`);
       return res.status(404).json({ message: "Application not found" });
     }
 
     const oldPositionId = application.positionId;
+    console.log(`📍 Old position: ${oldPositionId}`);
+    console.log(`📍 New position: ${newPositionId}`);
 
     // Check if new position already has an applicant
     const existingApplication = await Application.findOne({
@@ -2052,6 +2061,7 @@ router.put('/applications/:id/transfer', async (req, res) => {
     });
 
     if (existingApplication) {
+      console.error(`❌ Position already occupied by: ${existingApplication.applicantInfo.name}`);
       return res.status(400).json({ 
         message: "This position is already occupied",
         occupiedBy: existingApplication.applicantInfo.name
@@ -2061,6 +2071,7 @@ router.put('/applications/:id/transfer', async (req, res) => {
     // Update application's position
     application.positionId = newPositionId;
     await application.save();
+    console.log(`✅ Application position updated`);
 
     // If application is approved, also update the User record
     if (application.status === 'approved' && application.userId) {
@@ -2071,6 +2082,8 @@ router.put('/applications/:id/transfer', async (req, res) => {
         user.positionId = newPositionId;
         await user.save();
         console.log(`✅ Updated user position: ${user.name} -> ${newPositionId}`);
+      } else {
+        console.warn(`⚠️ User not found for ID: ${application.userId}`);
       }
     }
 
@@ -2085,7 +2098,16 @@ router.put('/applications/:id/transfer', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Transfer position error:', error);
-    res.status(500).json({ message: "Server error" });
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ 
+      message: "Server error", 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
