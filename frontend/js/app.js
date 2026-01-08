@@ -1296,6 +1296,14 @@ function calculateDays(appliedDate) {
 async function handleSearch() {
     const searchName = document.getElementById('searchName').value.toLowerCase().trim();
     const searchPhone = document.getElementById('searchPhone').value.trim();
+    
+    // If both search fields are empty, just reload all applications
+    if (!searchName && !searchPhone) {
+        console.log('🔍 Search cleared - reloading all applications');
+        await loadApplications();
+        return;
+    }
+    
     const country = document.getElementById('filterCountry').value || 'India';
     const zone = document.getElementById('filterZone').value;
     const state = document.getElementById('filterState').value;
@@ -1362,16 +1370,29 @@ async function handleSearch() {
         if (searchName || searchPhone) {
             console.log('🔎 Applying client-side search filters...');
             console.log(`   Search term: "${searchName}" (name) or "${searchPhone}" (phone)`);
+            console.log(`   Total positions to search: ${currentPositions.length}`);
             
             filteredPositions = currentPositions.filter(position => {
-                // Name search - check applicant name OR location names (zone, state, division, district, etc.)
+                // Name search - check applicant name, designation, AND location names
                 if (searchName) {
                     let nameMatches = false;
                     
-                    // Check applicant name
+                    // Check applicant name (primary match)
                     if (position.applicantDetails && position.applicantDetails.name) {
                         const positionName = (position.applicantDetails.name || '').toLowerCase();
                         nameMatches = positionName.includes(searchName);
+                        if (nameMatches) {
+                            console.log(`   ✅ Found match in name: ${position.applicantDetails.name}`);
+                        }
+                    }
+                    
+                    // Check designation
+                    if (!nameMatches && position.designation) {
+                        const designation = (position.designation || '').toLowerCase();
+                        nameMatches = designation.includes(searchName);
+                        if (nameMatches) {
+                            console.log(`   ✅ Found match in designation: ${position.designation}`);
+                        }
                     }
                     
                     // Check location fields if applicant name doesn't match
@@ -1387,6 +1408,9 @@ async function handleSearch() {
                         ].filter(Boolean).map(val => (val || '').toLowerCase());
                         
                         nameMatches = locationFields.some(field => field.includes(searchName));
+                        if (nameMatches) {
+                            console.log(`   ✅ Found match in location fields`);
+                        }
                     }
                     
                     if (!nameMatches) {
@@ -1415,9 +1439,14 @@ async function handleSearch() {
 
         displayPositions(filteredPositions);
 
-        // Show search results count
+        // Show search results count with details
         if (searchName || searchPhone) {
-            showNotification(`Found ${filteredPositions.length} matching position(s)`, 'info');
+            const searchTerm = searchName || searchPhone;
+            if (filteredPositions.length === 0) {
+                showNotification(`No results found for "${searchTerm}" - Try a different search term`, 'warning');
+            } else {
+                showNotification(`Found ${filteredPositions.length} position(s) matching "${searchTerm}"`, 'success');
+            }
         } else {
             showNotification(`Loaded ${filteredPositions.length} position(s)`, 'info');
         }
