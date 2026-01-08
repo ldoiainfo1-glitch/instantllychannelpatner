@@ -544,22 +544,21 @@ router.get('/aggregated-stats', async (req, res) => {
     if (tehsil) locationFilter['location.tehsil'] = tehsil;
     if (pincode) locationFilter['location.pincode'] = pincode;
     
-    // OPTIMIZED: Get all approved applications within the filtered location
-    // Only select minimal fields needed to reduce memory usage
-    const approvedApplications = await Application.find({ 
-      status: 'approved',
-      ...locationFilter
-    }).select('positionId').lean().maxTimeMS(10000); // 10 second timeout
-    
-    console.log(`✅ Found ${approvedApplications.length} approved applications in filtered location`);
+    // MEMORY-OPTIMIZED: Use aggregation instead of loading all documents
+    // Group by positionId prefix to count each position type
+    console.log(`🔍 Counting approved applications by position type...`);
     
     const stats = [];
     
     // Add the selected level itself (always 1 position total)
     const selectedPosIdKey = hierarchy[selectedLevelIndex].posIdKey;
-    const selectedLevelGiven = approvedApplications.filter(app => 
-      app.positionId && app.positionId.includes(selectedPosIdKey)
-    ).length;
+    const selectedLevelGiven = await Application.countDocuments({ 
+      status: 'approved',
+      ...locationFilter,
+      positionId: { $regex: selectedPosIdKey, $options: 'i' }
+    }).maxTimeMS(5000);
+    
+    console.log(`✅ ${selectedLevelName} position: ${selectedLevelGiven > 0 ? 1 : 0}/1 given`);
     
     stats.push({
       level: `${selectedLevelName} (${selectedLevelValue})`,
@@ -576,37 +575,41 @@ router.get('/aggregated-stats', async (req, res) => {
     if (tehsil) baseLocationFilter.tehsil = tehsil;
     if (pincode) baseLocationFilter.pincode = pincode;
     
-    // OPTIMIZED: Batch all Location.distinct queries in parallel
-    const distinctPromises = [];
+    // MEMORY-OPTIMIZED: Use countDocuments with queries instead of loading all data
+    const countPromises = [];
     for (let i = selectedLevelIndex + 1; i < hierarchy.length; i++) {
       const childLevel = hierarchy[i];
       const childFilter = { 
         ...baseLocationFilter, 
         [childLevel.level]: { $ne: null, $ne: '' } 
       };
-      distinctPromises.push(
-        Location.distinct(childLevel.level, childFilter)
-          .maxTimeMS(5000) // 5 second timeout per query
-          .catch(err => {
-            console.error(`⚠️ Failed to get distinct ${childLevel.display}:`, err.message);
-            return []; // Return empty array on error
-          })
+      
+      // Get distinct count + count approved in parallel
+      countPromises.push(
+        Promise.all([
+          Location.distinct(childLevel.level, childFilter).maxTimeMS(5000),
+          Application.countDocuments({
+            status: 'approved',
+            ...locationFilter,
+            positionId: { $regex: childLevel.posIdKey, $options: 'i' }
+          }).maxTimeMS(5000)
+        ]).catch(err => {
+          console.error(`⚠️ Failed to count ${childLevel.display}:`, err.message);
+          return [[], 0]; // Return empty array and 0 count on error
+        })
       );
     }
     
-    // Execute all Location queries in parallel
-    const distinctResults = await Promise.all(distinctPromises);
+    // Execute all queries in parallel
+    const countResults = await Promise.all(countPromises);
     
-    // Aggregate counts for all child levels
+    // Build stats for all child levels
+    // Build stats for all child levels
     for (let i = selectedLevelIndex + 1; i < hierarchy.length; i++) {
       const childLevel = hierarchy[i];
       const resultIndex = i - selectedLevelIndex - 1;
-      const totalCount = distinctResults[resultIndex].length;
-      
-      // Count approved applications at this level by checking positionId
-      const givenCount = approvedApplications.filter(app => 
-        app.positionId && app.positionId.includes(childLevel.posIdKey)
-      ).length;
+      const [distinctValues, givenCount] = countResults[resultIndex];
+      const totalCount = distinctValues.length;
       
       console.log(`   ${childLevel.display}: ${givenCount}/${totalCount} given`);
       
