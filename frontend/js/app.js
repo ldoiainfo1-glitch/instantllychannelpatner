@@ -604,12 +604,32 @@ async function loadApplications() {
         const positions = data.positions || data || [];
 
         // Store positions directly - they are already formatted with application data
-        currentPositions = positions.map((pos, index) => ({
-            ...pos,
-            sNo: index + 1 // Ensure sequential numbering
-        }));
+        currentPositions = positions;
+        console.log('📥 FRONTEND: Received', currentPositions.length, 'positions');
+        
+        // Log positions with applicants
+        const withApplicants = currentPositions.filter(p => p.applicantDetails);
+        console.log('👥 FRONTEND: Positions with applicants:', withApplicants.length);
+        if (withApplicants.length > 0) {
+            withApplicants.slice(0, 5).forEach(p => {
+                console.log(`   - ${p.applicantDetails?.name || 'N/A'} (${p.applicantDetails?.phone || 'N/A'})`);
+            });
+        }
 
+        // Server already filtered, just display results
         displayPositions(currentPositions);
+
+        // Show search results count with details
+        if (searchName || searchPhone) {
+            const searchTerm = searchName || searchPhone;
+            if (currentPositions.length === 0) {
+                showNotification(`No results found for "${searchTerm}"`, 'warning');
+            } else {
+                showNotification(`Found ${currentPositions.length} position(s) matching "${searchTerm}"`, 'success');
+            }
+        } else {
+            showNotification(`Loaded ${currentPositions.length} position(s)`, 'info');
+        }
 
         // Update selected filters display
         updateSelectedFiltersBadges();
@@ -1325,8 +1345,14 @@ async function handleSearch() {
     try {
         showLoading(true);
 
-        // Build query params for dynamic-positions endpoint (same as loadApplications)
+        // Build query params for dynamic-positions endpoint
         const params = new URLSearchParams({ country });
+        
+        // Add search parameters to backend query
+        if (searchName) params.append('searchName', searchName);
+        if (searchPhone) params.append('searchPhone', searchPhone);
+        
+        // Only add location filters if provided
         if (zone) params.append('zone', zone);
         if (state) params.append('state', state);
         if (division) params.append('division', division);
@@ -1338,6 +1364,9 @@ async function handleSearch() {
 
         const url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
         console.log('🌐 FRONTEND: Fetching positions from:', url);
+        if (searchName || searchPhone) {
+            console.log('🔍 BACKEND SEARCH: Searching for:', { searchName, searchPhone });
+        }
         const response = await fetch(url, {
             cache: 'no-store',
             headers: {
@@ -1365,90 +1394,19 @@ async function handleSearch() {
             });
         }
 
-        // Client-side filter for name and phone
-        let filteredPositions = currentPositions;
-        if (searchName || searchPhone) {
-            console.log('🔎 Applying client-side search filters...');
-            console.log(`   Search term: "${searchName}" (name) or "${searchPhone}" (phone)`);
-            console.log(`   Total positions to search: ${currentPositions.length}`);
-            
-            filteredPositions = currentPositions.filter(position => {
-                // Name search - check applicant name, designation, AND location names
-                if (searchName) {
-                    let nameMatches = false;
-                    
-                    // Check applicant name (primary match)
-                    if (position.applicantDetails && position.applicantDetails.name) {
-                        const positionName = (position.applicantDetails.name || '').toLowerCase();
-                        nameMatches = positionName.includes(searchName);
-                        if (nameMatches) {
-                            console.log(`   ✅ Found match in name: ${position.applicantDetails.name}`);
-                        }
-                    }
-                    
-                    // Check designation
-                    if (!nameMatches && position.designation) {
-                        const designation = (position.designation || '').toLowerCase();
-                        nameMatches = designation.includes(searchName);
-                        if (nameMatches) {
-                            console.log(`   ✅ Found match in designation: ${position.designation}`);
-                        }
-                    }
-                    
-                    // Check location fields if applicant name doesn't match
-                    if (!nameMatches) {
-                        const locationFields = [
-                            position.zone,
-                            position.state,
-                            position.division,
-                            position.district,
-                            position.tehsil,
-                            position.pincode,
-                            position.village
-                        ].filter(Boolean).map(val => (val || '').toLowerCase());
-                        
-                        nameMatches = locationFields.some(field => field.includes(searchName));
-                        if (nameMatches) {
-                            console.log(`   ✅ Found match in location fields`);
-                        }
-                    }
-                    
-                    if (!nameMatches) {
-                        return false;
-                    }
-                }
-
-                // Phone search - only check if position has applicant
-                if (searchPhone) {
-                    if (!position.applicantDetails) {
-                        return false; // Can't search by phone if no applicant
-                    }
-                    
-                    const positionPhone = position.applicantDetails.phone || '';
-                    const matches = positionPhone.includes(searchPhone);
-                    
-                    if (!matches) {
-                        return false;
-                    }
-                }
-
-                return true;
-            });
-            console.log(`✅ Search filtered: ${filteredPositions.length} of ${currentPositions.length} positions match`);
-        }
-
-        displayPositions(filteredPositions);
+        // Server-side search already applied, just display
+        displayPositions(currentPositions);
 
         // Show search results count with details
         if (searchName || searchPhone) {
             const searchTerm = searchName || searchPhone;
-            if (filteredPositions.length === 0) {
-                showNotification(`No results found for "${searchTerm}" - Try a different search term`, 'warning');
+            if (currentPositions.length === 0) {
+                showNotification(`No results found for "${searchTerm}"`, 'warning');
             } else {
-                showNotification(`Found ${filteredPositions.length} position(s) matching "${searchTerm}"`, 'success');
+                showNotification(`Found ${currentPositions.length} position(s) matching "${searchTerm}"`, 'success');
             }
         } else {
-            showNotification(`Loaded ${filteredPositions.length} position(s)`, 'info');
+            showNotification(`Loaded ${currentPositions.length} position(s)`, 'info');
         }
     } catch (error) {
         console.error('❌ Error searching positions:', error);

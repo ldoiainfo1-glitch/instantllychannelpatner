@@ -75,7 +75,9 @@ router.get('/', async (req, res) => {
       district, 
       tehsil, 
       pincode, 
-      village 
+      village,
+      searchName,  // NEW: Search by name
+      searchPhone  // NEW: Search by phone
     } = req.query;
     
     console.log('\n========================================');
@@ -90,7 +92,95 @@ router.get('/', async (req, res) => {
     console.log('   tehsil:', tehsil);
     console.log('   pincode:', pincode);
     console.log('   village:', village);
+    console.log('   🔍 searchName:', searchName);
+    console.log('   🔍 searchPhone:', searchPhone);
     console.log('========================================\n');
+    
+    // NEW: If search terms provided, search database first
+    if (searchName || searchPhone) {
+      console.log('🔍 SEARCH MODE ACTIVATED');
+      console.log(`   Searching for: name="${searchName}" OR phone="${searchPhone}"`);
+      
+      const searchQuery = { status: 'approved' };
+      const orConditions = [];
+      
+      if (searchName) {
+        orConditions.push({ 'applicantInfo.name': { $regex: searchName, $options: 'i' } });
+      }
+      if (searchPhone) {
+        orConditions.push({ 'applicantInfo.phone': { $regex: searchPhone, $options: 'i' } });
+      }
+      
+      if (orConditions.length > 0) {
+        searchQuery.$or = orConditions;
+      }
+      
+      console.log('🔎 Search query:', JSON.stringify(searchQuery, null, 2));
+      
+      const searchResults = await Application.find(searchQuery).lean();
+      console.log(`✅ Found ${searchResults.length} matching applications`);
+      
+      if (searchResults.length > 0) {
+        // Convert search results to positions format
+        const positions = [];
+        for (let i = 0; i < searchResults.length; i++) {
+          const app = searchResults[i];
+          const positionId = app.positionId;
+          
+          // Get user photo
+          const User = require('../models/User');
+          const user = await User.findOne({ phone: app.applicantInfo.phone });
+          const userPhoto = user?.photo || app.applicantInfo.photo;
+          
+          // Get referral count
+          const referralCount = await Application.countDocuments({ 
+            introducedBy: app.applicantInfo.phone,
+            status: 'approved'
+          });
+          
+          positions.push({
+            _id: positionId,
+            sNo: i + 1,
+            post: 'Committee',
+            designation: app.positionId.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' '),
+            location: app.location,
+            contribution: 10000,
+            credits: 60000,
+            isTemplate: true,
+            status: 'Approved',
+            applicantDetails: {
+              name: app.applicantInfo.name,
+              phone: app.applicantInfo.phone,
+              email: app.applicantInfo.email,
+              photo: userPhoto,
+              address: app.applicantInfo.address,
+              companyName: app.applicantInfo.companyName,
+              businessName: app.applicantInfo.businessName,
+              appliedDate: app.appliedDate,
+              introducedBy: app.introducedBy || 'Self',
+              introducedCount: referralCount,
+              days: Math.floor((new Date() - new Date(app.appliedDate)) / (1000 * 60 * 60 * 24)),
+              applicationId: app._id,
+              isVerified: app.isVerified || false
+            }
+          });
+        }
+        
+        console.log(`📤 Returning ${positions.length} search results`);
+        return res.status(200).json({
+          success: true,
+          positions: positions,
+          searchMode: true
+        });
+      } else {
+        console.log('📤 No search results found, returning empty array');
+        return res.status(200).json({
+          success: true,
+          positions: [],
+          searchMode: true
+        });
+      }
+    }
     
     let positions = [];
     let sNo = 1;
