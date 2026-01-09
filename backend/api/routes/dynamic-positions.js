@@ -3,6 +3,41 @@ const router = express.Router();
 const Location = require('../models/Location');
 const Application = require('../models/Application');
 
+// Helper function to extract position-level location from position ID
+// Position ID format: pos_[level]-head_country_zone_state_division_district_tehsil_pincode_village
+// This function returns ONLY the hierarchy levels appropriate for the position level
+function extractPositionLevelLocation(positionId, fullLocation) {
+  // Determine the position level from the ID
+  let positionLevel = null;
+  if (positionId.includes('village-head')) positionLevel = 'village';
+  else if (positionId.includes('pincode-head')) positionLevel = 'pincode';
+  else if (positionId.includes('tehsil-head')) positionLevel = 'tehsil';
+  else if (positionId.includes('district-head')) positionLevel = 'district';
+  else if (positionId.includes('division-head')) positionLevel = 'division';
+  else if (positionId.includes('state-head')) positionLevel = 'state';
+  else if (positionId.includes('zone-head')) positionLevel = 'zone';
+  else if (positionId.includes('president')) positionLevel = 'country';
+  
+  if (!positionLevel) {
+    console.warn('⚠️ Could not determine position level from ID:', positionId);
+    return fullLocation; // Return full location as fallback
+  }
+  
+  // Build location object with ONLY the levels up to the position level
+  const location = {};
+  const hierarchy = ['country', 'zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
+  const positionLevelIndex = hierarchy.indexOf(positionLevel);
+  
+  for (let i = 0; i <= positionLevelIndex; i++) {
+    const level = hierarchy[i];
+    if (fullLocation[level]) {
+      location[level] = fullLocation[level];
+    }
+  }
+  
+  return location;
+}
+
 // NEW: Get position statistics - counts approved applications at each level
 router.get('/statistics', async (req, res) => {
   try {
@@ -127,6 +162,14 @@ router.get('/', async (req, res) => {
           const app = searchResults[i];
           const positionId = app.positionId;
           
+          // Extract position level location from position ID
+          // Position ID format: pos_[level]-head_country_zone_state_division_district_tehsil_pincode_village
+          // We need to extract ONLY the hierarchy levels that match the position level
+          const positionLocation = extractPositionLevelLocation(positionId, app.location);
+          console.log(`   📍 Position ${positionId}`);
+          console.log(`      Original location:`, app.location);
+          console.log(`      Position-level location:`, positionLocation);
+          
           // Get user photo
           const User = require('../models/User');
           const user = await User.findOne({ phone: app.applicantInfo.phone });
@@ -143,7 +186,7 @@ router.get('/', async (req, res) => {
             sNo: i + 1,
             post: 'Committee',
             designation: app.positionId.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' '),
-            location: app.location,
+            location: positionLocation, // Use position-level location instead of full application location
             contribution: 10000,
             credits: 60000,
             isTemplate: true,
@@ -161,7 +204,8 @@ router.get('/', async (req, res) => {
               introducedCount: referralCount,
               days: Math.floor((new Date() - new Date(app.appliedDate)) / (1000 * 60 * 60 * 24)),
               applicationId: app._id,
-              isVerified: app.isVerified || false
+              isVerified: app.isVerified || false,
+              pincode: user?.pincode || app.applicantInfo.pincode || '' // Keep personal pincode separate
             }
           });
         }
