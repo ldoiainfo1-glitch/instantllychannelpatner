@@ -178,15 +178,15 @@ async function loadLocationData() {
         if (response.ok) {
             const data = await response.json();
 
-            // Store all options
+            // Store all options - filter out null/undefined/empty values
             locationData = {
-                zones: data.zones || [],
-                states: data.states || [],
-                divisions: data.divisions || [],
-                districts: data.districts || [],
-                tehsils: data.tehsils || [],
-                pincodes: data.pincodes || [],
-                villages: data.villages || []
+                zones: (data.zones || []).filter(item => item && item.trim()),
+                states: (data.states || []).filter(item => item && item.trim()),
+                divisions: (data.divisions || []).filter(item => item && item.trim()),
+                districts: (data.districts || []).filter(item => item && item.trim()),
+                tehsils: (data.tehsils || []).filter(item => item && item.trim()),
+                pincodes: (data.pincodes || []).filter(item => item && item.trim()),
+                villages: (data.villages || []).filter(item => item && item.trim())
             };
         } else {
             // Fallback to individual endpoints if /all doesn't exist
@@ -213,13 +213,13 @@ async function loadLocationData() {
             ]);
 
             locationData = {
-                zones: zones || [],
-                states: states || [],
-                divisions: divisions || [],
-                districts: districts || [],
-                tehsils: tehsils || [],
-                pincodes: pincodes || [],
-                villages: villages || []
+                zones: (zones || []).filter(item => item && item.trim()),
+                states: (states || []).filter(item => item && item.trim()),
+                divisions: (divisions || []).filter(item => item && item.trim()),
+                districts: (districts || []).filter(item => item && item.trim()),
+                tehsils: (tehsils || []).filter(item => item && item.trim()),
+                pincodes: (pincodes || []).filter(item => item && item.trim()),
+                villages: (villages || []).filter(item => item && item.trim())
             };
         }
 
@@ -3052,7 +3052,7 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
         const searchTerm = e.target.value.toLowerCase();
         if (searchTerm) {
             const filteredData = data.filter(item =>
-                item.toLowerCase().includes(searchTerm)
+                item && item.toLowerCase().includes(searchTerm)
             );
             displayFilterOptions(optionsContainer, filteredData, data, inputId, dropdownId);
         } else {
@@ -3075,9 +3075,9 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
         return;
     }
 
-    // Limit to 100 items for performance
-    const limitedData = displayData.slice(0, 100);
-    const hasMore = displayData.length > 100;
+    // Limit to 500 items for better search experience (increased from 100)
+    const limitedData = displayData.slice(0, 500);
+    const hasMore = displayData.length > 500;
 
     container.innerHTML = limitedData.map(item =>
         `<div class="filter-dropdown-item" data-value="${item}">${item}</div>`
