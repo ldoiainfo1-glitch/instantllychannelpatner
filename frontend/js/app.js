@@ -737,9 +737,64 @@ function createPositionRow(position) {
         nameCell = '-';
     }
 
-    // Determine Area Head For - show most specific location area name (district, tehsil, etc.)
+    // Determine Area Head For - extract from designation or position ID
     let areaHeadFor = '-';
-    if (position.location) {
+    
+    // Method 1: Extract from position ID (most reliable)
+    // Position ID format: pos_[level]-head_country_zone_state_division_district_tehsil_pincode_village
+    // Examples:
+    // - pos_district-head_india_east-zone_bihar_begusarai_begusarai -> District: Begusarai
+    // - pos_tehsil-head_india_east-zone_bihar_begusarai_sahebpur-kamal -> Tehsil: Sahebpur Kamal
+    // - pos_pincode-head_india_east-zone_bihar_begusarai_begusarai_851129 -> Pincode: 851129
+    if (position._id && typeof position._id === 'string' && position._id.startsWith('pos_')) {
+        const idParts = position._id.split('_');
+        if (idParts.length > 1) {
+            const levelPart = idParts[1]; // e.g., "district-head", "tehsil-head", "pincode-head"
+            
+            if (levelPart.includes('village-head') && position.location.village) {
+                areaHeadFor = position.location.village;
+            } else if (levelPart.includes('pincode-head') && position.location.pincode) {
+                areaHeadFor = position.location.pincode;
+            } else if (levelPart.includes('tehsil-head') && position.location.tehsil) {
+                areaHeadFor = position.location.tehsil;
+            } else if (levelPart.includes('district-head') && position.location.district) {
+                areaHeadFor = position.location.district;
+            } else if (levelPart.includes('division-head') && position.location.division) {
+                areaHeadFor = position.location.division;
+            } else if (levelPart.includes('state-head') && position.location.state) {
+                areaHeadFor = position.location.state;
+            } else if (levelPart.includes('zone-head') && position.location.zone) {
+                areaHeadFor = position.location.zone;
+            } else if (levelPart.includes('country-head') || levelPart.includes('president')) {
+                areaHeadFor = position.location.country || 'India';
+            }
+        }
+    }
+    
+    // Method 2: Fallback to designation text parsing if Method 1 didn't work
+    if (areaHeadFor === '-' && position.designation) {
+        const designation = position.designation.toLowerCase();
+        if (designation.includes('village')) {
+            areaHeadFor = position.location.village || '-';
+        } else if (designation.includes('pincode')) {
+            areaHeadFor = position.location.pincode || '-';
+        } else if (designation.includes('tehsil')) {
+            areaHeadFor = position.location.tehsil || '-';
+        } else if (designation.includes('district')) {
+            areaHeadFor = position.location.district || '-';
+        } else if (designation.includes('division')) {
+            areaHeadFor = position.location.division || '-';
+        } else if (designation.includes('state')) {
+            areaHeadFor = position.location.state || '-';
+        } else if (designation.includes('zone')) {
+            areaHeadFor = position.location.zone || '-';
+        } else if (designation.includes('president') || designation.includes('country')) {
+            areaHeadFor = position.location.country || 'India';
+        }
+    }
+    
+    // Method 3: Final fallback - use old logic only if still not determined
+    if (areaHeadFor === '-' && position.location) {
         // Show only the most specific location (lowest level in hierarchy)
         if (position.location.village) {
             areaHeadFor = position.location.village;
