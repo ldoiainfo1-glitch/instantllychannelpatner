@@ -189,8 +189,11 @@ router.get('/reverse-lookup/:value', async (req, res) => {
   try {
     const { value } = req.params;
     
-    // Try to find location by any field
-    const location = await Location.findOne({
+    // Get optional context parameters for more precise matching
+    const { zone, state, division, district, tehsil, pincode } = req.query;
+    
+    // Build query with hierarchical matching for better precision
+    let query = {
       $or: [
         { zone: value },
         { state: value },
@@ -200,7 +203,17 @@ router.get('/reverse-lookup/:value', async (req, res) => {
         { pincode: value },
         { village: value }
       ]
-    });
+    };
+    
+    // Add hierarchical filters if provided to narrow down the match
+    if (zone) query.zone = zone;
+    if (state) query.state = state;
+    if (division) query.division = division;
+    if (district) query.district = district;
+    if (tehsil) query.tehsil = tehsil;
+    if (pincode) query.pincode = pincode;
+    
+    const location = await Location.findOne(query);
     
     if (location) {
       res.json({

@@ -380,8 +380,25 @@ async function autoUpdateParentFilters(selectedValue, level) {
     }
 
     try {
-        // Get location details from reverse lookup API
-        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(selectedValue)}`);
+        // Build query parameters with current filter context for more precise matching
+        const queryParams = new URLSearchParams();
+        const zone = document.getElementById('filterZone')?.value;
+        const state = document.getElementById('filterState')?.value;
+        const division = document.getElementById('filterDivision')?.value;
+        const district = document.getElementById('filterDistrict')?.value;
+        const tehsil = document.getElementById('filterTehsil')?.value;
+        const pincode = document.getElementById('filterPincode')?.value;
+        
+        if (zone) queryParams.append('zone', zone);
+        if (state) queryParams.append('state', state);
+        if (division) queryParams.append('division', division);
+        if (district) queryParams.append('district', district);
+        if (tehsil) queryParams.append('tehsil', tehsil);
+        if (pincode) queryParams.append('pincode', pincode);
+        
+        // Get location details from reverse lookup API with context
+        const url = `${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(selectedValue)}?${queryParams.toString()}`;
+        const response = await fetch(url);
         if (!response.ok) {
             console.log('No reverse mapping found for:', selectedValue);
             await loadApplications(); // Still reload with current selection
@@ -3179,8 +3196,25 @@ async function performReverseMapping(inputId, value) {
     try {
         console.log('🔍 Reverse mapping triggered for:', { inputId, value });
 
-        // Call reverse-lookup API to get full location hierarchy
-        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(value)}`);
+        // Build query parameters with current filter context for more precise matching
+        const queryParams = new URLSearchParams();
+        const zone = document.getElementById('filterZone')?.value;
+        const state = document.getElementById('filterState')?.value;
+        const division = document.getElementById('filterDivision')?.value;
+        const district = document.getElementById('filterDistrict')?.value;
+        const tehsil = document.getElementById('filterTehsil')?.value;
+        const pincode = document.getElementById('filterPincode')?.value;
+        
+        if (zone) queryParams.append('zone', zone);
+        if (state) queryParams.append('state', state);
+        if (division) queryParams.append('division', division);
+        if (district) queryParams.append('district', district);
+        if (tehsil) queryParams.append('tehsil', tehsil);
+        if (pincode) queryParams.append('pincode', pincode);
+
+        // Call reverse-lookup API to get full location hierarchy with context
+        const url = `${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(value)}?${queryParams.toString()}`;
+        const response = await fetch(url);
 
         console.log('📡 API Response status:', response.status);
 
@@ -4236,8 +4270,19 @@ async function getCompleteLocationPath(location) {
             return location; // Return as-is if nothing is set
         }
         
-        // Call backend API to get reverse lookup
-        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lookupValue)}`);
+        // Build query parameters with location context for precise matching
+        const queryParams = new URLSearchParams();
+        if (location.zone) queryParams.append('zone', location.zone);
+        if (location.state) queryParams.append('state', location.state);
+        if (location.division) queryParams.append('division', location.division);
+        if (location.district) queryParams.append('district', location.district);
+        if (location.tehsil) queryParams.append('tehsil', location.tehsil);
+        if (location.pincode) queryParams.append('pincode', location.pincode);
+        
+        // Call backend API to get reverse lookup with hierarchical context
+        const url = `${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lookupValue)}?${queryParams.toString()}`;
+        console.log('🌐 Fetching location hierarchy:', url);
+        const response = await fetch(url);
         
         if (!response.ok) {
             console.warn('⚠️ Could not fetch location hierarchy, using provided data');
