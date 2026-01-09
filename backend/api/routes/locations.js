@@ -288,20 +288,23 @@ router.post('/manage', async (req, res) => {
   try {
     const { country, zone, state, division, district, tehsil, pincode, village } = req.body;
     
-    console.log('[LOCATION-CREATE] Creating new location:', { zone, state, division, district, tehsil, pincode, village });
+    console.log('[LOCATION-CREATE] Creating new location:', { country, zone, state, division, district, tehsil, pincode, village });
     
-    // Validate required fields (tehsil, pincode, village are optional)
-    if (!zone || !state || !division || !district) {
+    // All fields are now optional - just need at least one field to create a location
+    if (!country && !zone && !state && !division && !district && !tehsil && !pincode && !village) {
       return res.status(400).json({ 
         success: false, 
-        error: 'Zone, state, division, and district are required' 
+        error: 'At least one location field is required' 
       });
     }
     
     // Build query object for duplicate check (only include fields that are provided)
-    const existingQuery = {
-      zone, state, division, district
-    };
+    const existingQuery = {};
+    if (country) existingQuery.country = country;
+    if (zone) existingQuery.zone = zone;
+    if (state) existingQuery.state = state;
+    if (division) existingQuery.division = division;
+    if (district) existingQuery.district = district;
     if (tehsil) existingQuery.tehsil = tehsil;
     if (pincode) existingQuery.pincode = pincode;
     if (village) existingQuery.village = village;
@@ -317,14 +320,13 @@ router.post('/manage', async (req, res) => {
     }
     
     // Create new location (only include fields that are provided)
-    const locationData = {
-      country: country || 'India',
-      zone: zone.trim(),
-      state: state.trim(),
-      division: division.trim(),
-      district: district.trim()
-    };
+    const locationData = {};
     
+    if (country) locationData.country = country.trim();
+    if (zone) locationData.zone = zone.trim();
+    if (state) locationData.state = state.trim();
+    if (division) locationData.division = division.trim();
+    if (district) locationData.district = district.trim();
     if (tehsil) locationData.tehsil = tehsil.trim();
     if (pincode) locationData.pincode = pincode.trim();
     if (village) locationData.village = village.trim();
