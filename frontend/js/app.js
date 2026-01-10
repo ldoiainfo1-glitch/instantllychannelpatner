@@ -2097,10 +2097,20 @@ async function submitApplicationWithScreenshot() {
         
         // Prepare application data with payment screenshot
         const formData = new FormData();
+        
+        // Clean and validate pincode before sending
+        const cleanPincode = tempApplicationData.pincode.toString().trim();
+        console.log('🔍 Pincode validation before submit:', {
+            original: tempApplicationData.pincode,
+            cleaned: cleanPincode,
+            length: cleanPincode.length,
+            isValid: /^\d{6}$/.test(cleanPincode)
+        });
+        
         formData.append('positionId', tempApplicationData.positionId);
         formData.append('name', tempApplicationData.name);
         formData.append('phone', tempApplicationData.phone);
-        formData.append('pincode', tempApplicationData.pincode);
+        formData.append('pincode', cleanPincode);
         formData.append('companyName', tempApplicationData.companyName || '');
         formData.append('businessName', tempApplicationData.businessName || '');
         formData.append('address', tempApplicationData.address || '');
@@ -2110,7 +2120,7 @@ async function submitApplicationWithScreenshot() {
             formData.append('photo', tempApplicationData.photo);
         }
         
-        // Add location data
+        // Add location data (but NOT pincode again - it's already added above)
         const location = tempApplicationData.location;
         if (location.country) formData.append('country', location.country);
         if (location.zone) formData.append('zone', location.zone);
@@ -2118,7 +2128,7 @@ async function submitApplicationWithScreenshot() {
         if (location.division) formData.append('division', location.division);
         if (location.district) formData.append('district', location.district);
         if (location.tehsil) formData.append('tehsil', location.tehsil);
-        if (location.pincode) formData.append('pincode', location.pincode);
+        // REMOVED: Duplicate pincode append
         if (location.village) formData.append('village', location.village);
         
         // Add payment information

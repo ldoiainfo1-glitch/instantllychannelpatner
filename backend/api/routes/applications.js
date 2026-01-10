@@ -500,19 +500,36 @@ router.post('/with-payment', upload.fields([
       name, 
       phone,
       pincode,
+      pincodeType: typeof pincode,
+      pincodeLength: pincode ? pincode.length : 0,
       paymentAmount,
       hasPaymentScreenshot: !!(req.files && req.files.paymentScreenshot)
     });
     
     // Validate required fields
     if (!positionId || !name || !phone || !pincode || !paymentAmount) {
+      console.error('❌ Missing required fields:', { positionId: !!positionId, name: !!name, phone: !!phone, pincode: !!pincode, paymentAmount: !!paymentAmount });
       return res.status(400).json({ error: 'Missing required fields (name, phone, pincode, paymentAmount)' });
     }
     
+    // Clean pincode - remove any whitespace
+    const cleanPincode = pincode.toString().trim();
+    
     // Validate pincode format
-    if (!/^\d{6}$/.test(pincode)) {
-      return res.status(400).json({ error: 'Pincode must be exactly 6 digits' });
+    if (!/^\d{6}$/.test(cleanPincode)) {
+      console.error('❌ Invalid pincode format:', { 
+        original: pincode, 
+        cleaned: cleanPincode, 
+        length: cleanPincode.length,
+        containsOnlyDigits: /^\d+$/.test(cleanPincode)
+      });
+      return res.status(400).json({ 
+        error: 'Pincode must be exactly 6 digits', 
+        details: { received: cleanPincode, length: cleanPincode.length } 
+      });
     }
+    
+    console.log('✅ Pincode validated:', cleanPincode);
     
     // Payment screenshot is now optional
     const hasScreenshot = !!(req.files && req.files.paymentScreenshot && req.files.paymentScreenshot[0]);
@@ -582,7 +599,7 @@ router.post('/with-payment', upload.fields([
       applicantInfo: {
         name: name.trim(),
         phone: phone.trim(),
-        pincode: pincode.trim(),
+        pincode: cleanPincode,
         email: email ? email.trim() : '',
         photo: photoBase64,
         address: address ? address.trim() : '',
@@ -596,7 +613,7 @@ router.post('/with-payment', upload.fields([
         division: division || null,
         district: district || null,
         tehsil: tehsil || null,
-        pincode: pincode || null,
+        pincode: cleanPincode || null,
         village: village || null
       },
       payment: {
