@@ -1683,8 +1683,12 @@ async function submitApplication(event) {
     // Get form fields
     const name = document.getElementById('applicantName').value.trim();
     const phone = document.getElementById('applicantPhone').value.trim();
-    const pincode = document.getElementById('applicantPincode').value.trim();
+    const pincodeInput = document.getElementById('applicantPincode');
+    const pincode = pincodeInput.value.trim();
     const photoInput = document.getElementById('applicantPhoto');
+    
+    // Clear any custom validity messages before validation
+    pincodeInput.setCustomValidity('');
     
     // Validate name
     if (!name) {
@@ -1715,13 +1719,13 @@ async function submitApplication(event) {
     // Validate pincode
     if (!pincode) {
         showNotification('Please enter your pincode', 'error');
-        document.getElementById('applicantPincode').focus();
+        pincodeInput.focus();
         return;
     }
     
     if (!/^\d{6}$/.test(pincode)) {
         showNotification('Pincode must be exactly 6 digits', 'error');
-        document.getElementById('applicantPincode').focus();
+        pincodeInput.focus();
         return;
     }
     

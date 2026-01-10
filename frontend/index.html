@@ -1234,7 +1234,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="applicantPincode" class="form-label">Pincode *</label>
-                                <input type="text" class="form-control" id="applicantPincode" name="pincode" pattern="[0-9]{6}" maxlength="6" required oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value.length === 6) { this.setCustomValidity(''); } else { this.setCustomValidity('Pincode must be exactly 6 digits'); }">
+                                <input type="text" class="form-control" id="applicantPincode" name="pincode" pattern="[0-9]{6}" maxlength="6" required oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 6); this.setCustomValidity('');">
                                 <small class="text-muted">6 digit pincode</small>
                             </div>
                             <div class="col-md-6">
