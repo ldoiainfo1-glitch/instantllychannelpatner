@@ -57,7 +57,7 @@ app.use(cors({
     'https://instantllychannelpatner.vercel.app',
     'https://www.instantllycards.com',
     'https://instantllycards.com',
-    'http://channel-partner-prod.s3-website.ap-south-1.amazonaws.com/',
+    'http://channel-partner-prod.s3-website.ap-south-1.amazonaws.com',
     /\.vercel\.app$/
   ],
   credentials: true,
