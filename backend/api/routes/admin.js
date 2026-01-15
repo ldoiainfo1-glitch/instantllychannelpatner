@@ -335,6 +335,7 @@ router.put('/applications/:id/approve', async (req, res) => {
         name: application.applicantInfo.name,
         phone: application.applicantInfo.phone,
         email: application.applicantInfo.email || '',
+        pincode: application.applicantInfo.pincode,
         personCode: personCode,
         loginId: application.applicantInfo.phone, // Login ID is phone number
         password: defaultPassword, // First 4 letters of name in CAPITAL (e.g., "RAJE" for Rajesh)
@@ -1061,6 +1062,7 @@ router.post('/fix-approved-without-users', async (req, res) => {
           name: application.applicantInfo.name,
           phone: application.applicantInfo.phone,
           email: application.applicantInfo.email || '',
+          pincode: application.applicantInfo.pincode,
           personCode: personCode,
           loginId: application.applicantInfo.phone,
           password: defaultPassword,
@@ -2033,14 +2035,23 @@ router.put('/applications/:id/transfer', async (req, res) => {
 
     console.log(`🔄 Transferring application ${id} to position:`, newPositionId);
 
+    // Validate inputs
+    if (!newPositionId) {
+      console.error('❌ newPositionId is missing');
+      return res.status(400).json({ message: "newPositionId is required" });
+    }
+
     // Find the application
     const application = await Application.findById(id);
     
     if (!application) {
+      console.error(`❌ Application not found: ${id}`);
       return res.status(404).json({ message: "Application not found" });
     }
 
     const oldPositionId = application.positionId;
+    console.log(`📍 Old position: ${oldPositionId}`);
+    console.log(`📍 New position: ${newPositionId}`);
 
     // Check if new position already has an applicant
     const existingApplication = await Application.findOne({
@@ -2050,6 +2061,7 @@ router.put('/applications/:id/transfer', async (req, res) => {
     });
 
     if (existingApplication) {
+      console.error(`❌ Position already occupied by: ${existingApplication.applicantInfo.name}`);
       return res.status(400).json({ 
         message: "This position is already occupied",
         occupiedBy: existingApplication.applicantInfo.name
@@ -2059,6 +2071,7 @@ router.put('/applications/:id/transfer', async (req, res) => {
     // Update application's position
     application.positionId = newPositionId;
     await application.save();
+    console.log(`✅ Application position updated`);
 
     // If application is approved, also update the User record
     if (application.status === 'approved' && application.userId) {
@@ -2069,6 +2082,8 @@ router.put('/applications/:id/transfer', async (req, res) => {
         user.positionId = newPositionId;
         await user.save();
         console.log(`✅ Updated user position: ${user.name} -> ${newPositionId}`);
+      } else {
+        console.warn(`⚠️ User not found for ID: ${application.userId}`);
       }
     }
 
@@ -2083,7 +2098,16 @@ router.put('/applications/:id/transfer', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Transfer position error:', error);
-    res.status(500).json({ message: "Server error" });
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ 
+      message: "Server error", 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -2991,4 +3015,288 @@ router.post('/fix-introduced-counts', async (req, res) => {
   }
 });
 
+// Migrate pincode from applications to users
+router.get('/migrate-pincodes', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Find all users without pincode
+    const users = await User.find({ pincode: { $exists: false } });
+    
+    console.log(`📍 Found ${users.length} users without pincode`);
+    
+    const updated = [];
+    const notFound = [];
+    
+    for (const user of users) {
+      // Find their application
+      const application = await Application.findOne({ 
+        'applicantInfo.phone': user.phone 
+      });
+      
+      if (application && application.applicantInfo.pincode) {
+        user.pincode = application.applicantInfo.pincode;
+        await user.save();
+        updated.push({
+          name: user.name,
+          phone: user.phone,
+          pincode: application.applicantInfo.pincode
+        });
+        console.log(`✅ Updated ${user.name} (${user.phone}) with pincode: ${application.applicantInfo.pincode}`);
+      } else {
+        notFound.push({
+          name: user.name,
+          phone: user.phone,
+          reason: application ? 'No pincode in application' : 'Application not found'
+        });
+        console.log(`⚠️ Could not find pincode for ${user.name} (${user.phone})`);
+      }
+    }
+    
+    res.json({
+      message: 'Pincode migration completed',
+      totalUsers: users.length,
+      updated: updated.length,
+      notFound: notFound.length,
+      updatedList: updated,
+      notFoundList: notFound
+    });
+  } catch (error) {
+    console.error('❌ Error migrating pincodes:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Debug user login issue
+router.post('/debug-user-login', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const bcrypt = require('bcryptjs');
+    const { phone, password } = req.body;
+    
+    console.log(`🔍 DEBUG: Checking login for phone: ${phone}, password: ${password}`);
+    
+    // Find user by phone
+    const user = await User.findOne({ phone: phone });
+    
+    if (!user) {
+      return res.json({
+        success: false,
+        issue: 'USER_NOT_FOUND',
+        message: `No user found with phone ${phone}`,
+        suggestion: 'User account may not have been created. Check applications table.'
+      });
+    }
+    
+    console.log(`✅ User found:`, {
+      id: user._id,
+      name: user.name,
+      phone: user.phone,
+      loginId: user.loginId,
+      hasPassword: !!user.password,
+      passwordLength: user.password ? user.password.length : 0,
+      isHashed: user.password ? user.password.startsWith('$2') : false
+    });
+    
+    // Check if password is hashed
+    const isHashed = user.password.startsWith('$2');
+    
+    let passwordMatch = false;
+    if (isHashed) {
+      // Compare with bcrypt
+      passwordMatch = await bcrypt.compare(password, user.password);
+    } else {
+      // Direct comparison
+      passwordMatch = user.password === password;
+    }
+    
+    console.log(`🔐 Password check:`, {
+      provided: password,
+      stored: user.password.substring(0, 20) + '...',
+      isHashed: isHashed,
+      match: passwordMatch
+    });
+    
+    if (!passwordMatch) {
+      // Try to regenerate correct password
+      const nameForPassword = user.name.replace(/\s+/g, '');
+      const correctPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
+      
+      return res.json({
+        success: false,
+        issue: 'PASSWORD_MISMATCH',
+        message: 'Password does not match',
+        userDetails: {
+          name: user.name,
+          phone: user.phone,
+          storedPassword: isHashed ? 'HASHED' : user.password,
+          isHashed: isHashed,
+          shouldBePassword: correctPassword
+        },
+        suggestion: `Expected password should be: ${correctPassword}. Use /admin/fix-user-password endpoint to reset.`
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'User and password are correct',
+      userDetails: {
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        pincode: user.pincode,
+        credits: user.credits
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error debugging user:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fix user password
+router.post('/fix-user-password', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const { phone } = req.body;
+    
+    const user = await User.findOne({ phone: phone });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Generate correct password
+    const nameForPassword = user.name.replace(/\s+/g, '');
+    const correctPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
+    
+    // Store as plain text (not hashed)
+    user.password = correctPassword;
+    await user.save();
+    
+    console.log(`✅ Password reset for ${user.name} (${user.phone}) to: ${correctPassword}`);
+    
+    res.json({
+      success: true,
+      message: 'Password reset successfully',
+      userDetails: {
+        name: user.name,
+        phone: user.phone,
+        newPassword: correctPassword
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fixing password:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create missing user accounts for approved applications
+router.post('/create-missing-users', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Find all approved applications (status is lowercase)
+    const approvedApps = await Application.find({ 
+      status: 'approved'
+    });
+    
+    console.log(`🔍 Found ${approvedApps.length} approved applications`);
+    
+    const created = [];
+    const alreadyExists = [];
+    const errors = [];
+    
+    for (const application of approvedApps) {
+      try {
+        const phone = application.applicantInfo.phone;
+        
+        // Check if user already exists
+        const existingUser = await User.findOne({ phone: phone });
+        
+        if (existingUser) {
+          alreadyExists.push({
+            name: application.applicantInfo.name,
+            phone: phone,
+            userId: existingUser._id
+          });
+          console.log(`✓ User already exists: ${application.applicantInfo.name} (${phone})`);
+          continue;
+        }
+        
+        // Generate person code
+        const personCode = `CP${Date.now()}${Math.floor(Math.random() * 1000)}`;
+        
+        // Generate password: First 4 letters of name in CAPITAL
+        const nameForPassword = application.applicantInfo.name.replace(/\s+/g, '');
+        const defaultPassword = nameForPassword.substring(0, 4).toUpperCase().padEnd(4, 'X');
+        
+        // Create user account
+        const newUser = new User({
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          email: application.applicantInfo.email || '',
+          pincode: application.applicantInfo.pincode,
+          personCode: personCode,
+          loginId: application.applicantInfo.phone,
+          password: defaultPassword,
+          photo: application.applicantInfo.photo,
+          introducedBy: application.introducedBy,
+          positionId: application.positionId,
+          appliedDate: application.appliedDate,
+          approvedDate: application.approvedDate || new Date(),
+          credits: 0,
+          hasReceivedInitialCredits: false,
+          introducedCount: 0,
+          isVerified: false,
+          isFirstLogin: true
+        });
+        
+        await newUser.save();
+        
+        // Update application with userId
+        application.userId = newUser._id;
+        await application.save();
+        
+        created.push({
+          name: application.applicantInfo.name,
+          phone: phone,
+          userId: newUser._id,
+          personCode: personCode,
+          password: defaultPassword
+        });
+        
+        console.log(`✅ Created user: ${application.applicantInfo.name} (${phone}) - Password: ${defaultPassword}`);
+        
+      } catch (error) {
+        errors.push({
+          name: application.applicantInfo.name,
+          phone: application.applicantInfo.phone,
+          error: error.message
+        });
+        console.error(`❌ Error creating user for ${application.applicantInfo.name}:`, error.message);
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: 'User account creation completed',
+      totalApproved: approvedApps.length,
+      created: created.length,
+      alreadyExists: alreadyExists.length,
+      errors: errors.length,
+      createdList: created,
+      alreadyExistsList: alreadyExists,
+      errorsList: errors
+    });
+    
+  } catch (error) {
+    console.error('❌ Error creating missing users:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
+

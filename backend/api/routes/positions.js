@@ -426,4 +426,35 @@ router.get('/custom-pricing/all', async (req, res) => {
   }
 });
 
+// Get user by phone number (for ID card pincode fetch)
+router.get('/user-by-phone/:phone', async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const { phone } = req.params;
+    
+    console.log('📞 Fetching user by phone:', phone);
+    
+    const user = await User.findOne({ phone: phone }).select('name phone email pincode photo');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    console.log('✅ Found user:', user.name, 'Pincode:', user.pincode);
+    
+    res.json({
+      user: {
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        pincode: user.pincode,
+        photo: user.photo
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error fetching user by phone:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

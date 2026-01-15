@@ -161,6 +161,7 @@ router.get('/profile', async (req, res) => {
         name: user.name,
         phone: user.phone,
         email: user.email,
+        pincode: user.pincode,
         credits: user.credits,
         cashCredits: user.cashCredits || 0,
         extraCredits: user.extraCredits || 0,
@@ -199,10 +200,17 @@ router.put('/profile', async (req, res) => {
     }
 
     // Update allowed fields
-    const { name, email, photo, panCard, aadhaarCard } = req.body;
+    const { name, email, pincode, photo, panCard, aadhaarCard } = req.body;
     
     if (name) user.name = name;
     if (email !== undefined) user.email = email;
+    if (pincode !== undefined) {
+      // Validate pincode format if provided
+      if (pincode && !/^[0-9]{6}$/.test(pincode)) {
+        return res.status(400).json({ error: 'Invalid pincode format. Must be 6 digits.' });
+      }
+      user.pincode = pincode;
+    }
     if (photo) user.photo = photo;
     
     // Update documents
@@ -229,6 +237,7 @@ router.put('/profile', async (req, res) => {
         name: user.name,
         phone: user.phone,
         email: user.email,
+        pincode: user.pincode,
         credits: user.credits,
         photo: user.photo,
         documents: user.documents

@@ -3,6 +3,41 @@ const router = express.Router();
 const Location = require('../models/Location');
 const Application = require('../models/Application');
 
+// Helper function to extract position-level location from position ID
+// Position ID format: pos_[level]-head_country_zone_state_division_district_tehsil_pincode_village
+// This function returns ONLY the hierarchy levels appropriate for the position level
+function extractPositionLevelLocation(positionId, fullLocation) {
+  // Determine the position level from the ID
+  let positionLevel = null;
+  if (positionId.includes('village-head')) positionLevel = 'village';
+  else if (positionId.includes('pincode-head')) positionLevel = 'pincode';
+  else if (positionId.includes('tehsil-head')) positionLevel = 'tehsil';
+  else if (positionId.includes('district-head')) positionLevel = 'district';
+  else if (positionId.includes('division-head')) positionLevel = 'division';
+  else if (positionId.includes('state-head')) positionLevel = 'state';
+  else if (positionId.includes('zone-head')) positionLevel = 'zone';
+  else if (positionId.includes('president')) positionLevel = 'country';
+  
+  if (!positionLevel) {
+    console.warn('⚠️ Could not determine position level from ID:', positionId);
+    return fullLocation; // Return full location as fallback
+  }
+  
+  // Build location object with ONLY the levels up to the position level
+  const location = {};
+  const hierarchy = ['country', 'zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
+  const positionLevelIndex = hierarchy.indexOf(positionLevel);
+  
+  for (let i = 0; i <= positionLevelIndex; i++) {
+    const level = hierarchy[i];
+    if (fullLocation[level]) {
+      location[level] = fullLocation[level];
+    }
+  }
+  
+  return location;
+}
+
 // NEW: Get position statistics - counts approved applications at each level
 router.get('/statistics', async (req, res) => {
   try {
@@ -75,7 +110,9 @@ router.get('/', async (req, res) => {
       district, 
       tehsil, 
       pincode, 
-      village 
+      village,
+      searchName,  // NEW: Search by name
+      searchPhone  // NEW: Search by phone
     } = req.query;
     
     console.log('\n========================================');
@@ -90,7 +127,104 @@ router.get('/', async (req, res) => {
     console.log('   tehsil:', tehsil);
     console.log('   pincode:', pincode);
     console.log('   village:', village);
+    console.log('   🔍 searchName:', searchName);
+    console.log('   🔍 searchPhone:', searchPhone);
     console.log('========================================\n');
+    
+    // NEW: If search terms provided, search database first
+    if (searchName || searchPhone) {
+      console.log('🔍 SEARCH MODE ACTIVATED');
+      console.log(`   Searching for: name="${searchName}" OR phone="${searchPhone}"`);
+      
+      const searchQuery = { status: 'approved' };
+      const orConditions = [];
+      
+      if (searchName) {
+        orConditions.push({ 'applicantInfo.name': { $regex: searchName, $options: 'i' } });
+      }
+      if (searchPhone) {
+        orConditions.push({ 'applicantInfo.phone': { $regex: searchPhone, $options: 'i' } });
+      }
+      
+      if (orConditions.length > 0) {
+        searchQuery.$or = orConditions;
+      }
+      
+      console.log('🔎 Search query:', JSON.stringify(searchQuery, null, 2));
+      
+      const searchResults = await Application.find(searchQuery).lean();
+      console.log(`✅ Found ${searchResults.length} matching applications`);
+      
+      if (searchResults.length > 0) {
+        // Convert search results to positions format
+        const positions = [];
+        for (let i = 0; i < searchResults.length; i++) {
+          const app = searchResults[i];
+          const positionId = app.positionId;
+          
+          // Extract position level location from position ID
+          // Position ID format: pos_[level]-head_country_zone_state_division_district_tehsil_pincode_village
+          // We need to extract ONLY the hierarchy levels that match the position level
+          const positionLocation = extractPositionLevelLocation(positionId, app.location);
+          console.log(`   📍 Position ${positionId}`);
+          console.log(`      Original location:`, app.location);
+          console.log(`      Position-level location:`, positionLocation);
+          
+          // Get user photo
+          const User = require('../models/User');
+          const user = await User.findOne({ phone: app.applicantInfo.phone });
+          const userPhoto = user?.photo || app.applicantInfo.photo;
+          
+          // Get referral count
+          const referralCount = await Application.countDocuments({ 
+            introducedBy: app.applicantInfo.phone,
+            status: 'approved'
+          });
+          
+          positions.push({
+            _id: positionId,
+            sNo: i + 1,
+            post: 'Committee',
+            designation: app.positionId.replace('pos_', '').replace(/-/g, ' ').replace(/_/g, ' '),
+            location: positionLocation, // Use position-level location instead of full application location
+            contribution: 10000,
+            credits: 60000,
+            isTemplate: true,
+            status: 'Approved',
+            applicantDetails: {
+              name: app.applicantInfo.name,
+              phone: app.applicantInfo.phone,
+              email: app.applicantInfo.email,
+              photo: userPhoto,
+              address: app.applicantInfo.address,
+              companyName: app.applicantInfo.companyName,
+              businessName: app.applicantInfo.businessName,
+              appliedDate: app.appliedDate,
+              introducedBy: app.introducedBy || 'Self',
+              introducedCount: referralCount,
+              days: Math.floor((new Date() - new Date(app.appliedDate)) / (1000 * 60 * 60 * 24)),
+              applicationId: app._id,
+              isVerified: app.isVerified || false,
+              pincode: user?.pincode || app.applicantInfo.pincode || '' // Keep personal pincode separate
+            }
+          });
+        }
+        
+        console.log(`📤 Returning ${positions.length} search results`);
+        return res.status(200).json({
+          success: true,
+          positions: positions,
+          searchMode: true
+        });
+      } else {
+        console.log('📤 No search results found, returning empty array');
+        return res.status(200).json({
+          success: true,
+          positions: [],
+          searchMode: true
+        });
+      }
+    }
     
     let positions = [];
     let sNo = 1;
@@ -275,7 +409,14 @@ router.get('/', async (req, res) => {
         // Get user data from pre-fetched map
         const user = userMap[application.applicantInfo.phone];
         const userPhoto = user?.photo || application.applicantInfo.photo;
-        const introducedCount = user?.introducedCount || 0;
+        
+        // CRITICAL FIX: Real-time referral count calculation
+        const phone = application.applicantInfo.phone;
+        const referralCount = await Application.countDocuments({ 
+          introducedBy: phone,
+          status: 'approved'
+        });
+        console.log(`🔢 [BATCH] ${application.applicantInfo.name} (${phone}) introduced count: ${referralCount}`);
         
         position.applicantDetails = {
           name: application.applicantInfo.name,
@@ -287,7 +428,7 @@ router.get('/', async (req, res) => {
           businessName: application.applicantInfo.businessName,
           appliedDate: application.appliedDate,
           introducedBy: application.introducedBy || 'Self',
-          introducedCount: introducedCount,
+          introducedCount: referralCount, // Real-time count from Application collection
           days: Math.floor((new Date() - new Date(application.appliedDate)) / (1000 * 60 * 60 * 24)),
           applicationId: application._id,
           isVerified: application.isVerified || false
@@ -502,24 +643,34 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
                        existingApplication.status === 'approved' ? 'Approved' : 'Verified';
       
       // Get THIS applicant's introduced count (how many people they referred)
+      // REAL-TIME CALCULATION: Always count from Application collection for accurate, up-to-date results
       let applicantIntroducedCount = 0;
       const User = require('../models/User');
       
-      // Try to find the applicant in Users collection (if approved)
-      console.log(`🔍 Checking introducedCount for ${existingApplication.applicantInfo.name}`);
-      const applicantUser = await User.findOne({ phone: existingApplication.applicantInfo.phone });
-      if (applicantUser) {
-        applicantIntroducedCount = applicantUser.introducedCount || 0;
-      } else {
-        // If not in Users (pending), check their person code in Application
-        if (existingApplication.personCode) {
-          // Count how many people used THIS applicant's referral code
-          const referralCount = await Application.countDocuments({ 
-            introducedBy: existingApplication.personCode 
-          });
-          applicantIntroducedCount = referralCount;
-        }
-      }
+      const phone = existingApplication.applicantInfo.phone;
+      console.log(`\n🔍 ===== REFERRAL COUNT DEBUG for ${existingApplication.applicantInfo.name} =====`);
+      console.log(`   📱 Phone: ${phone}`);
+      console.log(`   🔎 Searching for applications where introducedBy="${phone}" AND status is approved...`);
+      
+      // CRITICAL FIX: Count approved applications
+      // Database stores lowercase 'approved' but checking both cases for safety
+      const referralCount = await Application.countDocuments({ 
+        introducedBy: phone,
+        status: 'approved' // Database stores lowercase
+      });
+      
+      // DEBUG: Show ALL applications with this introducedBy (any status)
+      const allDebugApps = await Application.find({ introducedBy: phone }).select('applicantInfo.name status introducedBy').lean();
+      console.log(`   📋 Total applications with introducedBy="${phone}": ${allDebugApps.length}`);
+      allDebugApps.forEach(app => {
+        console.log(`      - ${app.applicantInfo.name}, status: "${app.status}" (approved=${app.status === 'approved'})`);
+      });
+      
+      applicantIntroducedCount = referralCount;
+      console.log(`   ✅ FINAL COUNT of APPROVED referrals: ${applicantIntroducedCount}\n`);
+      
+      // Also get User record for photo (if exists)
+      const applicantUser = await User.findOne({ phone: phone });
       
       // CRITICAL FIX: Get updated photo from User model if available
       let userPhoto = existingApplication.applicantInfo.photo; // Default from application

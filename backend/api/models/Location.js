@@ -7,31 +7,31 @@ const locationSchema = new mongoose.Schema({
   },
   zone: {
     type: String,
-    required: true
+    required: false
   },
   state: {
     type: String,
-    required: true
+    required: false
   },
   division: {
     type: String,
-    required: true
+    required: false
   },
   district: {
     type: String,
-    required: true
+    required: false
   },
   tehsil: {
     type: String,
-    required: false  // Optional - allows district-level locations
+    required: false
   },
   pincode: {
     type: String,
-    required: false  // Optional - allows district-level locations
+    required: false
   },
   village: {
     type: String,
-    required: false  // Optional - allows district-level locations
+    required: false
   }
 }, {
   timestamps: true

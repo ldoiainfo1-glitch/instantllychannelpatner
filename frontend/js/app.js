@@ -178,15 +178,15 @@ async function loadLocationData() {
         if (response.ok) {
             const data = await response.json();
 
-            // Store all options
+            // Store all options - filter out null/undefined/empty values
             locationData = {
-                zones: data.zones || [],
-                states: data.states || [],
-                divisions: data.divisions || [],
-                districts: data.districts || [],
-                tehsils: data.tehsils || [],
-                pincodes: data.pincodes || [],
-                villages: data.villages || []
+                zones: (data.zones || []).filter(item => item && item.trim()),
+                states: (data.states || []).filter(item => item && item.trim()),
+                divisions: (data.divisions || []).filter(item => item && item.trim()),
+                districts: (data.districts || []).filter(item => item && item.trim()),
+                tehsils: (data.tehsils || []).filter(item => item && item.trim()),
+                pincodes: (data.pincodes || []).filter(item => item && item.trim()),
+                villages: (data.villages || []).filter(item => item && item.trim())
             };
         } else {
             // Fallback to individual endpoints if /all doesn't exist
@@ -213,13 +213,13 @@ async function loadLocationData() {
             ]);
 
             locationData = {
-                zones: zones || [],
-                states: states || [],
-                divisions: divisions || [],
-                districts: districts || [],
-                tehsils: tehsils || [],
-                pincodes: pincodes || [],
-                villages: villages || []
+                zones: (zones || []).filter(item => item && item.trim()),
+                states: (states || []).filter(item => item && item.trim()),
+                divisions: (divisions || []).filter(item => item && item.trim()),
+                districts: (districts || []).filter(item => item && item.trim()),
+                tehsils: (tehsils || []).filter(item => item && item.trim()),
+                pincodes: (pincodes || []).filter(item => item && item.trim()),
+                villages: (villages || []).filter(item => item && item.trim())
             };
         }
 
@@ -380,8 +380,25 @@ async function autoUpdateParentFilters(selectedValue, level) {
     }
 
     try {
-        // Get location details from reverse lookup API
-        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(selectedValue)}`);
+        // Build query parameters with current filter context for more precise matching
+        const queryParams = new URLSearchParams();
+        const zone = document.getElementById('filterZone')?.value;
+        const state = document.getElementById('filterState')?.value;
+        const division = document.getElementById('filterDivision')?.value;
+        const district = document.getElementById('filterDistrict')?.value;
+        const tehsil = document.getElementById('filterTehsil')?.value;
+        const pincode = document.getElementById('filterPincode')?.value;
+        
+        if (zone) queryParams.append('zone', zone);
+        if (state) queryParams.append('state', state);
+        if (division) queryParams.append('division', division);
+        if (district) queryParams.append('district', district);
+        if (tehsil) queryParams.append('tehsil', tehsil);
+        if (pincode) queryParams.append('pincode', pincode);
+        
+        // Get location details from reverse lookup API with context
+        const url = `${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(selectedValue)}?${queryParams.toString()}`;
+        const response = await fetch(url);
         if (!response.ok) {
             console.log('No reverse mapping found for:', selectedValue);
             await loadApplications(); // Still reload with current selection
@@ -604,12 +621,32 @@ async function loadApplications() {
         const positions = data.positions || data || [];
 
         // Store positions directly - they are already formatted with application data
-        currentPositions = positions.map((pos, index) => ({
-            ...pos,
-            sNo: index + 1 // Ensure sequential numbering
-        }));
+        currentPositions = positions;
+        console.log('📥 FRONTEND: Received', currentPositions.length, 'positions');
+        
+        // Log positions with applicants
+        const withApplicants = currentPositions.filter(p => p.applicantDetails);
+        console.log('👥 FRONTEND: Positions with applicants:', withApplicants.length);
+        if (withApplicants.length > 0) {
+            withApplicants.slice(0, 5).forEach(p => {
+                console.log(`   - ${p.applicantDetails?.name || 'N/A'} (${p.applicantDetails?.phone || 'N/A'})`);
+            });
+        }
 
+        // Server already filtered, just display results
         displayPositions(currentPositions);
+
+        // Show search results count with details
+        if (searchName || searchPhone) {
+            const searchTerm = searchName || searchPhone;
+            if (currentPositions.length === 0) {
+                showNotification(`No results found for "${searchTerm}"`, 'warning');
+            } else {
+                showNotification(`Found ${currentPositions.length} position(s) matching "${searchTerm}"`, 'success');
+            }
+        } else {
+            showNotification(`Loaded ${currentPositions.length} position(s)`, 'info');
+        }
 
         // Update selected filters display
         updateSelectedFiltersBadges();
@@ -717,9 +754,64 @@ function createPositionRow(position) {
         nameCell = '-';
     }
 
-    // Determine Area Head For - show most specific location area name (district, tehsil, etc.)
+    // Determine Area Head For - extract from designation or position ID
     let areaHeadFor = '-';
-    if (position.location) {
+    
+    // Method 1: Extract from position ID (most reliable)
+    // Position ID format: pos_[level]-head_country_zone_state_division_district_tehsil_pincode_village
+    // Examples:
+    // - pos_district-head_india_east-zone_bihar_begusarai_begusarai -> District: Begusarai
+    // - pos_tehsil-head_india_east-zone_bihar_begusarai_sahebpur-kamal -> Tehsil: Sahebpur Kamal
+    // - pos_pincode-head_india_east-zone_bihar_begusarai_begusarai_851129 -> Pincode: 851129
+    if (position._id && typeof position._id === 'string' && position._id.startsWith('pos_')) {
+        const idParts = position._id.split('_');
+        if (idParts.length > 1) {
+            const levelPart = idParts[1]; // e.g., "district-head", "tehsil-head", "pincode-head"
+            
+            if (levelPart.includes('village-head') && position.location.village) {
+                areaHeadFor = position.location.village;
+            } else if (levelPart.includes('pincode-head') && position.location.pincode) {
+                areaHeadFor = position.location.pincode;
+            } else if (levelPart.includes('tehsil-head') && position.location.tehsil) {
+                areaHeadFor = position.location.tehsil;
+            } else if (levelPart.includes('district-head') && position.location.district) {
+                areaHeadFor = position.location.district;
+            } else if (levelPart.includes('division-head') && position.location.division) {
+                areaHeadFor = position.location.division;
+            } else if (levelPart.includes('state-head') && position.location.state) {
+                areaHeadFor = position.location.state;
+            } else if (levelPart.includes('zone-head') && position.location.zone) {
+                areaHeadFor = position.location.zone;
+            } else if (levelPart.includes('country-head') || levelPart.includes('president')) {
+                areaHeadFor = position.location.country || 'India';
+            }
+        }
+    }
+    
+    // Method 2: Fallback to designation text parsing if Method 1 didn't work
+    if (areaHeadFor === '-' && position.designation) {
+        const designation = position.designation.toLowerCase();
+        if (designation.includes('village')) {
+            areaHeadFor = position.location.village || '-';
+        } else if (designation.includes('pincode')) {
+            areaHeadFor = position.location.pincode || '-';
+        } else if (designation.includes('tehsil')) {
+            areaHeadFor = position.location.tehsil || '-';
+        } else if (designation.includes('district')) {
+            areaHeadFor = position.location.district || '-';
+        } else if (designation.includes('division')) {
+            areaHeadFor = position.location.division || '-';
+        } else if (designation.includes('state')) {
+            areaHeadFor = position.location.state || '-';
+        } else if (designation.includes('zone')) {
+            areaHeadFor = position.location.zone || '-';
+        } else if (designation.includes('president') || designation.includes('country')) {
+            areaHeadFor = position.location.country || 'India';
+        }
+    }
+    
+    // Method 3: Final fallback - use old logic only if still not determined
+    if (areaHeadFor === '-' && position.location) {
         // Show only the most specific location (lowest level in hierarchy)
         if (position.location.village) {
             areaHeadFor = position.location.village;
@@ -773,9 +865,14 @@ function createPositionRow(position) {
         : '-';
 
     // Handle introduced count - show how many people joined using this person's referral code
-    const introducedBy = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
+    const introducedCount = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
         ? position.applicantDetails.introducedCount
         : (position.applicantDetails ? 0 : '-');
+    
+    // Make introduced count clickable if > 0
+    const introducedBy = introducedCount > 0 && position.applicantDetails?.phone
+        ? `<a href="#" onclick="showReferredPeople('${position.applicantDetails.phone}', '${position.applicantDetails.name || ''}'); return false;" class="text-primary fw-bold" style="text-decoration: underline; cursor: pointer;">${introducedCount}</a>`
+        : introducedCount;
 
     // Handle days since application
     const days = position.applicantDetails && position.applicantDetails.days !== undefined
@@ -826,6 +923,7 @@ function createPositionRow(position) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
+        const pincode = position.applicantDetails.pincode || '';
         const locationJson = JSON.stringify(position.location).replace(/"/g, '&quot;');
         
         othersCell = `
@@ -852,7 +950,7 @@ function createPositionRow(position) {
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${locationJson}); return false;">
+                            <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${pincode}', '${photo}', ${locationJson}); return false;">
                                 <i class="fas fa-id-card me-2"></i>ID Card
                             </a>
                         </li>
@@ -870,6 +968,7 @@ function createPositionRow(position) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
+        const pincode = position.applicantDetails.pincode || '';
 
         othersCell = `
             <div class="dropdown">
@@ -889,7 +988,7 @@ function createPositionRow(position) {
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})" return false;">
+                        <a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${pincode}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}); return false;">
                             <i class="fas fa-id-card me-2"></i>ID Card
                         </a>
                     </li>
@@ -1116,8 +1215,13 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
     
     // Phone, Introduced, Days
     const phoneNo = position.applicantDetails && position.applicantDetails.phone ? position.applicantDetails.phone : '-';
-    const introducedBy = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
+    const introducedCount = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
         ? position.applicantDetails.introducedCount : (position.applicantDetails ? 0 : '-');
+    
+    // Make introduced count clickable if > 0
+    const introducedBy = introducedCount > 0 && position.applicantDetails?.phone
+        ? `<a href="#" onclick="showReferredPeople('${position.applicantDetails.phone}', '${position.applicantDetails.name || ''}'); return false;" class="text-primary fw-bold" style="text-decoration: underline; cursor: pointer;">${introducedCount}</a>`
+        : introducedCount;
     const days = position.applicantDetails && position.applicantDetails.days !== undefined ? position.applicantDetails.days : '-';
     
     // Check if this nested row can also expand
@@ -1149,6 +1253,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
+        const pincode = position.applicantDetails.pincode || '';
         const locationJson = JSON.stringify(position.location).replace(/"/g, '&quot;');
         
         othersCell = `
@@ -1165,7 +1270,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
                     <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
                         <li><a class="dropdown-item" href="#" onclick="showLoginCredentials('${phone}', '${name}'); return false;"><i class="fas fa-key me-2"></i>Login Credentials</a></li>
                         <li><a class="dropdown-item" href="#" onclick="showReferralCode('${position._id}', '${phone}'); return false;"><i class="fas fa-users me-2"></i>Referral Code</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${locationJson}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${pincode}', '${photo}', ${locationJson}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
                         <li><a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${locationJson}, '${position.designation || ''}'); return false;"><i class="fas fa-bullhorn me-2"></i>Promotion</a></li>
                     </ul>
                 </div>
@@ -1175,6 +1280,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
+        const pincode = position.applicantDetails.pincode || '';
         
         othersCell = `
             <div class="dropdown">
@@ -1184,7 +1290,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
                 <ul class="dropdown-menu" aria-labelledby="actionMenu${position._id}">
                     <li><a class="dropdown-item" href="#" onclick="showLoginCredentials('${phone}', '${name}'); return false;"><i class="fas fa-key me-2"></i>Login Credentials</a></li>
                     <li><a class="dropdown-item" href="#" onclick="showReferralCode('${position._id}', '${phone}'); return false;"><i class="fas fa-users me-2"></i>Referral Code</a></li>
-                    <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="showIDCard('${name}', '${phone}', '${pincode}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}); return false;"><i class="fas fa-id-card me-2"></i>ID Card</a></li>
                     <li><a class="dropdown-item" href="#" onclick="openPromotion('${position._id}', '${name}', '${phone}', '${photo}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')}, '${position.designation || ''}'); return false;"><i class="fas fa-bullhorn me-2"></i>Promotion</a></li>
                 </ul>
             </div>
@@ -1282,6 +1388,14 @@ function calculateDays(appliedDate) {
 async function handleSearch() {
     const searchName = document.getElementById('searchName').value.toLowerCase().trim();
     const searchPhone = document.getElementById('searchPhone').value.trim();
+    
+    // If both search fields are empty, just reload all applications
+    if (!searchName && !searchPhone) {
+        console.log('🔍 Search cleared - reloading all applications');
+        await loadApplications();
+        return;
+    }
+    
     const country = document.getElementById('filterCountry').value || 'India';
     const zone = document.getElementById('filterZone').value;
     const state = document.getElementById('filterState').value;
@@ -1303,8 +1417,14 @@ async function handleSearch() {
     try {
         showLoading(true);
 
-        // Build query params for dynamic-positions endpoint (same as loadApplications)
+        // Build query params for dynamic-positions endpoint
         const params = new URLSearchParams({ country });
+        
+        // Add search parameters to backend query
+        if (searchName) params.append('searchName', searchName);
+        if (searchPhone) params.append('searchPhone', searchPhone);
+        
+        // Only add location filters if provided
         if (zone) params.append('zone', zone);
         if (state) params.append('state', state);
         if (division) params.append('division', division);
@@ -1316,6 +1436,9 @@ async function handleSearch() {
 
         const url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
         console.log('🌐 FRONTEND: Fetching positions from:', url);
+        if (searchName || searchPhone) {
+            console.log('🔍 BACKEND SEARCH: Searching for:', { searchName, searchPhone });
+        }
         const response = await fetch(url, {
             cache: 'no-store',
             headers: {
@@ -1343,69 +1466,19 @@ async function handleSearch() {
             });
         }
 
-        // Client-side filter for name and phone
-        let filteredPositions = currentPositions;
+        // Server-side search already applied, just display
+        displayPositions(currentPositions);
+
+        // Show search results count with details
         if (searchName || searchPhone) {
-            console.log('🔎 Applying client-side search filters...');
-            console.log(`   Search term: "${searchName}" (name) or "${searchPhone}" (phone)`);
-            
-            filteredPositions = currentPositions.filter(position => {
-                // Name search - check applicant name OR location names (zone, state, division, district, etc.)
-                if (searchName) {
-                    let nameMatches = false;
-                    
-                    // Check applicant name
-                    if (position.applicantDetails && position.applicantDetails.name) {
-                        const positionName = (position.applicantDetails.name || '').toLowerCase();
-                        nameMatches = positionName.includes(searchName);
-                    }
-                    
-                    // Check location fields if applicant name doesn't match
-                    if (!nameMatches) {
-                        const locationFields = [
-                            position.zone,
-                            position.state,
-                            position.division,
-                            position.district,
-                            position.tehsil,
-                            position.pincode,
-                            position.village
-                        ].filter(Boolean).map(val => (val || '').toLowerCase());
-                        
-                        nameMatches = locationFields.some(field => field.includes(searchName));
-                    }
-                    
-                    if (!nameMatches) {
-                        return false;
-                    }
-                }
-
-                // Phone search - only check if position has applicant
-                if (searchPhone) {
-                    if (!position.applicantDetails) {
-                        return false; // Can't search by phone if no applicant
-                    }
-                    
-                    const positionPhone = position.applicantDetails.phone || '';
-                    const matches = positionPhone.includes(searchPhone);
-                    
-                    if (!matches) {
-                        return false;
-                    }
-                }
-
-                return true;
-            });
-            console.log(`✅ Search filtered: ${filteredPositions.length} of ${currentPositions.length} positions match`);
-        }
-
-        displayPositions(filteredPositions);
-
-        // Show search results count
-        if (searchName || searchPhone) {
-            showNotification(`Found ${filteredPositions.length} matching position(s)`, 'info');
+            const searchTerm = searchName || searchPhone;
+            if (currentPositions.length === 0) {
+                showNotification(`No results found for "${searchTerm}"`, 'warning');
+            } else {
+                showNotification(`Found ${currentPositions.length} position(s) matching "${searchTerm}"`, 'success');
+            }
         } else {
-            showNotification(`Loaded ${filteredPositions.length} position(s)`, 'info');
+            showNotification(`Loaded ${currentPositions.length} position(s)`, 'info');
         }
     } catch (error) {
         console.error('❌ Error searching positions:', error);
@@ -1610,7 +1683,12 @@ async function submitApplication(event) {
     // Get form fields
     const name = document.getElementById('applicantName').value.trim();
     const phone = document.getElementById('applicantPhone').value.trim();
+    const pincodeInput = document.getElementById('applicantPincode');
+    const pincode = pincodeInput.value.trim();
     const photoInput = document.getElementById('applicantPhoto');
+    
+    // Clear any custom validity messages before validation
+    pincodeInput.setCustomValidity('');
     
     // Validate name
     if (!name) {
@@ -1635,6 +1713,19 @@ async function submitApplication(event) {
     if (!/^\d{10}$/.test(phone)) {
         showNotification('Phone number must be exactly 10 digits', 'error');
         document.getElementById('applicantPhone').focus();
+        return;
+    }
+    
+    // Validate pincode
+    if (!pincode) {
+        showNotification('Please enter your pincode', 'error');
+        pincodeInput.focus();
+        return;
+    }
+    
+    if (!/^\d{6}$/.test(pincode)) {
+        showNotification('Pincode must be exactly 6 digits', 'error');
+        pincodeInput.focus();
         return;
     }
     
@@ -1670,6 +1761,7 @@ async function submitApplication(event) {
             positionId: window.currentPosition.id,
             name: name,
             phone: phone,
+            pincode: pincode,
             companyName: formData.get('companyName'),
             businessName: formData.get('businessName'),
             address: formData.get('address'),
@@ -2005,9 +2097,20 @@ async function submitApplicationWithScreenshot() {
         
         // Prepare application data with payment screenshot
         const formData = new FormData();
+        
+        // Clean and validate pincode before sending
+        const cleanPincode = tempApplicationData.pincode.toString().trim();
+        console.log('🔍 Pincode validation before submit:', {
+            original: tempApplicationData.pincode,
+            cleaned: cleanPincode,
+            length: cleanPincode.length,
+            isValid: /^\d{6}$/.test(cleanPincode)
+        });
+        
         formData.append('positionId', tempApplicationData.positionId);
         formData.append('name', tempApplicationData.name);
         formData.append('phone', tempApplicationData.phone);
+        formData.append('pincode', cleanPincode);
         formData.append('companyName', tempApplicationData.companyName || '');
         formData.append('businessName', tempApplicationData.businessName || '');
         formData.append('address', tempApplicationData.address || '');
@@ -2017,7 +2120,7 @@ async function submitApplicationWithScreenshot() {
             formData.append('photo', tempApplicationData.photo);
         }
         
-        // Add location data
+        // Add location data (but NOT pincode again - it's already added above)
         const location = tempApplicationData.location;
         if (location.country) formData.append('country', location.country);
         if (location.zone) formData.append('zone', location.zone);
@@ -2025,7 +2128,7 @@ async function submitApplicationWithScreenshot() {
         if (location.division) formData.append('division', location.division);
         if (location.district) formData.append('district', location.district);
         if (location.tehsil) formData.append('tehsil', location.tehsil);
-        if (location.pincode) formData.append('pincode', location.pincode);
+        // REMOVED: Duplicate pincode append
         if (location.village) formData.append('village', location.village);
         
         // Add payment information
@@ -2963,7 +3066,7 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
         const searchTerm = e.target.value.toLowerCase();
         if (searchTerm) {
             const filteredData = data.filter(item =>
-                item.toLowerCase().includes(searchTerm)
+                item && item.toLowerCase().includes(searchTerm)
             );
             displayFilterOptions(optionsContainer, filteredData, data, inputId, dropdownId);
         } else {
@@ -2986,9 +3089,9 @@ function displayFilterOptions(container, displayData, fullData, inputId, dropdow
         return;
     }
 
-    // Limit to 100 items for performance
-    const limitedData = displayData.slice(0, 100);
-    const hasMore = displayData.length > 100;
+    // Limit to 500 items for better search experience (increased from 100)
+    const limitedData = displayData.slice(0, 500);
+    const hasMore = displayData.length > 500;
 
     container.innerHTML = limitedData.map(item =>
         `<div class="filter-dropdown-item" data-value="${item}">${item}</div>`
@@ -3107,8 +3210,25 @@ async function performReverseMapping(inputId, value) {
     try {
         console.log('🔍 Reverse mapping triggered for:', { inputId, value });
 
-        // Call reverse-lookup API to get full location hierarchy
-        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(value)}`);
+        // Build query parameters with current filter context for more precise matching
+        const queryParams = new URLSearchParams();
+        const zone = document.getElementById('filterZone')?.value;
+        const state = document.getElementById('filterState')?.value;
+        const division = document.getElementById('filterDivision')?.value;
+        const district = document.getElementById('filterDistrict')?.value;
+        const tehsil = document.getElementById('filterTehsil')?.value;
+        const pincode = document.getElementById('filterPincode')?.value;
+        
+        if (zone) queryParams.append('zone', zone);
+        if (state) queryParams.append('state', state);
+        if (division) queryParams.append('division', division);
+        if (district) queryParams.append('district', district);
+        if (tehsil) queryParams.append('tehsil', tehsil);
+        if (pincode) queryParams.append('pincode', pincode);
+
+        // Call reverse-lookup API to get full location hierarchy with context
+        const url = `${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(value)}?${queryParams.toString()}`;
+        const response = await fetch(url);
 
         console.log('📡 API Response status:', response.status);
 
@@ -3331,6 +3451,145 @@ function clearChildFilters(parentFilterId) {
 function showLoginCredentials(phone, name) {
     // Simply redirect to the login page
     window.location.href = 'profile.html';
+}
+
+// Show referral code (phone number) in a modal
+function showReferralCode(positionId, phone) {
+    if (!phone) {
+        alert('Phone number not available');
+        return;
+    }
+
+    // Create modern modal for referral code display
+    const modalHTML = `
+        <div class="modal fade" id="referralCodeModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius: 20px; overflow: hidden; border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                    <div class="modal-body p-0">
+                        <!-- Header -->
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; position: relative;">
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" style="position: absolute; top: 15px; right: 15px;"></button>
+                            <div style="margin-top: 10px;">
+                                <i class="fas fa-users" style="font-size: 3rem; color: white; margin-bottom: 10px;"></i>
+                                <h4 class="text-white fw-bold mb-0">Your Referral Code</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div style="padding: 30px; background: white;">
+                            <p class="text-center text-muted mb-4">Share this code with others to refer them</p>
+                            
+                            <!-- Referral Code Display -->
+                            <div style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 25px; border-radius: 15px; margin-bottom: 25px;">
+                                <div class="text-center mb-2">
+                                    <small class="text-muted d-block mb-2" style="font-size: 0.85rem;">REFERRAL CODE</small>
+                                    <div style="font-size: 2rem; font-weight: bold; color: #667eea; letter-spacing: 2px; font-family: 'Courier New', monospace;">
+                                        ${phone}
+                                    </div>
+                                </div>
+                                
+                                <!-- Copy Button -->
+                                <div class="text-center mt-3">
+                                    <button class="btn btn-primary" onclick="copyReferralCode('${phone}')" style="border-radius: 25px; padding: 10px 30px;">
+                                        <i class="fas fa-copy me-2"></i>Copy Code
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Instructions -->
+                            <div class="alert alert-info" style="border-radius: 15px; border: none; background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-info-circle me-3 mt-1" style="color: #1976d2; font-size: 1.2rem;"></i>
+                                    <div>
+                                        <strong style="color: #1976d2;">How to use:</strong>
+                                        <p class="mb-0 mt-1" style="font-size: 0.9rem; color: #333;">
+                                            When someone applies for a position, they can enter your phone number (${phone}) in the "Referred By" field to credit you as their referrer.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Share Options -->
+                            <div class="text-center mt-4">
+                                <p class="text-muted mb-2" style="font-size: 0.9rem;">Share via:</p>
+                                <div class="d-flex gap-2 justify-content-center">
+                                    <button class="btn btn-success btn-sm" onclick="shareViaWhatsApp('${phone}')" style="border-radius: 20px; padding: 8px 20px;">
+                                        <i class="fab fa-whatsapp me-1"></i>WhatsApp
+                                    </button>
+                                    <button class="btn btn-primary btn-sm" onclick="shareViaSMS('${phone}')" style="border-radius: 20px; padding: 8px 20px;">
+                                        <i class="fas fa-sms me-1"></i>SMS
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Remove existing modal if any
+    const existingModal = document.getElementById('referralCodeModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('referralCodeModal'));
+    modal.show();
+
+    // Remove modal from DOM after it's hidden
+    document.getElementById('referralCodeModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+// Copy referral code to clipboard
+function copyReferralCode(phone) {
+    navigator.clipboard.writeText(phone).then(() => {
+        // Show success message
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+        }, 2000);
+    }).catch(err => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = phone;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert('Referral code copied: ' + phone);
+        } catch (err) {
+            alert('Failed to copy. Your referral code is: ' + phone);
+        }
+        document.body.removeChild(textArea);
+    });
+}
+
+// Share referral code via WhatsApp
+function shareViaWhatsApp(phone) {
+    const message = `Join as a Channel Partner! Use my referral code: ${phone} when applying.\n\nApply here: ${window.location.origin}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+}
+
+// Share referral code via SMS
+function shareViaSMS(phone) {
+    const message = `Join as a Channel Partner! Use my referral code: ${phone} when applying. Apply here: ${window.location.origin}`;
+    const smsUrl = `sms:?body=${encodeURIComponent(message)}`;
+    window.location.href = smsUrl;
 }
 
 // Show referral info with phone number and credits info
@@ -4025,8 +4284,19 @@ async function getCompleteLocationPath(location) {
             return location; // Return as-is if nothing is set
         }
         
-        // Call backend API to get reverse lookup
-        const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lookupValue)}`);
+        // Build query parameters with location context for precise matching
+        const queryParams = new URLSearchParams();
+        if (location.zone) queryParams.append('zone', location.zone);
+        if (location.state) queryParams.append('state', location.state);
+        if (location.division) queryParams.append('division', location.division);
+        if (location.district) queryParams.append('district', location.district);
+        if (location.tehsil) queryParams.append('tehsil', location.tehsil);
+        if (location.pincode) queryParams.append('pincode', location.pincode);
+        
+        // Call backend API to get reverse lookup with hierarchical context
+        const url = `${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lookupValue)}?${queryParams.toString()}`;
+        console.log('🌐 Fetching location hierarchy:', url);
+        const response = await fetch(url);
         
         if (!response.ok) {
             console.warn('⚠️ Could not fetch location hierarchy, using provided data');
@@ -4067,7 +4337,7 @@ async function getCompleteLocationPath(location) {
     }
 }
 
-async function showIDCard(name, phone, photo, positionLocation) {
+async function showIDCard(name, phone, pincode, photo, positionLocation) {
     // Show loading overlay
     const loadingOverlay = document.createElement('div');
     loadingOverlay.id = 'idCardLoadingOverlay';
@@ -4086,6 +4356,23 @@ async function showIDCard(name, phone, photo, positionLocation) {
     document.body.appendChild(loadingOverlay);
 
     try {
+        // If pincode is not provided, try to fetch from user profile
+        if (!pincode || pincode === '' || pincode === 'N/A') {
+            try {
+                console.log('📍 Fetching pincode from user profile for phone:', phone);
+                const userResponse = await fetch(`${API_BASE_URL}/positions/user-by-phone/${phone}`);
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    if (userData.user && userData.user.pincode) {
+                        pincode = userData.user.pincode;
+                        console.log('✅ Found pincode from user profile:', pincode);
+                    }
+                }
+            } catch (error) {
+                console.warn('⚠️ Could not fetch pincode from user profile:', error);
+            }
+        }
+        
         // Get complete location hierarchy path
         const completeLocation = await getCompleteLocationPath(positionLocation);
         console.log('📍 Complete location for ID card:', completeLocation);
@@ -4414,13 +4701,16 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                         </div>
                                     </div>
 
-                                    <!-- NAME & MOBILE -->
+                                    <!-- NAME & MOBILE & PINCODE -->
                                     <div style="font-size:26px; line-height:1.25;">
                                         <div style="margin-bottom:8px;">
                                             <b>Name:</b> ${name}
                                         </div>
-                                        <div style="margin-bottom:15px;">
+                                        <div style="margin-bottom:8px;">
                                             <b>Mob:</b> ${phone}
+                                        </div>
+                                        <div style="margin-bottom:15px;">
+                                            <b>Pincode:</b> ${pincode || 'N/A'}
                                         </div>
                                     </div>
 
@@ -4981,3 +5271,144 @@ if (document.getElementById('forgotPasswordModal')) {
     document.getElementById('forgotPasswordModal').addEventListener('hidden.bs.modal', resetForgotPasswordForm);
 }
 
+// Show referred people modal
+async function showReferredPeople(referrerPhone, referrerName) {
+    try {
+        console.log(`📊 Fetching referred people for ${referrerName} (${referrerPhone})...`);
+        
+        const url = `${API_BASE_URL}/applications?introducedBy=${referrerPhone}&status=approved`;
+        console.log(`🌐 API URL:`, url);
+        
+        // Fetch all applications where introducedBy matches this phone
+        const response = await fetch(url, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        console.log(`📡 Response status:`, response.status, response.statusText);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ API Error:`, errorText);
+            throw new Error('Failed to fetch referred people');
+        }
+        
+        const applications = await response.json();
+        console.log(`✅ Applications response:`, applications);
+        console.log(`📝 Response type:`, typeof applications, Array.isArray(applications));
+        
+        // Ensure applications is an array
+        const applicationsArray = Array.isArray(applications) ? applications : [];
+        console.log(`✅ Found ${applicationsArray.length} referred people`);
+        
+        // Create modal HTML
+        const modalHtml = `
+            <div class="modal fade" id="referredPeopleModal" tabindex="-1" aria-labelledby="referredPeopleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="referredPeopleModalLabel">
+                                <i class="fas fa-users me-2"></i>People Introduced by ${referrerName}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${applicationsArray.length === 0 ? `
+                                <div class="text-center py-5">
+                                    <i class="fas fa-user-friends fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No approved referrals found</p>
+                                </div>
+                            ` : `
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Sr No.</th>
+                                                <th>Name</th>
+                                                <th>Phone</th>
+                                                <th>Position</th>
+                                                <th>Applied Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${applicationsArray.map((app, index) => {
+                                                const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
+                                                
+                                                // Extract position level and actual area from positionId
+                                                let positionDisplay = '-';
+                                                if (app.positionId) {
+                                                    const parts = app.positionId.split('_');
+                                                    if (parts.length >= 2) {
+                                                        const level = parts[1]; // e.g., 'state-head', 'division-head', 'district-head'
+                                                        let levelName = '';
+                                                        
+                                                        if (level.includes('state')) levelName = 'State';
+                                                        else if (level.includes('division')) levelName = 'Division';
+                                                        else if (level.includes('district')) levelName = 'District';
+                                                        else if (level.includes('zone')) levelName = 'Zone';
+                                                        else if (level.includes('tehsil')) levelName = 'Tehsil';
+                                                        else if (level.includes('village')) levelName = 'Village';
+                                                        
+                                                        // Extract the actual area from the LAST part of positionId
+                                                        // e.g., pos_division-head_india_east-zone_bihar_begusarai -> "begusarai"
+                                                        const locationRaw = parts[parts.length - 1] || '-';
+                                                        const location = locationRaw.split('-').map(word => 
+                                                            word.charAt(0).toUpperCase() + word.slice(1)
+                                                        ).join(' ');
+                                                        
+                                                        if (levelName && location !== '-') {
+                                                            positionDisplay = `${levelName}(${location})`;
+                                                        } else {
+                                                            positionDisplay = location;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                return `
+                                                    <tr>
+                                                        <td><strong>${index + 1}</strong></td>
+                                                        <td>${app.applicantInfo?.name || '-'}</td>
+                                                        <td>${app.applicantInfo?.phone || '-'}</td>
+                                                        <td>${positionDisplay}</td>
+                                                        <td>${appliedDate}</td>
+                                                    </tr>
+                                                `;
+                                            }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('referredPeopleModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add new modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show the modal
+        const modalElement = document.getElementById('referredPeopleModal');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+        
+        // Clean up modal after it's hidden
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            modalElement.remove();
+        });
+        
+    } catch (error) {
+        console.error('❌ Error fetching referred people:', error);
+        alert('Failed to load referred people. Please try again.');
+    }
+}

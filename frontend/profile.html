@@ -331,7 +331,7 @@
                             <div class="mb-2">
                                 <i class="fas fa-user-friends fa-2x text-primary"></i>
                             </div>
-                            <h4 class="mb-0" id="introducedCount">0</h4>
+                            <h4 class="mb-0" id="introducedCount" style="cursor: pointer;">0</h4>
                             <p class="text-muted mb-0">People Introduced</p>
                         </div>
                     </div>
@@ -432,6 +432,12 @@
                                     </label>
                                     <input type="tel" class="form-control" id="editPhone" readonly disabled>
                                     <small class="text-muted">Phone number cannot be changed</small>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="fas fa-map-pin me-2"></i>Pincode <span class="text-muted">(Editable)</span>
+                                    </label>
+                                    <input type="text" class="form-control" id="editPincode" pattern="[0-9]{6}" maxlength="6" placeholder="Enter 6-digit pincode" readonly>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label fw-bold">
@@ -1269,6 +1275,41 @@
             }
         }
 
+        // Fetch real-time referral count from Application collection
+        async function fetchRealTimeReferralCount(phone, name) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/applications?introducedBy=${phone}&status=approved`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const applications = await response.json();
+                    const count = Array.isArray(applications) ? applications.length : 0;
+                    
+                    const introducedCountEl = document.getElementById('introducedCount');
+                    if (introducedCountEl) {
+                        if (count > 0) {
+                            // Make it clickable and styled
+                            introducedCountEl.innerHTML = `<a href="#" onclick="showReferredPeople('${phone}', '${name}'); return false;" class="text-primary fw-bold" style="text-decoration: none;">${count}</a>`;
+                        } else {
+                            introducedCountEl.textContent = count;
+                        }
+                    }
+                    console.log(`🔢 Real-time referral count for ${name}: ${count}`);
+                } else {
+                    console.error('Failed to fetch referral count:', response.status);
+                    const introducedCountEl = document.getElementById('introducedCount');
+                    if (introducedCountEl) introducedCountEl.textContent = '0';
+                }
+            } catch (error) {
+                console.error('Error fetching referral count:', error);
+                const introducedCountEl = document.getElementById('introducedCount');
+                if (introducedCountEl) introducedCountEl.textContent = '0';
+            }
+        }
+
         // Fetch real-time credits from credits API
         async function fetchAndUpdateCredits() {
             try {
@@ -1335,9 +1376,11 @@
                 console.log('💰 Profile credits updated:', user.credits);
             }
 
-            // Stats
+            // Stats - Fetch real-time referral count
             const introducedCountEl = document.getElementById('introducedCount');
-            if (introducedCountEl) introducedCountEl.textContent = user.introducedCount || 0;
+            if (introducedCountEl && user.phone) {
+                fetchRealTimeReferralCount(user.phone, user.name);
+            }
 
             // Profile photo
             const profilePhoto = document.getElementById('profilePhoto');
@@ -1352,11 +1395,13 @@
             // Form fields
             const editNameEl = document.getElementById('editName');
             const editPhoneEl = document.getElementById('editPhone');
+            const editPincodeEl = document.getElementById('editPincode');
             const editEmailEl = document.getElementById('editEmail');
             const editIntroducedByEl = document.getElementById('editIntroducedBy');
 
             if (editNameEl) editNameEl.value = user.name;
             if (editPhoneEl) editPhoneEl.value = user.phone;
+            if (editPincodeEl) editPincodeEl.value = user.pincode || '';
             if (editEmailEl) editEmailEl.value = user.email || '';
             if (editIntroducedByEl) editIntroducedByEl.value = user.introducedBy || 'Self';
 
@@ -1758,6 +1803,7 @@
         function toggleEditMode() {
             isEditMode = true;
             document.getElementById('editName').removeAttribute('readonly');
+            document.getElementById('editPincode').removeAttribute('readonly');
             document.getElementById('editEmail').removeAttribute('readonly');
             document.getElementById('profileForm').classList.add('edit-mode');
             document.getElementById('profileActions').classList.remove('d-none');
@@ -1768,6 +1814,7 @@
         function cancelEditMode() {
             isEditMode = false;
             document.getElementById('editName').setAttribute('readonly', true);
+            document.getElementById('editPincode').setAttribute('readonly', true);
             document.getElementById('editEmail').setAttribute('readonly', true);
             document.getElementById('profileForm').classList.remove('edit-mode');
             document.getElementById('profileActions').classList.add('d-none');
@@ -1782,7 +1829,14 @@
             e.preventDefault();
 
             const name = document.getElementById('editName').value;
+            const pincode = document.getElementById('editPincode').value;
             const email = document.getElementById('editEmail').value;
+
+            // Validate pincode if provided
+            if (pincode && !/^[0-9]{6}$/.test(pincode)) {
+                showNotification('Please enter a valid 6-digit pincode', 'error');
+                return;
+            }
 
             try {
                 const response = await fetch(`${API_BASE_URL}/auth/profile`, {
@@ -1791,7 +1845,7 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ name, email })
+                    body: JSON.stringify({ name, pincode, email })
                 });
 
                 if (response.ok) {
@@ -2895,6 +2949,173 @@
             } catch (error) {
                 console.error('Delete ad error:', error);
                 showNotification('Network error. Please try again.', 'error');
+            }
+        }
+
+        // Show referred people in modal
+        async function showReferredPeople(referrerPhone, referrerName) {
+            console.log(`📊 Fetching referred people for ${referrerName} (${referrerPhone})`);
+            
+            // Show loading overlay
+            const loadingOverlay = document.createElement('div');
+            loadingOverlay.id = 'referredPeopleLoadingOverlay';
+            loadingOverlay.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                            background: rgba(0, 0, 0, 0.7); z-index: 9999; 
+                            display: flex; justify-content: center; align-items: center;">
+                    <div style="text-align: center; color: white;">
+                        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem; border-width: 0.3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p style="margin-top: 1rem; font-size: 1.1rem; font-weight: 500;">Loading Referred People...</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(loadingOverlay);
+            
+            try {
+                const url = `${API_BASE_URL}/applications?introducedBy=${referrerPhone}&status=approved`;
+                console.log(`🌐 API URL:`, url);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                console.log(`📡 Response status:`, response.status, response.statusText);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const applications = await response.json();
+                console.log(`✅ Applications response:`, applications);
+                console.log(`📝 Response type:`, typeof applications, 'Is array:', Array.isArray(applications));
+                
+                const applicationsArray = Array.isArray(applications) ? applications : [];
+                console.log(`✅ Found ${applicationsArray.length} referred people`);
+
+                // Create modal HTML
+                const modalHtml = `
+                    <div class="modal fade" id="referredPeopleModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-users me-2"></i>
+                                        People Referred by ${referrerName}
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ${applicationsArray.length === 0 ? `
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                                            <p class="text-muted">No approved referrals found</p>
+                                        </div>
+                                    ` : `
+                                        <div class="table-responsive">
+                                            <table class="table table-hover table-bordered">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Sr No.</th>
+                                                        <th>Name</th>
+                                                        <th>Phone</th>
+                                                        <th>Position</th>
+                                                        <th>Applied Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    ${applicationsArray.map((app, index) => {
+                                                        const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
+                                                        
+                                                        // Extract position level and actual area from positionId
+                                                        let positionDisplay = '-';
+                                                        if (app.positionId) {
+                                                            const parts = app.positionId.split('_');
+                                                            if (parts.length >= 2) {
+                                                                const level = parts[1]; // e.g., 'state-head', 'division-head', 'district-head'
+                                                                let levelName = '';
+                                                                
+                                                                if (level.includes('state')) levelName = 'State';
+                                                                else if (level.includes('division')) levelName = 'Division';
+                                                                else if (level.includes('district')) levelName = 'District';
+                                                                else if (level.includes('zone')) levelName = 'Zone';
+                                                                else if (level.includes('tehsil')) levelName = 'Tehsil';
+                                                                else if (level.includes('village')) levelName = 'Village';
+                                                                
+                                                                // Extract the actual area from the LAST part of positionId
+                                                                // e.g., pos_division-head_india_east-zone_bihar_begusarai -> "begusarai"
+                                                                const locationRaw = parts[parts.length - 1] || '-';
+                                                                const location = locationRaw.split('-').map(word => 
+                                                                    word.charAt(0).toUpperCase() + word.slice(1)
+                                                                ).join(' ');
+                                                                
+                                                                if (levelName && location !== '-') {
+                                                                    positionDisplay = `${levelName}(${location})`;
+                                                                } else {
+                                                                    positionDisplay = location;
+                                                                }
+                                                            }
+                                                        }
+                                                        
+                                                        return `
+                                                            <tr>
+                                                                <td><strong>${index + 1}</strong></td>
+                                                                <td>${app.applicantInfo?.name || '-'}</td>
+                                                                <td>${app.applicantInfo?.phone || '-'}</td>
+                                                                <td>${positionDisplay}</td>
+                                                                <td>${appliedDate}</td>
+                                                            </tr>
+                                                        `;
+                                                    }).join('')}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    `}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Remove existing modal if present
+                const existingModal = document.getElementById('referredPeopleModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                // Add modal to page
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                // Remove loading overlay
+                const loadingOverlay = document.getElementById('referredPeopleLoadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.remove();
+                }
+
+                // Show modal using Bootstrap
+                const modal = new bootstrap.Modal(document.getElementById('referredPeopleModal'));
+                modal.show();
+
+                // Clean up modal after it's hidden
+                document.getElementById('referredPeopleModal').addEventListener('hidden.bs.modal', function () {
+                    this.remove();
+                });
+
+            } catch (error) {
+                // Remove loading overlay on error
+                const loadingOverlay = document.getElementById('referredPeopleLoadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.remove();
+                }
+                
+                console.error('❌ Error fetching referred people:', error);
+                alert('Failed to load referred people. Please try again.');
             }
         }
     </script>

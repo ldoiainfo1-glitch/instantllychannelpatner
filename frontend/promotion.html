@@ -537,8 +537,17 @@
                 }, 1000);
                 
                 try {
-                    const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`, {
-                        signal: controller.signal
+                    // Add cache-busting parameter to ensure latest image is fetched
+                    const imageUrl = window.CacheBuster 
+                        ? window.CacheBuster.addCacheBuster(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`)
+                        : `${API_BASE_URL}/promotions/image/${promotionId}/${language}?t=${Date.now()}`;
+                    
+                    const response = await fetch(imageUrl, {
+                        signal: controller.signal,
+                        headers: {
+                            'Cache-Control': 'no-cache',
+                            'Pragma': 'no-cache'
+                        }
                     });
                     clearTimeout(timeoutId); // Clear timeout if request completes
                     clearInterval(loadingInterval); // Stop loading updates
@@ -816,8 +825,17 @@
             try {
                 console.log(`Downloading promotion: ${promotionId}, Language: ${language}`);
                 
-                // Fetch promotion image from backend
-                const response = await fetch(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`);
+                // Fetch promotion image from backend with cache-busting
+                const imageUrl = window.CacheBuster 
+                    ? window.CacheBuster.addCacheBuster(`${API_BASE_URL}/promotions/image/${promotionId}/${language}`)
+                    : `${API_BASE_URL}/promotions/image/${promotionId}/${language}?t=${Date.now()}`;
+                    
+                const response = await fetch(imageUrl, {
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
                 
                 if (!response.ok) {
                     throw new Error('Failed to fetch promotion image');

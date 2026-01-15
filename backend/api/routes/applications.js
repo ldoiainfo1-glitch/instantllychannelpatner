@@ -218,14 +218,16 @@ router.get('/', async (req, res) => {
       district, 
       tehsil, 
       pincode, 
-      village 
+      village,
+      introducedBy 
     } = req.query;
     
-    console.log('📋 Loading applications with filters:', { status, country, zone, state, division, district, tehsil, pincode, village });
+    console.log('📋 Loading applications with filters:', { status, country, zone, state, division, district, tehsil, pincode, village, introducedBy });
     
     // Build application filter
     let applicationFilter = {};
     if (status) applicationFilter.status = status;
+    if (introducedBy) applicationFilter.introducedBy = introducedBy;
     
     // Get all applications from applications collection (no position population needed)
     const applications = await Application.find(applicationFilter)
@@ -234,6 +236,7 @@ router.get('/', async (req, res) => {
       .sort({ appliedDate: -1 });
     
     console.log(`📊 Found ${applications.length} applications in database`);
+
     
     // Since applications don't have location data, we'll return all applications
     // In a real system, you'd add location fields to the Application model
@@ -364,6 +367,7 @@ router.put('/:id/status', async (req, res) => {
           name: application.applicantInfo.name,
           phone: application.applicantInfo.phone,
           email: application.applicantInfo.email,
+          pincode: application.applicantInfo.pincode,
           personCode: personCode,
           loginId: application.applicantInfo.phone, // Login ID is phone number
           password: defaultPassword, // First 4 letters of name in CAPITAL
@@ -494,15 +498,38 @@ router.post('/with-payment', upload.fields([
     console.log('📝 Application with payment received:', { 
       positionId, 
       name, 
-      phone, 
+      phone,
+      pincode,
+      pincodeType: typeof pincode,
+      pincodeLength: pincode ? pincode.length : 0,
       paymentAmount,
       hasPaymentScreenshot: !!(req.files && req.files.paymentScreenshot)
     });
     
     // Validate required fields
-    if (!positionId || !name || !phone || !paymentAmount) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!positionId || !name || !phone || !pincode || !paymentAmount) {
+      console.error('❌ Missing required fields:', { positionId: !!positionId, name: !!name, phone: !!phone, pincode: !!pincode, paymentAmount: !!paymentAmount });
+      return res.status(400).json({ error: 'Missing required fields (name, phone, pincode, paymentAmount)' });
     }
+    
+    // Clean pincode - remove any whitespace
+    const cleanPincode = pincode.toString().trim();
+    
+    // Validate pincode format
+    if (!/^\d{6}$/.test(cleanPincode)) {
+      console.error('❌ Invalid pincode format:', { 
+        original: pincode, 
+        cleaned: cleanPincode, 
+        length: cleanPincode.length,
+        containsOnlyDigits: /^\d+$/.test(cleanPincode)
+      });
+      return res.status(400).json({ 
+        error: 'Pincode must be exactly 6 digits', 
+        details: { received: cleanPincode, length: cleanPincode.length } 
+      });
+    }
+    
+    console.log('✅ Pincode validated:', cleanPincode);
     
     // Payment screenshot is now optional
     const hasScreenshot = !!(req.files && req.files.paymentScreenshot && req.files.paymentScreenshot[0]);
@@ -572,6 +599,7 @@ router.post('/with-payment', upload.fields([
       applicantInfo: {
         name: name.trim(),
         phone: phone.trim(),
+        pincode: cleanPincode,
         email: email ? email.trim() : '',
         photo: photoBase64,
         address: address ? address.trim() : '',
@@ -585,7 +613,7 @@ router.post('/with-payment', upload.fields([
         division: division || null,
         district: district || null,
         tehsil: tehsil || null,
-        pincode: pincode || null,
+        pincode: cleanPincode || null,
         village: village || null
       },
       payment: {
