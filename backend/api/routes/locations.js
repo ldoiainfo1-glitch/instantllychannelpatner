@@ -405,13 +405,53 @@ router.delete('/manage/:id', async (req, res) => {
     
     console.log('[LOCATION-DELETE] Deleting location:', id);
     
-    const location = await Location.findByIdAndDelete(id);
+    // First, fetch the location to get its data before deleting
+    const location = await Location.findById(id);
     if (!location) {
       return res.status(404).json({ 
         success: false, 
         error: 'Location not found' 
       });
     }
+    
+    console.log('[LOCATION-DELETE] Found location:', JSON.stringify(location.toObject()));
+    
+    // Check if any applications reference this location hierarchy
+    const Application = require('../models/Application');
+    const Position = require('../models/Position');
+    
+    // Build query to find applications that reference this location
+    const locationQuery = {};
+    if (location.zone) locationQuery['location.zone'] = location.zone;
+    if (location.state) locationQuery['location.state'] = location.state;
+    if (location.division) locationQuery['location.division'] = location.division;
+    if (location.district) locationQuery['location.district'] = location.district;
+    if (location.tehsil) locationQuery['location.tehsil'] = location.tehsil;
+    if (location.pincode) locationQuery['location.pincode'] = location.pincode;
+    if (location.village) locationQuery['location.village'] = location.village;
+    
+    // Check applications
+    const relatedApplications = await Application.find(locationQuery).countDocuments();
+    
+    // Check positions
+    const relatedPositions = await Position.find(locationQuery).countDocuments();
+    
+    console.log(`[LOCATION-DELETE] Found ${relatedApplications} applications and ${relatedPositions} positions using this location`);
+    
+    if (relatedApplications > 0 || relatedPositions > 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Cannot delete location: ${relatedApplications} channel partner(s) and ${relatedPositions} position(s) are using this location. Please reassign or delete them first.`,
+        details: {
+          applications: relatedApplications,
+          positions: relatedPositions,
+          location: location.toObject()
+        }
+      });
+    }
+    
+    // If no dependencies, proceed with deletion
+    await Location.findByIdAndDelete(id);
     
     console.log('[LOCATION-DELETE] ✅ Location deleted successfully');
     
