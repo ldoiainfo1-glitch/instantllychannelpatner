@@ -284,10 +284,22 @@ router.get('/', async (req, res) => {
       // State level - show state head + sample divisions
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${state}`, location: { country, zone, state } });
       
-      // Add sample divisions for this state
-      const sampleDivisions = [`${state} North Division`, `${state} South Division`, `${state} East Division`, `${state} West Division`];
-      for (const division of sampleDivisions) {
-        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
+      // Get actual divisions for this state from location data
+      try {
+        const divisions = await Location.distinct('division', { state, division: { $ne: null, $ne: '' } });
+        console.log(`📍 Found ${divisions.length} divisions for state ${state}:`, divisions.slice(0, 10));
+        
+        // Show all real divisions from database
+        for (const division of divisions.sort()) {
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
+        }
+      } catch (error) {
+        console.log('⚠️ Could not load divisions from Location model, using fallback');
+        // Fallback: generate sample divisions only if database fetch fails
+        const sampleDivisions = [`${state} North Division`, `${state} South Division`, `${state} East Division`, `${state} West Division`];
+        for (const division of sampleDivisions) {
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
+        }
       }
     } else if (zone) {
       // Zone level - show zone head + states from location data
