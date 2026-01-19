@@ -1,5 +1,5 @@
-// Configuration - Updated for Vercel deployment fix
-const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+// Configuration - Updated for AWS deployment
+const API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
 // const API_BASE_URL = 'http://localhost:5000/api';
 
 

@@ -52,13 +52,16 @@ app.use(cors({
     'http://localhost:3000', 
     'http://127.0.0.1:3000', 
     'http://localhost:5500',
-    'https://instantllychannelpatner.onrender.com',
+    'https://api.channel-partner.instantllycards.com',
+    'https://channelpartner.instantllycards.com',
+    'https://channelpartneradmin.instantllycards.com',
     'https://instantlly-channel-partner.vercel.app',
     'https://instantllychannelpatner.vercel.app',
     'https://www.instantllycards.com',
     'https://instantllycards.com',
     'http://channel-partner-prod.s3-website.ap-south-1.amazonaws.com',
-    /\.vercel\.app$/
+    /\.vercel\.app$/,
+    /\.instantllycards\.com$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -74,7 +77,9 @@ app.use((req, res, next) => {
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:5500',
-    'https://instantllychannelpatner.onrender.com',
+    'https://api.channel-partner.instantllycards.com',
+    'https://channelpartner.instantllycards.com',
+    'https://channelpartneradmin.instantllycards.com',
     'https://instantlly-channel-partner.vercel.app',
     'https://instantllychannelpatner.vercel.app',
     'https://instantllychannelpatneradmin.vercel.app',
@@ -82,7 +87,7 @@ app.use((req, res, next) => {
     'https://instantllycards.com'
   ];
   
-  if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin)) {
+  if (allowedOrigins.includes(origin) || /\.vercel\.app$/.test(origin) || /\.instantllycards\.com$/.test(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Access-Control-Allow-Credentials', 'true');
   }

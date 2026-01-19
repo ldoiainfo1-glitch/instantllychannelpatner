@@ -1504,7 +1504,7 @@
             document.getElementById('statsPaginationContainer').style.display = 'none';
             
             try {
-                const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+                const API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
                 
                 console.log('📊 Loading position statistics...');
                 
@@ -1616,7 +1616,7 @@
 
         // Get filtered statistics based on location filters
         async function getFilteredStatistics(filters, statsData, locationsData) {
-            const API_BASE_URL = 'https://instantllychannelpatner.onrender.com/api';
+            const API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
             const givenPositions = statsData.givenPositions || {};
             
             // Check if any meaningful filter is selected (excluding just 'country: India')
