@@ -805,4 +805,112 @@ router.get('/export-all', async (req, res) => {
   }
 });
 
+// Find & Replace - Preview matching locations
+router.post('/find-replace/preview', async (req, res) => {
+  try {
+    const { column, findValue, replaceValue } = req.body;
+    
+    // Validate inputs
+    if (!column || !findValue || !replaceValue) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Column, find value, and replace value are required' 
+      });
+    }
+    
+    // Validate column name
+    const validColumns = ['zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
+    if (!validColumns.includes(column)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid column name' 
+      });
+    }
+    
+    console.log(`🔍 Previewing find & replace: ${column} - "${findValue}" -> "${replaceValue}"`);
+    
+    // Count matching locations (case-insensitive exact match)
+    const matchCount = await Location.countDocuments({
+      [column]: { $regex: new RegExp(`^${findValue}$`, 'i') }
+    });
+    
+    console.log(`✅ Found ${matchCount} matching location(s)`);
+    
+    res.json({
+      success: true,
+      matchCount,
+      column,
+      findValue,
+      replaceValue
+    });
+    
+  } catch (error) {
+    console.error('❌ Error previewing find & replace:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Find & Replace - Execute bulk update
+router.post('/find-replace/execute', async (req, res) => {
+  try {
+    const { column, findValue, replaceValue } = req.body;
+    
+    // Validate inputs
+    if (!column || !findValue || !replaceValue) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Column, find value, and replace value are required' 
+      });
+    }
+    
+    // Validate column name
+    const validColumns = ['zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
+    if (!validColumns.includes(column)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Invalid column name' 
+      });
+    }
+    
+    console.log(`🔄 Executing find & replace: ${column} - "${findValue}" -> "${replaceValue}"`);
+    
+    // Update matching locations (case-insensitive exact match)
+    const updateResult = await Location.updateMany(
+      { [column]: { $regex: new RegExp(`^${findValue}$`, 'i') } },
+      { $set: { [column]: replaceValue } }
+    );
+    
+    console.log(`✅ Updated ${updateResult.modifiedCount} location(s)`);
+    
+    // Now update channel partner applications that reference these locations
+    let channelPartnersUpdated = 0;
+    
+    // Import Application model to update channel partner records
+    const Application = require('../models/Application');
+    
+    // Update applications where the location field matches
+    const appUpdateResult = await Application.updateMany(
+      { [`position.location.${column}`]: { $regex: new RegExp(`^${findValue}$`, 'i') } },
+      { $set: { [`position.location.${column}`]: replaceValue } }
+    );
+    
+    channelPartnersUpdated = appUpdateResult.modifiedCount;
+    console.log(`✅ Updated ${channelPartnersUpdated} channel partner application(s)`);
+    
+    res.json({
+      success: true,
+      updatedCount: updateResult.modifiedCount,
+      channelPartnersUpdated,
+      column,
+      findValue,
+      replaceValue,
+      message: `Successfully updated ${updateResult.modifiedCount} location(s)${channelPartnersUpdated > 0 ? ` and ${channelPartnersUpdated} channel partner record(s)` : ''}`
+    });
+    
+  } catch (error) {
+    console.error('❌ Error executing find & replace:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;
