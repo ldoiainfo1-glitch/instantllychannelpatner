@@ -234,13 +234,14 @@ router.get('/', async (req, res) => {
     
     // 🔍 AUTO-COMPLETE LOCATION HIERARCHY: If lower-level location is provided without parents,
     // look up the complete hierarchy from the Location collection
-    if ((district || tehsil || pincode || village) && (!zone || !state || !division)) {
+    if ((division || district || tehsil || pincode || village) && (!zone || !state || (division && !division))) {
       console.log('🔍 INCOMPLETE HIERARCHY DETECTED - Looking up parent locations...');
       const query = {};
       if (village) query.village = village;
       else if (pincode) query.pincode = pincode;
       else if (tehsil) query.tehsil = tehsil;
       else if (district) query.district = district;
+      else if (division) query.division = division;
       
       const locationDoc = await Location.findOne(query).lean();
       if (locationDoc) {
