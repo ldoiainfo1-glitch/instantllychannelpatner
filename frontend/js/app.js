@@ -4192,17 +4192,21 @@ async function showIDCard(name, phone, photo, positionLocation) {
                 overflow-y: auto;
                 padding: 15px;
                 max-height: 90vh;
+                display: flex;
+                justify-content: center;
+                background: #f5f5f5;
             }
             #idCardContent {
                 width: 540px;
                 height: auto;
                 margin: 0 auto;
                 background: white;
-                border: 2px solid #ddd;
-                border-radius: 8px;
+                border: none;
+                border-radius: 0;
                 overflow: hidden;
                 display: flex;
                 flex-direction: column;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             }
             @media (max-width: 768px) {
                 #idCardModal .modal-dialog {
@@ -4213,7 +4217,8 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     padding: 10px;
                 }
                 #idCardContent {
-                    width: 100%;
+                    width: 100% !important;
+                    max-width: 100% !important;
                     height: auto;
                 }
             }
@@ -4229,7 +4234,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     </div>
 
                     <div class="modal-body">
-                        <div id="idCardContent">
+                        <div id="idCardContent" style="width: 540px; max-width: 540px; margin: 0 auto; background: white;">
                             <!-- Header Section: Company Logo & Name -->
                             <div style="background: #000; color: white; padding: 10px 15px; text-align: center; flex-shrink: 0;">
                                 <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px;">
@@ -4336,16 +4341,14 @@ async function downloadIDCardAsImage(name) {
     // Wait for browser to reflow
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    // Get actual element dimensions
-    const actualHeight = element.scrollHeight || element.offsetHeight;
-    
+    // Get actual element dimensions - fixed at 540x772
     const canvas = await html2canvas(element, {
         scale: 2,
-        width: 720,
-        height: actualHeight,
+        width: 540,
+        height: 772,
         backgroundColor: "#ffffff",
         useCORS: true,
-        windowHeight: actualHeight,
+        windowHeight: 772,
         scrollY: -window.scrollY,
         scrollX: -window.scrollX
     });
