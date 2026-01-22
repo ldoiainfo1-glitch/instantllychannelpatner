@@ -2898,7 +2898,8 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
 
     // Get filtered data based on parent selections (reverse mapping handles cascading)
     let data = getFilteredDataBasedOnParents(inputId, dataKey, locationData[dataKey]);
-    console.log(`✅ Showing dropdown for ${dataKey}:`, data.length, 'items');
+    const allData = locationData[dataKey]; // Keep reference to full dataset for search
+    console.log(`✅ Showing dropdown for ${dataKey}:`, data.length, 'items (full dataset:', allData.length, ')');
 
     // Only create dropdown content if it doesn't exist or data changed
     if (!dropdown.dataset.initialized || dropdown.dataset.dataKey !== dataKey) {
@@ -2954,13 +2955,14 @@ async function showFilterDropdown(inputId, dropdownId, dataKey) {
     newSearchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
         if (searchTerm) {
-            const filteredData = data.filter(item =>
-                item.toLowerCase().includes(searchTerm)
+            // Search through FULL dataset, not cascaded
+            const filteredData = allData.filter(item =>
+                item && item.toLowerCase().includes(searchTerm)
             );
-            displayFilterOptions(optionsContainer, filteredData, data, inputId, dropdownId);
+            displayFilterOptions(optionsContainer, filteredData, allData, inputId, dropdownId);
         } else {
-            // Show first 50 when no search term
-            displayFilterOptions(optionsContainer, data.slice(0, 50), data, inputId, dropdownId);
+            // Show cascaded data when no search term
+            displayFilterOptions(optionsContainer, data.slice(0, 100), allData, inputId, dropdownId);
         }
     });
 
