@@ -708,18 +708,10 @@ function createPositionRow(position) {
                 <button class="btn btn-success btn-sm" onclick="openApplicationModal('${position._id}', '${position.designation}', ${JSON.stringify(position.location).replace(/"/g, '&quot;')})">
                     <i class="fas fa-plus me-1"></i>Apply Now
                 </button>
-                <div class="mt-2">
-                    <small class="text-muted d-block" style="font-size: 0.75rem;">ID: ${position._id}</small>
-                </div>
             </div>
         `;
     } else if (position.applicantDetails && position.applicantDetails.name) {
-        nameCell = `
-            <div>
-                <div>${position.applicantDetails.name}</div>
-                <small class="text-muted" style="font-size: 0.75rem;">ID: ${position._id}</small>
-            </div>
-        `;
+        nameCell = `<div>${position.applicantDetails.name}</div>`;
     } else {
         nameCell = '-';
     }
@@ -925,6 +917,7 @@ function createPositionRow(position) {
 
     row.innerHTML = `
         <td><strong>${position.sNo}</strong></td>
+        <td><small class="text-muted" style="font-size: 0.75rem;">${position._id || position.positionId || '-'}</small></td>
         <td>${nameCell}</td>
         <td>${areaHeadFor}</td>
         <td class="text-center">${photoCell}</td>
