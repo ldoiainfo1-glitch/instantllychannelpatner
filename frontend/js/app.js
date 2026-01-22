@@ -4234,7 +4234,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     </div>
 
                     <div class="modal-body">
-                        <div id="idCardContent" style="width: 540px; max-width: 540px; margin: 0 auto; background: white;">
+                        <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: white; display: flex; flex-direction: column;">
                             <!-- Header Section: Company Logo & Name -->
                             <div style="background: #000; color: white; padding: 10px 15px; text-align: center; flex-shrink: 0;">
                                 <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px;">
@@ -4252,7 +4252,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                             </div>
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
-                            <div style="padding: 15px 15px 20px 15px; background: #ff0000; color: white; flex-shrink: 0;">
+                            <div style="padding: 15px 15px 20px 15px; background: #ff0000; color: white; flex: 1; display: flex; flex-direction: column;">
                                 <!-- User Info Section: Photo + Name/Phone -->
                                 <div style="display: flex; gap: 15px; align-items: flex-start; margin-bottom: 15px; flex-shrink: 0;">
                                     <!-- Photo Column (REDUCED SIZE) -->
@@ -4275,7 +4275,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                 </div>
 
                                 <!-- Hierarchy Table (Compact) -->
-                                <div style="background: white; color: black; padding: 10px; border-radius: 5px;">
+                                <div style="background: white; color: black; padding: 10px; border-radius: 5px; flex: 1; overflow-y: auto;">
                                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                                         <thead>
                                             <tr style="background: #333; color: white;">
