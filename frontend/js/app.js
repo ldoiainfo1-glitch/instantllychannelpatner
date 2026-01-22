@@ -4238,7 +4238,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                             <!-- Header Section: Company Logo & Name -->
                             <div style="background: #000; color: white; padding: 15px 20px; text-align: center; flex-shrink: 0;">
                                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px;">
-                                    <img src="images/mainlogo.png" style="width: 50px; height: 50px;">
+                                    <img src="images/logo.jpeg" style="width: 50px; height: 50px;">
                                     <h2 style="margin: 0; font-size: 26px; font-weight: bold;">
                                         Instan<span style="color: #00bfff;">tlly</span> Cards
                                     </h2>
