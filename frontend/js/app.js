@@ -4236,28 +4236,28 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     <div class="modal-body">
                         <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: white; display: flex; flex-direction: column;">
                             <!-- Header Section: Company Logo & Name -->
-                            <div style="background: #000; color: white; padding: 10px 15px; text-align: center; flex-shrink: 0;">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 5px;">
-                                    <img src="images/mainlogo.png" style="width: 40px; height: 40px;">
-                                    <h2 style="margin: 0; font-size: 24px; font-weight: bold;">
+                            <div style="background: #000; color: white; padding: 15px 20px; text-align: center; flex-shrink: 0;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px;">
+                                    <img src="images/mainlogo.png" style="width: 50px; height: 50px;">
+                                    <h2 style="margin: 0; font-size: 26px; font-weight: bold;">
                                         Instan<span style="color: #00bfff;">tlly</span> Cards
                                     </h2>
                                 </div>
-                                <p style="margin: 0; font-size: 11px; line-height: 1.3;">
+                                <p style="margin: 5px 0; font-size: 12px; line-height: 1.4;">
                                     We Are Appointing Sole Head For India, Zone, State, Division, District, Tehsil, Pincode, Village
                                 </p>
-                                <p style="margin: 3px 0 0 0; font-size: 11px; font-weight: bold;">
+                                <p style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold;">
                                     Mob: 9833752025 | Web: instantlly.com
                                 </p>
                             </div>
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
-                            <div style="padding: 15px 15px 20px 15px; background: #ff0000; color: white; flex: 1; display: flex; flex-direction: column;">
+                            <div style="padding: 20px 20px 25px 20px; background: #ff0000; color: white; flex: 1; display: flex; flex-direction: column;">
                                 <!-- User Info Section: Photo + Name/Phone -->
-                                <div style="display: flex; gap: 15px; align-items: flex-start; margin-bottom: 15px; flex-shrink: 0;">
-                                    <!-- Photo Column (REDUCED SIZE) -->
+                                <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px; flex-shrink: 0;">
+                                    <!-- Photo Column -->
                                     <div style="flex-shrink: 0;">
-                                        <div style="width: 100px; height: 100px; border: 3px solid white; overflow: hidden; background: white;">
+                                        <div style="width: 130px; height: 130px; border: 4px solid white; overflow: hidden; background: white;">
                                             <img src="${photo}" 
                                                  style="width: 100%; height: 100%; object-fit: cover;">
                                         </div>
@@ -4265,24 +4265,24 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                     
                                     <!-- User Details Column -->
                                     <div style="flex: 1;">
-                                        <h3 style="margin: 0 0 10px 0; font-size: 20px; font-weight: bold;">Channel Partner</h3>
-                                        <div style="font-size: 15px; line-height: 1.5;">
-                                            <p style="margin: 3px 0;"><strong>Name:</strong> ${name}</p>
-                                            <p style="margin: 3px 0;"><strong>Mob:</strong> ${phone}</p>
-                                            <p style="margin: 3px 0;"><strong>Pincode:</strong> ${userPincode}</p>
+                                        <h3 style="margin: 0 0 12px 0; font-size: 22px; font-weight: bold;">Channel Partner</h3>
+                                        <div style="font-size: 16px; line-height: 1.6;">
+                                            <p style="margin: 5px 0;"><strong>Name:</strong> ${name}</p>
+                                            <p style="margin: 5px 0;"><strong>Mob:</strong> ${phone}</p>
+                                            <p style="margin: 5px 0;"><strong>Pincode:</strong> ${userPincode}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Hierarchy Table (Compact) -->
-                                <div style="background: white; color: black; padding: 10px; border-radius: 5px; flex: 1; overflow-y: auto;">
-                                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                <div style="background: white; color: black; padding: 15px; border-radius: 8px; flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; flex: 1;">
                                         <thead>
                                             <tr style="background: #333; color: white;">
-                                                <th style="padding: 6px 8px; border: 1px solid #ddd; text-align: left;">Position</th>
-                                                <th style="padding: 6px 8px; border: 1px solid #ddd; text-align: left;">Area</th>
-                                                <th style="padding: 6px 8px; border: 1px solid #ddd; text-align: left;">C.P. Name</th>
-                                                <th style="padding: 6px 8px; border: 1px solid #ddd; text-align: left;">C.P. Mob</th>
+                                                <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Position</th>
+                                                <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Area</th>
+                                                <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">C.P. Name</th>
+                                                <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">C.P. Mob</th>
                                             </tr>
                                         </thead>
                                         <tbody>
