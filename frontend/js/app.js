@@ -4266,7 +4266,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                     <!-- User Details Column -->
                                     <div style="flex: 1;">
                                         <h3 style="margin: 0 0 12px 0; font-size: 22px; font-weight: bold;">Channel Partner</h3>
-                                        <div style="font-size: 16px; line-height: 1.6;">
+                                        <div style="font-size: 20px; line-height: 1.6;">
                                             <p style="margin: 5px 0;"><strong>Name:</strong> ${name}</p>
                                             <p style="margin: 5px 0;"><strong>Mob:</strong> ${phone}</p>
                                             <p style="margin: 5px 0;"><strong>Pincode:</strong> ${userPincode}</p>
