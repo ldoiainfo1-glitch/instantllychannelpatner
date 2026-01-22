@@ -3616,7 +3616,7 @@ function fallbackCopyTextToClipboard(text) {
 //                                     <!-- LEFT SECTION: Logo (Top) + Photo (Middle) + Company Name (Bottom) -->
 //                                     <div style="flex: 0 0 220px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 0;">
 //                                         <!-- Logo at Top -->
-//                                         <img src="images/logo.jpeg" alt="Instantlly Cards Logo" style="width: 140px; height: 140px; object-fit: contain; border-radius: 15px;">
+//                                         <img src="images/logo.png" alt="Instantlly Cards Logo" style="width: 140px; height: 140px; object-fit: contain; border-radius: 15px;">
 
 //                                         <!-- Photo in Middle -->
 //                                         <img src="${photo || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4='}" 
@@ -4238,7 +4238,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                             <!-- Header Section: Company Logo & Name -->
                             <div style="background: #000; color: white; padding: 15px 20px; text-align: center; flex-shrink: 0;">
                                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px;">
-                                    <img src="images/logo.jpeg" style="width: 50px; height: 50px;">
+                                    <img src="images/logo.png" style="width: 50px; height: 50px;">
                                     <h2 style="margin: 0; font-size: 26px; font-weight: bold;">
                                         Instan<span style="color: #00bfff;">tlly</span> Cards
                                     </h2>
