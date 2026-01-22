@@ -673,16 +673,20 @@ router.get('/hierarchy/:phone', async (req, res) => {
       const level = hierarchyLevels[i];
       const levelName = level.charAt(0).toUpperCase() + level.slice(1);
       
-      // Get the area name for this level from user's location
+      // IMPORTANT: Only show area values for levels up to and including the user's position level
+      // This prevents showing personal location data for positions the user doesn't hold
       let areaValue = '';
-      if (level === 'country') areaValue = 'India';
-      else if (level === 'zone' && userApp.location.zone) areaValue = userApp.location.zone;
-      else if (level === 'state' && userApp.location.state) areaValue = userApp.location.state;
-      else if (level === 'division' && userApp.location.division) areaValue = userApp.location.division;
-      else if (level === 'district' && userApp.location.district) areaValue = userApp.location.district;
-      else if (level === 'tehsil' && userApp.location.tehsil) areaValue = userApp.location.tehsil;
-      else if (level === 'pincode' && userApp.location.pincode) areaValue = userApp.location.pincode;
-      else if (level === 'village' && userApp.location.village) areaValue = userApp.location.village;
+      if (i <= userLevelIndex) {
+        // Only populate area if this level is at or above the user's position
+        if (level === 'country') areaValue = 'India';
+        else if (level === 'zone' && userApp.location.zone) areaValue = userApp.location.zone;
+        else if (level === 'state' && userApp.location.state) areaValue = userApp.location.state;
+        else if (level === 'division' && userApp.location.division) areaValue = userApp.location.division;
+        else if (level === 'district' && userApp.location.district) areaValue = userApp.location.district;
+        else if (level === 'tehsil' && userApp.location.tehsil) areaValue = userApp.location.tehsil;
+        else if (level === 'pincode' && userApp.location.pincode) areaValue = userApp.location.pincode;
+        else if (level === 'village' && userApp.location.village) areaValue = userApp.location.village;
+      }
       
       let cpName = '';
       let cpMob = '';
