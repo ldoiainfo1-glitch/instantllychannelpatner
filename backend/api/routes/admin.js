@@ -3298,5 +3298,148 @@ router.post('/create-missing-users', async (req, res) => {
   }
 });
 
+// 🔍 Detect duplicate phone numbers across all applications
+router.get('/duplicate-phones', async (req, res) => {
+  try {
+    console.log('🔍 Checking for duplicate phone numbers...');
+    
+    // Aggregate to find phone numbers used more than once
+    const duplicates = await Application.aggregate([
+      {
+        $match: {
+          status: { $in: ['approved', 'pending'] },
+          'applicantInfo.phone': { $exists: true, $ne: null, $ne: '' }
+        }
+      },
+      {
+        $group: {
+          _id: '$applicantInfo.phone',
+          count: { $sum: 1 },
+          applications: {
+            $push: {
+              id: '$_id',
+              name: '$applicantInfo.name',
+              position: '$positionId',
+              status: '$status',
+              appliedAt: '$appliedAt'
+            }
+          }
+        }
+      },
+      {
+        $match: { count: { $gt: 1 } }
+      },
+      {
+        $sort: { count: -1 }
+      }
+    ]);
+    
+    console.log(`✅ Found ${duplicates.length} duplicate phone numbers`);
+    duplicates.forEach(dup => {
+      console.log(`   📞 ${dup._id}: ${dup.count} applications`);
+      dup.applications.forEach(app => {
+        console.log(`      - ${app.name} (${app.position})`);
+      });
+    });
+    
+    res.json({
+      success: true,
+      duplicateCount: duplicates.length,
+      duplicates: duplicates
+    });
+    
+  } catch (error) {
+    console.error('❌ Error checking duplicate phones:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 📝 Update phone number for an application (admin only)
+router.put('/applications/:applicationId/phone', async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { newPhone, adminNote } = req.body;
+    
+    console.log(`📝 Admin updating phone number for application: ${applicationId}`);
+    console.log(`   New phone: ${newPhone}`);
+    
+    if (!newPhone || !/^\d{10}$/.test(newPhone)) {
+      return res.status(400).json({ error: 'Invalid phone number. Must be 10 digits.' });
+    }
+    
+    // Find the application
+    const application = await Application.findById(applicationId);
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+    
+    const oldPhone = application.applicantInfo.phone;
+    console.log(`   Old phone: ${oldPhone}`);
+    
+    // Check if new phone is already in use
+    const existingWithNewPhone = await Application.findOne({
+      'applicantInfo.phone': newPhone,
+      _id: { $ne: applicationId },
+      status: { $in: ['approved', 'pending'] }
+    });
+    
+    if (existingWithNewPhone) {
+      return res.status(400).json({
+        error: `Phone number ${newPhone} is already used by ${existingWithNewPhone.applicantInfo.name} (${existingWithNewPhone.positionId})`
+      });
+    }
+    
+    const User = require('../models/User');
+    const existingUser = await User.findOne({ phone: newPhone });
+    if (existingUser) {
+      return res.status(400).json({
+        error: `Phone number ${newPhone} is already registered as a user`
+      });
+    }
+    
+    // Update application phone
+    application.applicantInfo.phone = newPhone;
+    if (adminNote) {
+      if (!application.adminNotes) application.adminNotes = [];
+      application.adminNotes.push({
+        timestamp: new Date(),
+        note: `Phone changed from ${oldPhone} to ${newPhone}. Reason: ${adminNote}`
+      });
+    }
+    await application.save();
+    
+    console.log(`✅ Application phone updated: ${oldPhone} → ${newPhone}`);
+    
+    // Update associated User record if exists (for login)
+    const user = await User.findOne({ phone: oldPhone });
+    if (user) {
+      console.log(`   Updating user login ID: ${oldPhone} → ${newPhone}`);
+      user.phone = newPhone;
+      user.loginId = newPhone; // Login ID is phone number
+      await user.save();
+      console.log(`   ✅ User record updated`);
+    } else {
+      console.log(`   ℹ️ No user record found for old phone ${oldPhone}`);
+    }
+    
+    res.json({
+      success: true,
+      message: `Phone number updated from ${oldPhone} to ${newPhone}`,
+      application: {
+        id: application._id,
+        name: application.applicantInfo.name,
+        oldPhone,
+        newPhone,
+        position: application.positionId
+      },
+      userUpdated: !!user
+    });
+    
+  } catch (error) {
+    console.error('❌ Error updating phone:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
 
