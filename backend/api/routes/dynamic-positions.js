@@ -251,7 +251,8 @@ router.get('/', async (req, res) => {
         console.log(`   Division: ${locationDoc.division}`);
         console.log(`   District: ${locationDoc.district || '-'}`);
         
-        // Auto-fill missing parent levels
+        // Auto-fill ONLY missing PARENT levels (not child levels!)
+        // This prevents accidentally jumping to a child location
         if (!zone && locationDoc.zone) {
           zone = locationDoc.zone;
           console.log(`   ✓ Auto-filled zone: ${zone}`);
@@ -260,19 +261,23 @@ router.get('/', async (req, res) => {
           state = locationDoc.state;
           console.log(`   ✓ Auto-filled state: ${state}`);
         }
-        if (!division && locationDoc.division) {
+        // Only auto-fill division if we're at district/tehsil/pincode/village level
+        if (!division && locationDoc.division && (district || tehsil || pincode || village)) {
           division = locationDoc.division;
           console.log(`   ✓ Auto-filled division: ${division}`);
         }
-        if (!district && locationDoc.district) {
+        // Only auto-fill district if we're at tehsil/pincode/village level  
+        if (!district && locationDoc.district && (tehsil || pincode || village)) {
           district = locationDoc.district;
           console.log(`   ✓ Auto-filled district: ${district}`);
         }
-        if (!tehsil && locationDoc.tehsil) {
+        // Only auto-fill tehsil if we're at pincode/village level
+        if (!tehsil && locationDoc.tehsil && (pincode || village)) {
           tehsil = locationDoc.tehsil;
           console.log(`   ✓ Auto-filled tehsil: ${tehsil}`);
         }
-        if (!pincode && locationDoc.pincode) {
+        // Only auto-fill pincode if we're at village level
+        if (!pincode && locationDoc.pincode && village) {
           pincode = locationDoc.pincode;
           console.log(`   ✓ Auto-filled pincode: ${pincode}`);
         }
