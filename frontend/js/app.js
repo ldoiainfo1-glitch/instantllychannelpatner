@@ -4118,8 +4118,6 @@ async function showIDCard(name, phone, photo, positionLocation) {
             #idCardContent {
                 width: 540px;
                 height: auto;
-                min-height: 650px;
-                max-height: 750px;
                 margin: 0 auto;
                 background: white;
                 border: 2px solid #ddd;
@@ -4139,8 +4137,6 @@ async function showIDCard(name, phone, photo, positionLocation) {
                 #idCardContent {
                     width: 100%;
                     height: auto;
-                    min-height: 650px;
-                    max-height: 750px;
                 }
             }
         </style>
@@ -4173,7 +4169,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                             </div>
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
-                            <div style="padding: 15px; background: #ff0000; color: white; flex-shrink: 0;">
+                            <div style="padding: 15px 15px 20px 15px; background: #ff0000; color: white; flex-shrink: 0;">
                                 <!-- User Info Section: Photo + Name/Phone -->
                                 <div style="display: flex; gap: 15px; align-items: flex-start; margin-bottom: 15px; flex-shrink: 0;">
                                     <!-- Photo Column (REDUCED SIZE) -->
