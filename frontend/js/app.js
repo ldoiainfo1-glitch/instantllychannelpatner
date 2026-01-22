@@ -4356,211 +4356,80 @@ async function showIDCard(name, phone, pincode, photo, positionLocation) {
     document.body.appendChild(loadingOverlay);
 
     try {
-        // If pincode is not provided, try to fetch from user profile
-        if (!pincode || pincode === '' || pincode === 'N/A') {
-            try {
-                console.log('📍 Fetching pincode from user profile for phone:', phone);
-                const userResponse = await fetch(`${API_BASE_URL}/positions/user-by-phone/${phone}`);
-                if (userResponse.ok) {
-                    const userData = await userResponse.json();
-                    if (userData.user && userData.user.pincode) {
-                        pincode = userData.user.pincode;
-                        console.log('✅ Found pincode from user profile:', pincode);
-                    }
-                }
-            } catch (error) {
-                console.warn('⚠️ Could not fetch pincode from user profile:', error);
-            }
+        // Fetch hierarchy data from new API endpoint
+        console.log('📇 Fetching hierarchy for ID card...');
+        const hierarchyResponse = await fetch(`${API_BASE_URL}/positions/hierarchy/${phone}`);
+        
+        if (!hierarchyResponse.ok) {
+            throw new Error('Could not fetch hierarchy data');
         }
         
-        // Get complete location hierarchy path
-        const completeLocation = await getCompleteLocationPath(positionLocation);
-        console.log('📍 Complete location for ID card:', completeLocation);
-
-        function getAreaHighlight(loc) {
-            if (loc.village)  return { level: "Village", value: loc.village };
-            if (loc.pincode)  return { level: "Pincode", value: loc.pincode };
-            if (loc.tehsil)   return { level: "Tehsil", value: loc.tehsil };
-            if (loc.district) return { level: "District", value: loc.district };
-            if (loc.division) return { level: "Div", value: loc.division };
-            if (loc.state)    return { level: "State", value: loc.state };
-            if (loc.zone)     return { level: "Zone", value: loc.zone };
-            return { level: "Country", value: loc.country || "India" };
+        const hierarchyData = await hierarchyResponse.json();
+        console.log('✅ Hierarchy data received:', hierarchyData);
+        
+        const userData = hierarchyData.user;
+        const hierarchy = hierarchyData.hierarchy;
+        
+        // Update pincode if needed
+        if (!pincode || pincode === '' || pincode === 'N/A') {
+            pincode = userData.pincode;
         }
-
-        const highlight = getAreaHighlight(completeLocation);
-
-        const loc = {
-            country: completeLocation.country || "India",
-            zone: completeLocation.zone || "",
-            state: completeLocation.state || "",
-            division: completeLocation.division || "",
-            district: completeLocation.district || "",
-            tehsil: completeLocation.tehsil || "",
-            pincode: completeLocation.pincode || "",
-            village: completeLocation.village || ""
-        };
-
-        let areaListHTML = "";
-
-        function makeRow(label, value) {
-            // HIGHLIGHT BOX for the area head level (filled value)
-            if (value && highlight.level === label) {
-                return `
-                <div style="
-                    background:white;
-                    color:black;
-                    padding:8px 10px;
-                    font-size:24px;
-                    font-weight:700;
-                    margin:6px 0;
-                    display:flex;
-                    align-items:center;
-                    line-height:1.1;
-                ">
-                    <span style="font-weight:bold; margin-right:8px;">${label}:</span><span>${value}</span>
-                </div>`;
-            }
-
-            // ALWAYS show the row - even if empty
-            return `<div style="margin-bottom:6px; line-height:1.25;"><b>${label}:</b> ${value}</div>`;
-        }
-
-        // ALWAYS show all 8 fields in order (filled or empty)
-        areaListHTML += makeRow("Country", loc.country);
-        areaListHTML += makeRow("Zone", loc.zone);
-        areaListHTML += makeRow("State", loc.state);
-        areaListHTML += makeRow("Div", loc.division);  // Changed to "Div"
-        areaListHTML += makeRow("District", loc.district);
-        areaListHTML += makeRow("Tehsil", loc.tehsil);
-        areaListHTML += makeRow("Pincode", loc.pincode);
-        areaListHTML += makeRow("Village", loc.village);
-
-        const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" }
+        
+        // Build the hierarchy table rows
+        let hierarchyRowsHTML = '';
+        hierarchy.forEach((level) => {
+            const rowStyle = level.isCurrentUser 
+                ? 'background: #FFE5E5; font-weight: bold;' 
+                : '';
+            
+            hierarchyRowsHTML += `
+                <tr style="${rowStyle}">
+                    <td style="padding: 8px; border: 1px solid #ddd;">${level.position}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${level.area}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${level.cpName || ''}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${level.cpMob || ''}</td>
+                </tr>
+            `;
         });
-
-        if (!response.ok) {
-            alert("User details not found.");
-            return;
-        }
-
-        const user = await response.json();
 
         const modalHTML = `
         <style>
             #idCardModal .modal-dialog {
-                max-width: 420px;
-                margin: 0.5rem auto;
+                max-width: 600px;
+                margin: 1rem auto;
             }
             #idCardModal .modal-body {
-                overflow: hidden;
-                padding: 0;
-                height: 550px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
+                overflow-y: auto;
+                padding: 20px;
+                max-height: 90vh;
             }
             #idCardContent {
-                transform: scale(0.46);
-                transform-origin: center center;
-            }
-            @media (min-width: 1400px) {
-                #idCardModal .modal-dialog {
-                    max-width: 480px;
-                }
-                #idCardModal .modal-body {
-                    height: 620px;
-                }
-                #idCardContent {
-                    transform: scale(0.52);
-                }
-            }
-            @media (max-width: 1199px) {
-                #idCardModal .modal-dialog {
-                    max-width: 400px;
-                }
-                #idCardModal .modal-body {
-                    height: 520px;
-                }
-                #idCardContent {
-                    transform: scale(0.44);
-                }
-            }
-            @media (max-width: 991px) {
-                #idCardModal .modal-dialog {
-                    max-width: 380px;
-                }
-                #idCardModal .modal-body {
-                    height: 500px;
-                }
-                #idCardContent {
-                    transform: scale(0.42);
-                }
+                width: 540px;
+                height: 772px;
+                margin: 0 auto;
+                background: white;
+                border: 2px solid #ddd;
+                border-radius: 8px;
+                overflow: hidden;
             }
             @media (max-width: 768px) {
                 #idCardModal .modal-dialog {
-                    max-width: 350px;
-                    margin: 0.5rem auto;
+                    max-width: 95%;
+                    margin: 0.5rem;
                 }
                 #idCardModal .modal-body {
-                    height: 470px;
+                    padding: 10px;
                 }
                 #idCardContent {
-                    transform: scale(0.39);
-                }
-            }
-            @media (max-width: 576px) {
-                #idCardModal .modal-dialog {
-                    max-width: 320px;
-                    margin: 0.5rem auto;
-                }
-                #idCardModal .modal-body {
-                    height: 440px;
-                }
-                #idCardContent {
-                    transform: scale(0.36);
-                }
-            }
-            @media (max-width: 480px) {
-                #idCardModal .modal-dialog {
-                    max-width: 300px;
-                }
-                #idCardModal .modal-body {
-                    height: 420px;
-                }
-                #idCardContent {
-                    transform: scale(0.34);
-                }
-            }
-            @media (max-width: 400px) {
-                #idCardModal .modal-dialog {
-                    max-width: 280px;
-                }
-                #idCardModal .modal-body {
-                    height: 400px;
-                }
-                #idCardContent {
-                    transform: scale(0.32);
-                }
-            }
-            @media (max-width: 360px) {
-                #idCardModal .modal-dialog {
-                    max-width: 260px;
-                }
-                #idCardModal .modal-body {
-                    height: 380px;
-                }
-                #idCardContent {
-                    transform: scale(0.30);
+                    width: 100%;
+                    height: auto;
+                    min-height: 772px;
                 }
             }
         </style>
         <div class="modal fade" id="idCardModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-
                     <div class="modal-header bg-primary text-white">
                         <h5 class="modal-title">
                             <i class="fas fa-id-card me-2"></i>Channel Partner ID Card
@@ -4568,180 +4437,73 @@ async function showIDCard(name, phone, pincode, photo, positionLocation) {
                         <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
 
-                    <div class="modal-body p-0" style="background:#f5f5f5;">
-                        <div style="padding:10px; display:flex; justify-content:center;">
+                    <div class="modal-body">
+                        <div id="idCardContent">
+                            <!-- Header Section -->
+                            <div style="background: #000; color: white; padding: 15px; text-align: center;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px;">
+                                    <img src="images/mainlogo.png" style="width: 50px; height: 50px;">
+                                    <h2 style="margin: 0; font-size: 28px; font-weight: bold;">
+                                        Instan<span style="color: #00bfff;">tlly</span> Cards
+                                    </h2>
+                                </div>
+                                <p style="margin: 5px 0; font-size: 14px;">
+                                    We Are Appointing Sole Head For India, Zone, State, Division, District, Tehsil, Pincode, Village
+                                </p>
+                                <p style="margin: 5px 0; font-size: 14px; font-weight: bold;">
+                                    Mob: 9833752025 | Web: instantlly.com
+                                </p>
+                            </div>
 
-                            <!-- FULL ID CARD -->
-                            <div id="idCardContent" style="
-                                width:720px;
-                                background:white;
-                                min-height:auto;
-                                display:flex;
-                                overflow:hidden;
-                                font-family:Arial, Helvetica, sans-serif;
-                                box-shadow:0 4px 15px rgba(0,0,0,0.25);
-                            ">
-
-                                <!-- LEFT SECTION -->
-                                <div style="
-                                    width:304px;
-                                    background:black;
-                                    color:white;
-                                    padding:20px;
-                                    display:flex;
-                                    flex-direction:column;
-                                    align-items:center;
-                                ">
-
-                                    <!-- LOGO -->
-                                    <div style="text-align:center; margin-bottom:25px;">
-                                        <img src="images/mainlogo.png" style="width:165px;">
-                                    </div>
-
-                                    <!-- APP BENEFITS -->
-                                    <div style="text-align:center; margin-bottom:30px;">
-                                        <div style="font-size:32px; font-weight:700;">App Benefits</div>
-                                        <div style="font-size:26px;">Create Send Receive</div>
-                                        <div style="font-size:32px; color:#00bfff; font-weight:700;">Unlimited Cards</div>
-                                    </div>
-
-                                    <!-- ADS -->
-                                    <div style="text-align:center; margin-bottom:30px;">
-                                        <div style="font-size:32px; font-weight:700; margin-bottom:10px;">
-                                            Advertisements
-                                        </div>
-
-                                        <div style="font-size:66px; font-weight:700; line-height:0.9;">Banner</div>
-                                        <div style="font-size:66px; font-weight:700; line-height:0.9;">Display</div>
-                                        <div style="font-size:66px; font-weight:700; line-height:0.9;">Video</div>
-
-                                        <div style="font-size:22px; margin-top:5px;">Download from</div>
-
-                                        <!-- PLAYSTORE INLINE -->
-                                        <div style="display:flex; align-items:center; gap:8px; margin-top:10px; justify-content:center;">
-                                            <span style="font-size:22px;">Playstore</span>
-                                            <img src="images/android.png" style="width:40px;">
+                            <!-- Main Content Section -->
+                            <div style="padding: 20px; background: #ff0000; color: white;">
+                                <!-- User Info Section -->
+                                <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px;">
+                                    <!-- Photo Column -->
+                                    <div style="flex-shrink: 0;">
+                                        <div style="width: 150px; height: 150px; border: 3px solid white; overflow: hidden; background: white;">
+                                            <img src="${window.CacheBuster ? window.CacheBuster.addCacheBuster(photo) : photo}" 
+                                                 style="width: 100%; height: 100%; object-fit: cover;">
                                         </div>
                                     </div>
-
-                                    <!-- HEADING: Instantly Cards -->
-                                    <div style="
-                                        font-size:30px;
-                                        font-weight:700;
-                                        text-align:center;
-                                        margin-bottom:8px;
-                                        letter-spacing:-0.5px;
-                                    ">
-                                        <span style="color:white;">Instan<span style="color:#00bfff;">tlly</span></span>
-                                        <span style="color:white;"> Cards</span>
+                                    
+                                    <!-- User Details Column -->
+                                    <div style="flex: 1;">
+                                        <h3 style="margin: 0 0 15px 0; font-size: 24px; font-weight: bold;">Area Head For</h3>
+                                        <div style="font-size: 18px; line-height: 1.6;">
+                                            <p style="margin: 5px 0;"><strong>Name:</strong> ${name}</p>
+                                            <p style="margin: 5px 0;"><strong>Mob:</strong> ${phone}</p>
+                                            <p style="margin: 5px 0;"><strong>Pincode:</strong> ${pincode || 'N/A'}</p>
+                                        </div>
                                     </div>
-
-                                    <!-- WHITE BOX 1 -->
-                                    <div style="
-                                        background:white;
-                                        color:black;
-                                        padding:12px;
-                                        border-radius:6px;
-                                        text-align:center;
-                                        font-size:17px;
-                                        line-height:1.2;
-                                        font-weight:600;
-                                        margin-bottom:10px;
-                                        width:100%;
-                                    ">
-                                        We Are Appointing Sole Head <br>
-                                        for India, Zone, State, Division,<br>
-                                        District, Tehsil, Pincode, Village
-                                    </div>
-
-                                    <!-- WHITE BOX 2 -->
-                                    <div style="
-                                        background:white;
-                                        color:black;
-                                        padding:12px;
-                                        border-radius:6px;
-                                        text-align:center;
-                                        font-size:22px;
-                                        line-height:1.3;
-                                        width:100%;
-                                        margin-bottom:0px;
-                                    ">
-                                        <div style="font-weight:700;">Mob: 9833752025</div>
-                                        <div style="font-size:18px;">Web: instantlly.com</div>
-                                    </div>
-
                                 </div>
 
-                                <!-- RIGHT SECTION -->
-                                <div style="
-                                    width:416px;
-                                    background:#e60000;
-                                    color:white;
-                                    padding:25px 35px;
-                                    display:flex;
-                                    flex-direction:column;
-                                    justify-content:flex-start;
-                                ">
-
-                                    <!-- PHOTO -->
-                                    <div style="text-align:center; margin-bottom:20px;">
-                                        <div style="font-size:32px; font-weight:700; color:black; margin-bottom:8px;">
-                                            Photo
-                                        </div>
-
-                                        <div style="
-                                            width:260px;
-                                            height:260px;
-                                            background:white;
-                                            overflow:hidden;
-                                            margin:0 auto;
-                                            border:4px solid white;
-                                        ">
-                                            <img src="${window.CacheBuster ? window.CacheBuster.addCacheBuster(photo) : photo}" style="width:100%; height:100%; object-fit:cover;">
-                                        </div>
-                                    </div>
-
-                                    <!-- NAME & MOBILE & PINCODE -->
-                                    <div style="font-size:26px; line-height:1.25;">
-                                        <div style="margin-bottom:8px;">
-                                            <b>Name:</b> ${name}
-                                        </div>
-                                        <div style="margin-bottom:8px;">
-                                            <b>Mob:</b> ${phone}
-                                        </div>
-                                        <div style="margin-bottom:15px;">
-                                            <b>Pincode:</b> ${pincode || 'N/A'}
-                                        </div>
-                                    </div>
-
-                                    <!-- AREA HEAD FOR -->
-                                    <div style="
-                                        font-size:36px;
-                                        font-weight:700;
-                                        margin-bottom:15px;
-                                    ">
-                                        Area Head For
-                                    </div>
-
-                                    <!-- COUNTRY → VILLAGE -->
-                                    <div style="font-size:24px; line-height:1.25;">
-                                        ${areaListHTML}
-                                    </div>
-
+                                <!-- Hierarchy Table -->
+                                <div style="background: white; color: black; padding: 15px; border-radius: 5px;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                        <thead>
+                                            <tr style="background: #333; color: white;">
+                                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Position</th>
+                                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Area</th>
+                                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">C.P. Name</th>
+                                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">C.P. Mob</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${hierarchyRowsHTML}
+                                        </tbody>
+                                    </table>
                                 </div>
-
                             </div>
                         </div>
                     </div>
 
                     <div class="modal-footer">
                         <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-
                         <button class="btn btn-primary" onclick="downloadIDCardAsImage('${name}', '${phone}', '${photo}')">
                             <i class="fas fa-download me-2"></i>Download
                         </button>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -4753,20 +4515,20 @@ async function showIDCard(name, phone, pincode, photo, positionLocation) {
         document.body.insertAdjacentHTML("beforeend", modalHTML);
         
         // Remove loading overlay
-        const loadingOverlay = document.getElementById('idCardLoadingOverlay');
-        if (loadingOverlay) {
+        if (loadingOverlay && loadingOverlay.parentNode) {
             loadingOverlay.remove();
         }
         
         new bootstrap.Modal(document.getElementById("idCardModal")).show();
 
     } catch (err) {
+        console.error('❌ Error loading ID card:', err);
         // Remove loading overlay on error
-        const loadingOverlay = document.getElementById('idCardLoadingOverlay');
-        if (loadingOverlay) {
-            loadingOverlay.remove();
+        const overlay = document.getElementById('idCardLoadingOverlay');
+        if (overlay && overlay.parentNode) {
+            overlay.remove();
         }
-        alert("Error loading card.");
+        alert("Error loading ID card: " + err.message);
     }
 }
 
@@ -4775,36 +4537,42 @@ async function showIDCard(name, phone, pincode, photo, positionLocation) {
 async function downloadIDCardAsImage(name) {
     const element = document.getElementById("idCardContent");
     
-    // Temporarily remove the scale transform to capture full-size image
-    const originalTransform = element.style.transform;
-    element.style.transform = 'none';
+    if (!element) {
+        alert('ID Card content not found');
+        return;
+    }
     
     // Wait for browser to reflow
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Get actual element dimensions
+    const actualWidth = element.scrollWidth || element.offsetWidth;
     const actualHeight = element.scrollHeight || element.offsetHeight;
     
-    const canvas = await html2canvas(element, {
-        scale: 2,
-        width: 720,
-        height: actualHeight,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-        windowHeight: actualHeight,
-        scrollY: -window.scrollY,
-        scrollX: -window.scrollX
-    });
+    try {
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            width: actualWidth,
+            height: actualHeight,
+            backgroundColor: "#ffffff",
+            useCORS: true,
+            allowTaint: true,
+            windowHeight: actualHeight,
+            windowWidth: actualWidth,
+            scrollY: -window.scrollY,
+            scrollX: -window.scrollX
+        });
 
-    // Restore the original transform
-    element.style.transform = originalTransform;
+        const url = canvas.toDataURL("image/png");
 
-    const url = canvas.toDataURL("image/png");
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `ID_Card_${name}.png`;
-    link.click();
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `ID_Card_${name}_${Date.now()}.png`;
+        link.click();
+    } catch (error) {
+        console.error('Error downloading ID card:', error);
+        alert('Error downloading ID card. Please try again.');
+    }
 }
 
 
