@@ -105,10 +105,14 @@ function setupEventListeners() {
     // Phone number validation with visual feedback
     const phoneInput = document.getElementById('applicantPhone');
     if (phoneInput) {
-        phoneInput.addEventListener('input', function() {
+        let checkTimeout;
+        phoneInput.addEventListener('input', async function() {
             const phoneHelp = document.getElementById('phoneHelp');
             const value = this.value.replace(/[^0-9]/g, '');
             this.value = value; // Only allow numbers
+            
+            // Clear previous timeout
+            clearTimeout(checkTimeout);
             
             if (value.length === 0) {
                 phoneHelp.textContent = '10 digit phone number only';
@@ -120,10 +124,38 @@ function setupEventListeners() {
                 this.classList.remove('is-valid');
                 this.classList.add('is-invalid');
             } else if (value.length === 10) {
-                phoneHelp.textContent = '✓ Valid phone number';
-                phoneHelp.className = 'text-success';
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
+                // Check if phone number already exists
+                phoneHelp.textContent = '⏳ Checking availability...';
+                phoneHelp.className = 'text-info';
+                this.classList.remove('is-valid', 'is-invalid');
+                
+                checkTimeout = setTimeout(async () => {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/applications/check-phone/${value}`);
+                        const data = await response.json();
+                        
+                        if (data.exists) {
+                            phoneHelp.textContent = '❌ This number is already registered! Please use a different number';
+                            phoneHelp.className = 'text-danger fw-bold';
+                            this.classList.remove('is-valid');
+                            this.classList.add('is-invalid');
+                            this.setAttribute('data-phone-exists', 'true');
+                        } else {
+                            phoneHelp.textContent = '✓ Valid phone number';
+                            phoneHelp.className = 'text-success';
+                            this.classList.remove('is-invalid');
+                            this.classList.add('is-valid');
+                            this.removeAttribute('data-phone-exists');
+                        }
+                    } catch (error) {
+                        console.error('Error checking phone:', error);
+                        phoneHelp.textContent = '✓ Valid phone number';
+                        phoneHelp.className = 'text-success';
+                        this.classList.remove('is-invalid');
+                        this.classList.add('is-valid');
+                        this.removeAttribute('data-phone-exists');
+                    }
+                }, 500);
             } else {
                 this.value = value.substring(0, 10); // Limit to 10 digits
             }
@@ -1646,6 +1678,14 @@ async function submitApplication(event) {
     if (!/^\d{10}$/.test(phone)) {
         showNotification('Phone number must be exactly 10 digits', 'error');
         document.getElementById('applicantPhone').focus();
+        return;
+    }
+    
+    // Check if phone number already exists
+    const phoneInput = document.getElementById('applicantPhone');
+    if (phoneInput.getAttribute('data-phone-exists') === 'true') {
+        showNotification('❌ This phone number is already registered! Please use a different number', 'error');
+        phoneInput.focus();
         return;
     }
     
