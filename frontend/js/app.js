@@ -4243,10 +4243,10 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                         Instan<span style="color: #00bfff;">tlly</span> Cards
                                     </h2>
                                 </div>
-                                <p style="margin: 5px 0; font-size: 12px; line-height: 1.4;">
+                                <p style="margin: 5px 0; font-size: 14px; line-height: 1.4;">
                                     We Are Appointing Sole Head For India, Zone, State, Division, District, Tehsil, Pincode, Village
                                 </p>
-                                <p style="margin: 5px 0 0 0; font-size: 12px; font-weight: bold;">
+                                <p style="margin: 5px 0 0 0; font-size: 14px; font-weight: bold;">
                                     Mob: 9833752025 | Web: instantlly.com
                                 </p>
                             </div>
