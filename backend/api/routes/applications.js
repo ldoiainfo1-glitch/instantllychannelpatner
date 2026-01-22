@@ -44,6 +44,37 @@ const upload = multer({
   }
 });
 
+// Check if phone number already exists
+router.get('/check-phone/:phone', async (req, res) => {
+  try {
+    const { phone } = req.params;
+    
+    console.log('🔍 Checking phone uniqueness:', phone);
+    
+    // Check in Application collection
+    const existingApplication = await Application.findOne({ 
+      'applicantInfo.phone': phone 
+    });
+    
+    // Also check in User collection
+    const User = require('../models/User');
+    const existingUser = await User.findOne({ phone: phone });
+    
+    const exists = !!(existingApplication || existingUser);
+    
+    console.log(`📱 Phone ${phone} exists: ${exists}`);
+    
+    res.json({ 
+      exists: exists,
+      message: exists ? 'Phone number already registered' : 'Phone number available'
+    });
+    
+  } catch (error) {
+    console.error('❌ Error checking phone:', error);
+    res.status(500).json({ error: 'Error checking phone number' });
+  }
+});
+
 // Apply for a position - Store in applications collection
 router.post('/', upload.single('photo'), async (req, res) => {
   try {
