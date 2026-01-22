@@ -4117,7 +4117,9 @@ async function showIDCard(name, phone, photo, positionLocation) {
             }
             #idCardContent {
                 width: 540px;
-                height: 772px;
+                height: auto;
+                min-height: 650px;
+                max-height: 750px;
                 margin: 0 auto;
                 background: white;
                 border: 2px solid #ddd;
@@ -4137,7 +4139,8 @@ async function showIDCard(name, phone, photo, positionLocation) {
                 #idCardContent {
                     width: 100%;
                     height: auto;
-                    min-height: 772px;
+                    min-height: 650px;
+                    max-height: 750px;
                 }
             }
         </style>
@@ -4170,7 +4173,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                             </div>
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
-                            <div style="padding: 15px; background: #ff0000; color: white; flex: 1; display: flex; flex-direction: column;">
+                            <div style="padding: 15px; background: #ff0000; color: white; flex-shrink: 0;">
                                 <!-- User Info Section: Photo + Name/Phone -->
                                 <div style="display: flex; gap: 15px; align-items: flex-start; margin-bottom: 15px; flex-shrink: 0;">
                                     <!-- Photo Column (REDUCED SIZE) -->
@@ -4193,7 +4196,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                 </div>
 
                                 <!-- Hierarchy Table (Compact) -->
-                                <div style="background: white; color: black; padding: 10px; border-radius: 5px; flex: 1; overflow: auto;">
+                                <div style="background: white; color: black; padding: 10px; border-radius: 5px;">
                                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                                         <thead>
                                             <tr style="background: #333; color: white;">
