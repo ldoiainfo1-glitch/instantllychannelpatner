@@ -1620,6 +1620,7 @@ async function submitApplication(event) {
     // Get form fields
     const name = document.getElementById('applicantName').value.trim();
     const phone = document.getElementById('applicantPhone').value.trim();
+    const pincode = document.getElementById('applicantPincode').value.trim();
     const photoInput = document.getElementById('applicantPhoto');
     
     // Validate name
@@ -1645,6 +1646,19 @@ async function submitApplication(event) {
     if (!/^\d{10}$/.test(phone)) {
         showNotification('Phone number must be exactly 10 digits', 'error');
         document.getElementById('applicantPhone').focus();
+        return;
+    }
+    
+    // Validate pincode
+    if (!pincode) {
+        showNotification('Please enter your pincode', 'error');
+        document.getElementById('applicantPincode').focus();
+        return;
+    }
+    
+    if (!/^\d{6}$/.test(pincode)) {
+        showNotification('Pincode must be exactly 6 digits', 'error');
+        document.getElementById('applicantPincode').focus();
         return;
     }
     
@@ -1680,6 +1694,7 @@ async function submitApplication(event) {
             positionId: window.currentPosition.id,
             name: name,
             phone: phone,
+            pincode: pincode,
             companyName: formData.get('companyName'),
             businessName: formData.get('businessName'),
             address: formData.get('address'),
@@ -2015,6 +2030,7 @@ async function submitApplicationWithScreenshot() {
         formData.append('positionId', tempApplicationData.positionId);
         formData.append('name', tempApplicationData.name);
         formData.append('phone', tempApplicationData.phone);
+        formData.append('pincode', tempApplicationData.pincode);
         formData.append('companyName', tempApplicationData.companyName || '');
         formData.append('businessName', tempApplicationData.businessName || '');
         formData.append('address', tempApplicationData.address || '');
@@ -4462,33 +4478,29 @@ document.addEventListener('DOMContentLoaded', function () {
             // Debounce search
             searchTimeout = setTimeout(async () => {
                 try {
-                    // Fetch all users and filter by phone containing search term
-                    const response = await fetch(`${API_BASE_URL}/admin/users-stats`, {
-                        method: 'GET',
-                        headers: { 'Content-Type': 'application/json' }
+                    // Search users by phone prefix
+                    const response = await fetch(`${API_BASE_URL}/admin/search-users`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ phonePrefix: searchTerm })
                     });
 
                     if (!response.ok) {
-                        console.error('Failed to fetch users');
+                        console.error('Failed to search users');
                         return;
                     }
 
                     const data = await response.json();
                     const users = data.users || [];
 
-                    // Filter users whose phone contains the search term
-                    const matchingUsers = users.filter(user =>
-                        user.phone && user.phone.includes(searchTerm)
-                    ).slice(0, 10); // Limit to 10 results
-
-                    if (matchingUsers.length === 0) {
+                    if (users.length === 0) {
                         dropdown.style.display = 'none';
                         return;
                     }
 
                     // Build dropdown HTML
-                    const dropdownHTML = matchingUsers.map(user => `
-                        <a href="#" class="dropdown-item py-2" onclick="selectReferrer('${user.phone}', '${user.name || 'Unknown'}'); return false;">
+                    const dropdownHTML = users.map(user => `
+                        <a href="#" class="dropdown-item py-2" onclick="selectReferrer('${user.phone}', '${(user.name || 'Unknown').replace(/'/g, "\\'")}'); return false;">
                             <div>
                                 <strong>+91 ${user.phone}</strong>
                                 <div class="text-muted small">${user.name || 'Unknown'}</div>
