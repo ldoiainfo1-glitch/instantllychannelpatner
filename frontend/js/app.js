@@ -1298,22 +1298,43 @@ async function handleSearch() {
         division,
         district
     });
+    
+    // Check if search is provided
+    if (!searchName && !searchPhone) {
+        showNotification('Please enter a name or phone number to search', 'info');
+        return;
+    }
 
     try {
         showLoading(true);
 
-        // Build query params for dynamic-positions endpoint (same as loadApplications)
-        const params = new URLSearchParams({ country });
-        if (zone) params.append('zone', zone);
-        if (state) params.append('state', state);
-        if (division) params.append('division', division);
-        if (district) params.append('district', district);
-        if (tehsil) params.append('tehsil', tehsil);
-        if (pincode) params.append('pincode', pincode);
-        if (village) params.append('village', village);
-        params.append('_t', Date.now()); // Cache-busting
-
-        const url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
+        // Determine if we should use global search or location-filtered search
+        const hasLocationFilters = zone || state || division || district || tehsil || pincode || village;
+        
+        let url;
+        if (!hasLocationFilters) {
+            // Use global search endpoint when no location filters
+            console.log('🌐 FRONTEND: Using GLOBAL SEARCH (no location filters)');
+            const searchParams = new URLSearchParams();
+            if (searchName) searchParams.set('name', searchName);
+            if (searchPhone) searchParams.set('phone', searchPhone);
+            searchParams.append('_t', Date.now()); // Cache-busting
+            url = `${API_BASE_URL}/dynamic-positions/search?${searchParams.toString()}`;
+        } else {
+            // Use location-filtered search when filters are selected
+            console.log('📍 FRONTEND: Using LOCATION-FILTERED SEARCH');
+            const params = new URLSearchParams({ country });
+            if (zone) params.append('zone', zone);
+            if (state) params.append('state', state);
+            if (division) params.append('division', division);
+            if (district) params.append('district', district);
+            if (tehsil) params.append('tehsil', tehsil);
+            if (pincode) params.append('pincode', pincode);
+            if (village) params.append('village', village);
+            params.append('_t', Date.now()); // Cache-busting
+            url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
+        }
+        
         console.log('🌐 FRONTEND: Fetching positions from:', url);
         const response = await fetch(url, {
             cache: 'no-store',
@@ -1342,10 +1363,11 @@ async function handleSearch() {
             });
         }
 
-        // Client-side filter for name and phone
+        // Client-side filter only if using location-filtered search
+        // Global search already filtered on server-side
         let filteredPositions = currentPositions;
-        if (searchName || searchPhone) {
-            console.log('🔎 Applying client-side search filters...');
+        if (hasLocationFilters && (searchName || searchPhone)) {
+            console.log('🔎 Applying client-side search filters on location-filtered results...');
             console.log(`   Search term: "${searchName}" (name) or "${searchPhone}" (phone)`);
             
             filteredPositions = currentPositions.filter(position => {

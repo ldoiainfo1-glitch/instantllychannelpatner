@@ -64,6 +64,146 @@ router.get('/statistics', async (req, res) => {
   }
 });
 
+// NEW: Global search endpoint - searches across all approved applications by name or phone
+router.get('/search', async (req, res) => {
+  try {
+    const { name, phone } = req.query;
+    
+    console.log('🔍 GLOBAL SEARCH REQUEST:', { name, phone });
+    
+    if (!name && !phone) {
+      return res.status(400).json({ error: 'Please provide name or phone to search' });
+    }
+    
+    // Build search query
+    const searchQuery = {
+      status: 'approved'
+    };
+    
+    // Add name search (case-insensitive, partial match)
+    if (name) {
+      searchQuery['applicantInfo.name'] = { $regex: name, $options: 'i' };
+    }
+    
+    // Add phone search (exact or partial match)
+    if (phone) {
+      searchQuery['applicantInfo.phone'] = { $regex: phone };
+    }
+    
+    console.log('🔎 Searching applications with query:', JSON.stringify(searchQuery));
+    
+    // Find matching applications
+    const applications = await Application.find(searchQuery)
+      .limit(50) // Limit to prevent huge results
+      .lean();
+    
+    console.log(`✅ Found ${applications.length} matching applications`);
+    
+    // Get user data for photos and referral counts
+    const User = require('../models/User');
+    const phoneNumbers = applications.map(app => app.applicantInfo?.phone).filter(Boolean);
+    const users = await User.find({ phone: { $in: phoneNumbers } }).select('phone photo introducedCount').lean();
+    
+    const userMap = {};
+    users.forEach(user => {
+      userMap[user.phone] = user;
+    });
+    
+    // Build positions from applications
+    const positions = [];
+    let sNo = 1;
+    
+    for (const app of applications) {
+      // Parse location from positionId
+      const location = parseLocationFromPositionId(app.positionId);
+      
+      const user = userMap[app.applicantInfo.phone];
+      const userPhoto = user?.photo || app.applicantInfo.photo;
+      const introducedCount = user?.introducedCount || 0;
+      
+      const position = {
+        _id: app.positionId,
+        sNo: sNo++,
+        post: 'Committee',
+        designation: `Head of ${location.area}`,
+        location: location,
+        status: 'Approved',
+        applicantDetails: {
+          name: app.applicantInfo.name,
+          phone: app.applicantInfo.phone,
+          email: app.applicantInfo.email,
+          photo: userPhoto,
+          address: app.applicantInfo.address,
+          introducedCount: introducedCount,
+          days: app.appliedDate ? Math.floor((Date.now() - new Date(app.appliedDate).getTime()) / (1000 * 60 * 60 * 24)) : 0
+        }
+      };
+      
+      positions.push(position);
+    }
+    
+    console.log(`✅ Returning ${positions.length} positions from search`);
+    
+    res.json({
+      success: true,
+      positions: positions,
+      total: positions.length
+    });
+    
+  } catch (error) {
+    console.error('❌ Error in global search:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Helper function to parse location from positionId
+function parseLocationFromPositionId(positionId) {
+  // Format: pos_level-head_country_zone_state_division_district_tehsil_pincode_village
+  const parts = positionId.split('_');
+  
+  const location = { country: 'India' };
+  let area = '';
+  
+  // Skip first part (pos) and second part (level-head)
+  for (let i = 2; i < parts.length; i++) {
+    const part = parts[i];
+    
+    // Determine which level this is based on position
+    if (i === 2) location.country = part;
+    else if (i === 3 && part.toLowerCase().includes('zone')) {
+      location.zone = part.replace(/-/g, ' ');
+      area = location.zone;
+    }
+    else if (i === 4) {
+      location.state = part.replace(/-/g, ' ');
+      area = location.state;
+    }
+    else if (i === 5 && part.toLowerCase().includes('division')) {
+      location.division = part.replace(/-/g, ' ');
+      area = location.division;
+    }
+    else if (i === 6) {
+      location.district = part.replace(/-/g, ' ');
+      area = location.district;
+    }
+    else if (i === 7) {
+      location.tehsil = part.replace(/-/g, ' ');
+      area = location.tehsil;
+    }
+    else if (i === 8) {
+      location.pincode = part;
+      area = location.pincode;
+    }
+    else if (i === 9) {
+      location.village = part.replace(/-/g, ' ');
+      area = location.village;
+    }
+  }
+  
+  location.area = area || location.country;
+  return location;
+}
+
 // Get available positions dynamically based on location filters.
 router.get('/', async (req, res) => {
   try {
