@@ -457,4 +457,136 @@ router.get('/user-by-phone/:phone', async (req, res) => {
   }
 });
 
+// Get position hierarchy for ID card - returns all upper-level channel partners
+router.get('/hierarchy/:phone', async (req, res) => {
+  try {
+    const { phone } = req.params;
+    console.log(`📇 Fetching ID card hierarchy for phone: ${phone}`);
+    
+    const Application = require('../models/Application');
+    const User = require('../models/User');
+    
+    // Find the user's approved application
+    const userApp = await Application.findOne({ 
+      'applicantInfo.phone': phone,
+      status: 'approved'
+    }).lean();
+    
+    if (!userApp) {
+      return res.status(404).json({ error: 'No approved application found for this phone' });
+    }
+    
+    console.log(`✅ Found user application:`, userApp.applicantInfo.name);
+    console.log(`   Position: ${userApp.positionId}`);
+    console.log(`   Location:`, userApp.location);
+    
+    // Determine the user's position level
+    let userLevel = null;
+    const posId = userApp.positionId || '';
+    if (posId.includes('president')) userLevel = 'country';
+    else if (posId.includes('zone-head')) userLevel = 'zone';
+    else if (posId.includes('state-head')) userLevel = 'state';
+    else if (posId.includes('division-head')) userLevel = 'division';
+    else if (posId.includes('district-head')) userLevel = 'district';
+    else if (posId.includes('tehsil-head')) userLevel = 'tehsil';
+    else if (posId.includes('pincode-head')) userLevel = 'pincode';
+    else if (posId.includes('village-head')) userLevel = 'village';
+    
+    console.log(`   User Level: ${userLevel}`);
+    
+    // Define hierarchy from top to bottom
+    const hierarchyLevels = [
+      'country',
+      'zone',
+      'state',
+      'division',
+      'district',
+      'tehsil',
+      'pincode',
+      'village'
+    ];
+    
+    const userLevelIndex = hierarchyLevels.indexOf(userLevel);
+    
+    // Build the hierarchy data for ID card
+    const hierarchy = [];
+    
+    for (let i = 0; i < hierarchyLevels.length; i++) {
+      const level = hierarchyLevels[i];
+      const levelName = level.charAt(0).toUpperCase() + level.slice(1);
+      
+      // Get the area name for this level from user's location
+      let areaValue = '';
+      if (level === 'country') areaValue = 'India';
+      else if (level === 'zone' && userApp.location.zone) areaValue = userApp.location.zone;
+      else if (level === 'state' && userApp.location.state) areaValue = userApp.location.state;
+      else if (level === 'division' && userApp.location.division) areaValue = userApp.location.division;
+      else if (level === 'district' && userApp.location.district) areaValue = userApp.location.district;
+      else if (level === 'tehsil' && userApp.location.tehsil) areaValue = userApp.location.tehsil;
+      else if (level === 'pincode' && userApp.location.pincode) areaValue = userApp.location.pincode;
+      else if (level === 'village' && userApp.location.village) areaValue = userApp.location.village;
+      
+      let cpName = '';
+      let cpMob = '';
+      
+      // For levels up to and including the user's level, find the CP
+      if (i <= userLevelIndex && areaValue) {
+        // Build query to find the channel partner at this level
+        const query = { status: 'approved' };
+        
+        if (level === 'country') {
+          query.positionId = { $regex: /president/ };
+        } else if (level === 'zone' && userApp.location.zone) {
+          query.positionId = { $regex: new RegExp(`zone-head.*${userApp.location.zone.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        } else if (level === 'state' && userApp.location.state) {
+          query.positionId = { $regex: new RegExp(`state-head.*${userApp.location.state.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        } else if (level === 'division' && userApp.location.division) {
+          query.positionId = { $regex: new RegExp(`division-head.*${userApp.location.division.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        } else if (level === 'district' && userApp.location.district) {
+          query.positionId = { $regex: new RegExp(`district-head.*${userApp.location.district.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        } else if (level === 'tehsil' && userApp.location.tehsil) {
+          query.positionId = { $regex: new RegExp(`tehsil-head.*${userApp.location.tehsil.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        } else if (level === 'pincode' && userApp.location.pincode) {
+          query.positionId = { $regex: new RegExp(`pincode-head.*${userApp.location.pincode.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        } else if (level === 'village' && userApp.location.village) {
+          query.positionId = { $regex: new RegExp(`village-head.*${userApp.location.village.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        }
+        
+        const cpApp = await Application.findOne(query).lean();
+        
+        if (cpApp) {
+          cpName = cpApp.applicantInfo.name;
+          cpMob = cpApp.applicantInfo.phone;
+          console.log(`   ${levelName}: ${cpName} (${cpMob})`);
+        }
+      }
+      
+      hierarchy.push({
+        position: levelName,
+        area: areaValue,
+        cpName: cpName,
+        cpMob: cpMob,
+        isCurrentUser: i === userLevelIndex
+      });
+    }
+    
+    console.log(`✅ Hierarchy built with ${hierarchy.length} levels`);
+    
+    res.json({
+      success: true,
+      user: {
+        name: userApp.applicantInfo.name,
+        phone: userApp.applicantInfo.phone,
+        pincode: userApp.location.pincode || userApp.applicantInfo.pincode || 'N/A'
+      },
+      userLevel: userLevel,
+      hierarchy: hierarchy
+    });
+    
+  } catch (error) {
+    console.error('❌ Error fetching position hierarchy:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
