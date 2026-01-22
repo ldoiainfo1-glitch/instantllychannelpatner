@@ -67,7 +67,7 @@ router.get('/statistics', async (req, res) => {
 // Get available positions dynamically based on location filters.
 router.get('/', async (req, res) => {
   try {
-    const { 
+    let { 
       country = 'India', 
       zone, 
       state, 
@@ -91,6 +91,54 @@ router.get('/', async (req, res) => {
     console.log('   pincode:', pincode);
     console.log('   village:', village);
     console.log('========================================\n');
+    
+    // 🔍 AUTO-COMPLETE LOCATION HIERARCHY: If lower-level location is provided without parents,
+    // look up the complete hierarchy from the Location collection
+    if ((district || tehsil || pincode || village) && (!zone || !state || !division)) {
+      console.log('🔍 INCOMPLETE HIERARCHY DETECTED - Looking up parent locations...');
+      const query = {};
+      if (village) query.village = village;
+      else if (pincode) query.pincode = pincode;
+      else if (tehsil) query.tehsil = tehsil;
+      else if (district) query.district = district;
+      
+      const locationDoc = await Location.findOne(query).lean();
+      if (locationDoc) {
+        console.log('✅ Found complete location hierarchy in database:');
+        console.log(`   Zone: ${locationDoc.zone}`);
+        console.log(`   State: ${locationDoc.state}`);
+        console.log(`   Division: ${locationDoc.division}`);
+        console.log(`   District: ${locationDoc.district || '-'}`);
+        
+        // Auto-fill missing parent levels
+        if (!zone && locationDoc.zone) {
+          zone = locationDoc.zone;
+          console.log(`   ✓ Auto-filled zone: ${zone}`);
+        }
+        if (!state && locationDoc.state) {
+          state = locationDoc.state;
+          console.log(`   ✓ Auto-filled state: ${state}`);
+        }
+        if (!division && locationDoc.division) {
+          division = locationDoc.division;
+          console.log(`   ✓ Auto-filled division: ${division}`);
+        }
+        if (!district && locationDoc.district) {
+          district = locationDoc.district;
+          console.log(`   ✓ Auto-filled district: ${district}`);
+        }
+        if (!tehsil && locationDoc.tehsil) {
+          tehsil = locationDoc.tehsil;
+          console.log(`   ✓ Auto-filled tehsil: ${tehsil}`);
+        }
+        if (!pincode && locationDoc.pincode) {
+          pincode = locationDoc.pincode;
+          console.log(`   ✓ Auto-filled pincode: ${pincode}`);
+        }
+      } else {
+        console.log('⚠️ Location not found in database - using provided parameters only');
+      }
+    }
     
     let positions = [];
     let sNo = 1;
