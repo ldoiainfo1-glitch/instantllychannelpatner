@@ -949,7 +949,7 @@ function createPositionRow(position) {
 
     row.innerHTML = `
         <td><strong>${position.sNo}</strong></td>
-        <td><small class="text-muted" style="font-size: 0.75rem;">${position._id || position.positionId || '-'}</small></td>
+        <td><small class="text-muted" style="font-size: 0.75rem;">${position.readablePositionName || position._id || position.positionId || '-'}</small></td>
         <td>${nameCell}</td>
         <td>${areaHeadFor}</td>
         <td class="text-center">${photoCell}</td>
