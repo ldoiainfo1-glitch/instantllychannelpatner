@@ -977,30 +977,46 @@ router.get('/hierarchy/:phone', async (req, res) => {
         const query = { status: 'approved' };
         
         if (level === 'country') {
-          query.positionId = { $regex: /president/ };
+          query.positionId = { $regex: /president/i };
         } else if (level === 'zone' && userApp.location.zone) {
-          query.positionId = { $regex: new RegExp(`zone-head.*${userApp.location.zone.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+          const zoneName = userApp.location.zone.replace(/\s+/g, '-').toLowerCase();
+          query.positionId = { $regex: new RegExp(`zone-head.*${zoneName}`, 'i') };
+          console.log(`   🔍 Zone query regex: zone-head.*${zoneName}`);
         } else if (level === 'state' && userApp.location.state) {
-          query.positionId = { $regex: new RegExp(`state-head.*${userApp.location.state.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+          const stateName = userApp.location.state.replace(/\s+/g, '-').toLowerCase();
+          query.positionId = { $regex: new RegExp(`state-head.*${stateName}`, 'i') };
+          console.log(`   🔍 State query regex: state-head.*${stateName}`);
         } else if (level === 'division' && userApp.location.division) {
-          query.positionId = { $regex: new RegExp(`division-head.*${userApp.location.division.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+          const divisionName = userApp.location.division.replace(/\s+/g, '-').toLowerCase();
+          query.positionId = { $regex: new RegExp(`division-head.*${divisionName}`, 'i') };
+          console.log(`   🔍 Division query regex: division-head.*${divisionName}`);
         } else if (level === 'district' && userApp.location.district) {
-          query.positionId = { $regex: new RegExp(`district-head.*${userApp.location.district.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+          const districtName = userApp.location.district.replace(/\s+/g, '-').toLowerCase();
+          query.positionId = { $regex: new RegExp(`district-head.*${districtName}`, 'i') };
+          console.log(`   🔍 District query regex: district-head.*${districtName}`);
         } else if (level === 'tehsil' && userApp.location.tehsil) {
-          query.positionId = { $regex: new RegExp(`tehsil-head.*${userApp.location.tehsil.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+          const tehsilName = userApp.location.tehsil.replace(/\s+/g, '-').toLowerCase();
+          query.positionId = { $regex: new RegExp(`tehsil-head.*${tehsilName}`, 'i') };
+          console.log(`   🔍 Tehsil query regex: tehsil-head.*${tehsilName}`);
         } else if (level === 'pincode' && (userApp.location.pincode || userApp.applicantInfo.pincode)) {
-          const pincode = userApp.location.pincode || userApp.applicantInfo.pincode;
-          query.positionId = { $regex: new RegExp(`pincode-head.*${pincode.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+          const pincode = (userApp.location.pincode || userApp.applicantInfo.pincode).toString().replace(/\s+/g, '-');
+          query.positionId = { $regex: new RegExp(`pincode-head.*${pincode}`, 'i') };
+          console.log(`   🔍 Pincode query regex: pincode-head.*${pincode}`);
         } else if (level === 'village' && userApp.location.village) {
-          query.positionId = { $regex: new RegExp(`village-head.*${userApp.location.village.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+          const villageName = userApp.location.village.replace(/\s+/g, '-').toLowerCase();
+          query.positionId = { $regex: new RegExp(`village-head.*${villageName}`, 'i') };
+          console.log(`   🔍 Village query regex: village-head.*${villageName}`);
         }
         
+        console.log(`   🔍 Searching for ${levelName} with query:`, JSON.stringify(query));
         const cpApp = await Application.findOne(query).lean();
         
         if (cpApp) {
           cpName = cpApp.applicantInfo.name;
           cpMob = cpApp.applicantInfo.phone;
-          console.log(`   ${levelName}: ${cpName} (${cpMob})`);
+          console.log(`   ✅ ${levelName}: ${cpName} (${cpMob}), Position ID: ${cpApp.positionId}`);
+        } else {
+          console.log(`   ❌ ${levelName}: No application found`);
         }
       }
       
