@@ -705,8 +705,191 @@ function displayPositions(positions) {
     tbody.innerHTML = '';
     tbody.appendChild(fragment);
 
+    // Fetch referral counts for all positions with applicants
+    fetchReferralCountsForPositions(positions);
+
     // Skip animations for faster rendering
     // Animation removed for performance
+}
+
+// Fetch referral counts for all positions asynchronously
+async function fetchReferralCountsForPositions(positions) {
+    console.log('🔄 Fetching referral counts for positions');
+    
+    for (const position of positions) {
+        if (!position.applicantDetails || !position.applicantDetails.phone) {
+            continue;
+        }
+        
+        const phone = position.applicantDetails.phone;
+        const name = position.applicantDetails.name;
+        const cleanPhone = phone.replace(/\D/g, '');
+        
+        try {
+            // Fetch applications where this phone is the introducer
+            const response = await fetch(`${API_BASE_URL}/applications?introducedBy=${phone}&status=approved`);
+            
+            let referredApps = [];
+            if (response.ok) {
+                referredApps = await response.json();
+                if (!Array.isArray(referredApps)) {
+                    referredApps = [];
+                }
+            }
+            
+            const count = referredApps.length;
+            console.log(`✅ ${name} has ${count} referrals`);
+            
+            const cell = document.getElementById(`referrer-${cleanPhone}`);
+            if (cell) {
+                if (count > 0) {
+                    cell.innerHTML = `
+                        <a href="#" onclick="showReferredPeoplePublic('${phone.replace(/'/g, "\\'")}', '${name.replace(/'/g, "\\'")}'); return false;" 
+                           class="btn btn-sm btn-primary" 
+                           title="View ${count} referred ${count === 1 ? 'person' : 'people'}">
+                            <i class="fas fa-users me-1"></i>${count}
+                        </a>
+                    `;
+                } else {
+                    cell.innerHTML = '<span class="text-muted">0</span>';
+                }
+            }
+        } catch (error) {
+            console.error(`❌ Error fetching referral count for ${name}:`, error);
+            const cell = document.getElementById(`referrer-${cleanPhone}`);
+            if (cell) cell.innerHTML = '<span class="text-muted">0</span>';
+        }
+    }
+    
+    console.log('✅ Finished fetching all referral counts');
+}
+
+// Show referred people modal for public channel partner view
+async function showReferredPeoplePublic(referrerPhone, referrerName) {
+    console.log(`📊 Fetching referred people for ${referrerName} (${referrerPhone})`);
+    
+    try {
+        const url = `${API_BASE_URL}/applications?introducedBy=${referrerPhone}&status=approved`;
+        console.log(`🌐 API URL:`, url);
+        
+        const response = await fetch(url);
+
+        console.log(`📡 Response status:`, response.status, response.statusText);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const applications = await response.json();
+        console.log(`✅ Applications response:`, applications);
+        
+        const applicationsArray = Array.isArray(applications) ? applications : [];
+        console.log(`✅ Found ${applicationsArray.length} referred people`);
+
+        // Create modal HTML
+        const modalHtml = `
+            <div class="modal fade" id="referredPeopleModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-users me-2"></i>
+                                People Referred by ${referrerName}
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${applicationsArray.length === 0 ? `
+                                <div class="text-center py-4">
+                                    <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">No approved referrals found</p>
+                                </div>
+                            ` : `
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Sr No.</th>
+                                                <th>Name</th>
+                                                <th>Phone</th>
+                                                <th>Position</th>
+                                                <th>Applied Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${applicationsArray.map((app, index) => {
+                                                const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
+                                                
+                                                // Extract position level and actual area from positionId
+                                                let positionDisplay = '-';
+                                                if (app.positionId) {
+                                                    const parts = app.positionId.split('_');
+                                                    if (parts.length >= 2) {
+                                                        const level = parts[1];
+                                                        let levelName = '';
+                                                        
+                                                        if (level.includes('state')) levelName = 'State';
+                                                        else if (level.includes('division')) levelName = 'Division';
+                                                        else if (level.includes('district')) levelName = 'District';
+                                                        else if (level.includes('zone')) levelName = 'Zone';
+                                                        else if (level.includes('tehsil')) levelName = 'Tehsil';
+                                                        else if (level.includes('village')) levelName = 'Village';
+                                                        else if (level.includes('pincode')) levelName = 'Pincode';
+                                                        else if (level.includes('president')) levelName = 'President';
+                                                        
+                                                        const locationRaw = parts[parts.length - 1] || '-';
+                                                        const location = locationRaw.split('-').map(word => 
+                                                            word.charAt(0).toUpperCase() + word.slice(1)
+                                                        ).join(' ');
+                                                        
+                                                        if (levelName && location !== '-') {
+                                                            positionDisplay = `${levelName}(${location})`;
+                                                        } else {
+                                                            positionDisplay = location;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                return `
+                                                    <tr>
+                                                        <td><strong>${index + 1}</strong></td>
+                                                        <td>${app.applicantInfo?.name || '-'}</td>
+                                                        <td>${app.applicantInfo?.phone || '-'}</td>
+                                                        <td>${positionDisplay}</td>
+                                                        <td>${appliedDate}</td>
+                                                    </tr>
+                                                `;
+                                            }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Remove existing modal if present
+        const existingModal = document.getElementById('referredPeopleModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add modal to page
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('referredPeopleModal'));
+        modal.show();
+        
+    } catch (error) {
+        console.error('❌ Error loading referred people:', error);
+        alert('Failed to load referred people. Please try again.');
+    }
 }
 
 // Create position table row
@@ -803,10 +986,11 @@ function createPositionRow(position) {
         ? position.applicantDetails.phone
         : '-';
 
-    // Handle introduced count - show how many people joined using this person's referral code
-    const introducedBy = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
-        ? position.applicantDetails.introducedCount
-        : (position.applicantDetails ? 0 : '-');
+    // Handle introduced count - will be fetched asynchronously
+    const cleanPhone = phoneNo.replace(/\D/g, '');
+    const introducedBy = phoneNo !== '-' 
+        ? `<span id="referrer-${cleanPhone}"><div class="spinner-border spinner-border-sm text-primary" role="status" style="width: 1rem; height: 1rem;"></div></span>`
+        : '-';
 
     // Handle days since application
     const days = position.applicantDetails && position.applicantDetails.days !== undefined
