@@ -1866,22 +1866,34 @@
                 else if (levelName.includes('Pincode')) positionLevel = 'pincode-head';
                 else if (levelName.includes('Village')) positionLevel = 'village-head';
                 
-                // Fetch approved applications for this level
+                // Fetch positions with applicant details (public endpoint)
                 const API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
-                const response = await fetch(`${API_BASE_URL}/admin/applications/approved`);
+                const response = await fetch(`${API_BASE_URL}/dynamic-positions?country=India`);
                 const data = await response.json();
                 
-                if (!data.success) {
-                    throw new Error('Failed to fetch applications');
+                if (!data.positions) {
+                    throw new Error('Failed to fetch positions');
                 }
                 
-                // Filter applications by position level
-                const applications = data.applications.filter(app => {
-                    const posId = app.positionId || '';
-                    return posId.includes(positionLevel);
+                // Filter positions by level and status (Approved/Verified only)
+                const filteredPositions = data.positions.filter(pos => {
+                    const posId = pos.positionId || pos._id || '';
+                    const hasApplicant = pos.applicantDetails && pos.applicantDetails.name;
+                    const isApproved = pos.status === 'Approved' || pos.status === 'Verified';
+                    return posId.includes(positionLevel) && hasApplicant && isApproved;
                 });
                 
-                console.log(`✅ Found ${applications.length} applications for ${positionLevel}`);
+                console.log(`✅ Found ${filteredPositions.length} positions for ${positionLevel}`);
+                
+                // Convert positions to applications format for display
+                const applications = filteredPositions.map(pos => ({
+                    applicantInfo: {
+                        name: pos.applicantDetails.name,
+                        phone: pos.applicantDetails.phone
+                    },
+                    positionId: pos.positionId || pos._id,
+                    appliedDate: pos.applicantDetails.appliedDate || pos.createdAt
+                }));
                 
                 // Display table
                 displayApplicationsTable(applications, modalBody);
