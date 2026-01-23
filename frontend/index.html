@@ -1871,19 +1871,44 @@
                 const response = await fetch(`${API_BASE_URL}/dynamic-positions?country=India`);
                 const data = await response.json();
                 
+                console.log(`📊 Total positions fetched:`, data.positions?.length || 0);
+                
                 if (!data.positions) {
                     throw new Error('Failed to fetch positions');
                 }
                 
+                // Debug: Check first few positions
+                console.log(`🔍 Sample positions:`, data.positions.slice(0, 3).map(p => ({
+                    positionId: p.positionId || p._id,
+                    status: p.status,
+                    hasApplicant: !!p.applicantDetails
+                })));
+                
                 // Filter positions by level and status (Approved/Verified only)
                 const filteredPositions = data.positions.filter(pos => {
-                    const posId = pos.positionId || pos._id || '';
+                    const posId = (pos.positionId || pos._id || '').toLowerCase();
                     const hasApplicant = pos.applicantDetails && pos.applicantDetails.name;
                     const isApproved = pos.status === 'Approved' || pos.status === 'Verified';
-                    return posId.includes(positionLevel) && hasApplicant && isApproved;
+                    
+                    // More flexible matching for position level
+                    const matchesLevel = posId.includes(positionLevel) || 
+                                        (positionLevel === 'president' && posId.includes('president'));
+                    
+                    const matches = matchesLevel && hasApplicant && isApproved;
+                    
+                    // Debug first match
+                    if (matches) {
+                        console.log(`✓ Match found:`, {
+                            posId,
+                            name: pos.applicantDetails?.name,
+                            status: pos.status
+                        });
+                    }
+                    
+                    return matches;
                 });
                 
-                console.log(`✅ Found ${filteredPositions.length} positions for ${positionLevel}`);
+                console.log(`✅ Found ${filteredPositions.length} positions for ${positionLevel} (expected ${count})`);
                 
                 // Convert positions to applications format for display
                 const applications = filteredPositions.map(pos => ({
