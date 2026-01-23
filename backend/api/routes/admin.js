@@ -2041,11 +2041,10 @@ router.put('/applications/:id/transfer', async (req, res) => {
       return res.status(400).json({ message: "newPositionId is required" });
     }
 
-    // Normalize position ID - ensure it doesn't have pos_ prefix
-    // Database now stores without pos_ prefix
-    if (newPositionId.startsWith('pos_')) {
-      newPositionId = newPositionId.replace('pos_', '');
-      console.log(`🔧 Removed pos_ prefix: ${newPositionId}`);
+    // Normalize position ID - ensure it HAS pos_ prefix (channel partner backend expects it)
+    if (!newPositionId.startsWith('pos_')) {
+      newPositionId = `pos_${newPositionId}`;
+      console.log(`🔧 Added pos_ prefix: ${newPositionId}`);
     }
 
     // Find the application
@@ -2056,23 +2055,16 @@ router.put('/applications/:id/transfer', async (req, res) => {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    // Normalize old position ID for comparison
+    // Normalize old position ID
     let oldPositionId = application.positionId;
-    let normalizedOldPosition = oldPositionId;
-    if (oldPositionId && oldPositionId.startsWith('pos_')) {
-      normalizedOldPosition = oldPositionId.replace('pos_', '');
-    }
-
+    
     console.log(`📍 Old position: ${oldPositionId}`);
     console.log(`📍 New position: ${newPositionId}`);
 
     // Check if new position already has an applicant
-    // Check both with and without pos_ prefix for backward compatibility
+    // Check with the normalized format (with pos_ prefix)
     const existingApplication = await Application.findOne({
-      $or: [
-        { positionId: newPositionId },
-        { positionId: `pos_${newPositionId}` }
-      ],
+      positionId: newPositionId,
       status: { $in: ['pending', 'approved'] },
       _id: { $ne: id } // Exclude current application
     });
@@ -2085,7 +2077,7 @@ router.put('/applications/:id/transfer', async (req, res) => {
       });
     }
 
-    // Update application's position (store without pos_ prefix)
+    // Update application's position (store WITH pos_ prefix)
     application.positionId = newPositionId;
     await application.save();
     console.log(`✅ Application position updated`);
