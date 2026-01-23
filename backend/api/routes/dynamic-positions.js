@@ -658,9 +658,19 @@ async function createPositionWithApplicationStatus(sNo, post, designation, locat
     }
     
     // Check if someone has already applied for this exact position using position ID
+    // Check BOTH formats: with pos_ prefix (old) and without (new)
+    const positionIdWithoutPrefix = positionId.replace('pos_', '');
     let existingApplication = await Application.findOne({ 
-      positionId: positionId 
+      $or: [
+        { positionId: positionId },  // Check with pos_ prefix
+        { positionId: positionIdWithoutPrefix }  // Check without pos_ prefix
+      ]
     });
+    
+    console.log('🔍 Checking for applications with:');
+    console.log('   -', positionId);
+    console.log('   -', positionIdWithoutPrefix);
+    console.log('   Result:', existingApplication ? existingApplication.applicantInfo.name : 'None found');
     
     // DISABLED legacy matching - it causes wrong people to show in positions
     // For example, zone-head would appear in district-head positions
