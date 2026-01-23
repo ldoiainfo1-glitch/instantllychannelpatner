@@ -12,5 +12,18 @@
         "A4:BF:C1:80:E4:43:8C:D8:9F:C5:4D:63:29:68:88:8B:A4:15:54:79:3C:33:30:F9:30:59:B2:1F:4E:FD:A8:1B"
       ]
     }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.instantllycards.channelpartner",
+      "sha256_cert_fingerprints": [
+        "31:78:27:21:4F:5F:0A:62:6D:73:3C:3F:6F:28:BE:01:10:A2:99:8A:EE:78:AF:29:D6:D1:A4:21:19:BF:AE:81"
+      ]
+    }
   }
 ]
