@@ -878,9 +878,11 @@ router.get('/hierarchy/:phone', async (req, res) => {
         else if (level === 'division' && userApp.location.division) areaValue = userApp.location.division;
         else if (level === 'district' && userApp.location.district) areaValue = userApp.location.district;
         else if (level === 'tehsil' && userApp.location.tehsil) areaValue = userApp.location.tehsil;
-        else if (level === 'pincode' && userApp.location.pincode) {
+        else if (level === 'pincode' && (userApp.location.pincode || userApp.applicantInfo.pincode)) {
           // Show pincode for pincode heads and all levels below (including village heads)
-          areaValue = userApp.location.pincode;
+          // Try location.pincode first, fallback to applicantInfo.pincode
+          areaValue = userApp.location.pincode || userApp.applicantInfo.pincode;
+          console.log(`   🔍 Setting pincode area: ${areaValue}, i=${i}, userLevelIndex=${userLevelIndex}`);
         }
         else if (level === 'village' && userApp.location.village) {
           // For village level, only show if user is actually village head
@@ -889,6 +891,7 @@ router.get('/hierarchy/:phone', async (req, res) => {
           }
         }
       }
+      console.log(`   Row ${i} (${levelName}): areaValue="${areaValue}", i <= userLevelIndex: ${i <= userLevelIndex}`);
       
       let cpName = '';
       let cpMob = '';
@@ -910,8 +913,9 @@ router.get('/hierarchy/:phone', async (req, res) => {
           query.positionId = { $regex: new RegExp(`district-head.*${userApp.location.district.replace(/\s/g, '-').toLowerCase()}`, 'i') };
         } else if (level === 'tehsil' && userApp.location.tehsil) {
           query.positionId = { $regex: new RegExp(`tehsil-head.*${userApp.location.tehsil.replace(/\s/g, '-').toLowerCase()}`, 'i') };
-        } else if (level === 'pincode' && userApp.location.pincode) {
-          query.positionId = { $regex: new RegExp(`pincode-head.*${userApp.location.pincode.replace(/\s/g, '-').toLowerCase()}`, 'i') };
+        } else if (level === 'pincode' && (userApp.location.pincode || userApp.applicantInfo.pincode)) {
+          const pincode = userApp.location.pincode || userApp.applicantInfo.pincode;
+          query.positionId = { $regex: new RegExp(`pincode-head.*${pincode.replace(/\s/g, '-').toLowerCase()}`, 'i') };
         } else if (level === 'village' && userApp.location.village) {
           query.positionId = { $regex: new RegExp(`village-head.*${userApp.location.village.replace(/\s/g, '-').toLowerCase()}`, 'i') };
         }
