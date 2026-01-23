@@ -300,54 +300,66 @@ router.get('/', async (req, res) => {
       // Pincode level - show villages under this pincode + pincode head
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${pincode}`, location: { country, zone, state, division, district, tehsil, pincode } });
       
-      // Add some sample villages for this pincode
-      const sampleVillages = [`${pincode} Village A`, `${pincode} Village B`, `${pincode} Village C`];
-      for (const village of sampleVillages) {
-        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${village}`, location: { country, zone, state, division, district, tehsil, pincode, village } });
+      // Get real villages from database for this pincode
+      const realVillages = await Location.find({ pincode }).distinct('village');
+      console.log(`   Found ${realVillages.length} real villages for pincode ${pincode}:`, realVillages);
+      for (const village of realVillages) {
+        if (village) {
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${village}`, location: { country, zone, state, division, district, tehsil, pincode, village } });
+        }
       }
     } else if (tehsil) {
-      // Tehsil level - show tehsil head + sample pincodes
+      // Tehsil level - show tehsil head + real pincodes from database
       console.log('\n🔍 TEHSIL LEVEL - Building positions');
       console.log('   Creating tehsil head with location:', { country, zone, state, division, district, tehsil });
       
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${tehsil}`, location: { country, zone, state, division, district, tehsil } });
       
-      // Add sample pincodes for this tehsil
-      const basePincode = Math.floor(Math.random() * 900000) + 100000;
-      console.log('   Generating 5 sample pincodes starting from:', basePincode);
+      // Get real pincodes from database for this tehsil
+      const realPincodes = await Location.find({ tehsil }).distinct('pincode');
+      console.log(`   Found ${realPincodes.length} real pincodes for tehsil ${tehsil}:`, realPincodes.slice(0, 10));
       
-      for (let i = 0; i < 5; i++) {
-        const pincode = (basePincode + i).toString();
-        const pincodeLocation = { country, zone, state, division, district, tehsil, pincode };
-        console.log(`   - Pincode ${pincode} with location:`, pincodeLocation);
-        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${pincode}`, location: pincodeLocation });
+      for (const pincode of realPincodes) {
+        if (pincode) {
+          const pincodeLocation = { country, zone, state, division, district, tehsil, pincode };
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${pincode}`, location: pincodeLocation });
+        }
       }
     } else if (district) {
-      // District level - show district head + sample tehsils
+      // District level - show district head + real tehsils from database
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${district}`, location: { country, zone, state, division, district } });
       
-      // Add sample tehsils for this district
-      const sampleTehsils = [`${district} East`, `${district} West`, `${district} North`, `${district} South`, `${district} Central`];
-      for (const tehsil of sampleTehsils) {
-        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${tehsil}`, location: { country, zone, state, division, district, tehsil } });
+      // Get real tehsils from database for this district
+      const realTehsils = await Location.find({ district }).distinct('tehsil');
+      console.log(`   Found ${realTehsils.length} real tehsils for district ${district}:`, realTehsils);
+      for (const tehsil of realTehsils) {
+        if (tehsil) {
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${tehsil}`, location: { country, zone, state, division, district, tehsil } });
+        }
       }
     } else if (division) {
-      // Division level - show division head + sample districts
+      // Division level - show division head + real districts from database
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
       
-      // Add sample districts for this division
-      const sampleDistricts = [`${division} District 1`, `${division} District 2`, `${division} District 3`];
-      for (const district of sampleDistricts) {
-        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${district}`, location: { country, zone, state, division, district } });
+      // Get real districts from database for this division
+      const realDistricts = await Location.find({ division }).distinct('district');
+      console.log(`   Found ${realDistricts.length} real districts for division ${division}:`, realDistricts);
+      for (const district of realDistricts) {
+        if (district) {
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${district}`, location: { country, zone, state, division, district } });
+        }
       }
     } else if (state) {
-      // State level - show state head + sample divisions
+      // State level - show state head + real divisions from database
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${state}`, location: { country, zone, state } });
       
-      // Add sample divisions for this state
-      const sampleDivisions = [`${state} North Division`, `${state} South Division`, `${state} East Division`, `${state} West Division`];
-      for (const division of sampleDivisions) {
-        positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
+      // Get real divisions from database for this state
+      const realDivisions = await Location.find({ state }).distinct('division');
+      console.log(`   Found ${realDivisions.length} real divisions for state ${state}:`, realDivisions);
+      for (const division of realDivisions) {
+        if (division) {
+          positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
+        }
       }
     } else if (zone) {
       // Zone level - show zone head + states from location data
