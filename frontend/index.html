@@ -1883,22 +1883,39 @@
                     throw new Error('Invalid response format');
                 }
                 
-                // Filter applications by position level
+                // Filter applications by position level (match exactly how statistics counts)
                 const applications = allApplications.filter(app => {
-                    const posId = (app.positionId || '').toLowerCase();
-                    const matches = posId.includes(positionLevel);
+                    const posId = app.positionId || '';
                     
-                    if (matches) {
-                        console.log(`✓ Match:`, {
-                            name: app.applicantInfo?.name,
-                            positionId: app.positionId
-                        });
+                    // Use exact same logic as backend statistics counting
+                    let matches = false;
+                    if (positionLevel === 'president' && posId.includes('president')) {
+                        matches = true;
+                    } else if (positionLevel === 'zone-head' && posId.includes('zone-head')) {
+                        matches = true;
+                    } else if (positionLevel === 'state-head' && posId.includes('state-head')) {
+                        matches = true;
+                    } else if (positionLevel === 'division-head' && posId.includes('division-head')) {
+                        matches = true;
+                    } else if (positionLevel === 'district-head' && posId.includes('district-head')) {
+                        matches = true;
+                    } else if (positionLevel === 'tehsil-head' && posId.includes('tehsil-head')) {
+                        matches = true;
+                    } else if (positionLevel === 'pincode-head' && posId.includes('pincode-head')) {
+                        matches = true;
+                    } else if (positionLevel === 'village-head' && posId.includes('village-head')) {
+                        matches = true;
                     }
                     
                     return matches;
                 });
                 
                 console.log(`✅ Found ${applications.length} applications for ${positionLevel} (expected ${count})`);
+                
+                if (applications.length !== count) {
+                    console.warn(`⚠️ Mismatch! Found ${applications.length} but expected ${count}`);
+                    console.log('Sample mismatched IDs:', allApplications.slice(0, 5).map(a => a.positionId));
+                }
                 
                 // Display table
                 displayApplicationsTable(applications, modalBody);
