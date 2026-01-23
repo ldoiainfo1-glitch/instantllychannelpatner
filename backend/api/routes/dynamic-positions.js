@@ -300,8 +300,14 @@ router.get('/', async (req, res) => {
       // Pincode level - show villages under this pincode + pincode head
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${pincode}`, location: { country, zone, state, division, district, tehsil, pincode } });
       
-      // Get real villages from database for this pincode
-      const realVillages = await Location.find({ pincode }).distinct('village');
+      // Get real villages from database for this pincode (filtered by all parent levels)
+      const villageQuery = { pincode };
+      if (tehsil) villageQuery.tehsil = tehsil;
+      if (district) villageQuery.district = district;
+      if (division) villageQuery.division = division;
+      if (state) villageQuery.state = state;
+      if (zone) villageQuery.zone = zone;
+      const realVillages = await Location.find(villageQuery).distinct('village');
       console.log(`   Found ${realVillages.length} real villages for pincode ${pincode}:`, realVillages);
       for (const village of realVillages) {
         if (village) {
@@ -315,8 +321,13 @@ router.get('/', async (req, res) => {
       
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${tehsil}`, location: { country, zone, state, division, district, tehsil } });
       
-      // Get real pincodes from database for this tehsil
-      const realPincodes = await Location.find({ tehsil }).distinct('pincode');
+      // Get real pincodes from database for this tehsil (filtered by all parent levels)
+      const pincodeQuery = { tehsil };
+      if (district) pincodeQuery.district = district;
+      if (division) pincodeQuery.division = division;
+      if (state) pincodeQuery.state = state;
+      if (zone) pincodeQuery.zone = zone;
+      const realPincodes = await Location.find(pincodeQuery).distinct('pincode');
       console.log(`   Found ${realPincodes.length} real pincodes for tehsil ${tehsil}:`, realPincodes.slice(0, 10));
       
       for (const pincode of realPincodes) {
@@ -329,8 +340,12 @@ router.get('/', async (req, res) => {
       // District level - show district head + real tehsils from database
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${district}`, location: { country, zone, state, division, district } });
       
-      // Get real tehsils from database for this district
-      const realTehsils = await Location.find({ district }).distinct('tehsil');
+      // Get real tehsils from database for this district (filtered by all parent levels)
+      const tehsilQuery = { district };
+      if (division) tehsilQuery.division = division;
+      if (state) tehsilQuery.state = state;
+      if (zone) tehsilQuery.zone = zone;
+      const realTehsils = await Location.find(tehsilQuery).distinct('tehsil');
       console.log(`   Found ${realTehsils.length} real tehsils for district ${district}:`, realTehsils);
       for (const tehsil of realTehsils) {
         if (tehsil) {
@@ -341,8 +356,11 @@ router.get('/', async (req, res) => {
       // Division level - show division head + real districts from database
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
       
-      // Get real districts from database for this division
-      const realDistricts = await Location.find({ division }).distinct('district');
+      // Get real districts from database for this division (filtered by state, zone, division)
+      const districtQuery = { division };
+      if (state) districtQuery.state = state;
+      if (zone) districtQuery.zone = zone;
+      const realDistricts = await Location.find(districtQuery).distinct('district');
       console.log(`   Found ${realDistricts.length} real districts for division ${division}:`, realDistricts);
       for (const district of realDistricts) {
         if (district) {
@@ -353,9 +371,11 @@ router.get('/', async (req, res) => {
       // State level - show state head + real divisions from database
       positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${state}`, location: { country, zone, state } });
       
-      // Get real divisions from database for this state
-      const realDivisions = await Location.find({ state }).distinct('division');
-      console.log(`   Found ${realDivisions.length} real divisions for state ${state}:`, realDivisions);
+      // Get real divisions from database for this state (filtered by zone if available)
+      const divisionQuery = { state };
+      if (zone) divisionQuery.zone = zone;
+      const realDivisions = await Location.find(divisionQuery).distinct('division');
+      console.log(`   Found ${realDivisions.length} real divisions for state ${state}, zone ${zone}:`, realDivisions);
       for (const division of realDivisions) {
         if (division) {
           positionsToGenerate.push({ sNo: sNo++, post: 'Committee', designation: `Head of ${division}`, location: { country, zone, state, division } });
@@ -467,6 +487,7 @@ router.get('/', async (req, res) => {
         sNo: posData.sNo,
         post: posData.post,
         designation: posData.designation,
+        readablePositionName: generateReadablePositionName(posData.location), // Add readable format
         location: posData.location,
         contribution: 10000,
         credits: 60000,
@@ -821,6 +842,37 @@ function generatePositionId(location, designation) {
   // Create unique position ID: pos_type_location-hierarchy
   const locationPath = parts.join('_');
   return `pos_${positionType}_${locationPath}`;
+}
+
+// Generate readable position display format (matches admin format)
+// Example: "state head - india - west zone - maharashtra"
+function generateReadablePositionName(location) {
+  const parts = [];
+  
+  // Determine position type (readable format with spaces)
+  let positionType = 'president';
+  if (location.village) positionType = 'village head';
+  else if (location.pincode) positionType = 'pincode head';
+  else if (location.tehsil) positionType = 'tehsil head';
+  else if (location.district) positionType = 'district head';
+  else if (location.division) positionType = 'division head';
+  else if (location.state) positionType = 'state head';
+  else if (location.zone) positionType = 'zone head';
+  
+  parts.push(positionType);
+  
+  // Add location hierarchy in readable format (lowercase)
+  if (location.country) parts.push(location.country.toLowerCase());
+  if (location.zone) parts.push(location.zone.toLowerCase());
+  if (location.state) parts.push(location.state.toLowerCase());
+  if (location.division) parts.push(location.division.toLowerCase());
+  if (location.district) parts.push(location.district.toLowerCase());
+  if (location.tehsil) parts.push(location.tehsil.toLowerCase());
+  if (location.pincode) parts.push(location.pincode.toLowerCase());
+  if (location.village) parts.push(location.village.toLowerCase());
+  
+  // Join with " - "
+  return parts.join(' - ');
 }
 
 // NEW: Get position hierarchy for ID card - returns all upper-level channel partners
