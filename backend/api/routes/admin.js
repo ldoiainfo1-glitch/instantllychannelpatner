@@ -2077,10 +2077,46 @@ router.put('/applications/:id/transfer', async (req, res) => {
       });
     }
 
-    // Update application's position (store WITH pos_ prefix)
+    // Parse position ID to extract location hierarchy
+    // Format: pos_pincode-head_india_west-zone_maharashtra_konkan_thane_thane_401107
+    const parseLocationFromPositionId = (positionId) => {
+      const location = { country: 'India' };
+      
+      // Remove pos_ prefix and split by underscore
+      const cleaned = positionId.replace('pos_', '');
+      const parts = cleaned.split('_');
+      
+      console.log(`🔍 Parsing position ID parts:`, parts);
+      
+      // First part is the position type (e.g., pincode-head), skip it
+      // Remaining parts are the location hierarchy
+      if (parts.length > 1) {
+        const locationParts = parts.slice(1); // Skip position type
+        
+        // Map parts to hierarchy levels
+        // Order: country, zone, state, division, district, tehsil, pincode, village
+        if (locationParts[0]) location.country = locationParts[0].replace(/-/g, ' ');
+        if (locationParts[1]) location.zone = locationParts[1].replace(/-/g, ' ');
+        if (locationParts[2]) location.state = locationParts[2].replace(/-/g, ' ');
+        if (locationParts[3]) location.division = locationParts[3].replace(/-/g, ' ');
+        if (locationParts[4]) location.district = locationParts[4].replace(/-/g, ' ');
+        if (locationParts[5]) location.tehsil = locationParts[5].replace(/-/g, ' ');
+        if (locationParts[6]) location.pincode = locationParts[6].replace(/-/g, ' ');
+        if (locationParts[7]) location.village = locationParts[7].replace(/-/g, ' ');
+      }
+      
+      console.log(`📍 Parsed location:`, location);
+      return location;
+    };
+
+    // Parse new location from position ID
+    const newLocation = parseLocationFromPositionId(newPositionId);
+
+    // Update application's position AND location (store WITH pos_ prefix)
     application.positionId = newPositionId;
+    application.location = newLocation;
     await application.save();
-    console.log(`✅ Application position updated`);
+    console.log(`✅ Application position and location updated`);
 
     // If application is approved, also update the User record
     if (application.status === 'approved' && application.userId) {
@@ -2097,6 +2133,7 @@ router.put('/applications/:id/transfer', async (req, res) => {
     }
 
     console.log(`✅ Transferred ${application.applicantInfo.name} from ${oldPositionId} to ${newPositionId}`);
+    console.log(`   New location:`, newLocation);
 
     res.json({
       success: true,
