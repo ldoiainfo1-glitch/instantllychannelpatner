@@ -2151,8 +2151,10 @@ router.put('/applications/:id/transfer', async (req, res) => {
       
       if (user) {
         user.positionId = newPositionId;
+        user.location = newLocation; // Also update location for ID card hierarchy
         await user.save();
-        console.log(`✅ Updated user position: ${user.name} -> ${newPositionId}`);
+        console.log(`✅ Updated user position and location: ${user.name} -> ${newPositionId}`);
+        console.log(`   User location:`, JSON.stringify(user.location));
       } else {
         console.warn(`⚠️ User not found for ID: ${application.userId}`);
       }

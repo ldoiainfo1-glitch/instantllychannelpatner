@@ -906,6 +906,26 @@ router.get('/hierarchy/:phone', async (req, res) => {
     console.log(`   Position: ${userApp.positionId}`);
     console.log(`   Location:`, userApp.location);
     
+    // FALLBACK: If location is missing or empty, parse it from positionId
+    if (!userApp.location || Object.keys(userApp.location).length === 0) {
+      console.log(`⚠️ Location missing/empty, parsing from positionId...`);
+      userApp.location = {};
+      
+      // Parse position ID: pos_level_country_zone_state_division_district_tehsil_pincode_village
+      const positionParts = userApp.positionId.split('_');
+      if (positionParts.length >= 3) {
+        userApp.location.country = positionParts[2]?.replace(/-/g, ' ') || '';
+        if (positionParts[3]) userApp.location.zone = positionParts[3].replace(/-/g, ' ');
+        if (positionParts[4]) userApp.location.state = positionParts[4].replace(/-/g, ' ');
+        if (positionParts[5]) userApp.location.division = positionParts[5].replace(/-/g, ' ');
+        if (positionParts[6]) userApp.location.district = positionParts[6].replace(/-/g, ' ');
+        if (positionParts[7]) userApp.location.tehsil = positionParts[7].replace(/-/g, ' ');
+        if (positionParts[8]) userApp.location.pincode = positionParts[8].replace(/-/g, ' ');
+        if (positionParts[9]) userApp.location.village = positionParts[9].replace(/-/g, ' ');
+        console.log(`✅ Parsed location from positionId:`, userApp.location);
+      }
+    }
+    
     // Determine the user's position level
     let userLevel = null;
     const posId = userApp.positionId || '';
