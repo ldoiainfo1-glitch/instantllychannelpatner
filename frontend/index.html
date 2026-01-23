@@ -1866,59 +1866,39 @@
                 else if (levelName.includes('Pincode')) positionLevel = 'pincode-head';
                 else if (levelName.includes('Village')) positionLevel = 'village-head';
                 
-                // Fetch positions with applicant details (public endpoint)
+                console.log(`🔍 Fetching approved applications for level: ${positionLevel}`);
+                
+                // Fetch approved applications directly (same endpoint used for statistics)
                 const API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
-                const response = await fetch(`${API_BASE_URL}/dynamic-positions?country=India`);
-                const data = await response.json();
+                const response = await fetch(`${API_BASE_URL}/applications?status=approved`);
                 
-                console.log(`📊 Total positions fetched:`, data.positions?.length || 0);
-                
-                if (!data.positions) {
-                    throw new Error('Failed to fetch positions');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                // Debug: Check first few positions
-                console.log(`🔍 Sample positions:`, data.positions.slice(0, 3).map(p => ({
-                    positionId: p.positionId || p._id,
-                    status: p.status,
-                    hasApplicant: !!p.applicantDetails
-                })));
+                const allApplications = await response.json();
+                console.log(`📊 Total approved applications:`, allApplications.length);
                 
-                // Filter positions by level and status (Approved/Verified only)
-                const filteredPositions = data.positions.filter(pos => {
-                    const posId = (pos.positionId || pos._id || '').toLowerCase();
-                    const hasApplicant = pos.applicantDetails && pos.applicantDetails.name;
-                    const isApproved = pos.status === 'Approved' || pos.status === 'Verified';
+                if (!Array.isArray(allApplications)) {
+                    throw new Error('Invalid response format');
+                }
+                
+                // Filter applications by position level
+                const applications = allApplications.filter(app => {
+                    const posId = (app.positionId || '').toLowerCase();
+                    const matches = posId.includes(positionLevel);
                     
-                    // More flexible matching for position level
-                    const matchesLevel = posId.includes(positionLevel) || 
-                                        (positionLevel === 'president' && posId.includes('president'));
-                    
-                    const matches = matchesLevel && hasApplicant && isApproved;
-                    
-                    // Debug first match
                     if (matches) {
-                        console.log(`✓ Match found:`, {
-                            posId,
-                            name: pos.applicantDetails?.name,
-                            status: pos.status
+                        console.log(`✓ Match:`, {
+                            name: app.applicantInfo?.name,
+                            positionId: app.positionId
                         });
                     }
                     
                     return matches;
                 });
                 
-                console.log(`✅ Found ${filteredPositions.length} positions for ${positionLevel} (expected ${count})`);
-                
-                // Convert positions to applications format for display
-                const applications = filteredPositions.map(pos => ({
-                    applicantInfo: {
-                        name: pos.applicantDetails.name,
-                        phone: pos.applicantDetails.phone
-                    },
-                    positionId: pos.positionId || pos._id,
-                    appliedDate: pos.applicantDetails.appliedDate || pos.createdAt
-                }));
+                console.log(`✅ Found ${applications.length} applications for ${positionLevel} (expected ${count})`);
                 
                 // Display table
                 displayApplicationsTable(applications, modalBody);
