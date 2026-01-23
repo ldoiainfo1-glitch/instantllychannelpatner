@@ -878,8 +878,18 @@ router.get('/hierarchy/:phone', async (req, res) => {
         else if (level === 'division' && userApp.location.division) areaValue = userApp.location.division;
         else if (level === 'district' && userApp.location.district) areaValue = userApp.location.district;
         else if (level === 'tehsil' && userApp.location.tehsil) areaValue = userApp.location.tehsil;
-        else if (level === 'pincode' && userApp.location.pincode) areaValue = userApp.location.pincode;
-        else if (level === 'village' && userApp.location.village) areaValue = userApp.location.village;
+        else if (level === 'pincode' && userApp.location.pincode) {
+          // For pincode level, only show if user is actually pincode head (not village head)
+          if (userLevel === 'pincode' || i < userLevelIndex) {
+            areaValue = userApp.location.pincode;
+          }
+        }
+        else if (level === 'village' && userApp.location.village) {
+          // For village level, only show if user is actually village head
+          if (userLevel === 'village') {
+            areaValue = userApp.location.village;
+          }
+        }
       }
       
       let cpName = '';
