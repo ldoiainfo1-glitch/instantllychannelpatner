@@ -2078,34 +2078,60 @@ router.put('/applications/:id/transfer', async (req, res) => {
     }
 
     // Parse position ID to extract location hierarchy
+    // Format: pos_village-head_india_west-zone_maharashtra_konkan_thane_thane_401107_ghodbander-b.o
     // Format: pos_pincode-head_india_west-zone_maharashtra_konkan_thane_thane_401107
     const parseLocationFromPositionId = (positionId) => {
-      const location = { country: 'India' };
+      const location = {};
       
       // Remove pos_ prefix and split by underscore
-      const cleaned = positionId.replace('pos_', '');
+      const cleaned = positionId.replace(/^pos_/, '');
       const parts = cleaned.split('_');
       
       console.log(`🔍 Parsing position ID parts:`, parts);
+      console.log(`   Total parts: ${parts.length}`);
       
-      // First part is the position type (e.g., pincode-head), skip it
+      // First part is the position type (e.g., pincode-head, village-head), skip it
       // Remaining parts are the location hierarchy
       if (parts.length > 1) {
         const locationParts = parts.slice(1); // Skip position type
         
         // Map parts to hierarchy levels
         // Order: country, zone, state, division, district, tehsil, pincode, village
-        if (locationParts[0]) location.country = locationParts[0].replace(/-/g, ' ');
-        if (locationParts[1]) location.zone = locationParts[1].replace(/-/g, ' ');
-        if (locationParts[2]) location.state = locationParts[2].replace(/-/g, ' ');
-        if (locationParts[3]) location.division = locationParts[3].replace(/-/g, ' ');
-        if (locationParts[4]) location.district = locationParts[4].replace(/-/g, ' ');
-        if (locationParts[5]) location.tehsil = locationParts[5].replace(/-/g, ' ');
-        if (locationParts[6]) location.pincode = locationParts[6].replace(/-/g, ' ');
-        if (locationParts[7]) location.village = locationParts[7].replace(/-/g, ' ');
+        if (locationParts[0]) {
+          location.country = locationParts[0].replace(/-/g, ' ');
+          console.log(`   Country: ${location.country}`);
+        }
+        if (locationParts[1]) {
+          location.zone = locationParts[1].replace(/-/g, ' ');
+          console.log(`   Zone: ${location.zone}`);
+        }
+        if (locationParts[2]) {
+          location.state = locationParts[2].replace(/-/g, ' ');
+          console.log(`   State: ${location.state}`);
+        }
+        if (locationParts[3]) {
+          location.division = locationParts[3].replace(/-/g, ' ');
+          console.log(`   Division: ${location.division}`);
+        }
+        if (locationParts[4]) {
+          location.district = locationParts[4].replace(/-/g, ' ');
+          console.log(`   District: ${location.district}`);
+        }
+        if (locationParts[5]) {
+          location.tehsil = locationParts[5].replace(/-/g, ' ');
+          console.log(`   Tehsil: ${location.tehsil}`);
+        }
+        if (locationParts[6]) {
+          location.pincode = locationParts[6].replace(/-/g, ' ');
+          console.log(`   Pincode: ${location.pincode}`);
+        }
+        if (locationParts[7]) {
+          location.village = locationParts[7].replace(/-/g, ' ');
+          console.log(`   Village: ${location.village}`);
+        }
       }
       
-      console.log(`📍 Parsed location:`, location);
+      console.log(`📍 Parsed location:`, JSON.stringify(location));
       return location;
     };
 

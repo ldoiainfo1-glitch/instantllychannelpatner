@@ -971,8 +971,14 @@ router.get('/hierarchy/:phone', async (req, res) => {
       let cpName = '';
       let cpMob = '';
       
-      // For levels up to and including the user's level, find the CP
-      if (i <= userLevelIndex && areaValue) {
+      // Special case: if this is the user's own level, show their own data
+      if (i === userLevelIndex) {
+        cpName = userApp.applicantInfo.name;
+        cpMob = userApp.applicantInfo.phone;
+        console.log(`   ✅ ${levelName} (Current User): ${cpName} (${cpMob})`);
+      }
+      // For OTHER levels up to the user's level, find the CP
+      else if (i < userLevelIndex && areaValue) {
         // Build query to find the channel partner at this level
         const query = { status: 'approved' };
         
