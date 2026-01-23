@@ -212,7 +212,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
         division: division || null,
         district: district || null,
         tehsil: tehsil || null,
-        pincode: pincode || null,
+        pincode: positionPincode || null,
         village: village || null
       },
       introducedBy: introducedBy ? introducedBy.trim() : 'Self',
@@ -519,6 +519,7 @@ router.post('/with-payment', upload.fields([
       district,
       tehsil,
       pincode,
+      positionPincode,
       village,
       paymentAmount,
       paymentProfit,
@@ -644,7 +645,7 @@ router.post('/with-payment', upload.fields([
         division: division || null,
         district: district || null,
         tehsil: tehsil || null,
-        pincode: cleanPincode || null,
+        pincode: positionPincode || null,
         village: village || null
       },
       payment: {

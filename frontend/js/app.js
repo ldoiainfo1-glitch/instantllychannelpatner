@@ -2088,7 +2088,7 @@ async function submitApplicationWithScreenshot() {
         if (location.division) formData.append('division', location.division);
         if (location.district) formData.append('district', location.district);
         if (location.tehsil) formData.append('tehsil', location.tehsil);
-        if (location.pincode) formData.append('pincode', location.pincode);
+        if (location.positionPincode) formData.append('positionPincode', location.positionPincode);
         if (location.village) formData.append('village', location.village);
         
         // Add payment information
