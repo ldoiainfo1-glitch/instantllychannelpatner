@@ -535,9 +535,11 @@ router.post('/', upload.any(), async (req, res) => {
 
       console.log('💸 Refund completed');
 
-      return res.status(500).json({
+      return res.status(response.status || 500).json({
         success: false,
-        message: 'Ad creation failed. Credits refunded.'
+        message: 'Ad creation failed. Credits refunded.',
+        mainBackendStatus: response.status,
+        mainBackendError: responseData || null
       });
     }
 
