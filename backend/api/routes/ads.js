@@ -448,11 +448,49 @@ router.post('/', upload.any(), async (req, res) => {
       });
     });
 
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL;
-    const response = await fetch(`${MAIN_BACKEND_URL}/api/channel-partner/ads`, {
-      method: 'POST',
-      body: formData
-    });
+    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    let response;
+    try {
+      response = await fetch(`${MAIN_BACKEND_URL}/api/channel-partner/ads`, {
+        method: 'POST',
+        body: formData
+      });
+    } catch (fetchErr) {
+      console.error('❌ Failed to forward ad to main backend:', fetchErr.message || fetchErr);
+
+      // Refund credits because ad couldn't be forwarded
+      user.cashCredits += deductedFromCash;
+      user.extraCredits += deductedFromExtra;
+      user.credits = user.cashCredits + user.extraCredits;
+
+      if (deductedFromCash > 0) {
+        user.cashHistory.push({
+          type: 'credit',
+          amount: deductedFromCash,
+          balance: user.cashCredits,
+          description: 'Refund: Ad creation failed (network)',
+          date: new Date()
+        });
+      }
+
+      if (deductedFromExtra > 0) {
+        user.extraHistory.push({
+          type: 'credit',
+          amount: deductedFromExtra,
+          balance: user.extraCredits,
+          description: 'Refund: Ad creation failed (network)',
+          date: new Date()
+        });
+      }
+
+      await user.save();
+
+      return res.status(502).json({
+        success: false,
+        message: 'Failed to reach main ads backend. Credits have been refunded.',
+        error: fetchErr.message || String(fetchErr)
+      });
+    }
 
     console.log('📨 Main backend response:', response.status);
 
