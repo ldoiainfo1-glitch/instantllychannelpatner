@@ -2197,8 +2197,8 @@ router.get('/ads', async (req, res) => {
     
     console.log('🔄 Proxying ads request - approvalStatus:', approvalStatus);
     
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
-    const url = `${MAIN_BACKEND_URL}/api/ads${approvalStatus ? `?approvalStatus=${approvalStatus}` : ''}`;
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const url = `${APP_BACKEND_URL}/api/ads${approvalStatus ? `?approvalStatus=${approvalStatus}` : ''}`;
     
     console.log('🌐 Fetching from:', url);
     
@@ -2233,8 +2233,8 @@ router.put('/ads/:id', async (req, res) => {
     
     console.log(`🔄 Proxying ad update - ID: ${id}, Status: ${approvalStatus}`);
     
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
-    const url = `${MAIN_BACKEND_URL}/api/ads/${id}`;
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const url = `${APP_BACKEND_URL}/api/ads/${id}`;
     
     const response = await fetch(url, {
       method: 'PUT',
@@ -2271,8 +2271,8 @@ router.delete('/ads/:id', async (req, res) => {
     
     console.log(`🔄 Proxying ad deletion - ID: ${id}`);
     
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
-    const url = `${MAIN_BACKEND_URL}/api/ads/${id}`;
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const url = `${APP_BACKEND_URL}/api/ads/${id}`;
     
     const response = await fetch(url, { method: 'DELETE' });
     const data = await response.json();
@@ -2314,8 +2314,8 @@ router.post('/ads/:id/approve', async (req, res) => {
       });
     }
     
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL;
-    const url = `${MAIN_BACKEND_URL}/api/ads/${id}/approve`;
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const url = `${APP_BACKEND_URL}/api/ads/${id}/approve`;
     
     const response = await fetch(url, {
       method: 'POST',
@@ -2365,8 +2365,8 @@ router.post('/ads/:id/reject', async (req, res) => {
     
     console.log(`🔄 Proxying ad rejection - ID: ${id}`);
     
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
-    const url = `${MAIN_BACKEND_URL}/api/ads/${id}/reject`;
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const url = `${APP_BACKEND_URL}/api/ads/${id}/reject`;
     
     const response = await fetch(url, {
       method: 'POST',
@@ -2403,8 +2403,8 @@ router.get('/ads/:id', async (req, res) => {
     
     console.log(`🔄 Proxying get ad details - ID: ${id}`);
     
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
-    const url = `${MAIN_BACKEND_URL}/api/ads/${id}`;
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const url = `${APP_BACKEND_URL}/api/ads/${id}`;
     
     const response = await fetch(url);
     const data = await response.json();
@@ -2437,8 +2437,8 @@ router.get('/ads/image/:id/:type', async (req, res) => {
     
     console.log(`🖼️  Proxying image request - Ad: ${id}, Type: ${type}`);
     
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
-    const url = `${MAIN_BACKEND_URL}/api/ads/image/${id}/${type}`;
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const url = `${APP_BACKEND_URL}/api/ads/image/${id}/${type}`;
     
     console.log('🌐 Fetching image from:', url);
     

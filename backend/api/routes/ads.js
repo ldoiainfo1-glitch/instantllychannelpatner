@@ -448,10 +448,10 @@ router.post('/', upload.any(), async (req, res) => {
       });
     });
 
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
     let response;
     try {
-      response = await fetch(`${MAIN_BACKEND_URL}/api/channel-partner/ads`, {
+      response = await fetch(`${APP_BACKEND_URL}/api/channel-partner/ads`, {
         method: 'POST',
         body: formData
       });
@@ -681,8 +681,8 @@ router.get('/image/:id/:type', async (req, res) => {
 
     console.log(`🖼️  Proxying image request - Ad: ${id}, Type: ${type}`);
 
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
-    const url = `${MAIN_BACKEND_URL}/api/ads/image/${id}/${type}`;
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const url = `${APP_BACKEND_URL}/api/ads/image/${id}/${type}`;
 
     const response = await fetch(url);
 

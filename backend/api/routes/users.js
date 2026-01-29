@@ -488,8 +488,8 @@ router.get('/my-ads', async (req, res) => {
     
     console.log('🔄 Fetching ads for user phone:', phone);
     
-    const MAIN_BACKEND_URL = process.env.MAIN_BACKEND_URL || 'https://instantlly-cards-backend-6ki0.onrender.com';
-    const url = `${MAIN_BACKEND_URL}/api/channel-partner/ads?phone=${encodeURIComponent(phone)}`;
+    const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
+    const url = `${APP_BACKEND_URL}/api/channel-partner/ads?phone=${encodeURIComponent(phone)}`;
     
     console.log('🌐 Calling main backend:', url);
     
