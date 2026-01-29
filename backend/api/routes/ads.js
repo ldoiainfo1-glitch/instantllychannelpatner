@@ -551,71 +551,143 @@ router.post('/', upload.any(), async (req, res) => {
     // -----------------------
     // Commission distribution
     // -----------------------
-    // Rule: Only distribute commissions when the ad cost was covered entirely from cash credits
-    // (i.e., no extraCredits were used). If any extra credits were used, skip commission.
-    if (deductedFromExtra === 0 && deductedFromCash > 0) {
+    // TWO-TIER COMMISSION SYSTEM:
+    // 1. If ONLY cash credits used (no extra): Self gets 20%, parents get their shares
+    // 2. If extra credits used: Self gets 0%, parents get their shares (skip self)
+    if (deductedFromCash > 0) {
       (async () => {
         try {
           const uploader = user; // user who created the ad
           const adId = responseData?.ad?._id || responseData?.ad?.id || null;
+          const Application = require('../models/Application');
+
           // Commission shares (percent of ad amount) by position
           const levelShares = [
-            { post: 'Pincode Head', percent: 20, locationField: 'pincode', label: 'Pincode' },
-            { post: 'Tehsil Head', percent: 10, locationField: 'tehsil', label: 'Tehsil' },
-            { post: 'District Head', percent: 5, locationField: 'district', label: 'District' },
-            { post: 'Division Head', percent: 2.5, locationField: 'division', label: 'Division' },
-            { post: 'State Head', percent: 1.25, locationField: 'state', label: 'State' },
-            { post: 'Zone Head', percent: 0.6, locationField: 'zone', label: 'Zone' },
-            { post: 'President', percent: 0.3, locationField: 'country', label: 'India' }
+            { levelName: 'pincode', percent: 20, label: 'Pincode' },
+            { levelName: 'tehsil', percent: 10, label: 'Tehsil' },
+            { levelName: 'district', percent: 5, label: 'District' },
+            { levelName: 'division', percent: 2.5, label: 'Division' },
+            { levelName: 'state', percent: 1.25, label: 'State' },
+            { levelName: 'zone', percent: 0.6, label: 'Zone' },
+            { levelName: 'country', percent: 0.3, label: 'India' }
           ];
 
-          // Always credit uploader with the 'self' share (Pincode level share)
-          const selfShare = levelShares[0];
-          const selfAmt = Number((AD_COST * (selfShare.percent / 100)).toFixed(2));
-          uploader.commissionBalance = (uploader.commissionBalance || 0) + selfAmt;
-          uploader.commissionHistory = uploader.commissionHistory || [];
-          uploader.commissionHistory.push({
-            type: 'credit',
-            amount: selfAmt,
-            balance: uploader.commissionBalance,
-            description: `Commission (Self) from ad`,
-            fromAdId: adId,
-            level: selfShare.label,
-            date: new Date()
-          });
-          await uploader.save();
-
-          // Find uploader's position to determine higher levels
-          let userPosition = null;
-          try {
-            if (uploader.positionId) {
-              userPosition = await Position.findById(uploader.positionId).lean();
-            }
-          } catch (posErr) {
-            console.warn('Could not load user position for commission distribution', posErr.message);
+          // Determine if self gets commission (only when paid fully in cash)
+          const selfGetsCommission = (deductedFromExtra === 0);
+          
+          if (selfGetsCommission) {
+            // Credit uploader with 'self' share when paid fully in cash
+            const selfShare = levelShares[0];
+            const selfAmt = Number((AD_COST * (selfShare.percent / 100)).toFixed(2));
+            uploader.commissionBalance = (uploader.commissionBalance || 0) + selfAmt;
+            uploader.commissionHistory = uploader.commissionHistory || [];
+            uploader.commissionHistory.push({
+              type: 'credit',
+              amount: selfAmt,
+              balance: uploader.commissionBalance,
+              description: `Commission (Self) from ad`,
+              fromAdId: adId,
+              level: selfShare.label,
+              date: new Date()
+            });
+            await uploader.save();
+            console.log(`✅ [COMMISSION] Self: ₹${selfAmt} to ${uploader.name || uploader.phone}`);
+          } else {
+            console.log(`ℹ️ [COMMISSION] Self commission skipped (extra credits used: ₹${deductedFromExtra})`);
           }
 
-          // For each higher level (skip the first which is self), find occupied position and credit
+          // Find uploader's approved application to determine hierarchy
+          const uploaderApp = await Application.findOne({
+            'applicantInfo.phone': uploader.phone,
+            status: 'approved'
+          }).lean();
+
+          if (!uploaderApp) {
+            console.warn('⚠️ Cannot distribute commissions: uploader has no approved application');
+            return;
+          }
+
+          // Extract location hierarchy from uploader's application
+          const hierarchy = {
+            pincode: uploaderApp.applicantInfo?.pincode,
+            tehsil: uploaderApp.applicantInfo?.tehsil,
+            district: uploaderApp.applicantInfo?.district,
+            division: uploaderApp.applicantInfo?.division,
+            state: uploaderApp.applicantInfo?.state,
+            zone: uploaderApp.applicantInfo?.zone,
+            country: uploaderApp.applicantInfo?.country || 'India'
+          };
+
+          console.log('📍 [COMMISSION] Uploader hierarchy:', hierarchy);
+
+          // Helper: find approved application holder for a level with fallback and reallocation
+          const findLevelHolder = async (levelName, excludePhone = null) => {
+            const levelsOrder = ['pincode','tehsil','district','division','state','zone','country'];
+            const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            // First try: search by positionId patterns (flexible regex)
+            let query = { status: 'approved' };
+            if (excludePhone) {
+              query['applicantInfo.phone'] = { $ne: excludePhone }; // exclude uploader
+            }
+            
+            const token = hierarchy[levelName];
+            if (token && levelName !== 'country') {
+              const flexToken = String(token).trim().toLowerCase().replace(/[^a-z0-9]+/g, '[-_\\s]*');
+              const levelFlex = levelName.replace(/\s+/g, '[-_\\s]*');
+              query.positionId = { $regex: new RegExp(`(${levelFlex}[-_\\s]*head.*${flexToken}|${flexToken}.*${levelFlex}[-_\\s]*head)`, 'i') };
+            } else if (levelName === 'country') {
+              query.positionId = { $regex: /president|india[-_\s]*head/i };
+            }
+
+            let app = await Application.findOne(query).lean();
+            if (app) return { app, paidLevel: levelName };
+
+            // Second try: fallback by applicantInfo location field
+            if (token && levelName !== 'country') {
+              const fallbackQuery = { status: 'approved' };
+              if (excludePhone) {
+                fallbackQuery['applicantInfo.phone'] = { $ne: excludePhone };
+              }
+              fallbackQuery[`applicantInfo.${levelName}`] = new RegExp(esc(token), 'i');
+              app = await Application.findOne(fallbackQuery).sort({ approvedDate: -1 }).lean();
+              if (app) {
+                console.log(`ℹ️ [COMMISSION] Found ${levelName} holder by applicantInfo`);
+                return { app, paidLevel: levelName };
+              }
+            }
+
+            // Third try: reallocate to next available upper level
+            console.log(`ℹ️ [COMMISSION] No ${levelName} holder found, trying upper levels...`);
+            const startIdx = Math.max(0, levelsOrder.indexOf(levelName));
+            for (let i = startIdx + 1; i < levelsOrder.length; i++) {
+              const upperLevel = levelsOrder[i];
+              const upperResult = await findLevelHolder(upperLevel, excludePhone);
+              if (upperResult && upperResult.app) {
+                console.log(`ℹ️ [COMMISSION] Reallocated ${levelName} -> ${upperLevel}`);
+                return { app: upperResult.app, paidLevel: upperLevel, reallocatedFrom: levelName };
+              }
+            }
+
+            return null;
+          };
+
+          // For parent levels, find holder and credit
+          // Start from index 1 (tehsil) regardless of whether self got commission
           for (let i = 1; i < levelShares.length; i++) {
             const level = levelShares[i];
             try {
-              if (!userPosition) continue; // cannot locate hierarchy without user's position
-
-              // Build query depending on location field
-              const query = { post: level.post, status: 'Occupied' };
-              if (level.locationField === 'country') {
-                query['location.country'] = userPosition.location?.country || 'India';
-              } else {
-                const val = userPosition.location?.[level.locationField];
-                if (!val) continue; // no location value to match
-                query[`location.${level.locationField}`] = val;
+              const result = await findLevelHolder(level.levelName, uploader.phone);
+              if (!result || !result.app) {
+                console.log(`⚠️ [COMMISSION] No holder found for ${level.label} (and no upper-level fallback)`);
+                continue;
               }
 
-              const pos = await Position.findOne(query).lean();
-              if (!pos || !pos.applicantDetails || !pos.applicantDetails.userId) continue;
-
-              const recipient = await User.findById(pos.applicantDetails.userId);
-              if (!recipient) continue;
+              const recipient = await User.findById(result.app.userId);
+              if (!recipient) {
+                console.log(`⚠️ [COMMISSION] User not found for ${level.label} holder`);
+                continue;
+              }
 
               const amt = Number((AD_COST * (level.percent / 100)).toFixed(2));
               recipient.commissionBalance = (recipient.commissionBalance || 0) + amt;
@@ -624,23 +696,24 @@ router.post('/', upload.any(), async (req, res) => {
                 type: 'credit',
                 amount: amt,
                 balance: recipient.commissionBalance,
-                description: `Commission (${level.label}) from ad by ${uploader.name || uploader.phone}`,
+                description: `Commission (${level.label}) from ad by ${uploader.name || uploader.phone}${result.reallocatedFrom ? ` [reallocated from ${result.reallocatedFrom}]` : ''}`,
                 fromAdId: adId,
                 level: level.label,
                 date: new Date()
               });
               await recipient.save();
+              console.log(`✅ [COMMISSION] ${level.label}: ₹${amt} to ${recipient.name || recipient.phone} (requested: ${level.levelName}, paid: ${result.paidLevel})`);
             } catch (innerErr) {
-              console.error('Commission credit failed for level', level, innerErr.message);
+              console.error(`❌ [COMMISSION] Failed for ${level.label}:`, innerErr.message);
             }
           }
           console.log('💸 Commission distribution completed for ad');
         } catch (err) {
-          console.error('Commission distribution error:', err);
+          console.error('❌ Commission distribution error:', err);
         }
       })();
     } else {
-      console.log('ℹ️ Commission skipped because extra credits were used for this ad');
+      console.log('ℹ️ Commission skipped because no cash credits were used');
     }
 
     return res.status(201).json({
