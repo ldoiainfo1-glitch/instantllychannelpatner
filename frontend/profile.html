@@ -383,6 +383,11 @@
                     </button>
                 </li>
                 <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#commissionsTab">
+                        <i class="fas fa-hand-holding-dollar me-2"></i>Commissions
+                    </button>
+                </li>
+                <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transferTab">
                         <i class="fas fa-exchange-alt me-2"></i>Transfer Credits
                     </button>
@@ -833,6 +838,41 @@
                 </div>
 
                 <!-- Advertisements Tab -->
+                <!-- Commissions Tab -->
+                <div class="tab-pane fade" id="commissionsTab">
+                    <div class="info-card mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="mb-0">
+                                <i class="fas fa-hand-holding-dollar me-2"></i>Commissions
+                            </h4>
+                            <div>
+                                <strong>Withdrawable:</strong>
+                                <span id="commissionBalanceDisplay">₹0</span>
+                                <button class="btn btn-sm btn-primary ms-3" id="withdrawAllBtn">Withdraw All</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Sr No.</th>
+                                        <th>Name</th>
+                                        <th>Position</th>
+                                        <th>Commission %</th>
+                                        <th>Amount</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="commissionTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">No commissions yet</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
                 <div class="tab-pane fade" id="advertisementsTab">
                     <div class="info-card mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -2533,6 +2573,72 @@
         document.querySelector('[data-bs-target="#advertisementsTab"]')?.addEventListener('click', () => {
             loadUserAdvertisements();
         });
+
+        // Load commissions when commissions tab is shown
+        document.querySelector('[data-bs-target="#commissionsTab"]')?.addEventListener('click', () => {
+            loadCommissions();
+        });
+
+        document.getElementById('withdrawAllBtn')?.addEventListener('click', async () => {
+            const balanceText = document.getElementById('commissionBalanceDisplay').textContent || '0';
+            const numeric = Number(balanceText.replace(/[^0-9.-]+/g, '')) || 0;
+            if (numeric <= 0) return showNotification('No commission available to withdraw', 'error');
+            if (!confirm(`Withdraw ₹${numeric.toLocaleString('en-IN')} from your commissions?`)) return;
+            try {
+                const resp = await fetch(`${API_BASE_URL}/users/${currentUser._id || currentUser.id}/commissions/withdraw`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: numeric })
+                });
+                const data = await resp.json();
+                if (resp.ok) {
+                    showNotification('Withdraw successful', 'success');
+                    loadCommissions();
+                    loadUserProfile();
+                } else {
+                    showNotification(data.message || 'Withdraw failed', 'error');
+                }
+            } catch (err) {
+                console.error('Withdraw error', err);
+                showNotification('Network error during withdraw', 'error');
+            }
+        });
+
+        async function loadCommissions() {
+            const tbody = document.getElementById('commissionTableBody');
+            const balanceDisplay = document.getElementById('commissionBalanceDisplay');
+            if (!currentUser) return;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>`;
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${currentUser._id || currentUser.id}/commissions`);
+                const data = await response.json();
+                if (!response.ok) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load commissions</td></tr>`;
+                    return;
+                }
+                const history = data.commissionHistory || [];
+                balanceDisplay.textContent = `₹${(data.commissionBalance || 0).toLocaleString('en-IN')}`;
+                if (history.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-4">No commissions yet</td></tr>`;
+                    return;
+                }
+                tbody.innerHTML = history.map((h, idx) => {
+                    const name = h.description?.match(/by ([^\n]+)/)?.[1] || (currentUser.name || currentUser.phone);
+                    return `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${name}</td>
+                            <td>${h.level || '-'}</td>
+                            <td>${h.type === 'withdraw' ? '-' : (h.amount ? ((Math.abs(h.amount) / (h.amount ? Math.abs(h.amount) : 1)) : '-') : '-')}</td>
+                            <td>₹${Math.abs(h.amount).toLocaleString('en-IN')}</td>
+                            <td>${new Date(h.date).toLocaleString('en-IN')}</td>
+                        </tr>`;
+                }).join('');
+            } catch (err) {
+                console.error('Load commissions error', err);
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load commissions</td></tr>`;
+            }
+        }
 
         // Image preview handlers for ad creation
         document.getElementById('adBottomImage')?.addEventListener('change', function (e) {

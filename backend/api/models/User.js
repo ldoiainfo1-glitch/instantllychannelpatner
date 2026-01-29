@@ -130,6 +130,40 @@ const userSchema = new mongoose.Schema({
       default: Date.now
     }
   }],
+  // Commission balance (withdrawable) and history
+  commissionBalance: {
+    type: Number,
+    default: 0
+  },
+  commissionHistory: [{
+    type: {
+      type: String,
+      enum: ['credit', 'withdraw'],
+      required: true
+    },
+    amount: {
+      type: Number,
+      required: true
+    },
+    balance: {
+      type: Number,
+      required: true
+    },
+    description: {
+      type: String,
+      required: true
+    },
+    fromAdId: {
+      type: String
+    },
+    level: {
+      type: String
+    },
+    date: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   hasReceivedInitialCredits: {
     type: Boolean,
     default: false

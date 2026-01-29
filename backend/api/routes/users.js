@@ -324,6 +324,57 @@ router.get('/:userId/credits-history', async (req, res) => {
   }
 });
 
+// Get user commission history and balance
+router.get('/:userId/commissions', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId).select('commissionHistory commissionBalance');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const history = (user.commissionHistory || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    res.json({
+      success: true,
+      commissionBalance: user.commissionBalance || 0,
+      commissionHistory: history
+    });
+  } catch (error) {
+    console.error('Get commissions error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Withdraw commission (simple instant withdraw that debits commission balance)
+router.post('/:userId/commissions/withdraw', async (req, res) => {
+  try {
+    const { amount, method = 'bank', reference = '' } = req.body;
+    const withdrawAmt = Number(amount) || 0;
+    if (withdrawAmt <= 0) return res.status(400).json({ success: false, message: 'Invalid withdraw amount' });
+
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const balance = user.commissionBalance || 0;
+    if (withdrawAmt > balance) return res.status(400).json({ success: false, message: 'Insufficient commission balance' });
+
+    user.commissionBalance = Number((balance - withdrawAmt).toFixed(2));
+    user.commissionHistory = user.commissionHistory || [];
+    user.commissionHistory.push({
+      type: 'withdraw',
+      amount: -withdrawAmt,
+      balance: user.commissionBalance,
+      description: `Withdraw via ${method} ${reference ? '- ' + reference : ''}`,
+      date: new Date()
+    });
+
+    await user.save();
+
+    res.json({ success: true, message: 'Withdraw successful', commissionBalance: user.commissionBalance });
+  } catch (error) {
+    console.error('Withdraw commission error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Process payment
 router.post('/:userId/process-payment', async (req, res) => {
   try {

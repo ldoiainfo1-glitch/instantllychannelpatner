@@ -435,28 +435,9 @@
             
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-
-                if (selectedImages.length === 0) {
-                    alert('Please select at least one image');
-                    return;
-                }
-
-                const submitBtn = form.querySelector('button[type="submit"]');
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
-
-                const formData = new FormData();
-                formData.append('title', document.getElementById('adTitle').value);
-                formData.append('phoneNumber', document.getElementById('phoneNumber').value);
-                formData.append('startDate', document.getElementById('startDate').value);
-                formData.append('endDate', document.getElementById('endDate').value);
-
-                selectedImages.forEach(image => {
-                    formData.append('images', image);
-                });
-
-                const token = localStorage.getItem('authToken');
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                uploadAd();
+            });
+        }
 
         async function uploadAd() {
             const title = document.getElementById('adTitle').value.trim();
@@ -480,7 +461,7 @@
                 return;
             }
 
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('authToken');
             const user = JSON.parse(localStorage.getItem('user') || '{}');
 
             const formData = new FormData();

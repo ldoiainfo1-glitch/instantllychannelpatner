@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Position = require('../models/Position');
 const multer = require('multer');
 const GridFSBucket = require('mongodb').GridFSBucket;
 const mongoose = require('mongoose');
@@ -506,6 +507,101 @@ router.post('/', upload.any(), async (req, res) => {
     // SUCCESS RESPONSE
     // =======================
     console.log('✅ Ad created successfully');
+
+    // -----------------------
+    // Commission distribution
+    // -----------------------
+    // Rule: Only distribute commissions when the ad cost was covered entirely from cash credits
+    // (i.e., no extraCredits were used). If any extra credits were used, skip commission.
+    if (deductedFromExtra === 0 && deductedFromCash > 0) {
+      (async () => {
+        try {
+          const uploader = user; // user who created the ad
+          const adId = responseData?.ad?._id || responseData?.ad?.id || null;
+          // Commission shares (percent of ad amount) by position
+          const levelShares = [
+            { post: 'Pincode Head', percent: 20, locationField: 'pincode', label: 'Pincode' },
+            { post: 'Tehsil Head', percent: 10, locationField: 'tehsil', label: 'Tehsil' },
+            { post: 'District Head', percent: 5, locationField: 'district', label: 'District' },
+            { post: 'Division Head', percent: 2.5, locationField: 'division', label: 'Division' },
+            { post: 'State Head', percent: 1.25, locationField: 'state', label: 'State' },
+            { post: 'Zone Head', percent: 0.6, locationField: 'zone', label: 'Zone' },
+            { post: 'President', percent: 0.3, locationField: 'country', label: 'India' }
+          ];
+
+          // Always credit uploader with the 'self' share (Pincode level share)
+          const selfShare = levelShares[0];
+          const selfAmt = Number((AD_COST * (selfShare.percent / 100)).toFixed(2));
+          uploader.commissionBalance = (uploader.commissionBalance || 0) + selfAmt;
+          uploader.commissionHistory = uploader.commissionHistory || [];
+          uploader.commissionHistory.push({
+            type: 'credit',
+            amount: selfAmt,
+            balance: uploader.commissionBalance,
+            description: `Commission (Self) from ad`,
+            fromAdId: adId,
+            level: selfShare.label,
+            date: new Date()
+          });
+          await uploader.save();
+
+          // Find uploader's position to determine higher levels
+          let userPosition = null;
+          try {
+            if (uploader.positionId) {
+              userPosition = await Position.findById(uploader.positionId).lean();
+            }
+          } catch (posErr) {
+            console.warn('Could not load user position for commission distribution', posErr.message);
+          }
+
+          // For each higher level (skip the first which is self), find occupied position and credit
+          for (let i = 1; i < levelShares.length; i++) {
+            const level = levelShares[i];
+            try {
+              if (!userPosition) continue; // cannot locate hierarchy without user's position
+
+              // Build query depending on location field
+              const query = { post: level.post, status: 'Occupied' };
+              if (level.locationField === 'country') {
+                query['location.country'] = userPosition.location?.country || 'India';
+              } else {
+                const val = userPosition.location?.[level.locationField];
+                if (!val) continue; // no location value to match
+                query[`location.${level.locationField}`] = val;
+              }
+
+              const pos = await Position.findOne(query).lean();
+              if (!pos || !pos.applicantDetails || !pos.applicantDetails.userId) continue;
+
+              const recipient = await User.findById(pos.applicantDetails.userId);
+              if (!recipient) continue;
+
+              const amt = Number((AD_COST * (level.percent / 100)).toFixed(2));
+              recipient.commissionBalance = (recipient.commissionBalance || 0) + amt;
+              recipient.commissionHistory = recipient.commissionHistory || [];
+              recipient.commissionHistory.push({
+                type: 'credit',
+                amount: amt,
+                balance: recipient.commissionBalance,
+                description: `Commission (${level.label}) from ad by ${uploader.name || uploader.phone}`,
+                fromAdId: adId,
+                level: level.label,
+                date: new Date()
+              });
+              await recipient.save();
+            } catch (innerErr) {
+              console.error('Commission credit failed for level', level, innerErr.message);
+            }
+          }
+          console.log('💸 Commission distribution completed for ad');
+        } catch (err) {
+          console.error('Commission distribution error:', err);
+        }
+      })();
+    } else {
+      console.log('ℹ️ Commission skipped because extra credits were used for this ad');
+    }
 
     return res.status(201).json({
       success: true,
