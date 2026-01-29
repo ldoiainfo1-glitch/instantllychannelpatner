@@ -2623,13 +2623,14 @@
                     return;
                 }
                 tbody.innerHTML = history.map((h, idx) => {
-                    const name = h.description?.match(/by ([^\n]+)/)?.[1] || (currentUser.name || currentUser.phone);
+                    const name = (h.description && h.description.match && h.description.match(/by ([^\n]+)/)) ? h.description.match(/by ([^\n]+)/)[1] : (currentUser.name || currentUser.phone);
+                    const percentDisplay = h.percent ? `${h.percent}%` : '-';
                     return `
                         <tr>
                             <td>${idx + 1}</td>
                             <td>${name}</td>
                             <td>${h.level || '-'}</td>
-                            <td>${h.type === 'withdraw' ? '-' : (h.amount ? ((Math.abs(h.amount) / (h.amount ? Math.abs(h.amount) : 1)) : '-') : '-')}</td>
+                            <td>${percentDisplay}</td>
                             <td>₹${Math.abs(h.amount).toLocaleString('en-IN')}</td>
                             <td>${new Date(h.date).toLocaleString('en-IN')}</td>
                         </tr>`;
