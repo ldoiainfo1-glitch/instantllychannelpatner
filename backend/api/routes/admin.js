@@ -2235,10 +2235,16 @@ router.put('/ads/:id', async (req, res) => {
     
     const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
     const url = `${APP_BACKEND_URL}/api/ads/${id}`;
-    
+
+    // Use a server-side admin token when configured, otherwise forward caller Authorization
+    const forwardAuth = process.env.APP_BACKEND_ADMIN_TOKEN ? `Bearer ${process.env.APP_BACKEND_ADMIN_TOKEN}` : req.headers.authorization;
+
+    const headers = { 'Content-Type': 'application/json' };
+    if (forwardAuth) headers['Authorization'] = forwardAuth;
+
     const response = await fetch(url, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ approvalStatus, adminComments })
     });
     
@@ -2273,8 +2279,12 @@ router.delete('/ads/:id', async (req, res) => {
     
     const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
     const url = `${APP_BACKEND_URL}/api/ads/${id}`;
-    
-    const response = await fetch(url, { method: 'DELETE' });
+
+    const forwardAuth = process.env.APP_BACKEND_ADMIN_TOKEN ? `Bearer ${process.env.APP_BACKEND_ADMIN_TOKEN}` : req.headers.authorization;
+    const headers = {};
+    if (forwardAuth) headers['Authorization'] = forwardAuth;
+
+    const response = await fetch(url, { method: 'DELETE', headers });
     const data = await response.json();
     
     if (response.ok) {
@@ -2303,25 +2313,26 @@ router.post('/ads/:id/approve', async (req, res) => {
     const { id } = req.params;
     const { priority } = req.body;
     const authHeader = req.headers.authorization;
-    
-    console.log(`🔄 Proxying ad approval - ID: ${id}, Priority: ${priority}`);
-    console.log('🔐 Forwarding Authorization:', authHeader ? 'YES' : 'NO');
 
-    if (!authHeader) {
+    console.log(`🔄 Proxying ad approval - ID: ${id}, Priority: ${priority}`);
+
+    // Prefer a server-side admin token if configured, otherwise forward caller token.
+    const forwardAuth = process.env.APP_BACKEND_ADMIN_TOKEN ? `Bearer ${process.env.APP_BACKEND_ADMIN_TOKEN}` : authHeader;
+    console.log('🔐 Forwarding Authorization:', forwardAuth ? 'YES' : 'NO');
+
+    if (!forwardAuth) {
       return res.status(401).json({
         success: false,
         message: 'Authorization token missing'
       });
     }
-    
+
     const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
     const url = `${APP_BACKEND_URL}/api/ads/${id}/approve`;
-    
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json',
-        'Authorization': authHeader
-       },
+      headers: { 'Content-Type': 'application/json', 'Authorization': forwardAuth },
       body: JSON.stringify({ priority })
     });
     
@@ -2367,10 +2378,14 @@ router.post('/ads/:id/reject', async (req, res) => {
     
     const APP_BACKEND_URL = process.env.APP_BACKEND_URL || process.env.MAIN_BACKEND_URL || 'https://api.instantllycards.com';
     const url = `${APP_BACKEND_URL}/api/ads/${id}/reject`;
-    
+
+    const forwardAuth = process.env.APP_BACKEND_ADMIN_TOKEN ? `Bearer ${process.env.APP_BACKEND_ADMIN_TOKEN}` : req.headers.authorization;
+    const headers = { 'Content-Type': 'application/json' };
+    if (forwardAuth) headers['Authorization'] = forwardAuth;
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ reason })
     });
     
@@ -2805,29 +2820,85 @@ router.post('/applications/:id/distribute-commission', async (req, res) => {
     for (const distribution of distributions) {
       try {
         // Find the position holder for this level
-        const recipientPosition = await findPositionHolder(hierarchy, distribution.level);
-        
+        let recipientPosition = await findPositionHolder(hierarchy, distribution.level);
+        let actualPaidLevel = distribution.level;
+
+        // If no recipient found at this exact level, try to reallocate to next available upper level
+        const levelsOrder = ['pincode','tehsil','district','division','state','zone','country'];
+        if (!recipientPosition || !recipientPosition.application) {
+          console.log(`⚠️ [COMMISSION] No approved holder found for ${distribution.level} level — attempting fallback allocation`);
+          const startIdx = Math.max(0, levelsOrder.indexOf(distribution.level));
+          for (let i = startIdx + 1; i < levelsOrder.length; i++) {
+            const upperLevel = levelsOrder[i];
+            const upperPos = await findPositionHolder(hierarchy, upperLevel);
+            if (upperPos && upperPos.application) {
+              recipientPosition = upperPos;
+              actualPaidLevel = upperLevel;
+              console.log(`ℹ️ [COMMISSION] Reallocated ${distribution.level} -> ${upperLevel}`);
+              break;
+            }
+          }
+        }
+
+        // If still not found, try fallback search by applicantInfo fields (state/zone/etc.)
+        if ((!recipientPosition || !recipientPosition.application) && distribution.level !== 'country') {
+          console.log(`ℹ️ [COMMISSION] Trying fallback search by location fields for ${distribution.level}`);
+          // build fallbackQuery based on level
+          const fallbackQuery = { status: 'approved' };
+          const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          switch (distribution.level.toLowerCase()) {
+            case 'state':
+              if (hierarchy.state) fallbackQuery['applicantInfo.state'] = new RegExp(esc(hierarchy.state), 'i');
+              break;
+            case 'division':
+              if (hierarchy.division) fallbackQuery['applicantInfo.division'] = new RegExp(esc(hierarchy.division), 'i');
+              break;
+            case 'district':
+              if (hierarchy.district) fallbackQuery['applicantInfo.district'] = new RegExp(esc(hierarchy.district), 'i');
+              break;
+            case 'tehsil':
+              if (hierarchy.tehsil) fallbackQuery['applicantInfo.tehsil'] = new RegExp(esc(hierarchy.tehsil), 'i');
+              break;
+            case 'pincode':
+              if (hierarchy.pincode) fallbackQuery['applicantInfo.pincode'] = new RegExp(esc(hierarchy.pincode), 'i');
+              break;
+            case 'zone':
+              if (hierarchy.zone) fallbackQuery['applicantInfo.zone'] = new RegExp(esc(hierarchy.zone), 'i');
+              break;
+            default:
+              break;
+          }
+          if (Object.keys(fallbackQuery).length > 1) {
+            const fallbackApp = await Application.findOne(fallbackQuery).sort({ approvedDate: -1 });
+            if (fallbackApp) {
+              recipientPosition = { application: fallbackApp };
+              actualPaidLevel = distribution.level + ' (fallback by applicantInfo)';
+              console.log(`✅ [COMMISSION] Found fallback holder by applicantInfo for level ${distribution.level}`);
+            }
+          }
+        }
+
         if (recipientPosition && recipientPosition.application) {
           const recipient = await User.findById(recipientPosition.application.userId);
-          
           if (recipient) {
             // Add credits to recipient
             const creditsToAdd = Math.floor(distribution.amount);
             recipient.credits = (recipient.credits || 0) + creditsToAdd;
-            
+
             // Add commission transaction
             recipient.creditsHistory = recipient.creditsHistory || [];
             recipient.creditsHistory.push({
               amount: creditsToAdd,
               type: 'commission',
-              description: `Commission from ${hierarchy.level} position (${distribution.percentage}% of ₹${totalAmount})`,
+              description: `Commission from ${hierarchy.level} position (${distribution.percentage}% of ₹${totalAmount}) allocated to ${actualPaidLevel}`,
               date: new Date()
             });
 
             await recipient.save();
-            
+
             commissionRecipients.push({
-              level: distribution.level,
+              requestedLevel: distribution.level,
+              paidLevel: actualPaidLevel,
               name: recipient.name,
               phone: recipient.phone,
               amount: creditsToAdd,
@@ -2837,10 +2908,10 @@ router.post('/applications/:id/distribute-commission', async (req, res) => {
             totalDistributed += creditsToAdd;
             successfulDistributions++;
 
-            console.log(`✅ [COMMISSION] Distributed ₹${creditsToAdd} to ${recipient.name} (${distribution.level})`);
+            console.log(`✅ [COMMISSION] Distributed ₹${creditsToAdd} to ${recipient.name} (requested: ${distribution.level} -> paid: ${actualPaidLevel})`);
           }
         } else {
-          console.log(`⚠️ [COMMISSION] No approved holder found for ${distribution.level} level`);
+          console.log(`⚠️ [COMMISSION] No approved holder found for ${distribution.level} (and no upper-level/fallback holder)`);
         }
       } catch (distError) {
         console.error(`❌ [COMMISSION] Error distributing to ${distribution.level}:`, distError);
@@ -2886,53 +2957,55 @@ function parsePositionId(positionId) {
 async function findPositionHolder(hierarchy, level) {
   try {
     let query = { status: 'approved' };
-    
-    // Build position query based on level
+
+    // helper to create flexible regex from a token (handles spaces, underscores, hyphens)
+    const makeFlexible = (str) => {
+      if (!str) return null;
+      const token = String(str).trim().toLowerCase().replace(/[^a-z0-9]+/g, '[-_\\s]*');
+      // match either "<level>...<token>" or "<token>...<level>"
+      return new RegExp(`(${level.replace(/\s+/g, '[-_\\s]*')}[-_\\s]*head.*${token}|${token}.*${level.replace(/\s+/g, '[-_\\s]*')}[-_\\s]*head)`, 'i');
+    };
+
+    let regex = null;
+
     switch (level.toLowerCase()) {
       case 'country':
-        query.positionId = { $regex: /^pos_president_/ };
+        // president or country-level holder
+        regex = /president|india[-_\s]*head/i;
         break;
       case 'zone':
-        if (hierarchy.zone) {
-          query.positionId = { $regex: new RegExp(`zone-head.*${hierarchy.zone.replace(/\s/g, '-').toLowerCase()}`, 'i') };
-        }
+        regex = makeFlexible(hierarchy.zone || hierarchy.state || hierarchy.division);
         break;
       case 'state':
-        if (hierarchy.state) {
-          query.positionId = { $regex: new RegExp(`state-head.*${hierarchy.state.replace(/\s/g, '-').toLowerCase()}`, 'i') };
-        }
+        regex = makeFlexible(hierarchy.state || hierarchy.zone);
         break;
       case 'division':
-        if (hierarchy.division) {
-          query.positionId = { $regex: new RegExp(`division-head.*${hierarchy.division.replace(/\s/g, '-').toLowerCase()}`, 'i') };
-        }
+        regex = makeFlexible(hierarchy.division || hierarchy.state);
         break;
       case 'district':
-        if (hierarchy.district) {
-          query.positionId = { $regex: new RegExp(`district-head.*${hierarchy.district.replace(/\s/g, '-').toLowerCase()}`, 'i') };
-        }
+        regex = makeFlexible(hierarchy.district || hierarchy.division);
         break;
       case 'tehsil':
-        if (hierarchy.tehsil) {
-          query.positionId = { $regex: new RegExp(`tehsil-head.*${hierarchy.tehsil.replace(/\s/g, '-').toLowerCase()}`, 'i') };
-        }
+        regex = makeFlexible(hierarchy.tehsil || hierarchy.district);
         break;
       case 'pincode':
         if (hierarchy.pincode) {
-          query.positionId = { $regex: new RegExp(`pincode-head.*${hierarchy.pincode}`, 'i') };
+          regex = new RegExp(`${hierarchy.pincode}`, 'i');
         }
         break;
       case 'village':
-        if (hierarchy.village) {
-          query.positionId = { $regex: new RegExp(`village-head.*${hierarchy.village.replace(/\s/g, '-').toLowerCase()}`, 'i') };
-        }
+        regex = makeFlexible(hierarchy.village || hierarchy.tehsil);
         break;
     }
 
-    console.log(`🔍 [COMMISSION] Searching for ${level} holder with query:`, query);
-    
+    if (regex) {
+      query.positionId = { $regex: regex };
+    }
+
+    console.log(`🔍 [COMMISSION] Searching for ${level} holder with query:`, query, 'regex:', regex);
+
     const application = await Application.findOne(query);
-    
+
     return application ? { application } : null;
   } catch (error) {
     console.error(`Error finding ${level} position holder:`, error);

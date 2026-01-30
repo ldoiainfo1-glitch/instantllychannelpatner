@@ -224,6 +224,7 @@ const adsRoutes = require('../api/routes/ads');
 const positionsRoutes = require('../api/routes/positions');
 const paymentsRoutes = require('../api/routes/payments');
 const pricingManagerRoutes = require('../api/routes/pricing-manager');
+const loginHelpRoutes = require('../api/routes/login-help');
 
 // Routes
 app.use('/api/positions', positionsRoutes); // Add positions route FIRST for photo fix
@@ -239,6 +240,7 @@ app.use('/api/credits', creditsRoutes);
 app.use('/api/promotions', promotionsRoutes);
 app.use('/api/ads', adsRoutes);
 app.use('/api/payments', paymentsRoutes);
+app.use('/api', loginHelpRoutes); // Login Help routes
 
 // Health check route
 app.get('/api/health', (req, res) => {
