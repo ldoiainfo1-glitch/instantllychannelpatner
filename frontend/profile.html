@@ -852,24 +852,75 @@
                             </div>
                         </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Sr No.</th>
-                                        <th>Name</th>
-                                        <th>Position</th>
-                                        <th>Commission %</th>
-                                        <th>Amount</th>
-                                        <th>Date</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="commissionTableBody">
-                                    <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">No commissions yet</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <!-- Tab Navigation for Commission Views -->
+                        <ul class="nav nav-pills mb-3" id="commissionViewTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="summary-tab" data-bs-toggle="pill" data-bs-target="#summary-view" type="button">
+                                    Summary
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="paths-tab" data-bs-toggle="pill" data-bs-target="#paths-view" type="button">
+                                    Distribution Paths
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="commissionViewContent">
+                            <!-- Summary View (Original) -->
+                            <div class="tab-pane fade show active" id="summary-view">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Sr No.</th>
+                                                <th>Name</th>
+                                                <th>Position</th>
+                                                <th>Commission %</th>
+                                                <th>Amount</th>
+                                                <th>Date</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="commissionTableBody">
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted py-4">No commissions yet</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Distribution Paths View (New) -->
+                            <div class="tab-pane fade" id="paths-view">
+                                <div class="mb-3">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        This shows the complete hierarchy for each ad commission. 
+                                        <strong>✅ Green</strong> = Position filled (received commission), 
+                                        <strong>⛔ Red</strong> = Position empty (skipped)
+                                    </div>
+                                </div>
+
+                                <!-- Ads Created by This User -->
+                                <div class="mb-4">
+                                    <h5 class="mb-3"><i class="fas fa-arrow-up me-2"></i>Commissions from My Ads</h5>
+                                    <div id="createdPathsContainer">
+                                        <div class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Loading...
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Ads Where User Received Commission -->
+                                <div class="mb-4">
+                                    <h5 class="mb-3"><i class="fas fa-arrow-down me-2"></i>Commissions I Received from Others</h5>
+                                    <div id="receivedPathsContainer">
+                                        <div class="text-center text-muted py-4">
+                                            <i class="fas fa-spinner fa-spin me-2"></i>Loading...
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2579,6 +2630,11 @@
             loadCommissions();
         });
 
+        // Load commission paths when paths tab is clicked
+        document.getElementById('paths-tab')?.addEventListener('click', () => {
+            loadCommissionPaths();
+        });
+
         document.getElementById('withdrawAllBtn')?.addEventListener('click', async () => {
             const balanceText = document.getElementById('commissionBalanceDisplay').textContent || '0';
             const numeric = Number(balanceText.replace(/[^0-9.-]+/g, '')) || 0;
@@ -2639,6 +2695,114 @@
                 console.error('Load commissions error', err);
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load commissions</td></tr>`;
             }
+        }
+
+        // Load commission distribution paths
+        async function loadCommissionPaths() {
+            const createdContainer = document.getElementById('createdPathsContainer');
+            const receivedContainer = document.getElementById('receivedPathsContainer');
+            
+            if (!currentUser) return;
+            
+            createdContainer.innerHTML = `<div class="text-center py-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>`;
+            receivedContainer.innerHTML = `<div class="text-center py-3"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</div>`;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/users/${currentUser._id || currentUser.id}/commission-paths`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    createdContainer.innerHTML = `<div class="text-center text-danger py-4">Failed to load paths</div>`;
+                    receivedContainer.innerHTML = `<div class="text-center text-danger py-4">Failed to load paths</div>`;
+                    return;
+                }
+                
+                // Render created ads
+                const created = data.created || [];
+                if (created.length === 0) {
+                    createdContainer.innerHTML = `<div class="text-center text-muted py-4">No ads created yet</div>`;
+                } else {
+                    createdContainer.innerHTML = created.map((path, idx) => renderCommissionPath(path, idx + 1, 'created')).join('');
+                }
+                
+                // Render received commissions
+                const received = data.received || [];
+                if (received.length === 0) {
+                    receivedContainer.innerHTML = `<div class="text-center text-muted py-4">No commissions received yet</div>`;
+                } else {
+                    receivedContainer.innerHTML = received.map((path, idx) => renderCommissionPath(path, idx + 1, 'received')).join('');
+                }
+                
+            } catch (err) {
+                console.error('Load commission paths error', err);
+                createdContainer.innerHTML = `<div class="text-center text-danger py-4">Failed to load paths</div>`;
+                receivedContainer.innerHTML = `<div class="text-center text-danger py-4">Failed to load paths</div>`;
+            }
+        }
+
+        // Render a single commission path card
+        function renderCommissionPath(path, srNo, viewType) {
+            const date = new Date(path.distributionDate).toLocaleString('en-IN');
+            const myCommission = viewType === 'created' 
+                ? path.selfCommission.amount 
+                : path.hierarchyPath.find(h => h.holderPhone === (currentUser.phone || currentUser.mobile))?.commission || 0;
+            
+            const hierarchyHtml = path.hierarchyPath.map(h => {
+                const icon = h.status === 'filled' ? '✅' : (h.status === 'self' ? '👤' : '⛔');
+                const color = h.status === 'filled' ? 'success' : (h.status === 'self' ? 'primary' : 'danger');
+                const holderText = h.holder || 'Empty';
+                const commissionText = h.commission > 0 ? `₹${h.commission.toLocaleString('en-IN')} (${h.percent}%)` : '₹0';
+                const sequentialText = h.sequentialPosition ? ` - Parent #${h.sequentialPosition}` : '';
+                
+                return `
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="badge bg-${color} me-2" style="min-width: 30px;">${icon}</span>
+                        <div class="flex-grow-1">
+                            <strong>${h.level.toUpperCase()}:</strong> ${h.location || 'N/A'}
+                            <br>
+                            <small class="text-muted">${holderText}${h.holderPhone ? ' (' + h.holderPhone + ')' : ''}${sequentialText}</small>
+                        </div>
+                        <div class="text-end">
+                            <strong>${commissionText}</strong>
+                        </div>
+                    </div>`;
+            }).join('');
+            
+            return `
+                <div class="card mb-3">
+                    <div class="card-header bg-light">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <strong>#${srNo}</strong> - 
+                                ${viewType === 'created' ? 'Your Ad' : 'Commission from ' + path.creatorName}
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <span class="badge bg-primary">Ad Amount: ₹${path.adAmount.toLocaleString('en-IN')}</span>
+                                <span class="badge bg-success ms-2">Your Share: ₹${myCommission.toLocaleString('en-IN')}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 class="mb-3">Distribution Hierarchy:</h6>
+                                ${hierarchyHtml}
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-title">Summary</h6>
+                                        <p class="mb-1"><strong>Total Distributed:</strong> ₹${path.totalDistributed.toLocaleString('en-IN')}</p>
+                                        <p class="mb-1"><strong>Filled Positions:</strong> ${path.filledPositions}</p>
+                                        <p class="mb-1"><strong>Empty Positions:</strong> ${path.emptyPositions}</p>
+                                        <p class="mb-1"><strong>Date:</strong> ${date}</p>
+                                        ${path.creditBreakdown ? `<p class="mb-0"><small>Cash: ₹${path.creditBreakdown.cash || 0} | Extra: ₹${path.creditBreakdown.extra || 0}</small></p>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
         }
 
         // Image preview handlers for ad creation

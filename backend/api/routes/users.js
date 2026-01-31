@@ -343,6 +343,38 @@ router.get('/:userId/commissions', async (req, res) => {
   }
 });
 
+// Get user commission paths (detailed hierarchy showing filled/empty positions)
+router.get('/:userId/commission-paths', async (req, res) => {
+  try {
+    const CommissionDistribution = require('../models/CommissionDistribution');
+    const user = await User.findById(req.params.userId).select('phone');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    // Find all distributions where this user was the creator OR a recipient
+    const createdPaths = await CommissionDistribution.find({ creatorPhone: user.phone })
+      .sort({ distributionDate: -1 })
+      .limit(50)
+      .lean();
+
+    const receivedPaths = await CommissionDistribution.find({ 
+      'hierarchyPath.holderPhone': user.phone,
+      creatorPhone: { $ne: user.phone }  // Exclude ones where user was creator (already in createdPaths)
+    })
+      .sort({ distributionDate: -1 })
+      .limit(50)
+      .lean();
+
+    res.json({
+      success: true,
+      created: createdPaths,  // Ads created by this user
+      received: receivedPaths  // Ads where this user received commission
+    });
+  } catch (error) {
+    console.error('Get commission paths error:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 // Withdraw commission (simple instant withdraw that debits commission balance)
 router.post('/:userId/commissions/withdraw', async (req, res) => {
   try {

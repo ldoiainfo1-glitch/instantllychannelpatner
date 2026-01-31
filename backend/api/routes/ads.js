@@ -560,8 +560,10 @@ router.post('/', upload.any(), async (req, res) => {
           const uploader = user; // user who created the ad
           const adId = responseData?.ad?._id || responseData?.ad?.id || null;
           const Application = require('../models/Application');
+          const CommissionDistribution = require('../models/CommissionDistribution');
 
           // Commission shares (percent of ad amount) by position
+          // Self gets 20%, then parent positions get percentages in sequence
           const levelShares = [
             { levelName: 'pincode', percent: 20, label: 'Pincode' },
             { levelName: 'tehsil', percent: 10, label: 'Tehsil' },
@@ -571,6 +573,10 @@ router.post('/', upload.any(), async (req, res) => {
             { levelName: 'zone', percent: 0.6, label: 'Zone' },
             { levelName: 'country', percent: 0.3, label: 'India' }
           ];
+          
+          // Parent commission percentages (used when positions are filled)
+          // First filled parent gets 10%, second gets 5%, third gets 2.5%, etc.
+          const parentPercentages = [10, 5, 2.5, 1.25, 0.6, 0.3];
 
           // Determine if self gets commission (only when paid fully in cash)
           const selfGetsCommission = (deductedFromExtra === 0);
@@ -620,12 +626,10 @@ router.post('/', upload.any(), async (req, res) => {
 
           console.log('📍 [COMMISSION] Uploader hierarchy:', hierarchy);
 
-          // Helper: find approved application holder for a level with fallback and reallocation
+          // Helper: find approved application holder for a level - NO REALLOCATION
+          // Only returns if the exact position is filled, otherwise returns null
           const findLevelHolder = async (levelName, excludePhone = null) => {
-            const levelsOrder = ['pincode','tehsil','district','division','state','zone','country'];
-            const esc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-            // First try: search by positionId patterns (flexible regex)
+            // First try: search by positionId patterns (must contain level-head)
             let query = { status: 'approved' };
             if (excludePhone) {
               query['applicantInfo.phone'] = { $ne: excludePhone }; // exclude uploader
@@ -635,7 +639,8 @@ router.post('/', upload.any(), async (req, res) => {
             if (token && levelName !== 'country') {
               const flexToken = String(token).trim().toLowerCase().replace(/[^a-z0-9]+/g, '[-_\\s]*');
               const levelFlex = levelName.replace(/\s+/g, '[-_\\s]*');
-              query.positionId = { $regex: new RegExp(`(${levelFlex}[-_\\s]*head.*${flexToken}|${flexToken}.*${levelFlex}[-_\\s]*head)`, 'i') };
+              // MUST contain both: level-head AND location token
+              query.positionId = { $regex: new RegExp(`${levelFlex}[-_\\s]*head.*${flexToken}`, 'i') };
             } else if (levelName === 'country') {
               query.positionId = { $regex: /president|india[-_\s]*head/i };
             }
@@ -643,71 +648,180 @@ router.post('/', upload.any(), async (req, res) => {
             let app = await Application.findOne(query).lean();
             if (app) return { app, paidLevel: levelName };
 
-            // Second try: fallback by applicantInfo location field
-            if (token && levelName !== 'country') {
-              const fallbackQuery = { status: 'approved' };
-              if (excludePhone) {
-                fallbackQuery['applicantInfo.phone'] = { $ne: excludePhone };
-              }
-              fallbackQuery[`applicantInfo.${levelName}`] = new RegExp(esc(token), 'i');
-              app = await Application.findOne(fallbackQuery).sort({ approvedDate: -1 }).lean();
-              if (app) {
-                console.log(`ℹ️ [COMMISSION] Found ${levelName} holder by applicantInfo`);
-                return { app, paidLevel: levelName };
-              }
-            }
-
-            // Third try: reallocate to next available upper level
-            console.log(`ℹ️ [COMMISSION] No ${levelName} holder found, trying upper levels...`);
-            const startIdx = Math.max(0, levelsOrder.indexOf(levelName));
-            for (let i = startIdx + 1; i < levelsOrder.length; i++) {
-              const upperLevel = levelsOrder[i];
-              const upperResult = await findLevelHolder(upperLevel, excludePhone);
-              if (upperResult && upperResult.app) {
-                console.log(`ℹ️ [COMMISSION] Reallocated ${levelName} -> ${upperLevel}`);
-                return { app: upperResult.app, paidLevel: upperLevel, reallocatedFrom: levelName };
-              }
-            }
-
+            // NO FALLBACK to location fields - position must be explicitly in positionId
+            // NO REALLOCATION - if position is empty, return null
+            console.log(`ℹ️ [COMMISSION] Position ${levelName} is empty - will be skipped`);
             return null;
           };
 
-          // For parent levels, find holder and credit
+          // For parent levels, find holder and credit with SEQUENTIAL PERCENTAGES
           // Start from index 1 (tehsil) regardless of whether self got commission
+          // NEW LOGIC: First filled parent gets 10%, second gets 5%, third gets 2.5%, etc.
+          
+          const filledParents = []; // Store filled parent positions in order
+          
+          // First pass: Find all filled parent positions
           for (let i = 1; i < levelShares.length; i++) {
             const level = levelShares[i];
             try {
               const result = await findLevelHolder(level.levelName, uploader.phone);
-              if (!result || !result.app) {
-                console.log(`⚠️ [COMMISSION] No holder found for ${level.label} (and no upper-level fallback)`);
-                continue;
+              if (result && result.app) {
+                const recipient = await User.findById(result.app.userId);
+                if (recipient) {
+                  filledParents.push({
+                    level: level,
+                    recipient: recipient,
+                    originalLevel: level.label,
+                    reallocatedFrom: result.reallocatedFrom
+                  });
+                  console.log(`✅ [COMMISSION] Found filled position #${filledParents.length}: ${level.label} - ${recipient.name || recipient.phone}`);
+                } else {
+                  console.log(`⚠️ [COMMISSION] User not found for ${level.label} holder`);
+                }
+              } else {
+                console.log(`ℹ️ [COMMISSION] Empty position: ${level.label}`);
               }
-
-              const recipient = await User.findById(result.app.userId);
-              if (!recipient) {
-                console.log(`⚠️ [COMMISSION] User not found for ${level.label} holder`);
-                continue;
-              }
-
-              const amt = Number((AD_COST * (level.percent / 100)).toFixed(2));
-              recipient.commissionBalance = (recipient.commissionBalance || 0) + amt;
-              recipient.commissionHistory = recipient.commissionHistory || [];
-              recipient.commissionHistory.push({
-                type: 'credit',
-                amount: amt,
-                balance: recipient.commissionBalance,
-                description: `Commission (${level.label}) from ad by ${uploader.name || uploader.phone}${result.reallocatedFrom ? ` [reallocated from ${result.reallocatedFrom}]` : ''}`,
-                fromAdId: adId,
-                level: level.label,
-                date: new Date()
-              });
-              await recipient.save();
-              console.log(`✅ [COMMISSION] ${level.label}: ₹${amt} to ${recipient.name || recipient.phone} (requested: ${level.levelName}, paid: ${result.paidLevel})`);
             } catch (innerErr) {
               console.error(`❌ [COMMISSION] Failed for ${level.label}:`, innerErr.message);
             }
           }
+          
+          // Second pass: Assign sequential percentages to filled parents
+          console.log(`\n💰 [COMMISSION] Distributing to ${filledParents.length} filled parent position(s):\n`);
+          
+          for (let i = 0; i < filledParents.length; i++) {
+            try {
+              const parent = filledParents[i];
+              const percent = parentPercentages[i] || 0; // Get sequential percentage
+              const amt = Number((AD_COST * (percent / 100)).toFixed(2));
+              
+              if (amt > 0) {
+                parent.recipient.commissionBalance = (parent.recipient.commissionBalance || 0) + amt;
+                parent.recipient.commissionHistory = parent.recipient.commissionHistory || [];
+                parent.recipient.commissionHistory.push({
+                  type: 'credit',
+                  amount: amt,
+                  balance: parent.recipient.commissionBalance,
+                  description: `Commission (Parent #${i + 1} - ${percent}% - ${parent.originalLevel}) from ad by ${uploader.name || uploader.phone}`,
+                  fromAdId: adId,
+                  level: `Parent ${i + 1}`,
+                  date: new Date()
+                });
+                await parent.recipient.save();
+                
+                console.log(`✅ [COMMISSION] Parent #${i + 1}: ${parent.recipient.name || parent.recipient.phone} (${parent.originalLevel}) → ${percent}% = ₹${amt}`);
+              }
+            } catch (saveErr) {
+              console.error(`❌ [COMMISSION] Failed to save commission:`, saveErr.message);
+            }
+          }
           console.log('💸 Commission distribution completed for ad');
+          
+          // ==========================================
+          // CREATE COMMISSION PATH RECORD
+          // ==========================================
+          // Store the complete hierarchy path for transparency
+          // This shows which positions received commission and which were empty/skipped
+          try {
+            const hierarchyPathArray = [];
+            let totalDistributed = 0;
+            let filledCount = 0;
+            let emptyCount = 0;
+            
+            // Add self to path
+            const selfAmt = selfGetsCommission ? Number((AD_COST * 0.2).toFixed(2)) : 0;
+            if (selfGetsCommission) {
+              totalDistributed += selfAmt;
+              filledCount++;
+            }
+            hierarchyPathArray.push({
+              level: levelShares[0].levelName,
+              location: hierarchy[levelShares[0].levelName] || uploaderApp.positionId?.split('_')[levelShares[0].levelName === 'pincode' ? 7 : 0] || 'Unknown',
+              holder: uploader.name,
+              holderPhone: uploader.phone,
+              holderId: uploader._id,
+              status: 'self',
+              commission: selfAmt,
+              percent: selfGetsCommission ? 20 : 0,
+              sequentialPosition: null
+            });
+            
+            // Build complete path array showing filled and empty positions
+            let parentIndex = 0;
+            for (let i = 1; i < levelShares.length; i++) {
+              const level = levelShares[i];
+              const location = hierarchy[level.levelName] || level.label;
+              
+              // Check if this position was filled (in filledParents array)
+              const filledParent = filledParents.find(p => p.level.levelName === level.levelName);
+              
+              if (filledParent) {
+                const percent = parentPercentages[parentIndex] || 0;
+                const amt = Number((AD_COST * (percent / 100)).toFixed(2));
+                totalDistributed += amt;
+                filledCount++;
+                
+                hierarchyPathArray.push({
+                  level: level.levelName,
+                  location: location,
+                  holder: filledParent.recipient.name,
+                  holderPhone: filledParent.recipient.phone,
+                  holderId: filledParent.recipient._id,
+                  status: 'filled',
+                  commission: amt,
+                  percent: percent,
+                  sequentialPosition: parentIndex + 1
+                });
+                
+                parentIndex++;
+              } else {
+                // Position is empty - add to path but with 0 commission
+                emptyCount++;
+                hierarchyPathArray.push({
+                  level: level.levelName,
+                  location: location,
+                  holder: null,
+                  holderPhone: null,
+                  holderId: null,
+                  status: 'empty',
+                  commission: 0,
+                  percent: 0,
+                  sequentialPosition: null
+                });
+              }
+            }
+            
+            // Create CommissionDistribution record
+            const distributionRecord = new CommissionDistribution({
+              adId: adId,
+              creatorId: uploader._id,
+              creatorPhone: uploader.phone,
+              creatorName: uploader.name,
+              adAmount: AD_COST,
+              distributionDate: new Date(),
+              selfCommission: {
+                paid: selfGetsCommission,
+                amount: selfAmt,
+                percent: selfGetsCommission ? 20 : 0
+              },
+              hierarchyPath: hierarchyPathArray,
+              totalDistributed: totalDistributed,
+              filledPositions: filledCount,
+              emptyPositions: emptyCount,
+              creditBreakdown: {
+                cash: deductedFromCash,
+                extra: deductedFromExtra
+              }
+            });
+            
+            await distributionRecord.save();
+            console.log(`✅ [COMMISSION PATH] Saved distribution record with ${filledCount} filled and ${emptyCount} empty positions`);
+            
+          } catch (pathErr) {
+            console.error('❌ [COMMISSION PATH] Failed to save distribution record:', pathErr.message);
+          }
+          // ==========================================
+          
         } catch (err) {
           console.error('❌ Commission distribution error:', err);
         }
