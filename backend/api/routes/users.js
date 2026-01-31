@@ -327,10 +327,36 @@ router.get('/:userId/credits-history', async (req, res) => {
 // Get user commission history and balance
 router.get('/:userId/commissions', async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).select('commissionHistory commissionBalance');
+    const CommissionDistribution = require('../models/CommissionDistribution');
+    const user = await User.findById(req.params.userId).select('phone commissionBalance');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    const history = (user.commissionHistory || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Get commission distributions where user received commission
+    const distributions = await CommissionDistribution.find({ 
+      'hierarchyPath.holderPhone': user.phone
+    })
+    .sort({ distributionDate: -1 })
+    .limit(100)
+    .lean();
+
+    // Build commission history from distributions
+    const history = [];
+    distributions.forEach(dist => {
+      // Find this user's entry in the hierarchy
+      const userEntry = dist.hierarchyPath.find(h => h.holderPhone === user.phone);
+      if (userEntry && userEntry.commission > 0) {
+        history.push({
+          amount: userEntry.commission,
+          description: `Commission from ad by ${dist.creatorName || 'Unknown'} (${dist.selfCommission?.level || 'pincode'})`,
+          date: dist.distributionDate,
+          type: 'commission',
+          percent: userEntry.percent,
+          positionLevel: dist.selfCommission?.level || 'pincode',
+          positionLocation: dist.selfCommission?.location || '',
+          uploaderName: dist.creatorName
+        });
+      }
+    });
 
     res.json({
       success: true,
