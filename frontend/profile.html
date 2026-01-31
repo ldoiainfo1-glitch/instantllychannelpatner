@@ -2846,9 +2846,9 @@
                 const cashCommCell = (h.commission || 0).toLocaleString('en-IN');
                 const totalCreditCell = ((h.commission || 0) + (isSelf ? cashCredit + bonusCredit : 0)).toLocaleString('en-IN');
                 
-                // Highlight advertiser (self) row with orange/amber color for visibility
-                const rowColor = isSelf ? '#FFB74D' : (isFilled ? '#D4EDDA' : '#F8D7DA');
-                const rowStyle = isSelf ? 'background-color: #FFB74D; font-weight: bold;' : `background-color: ${rowColor};`;
+                // Highlight advertiser (self) row with blue color for visibility
+                const rowColor = isSelf ? '#6BA4D8' : (isFilled ? '#D4EDDA' : '#F8D7DA');
+                const rowStyle = isSelf ? 'background-color: #6BA4D8; font-weight: bold; color: white;' : `background-color: ${rowColor};`;
                 
                 return `
                     <tr style="${rowStyle}">
@@ -2883,10 +2883,10 @@
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th colspan="5" class="text-center bg-light">
+                                        <th colspan="5" class="text-center bg-primary text-white">
                                             <strong>Payment Received Details</strong>
                                         </th>
-                                        <th colspan="5" class="text-center bg-light">
+                                        <th colspan="5" class="text-center bg-primary text-white">
                                             <strong>Comm Distributed on Details</strong>
                                         </th>
                                     </tr>
@@ -2933,26 +2933,6 @@
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-                        <div class="p-3 bg-light border-top">
-                            <div class="row text-center">
-                                <div class="col-md-3">
-                                    <small class="text-muted">Your Share</small>
-                                    <h5 class="text-success mb-0">₹${myCommission.toLocaleString('en-IN')}</h5>
-                                </div>
-                                <div class="col-md-3">
-                                    <small class="text-muted">Filled Positions</small>
-                                    <h5 class="text-primary mb-0">${path.filledPositions}</h5>
-                                </div>
-                                <div class="col-md-3">
-                                    <small class="text-muted">Empty Positions</small>
-                                    <h5 class="text-danger mb-0">${path.emptyPositions}</h5>
-                                </div>
-                                <div class="col-md-3">
-                                    <small class="text-muted">Total Distributed</small>
-                                    <h5 class="text-info mb-0">₹${path.totalDistributed.toLocaleString('en-IN')}</h5>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>`;
