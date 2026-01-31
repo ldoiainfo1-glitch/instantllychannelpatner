@@ -1069,6 +1069,8 @@
                                         required>
                                     <small class="text-muted" id="adBottomHint">This appears in the bottom
                                         carousel</small>
+                                    <small class="text-danger" id="adBottomImageError" style="display:none;"></small>
+                                    <small class="text-success" id="adBottomImageSuccess" style="display:none;"></small>
                                     <div id="bottomImagePreview" class="mt-2" style="display: none;">
                                         <img id="bottomImagePreviewImg" src="" class="img-fluid rounded border"
                                             style="max-height: 150px;">
@@ -1083,6 +1085,8 @@
                                         accept="image/*,video/*">
                                     <small class="text-muted" id="adFullscreenHint">Shown when user taps the
                                         banner</small>
+                                    <small class="text-danger" id="adFullscreenImageError" style="display:none;"></small>
+                                    <small class="text-success" id="adFullscreenImageSuccess" style="display:none;"></small>
                                     <div id="fullscreenImagePreview" class="mt-2" style="display: none;">
                                         <img id="fullscreenImagePreviewImg" src="" class="img-fluid rounded border"
                                             style="max-height: 200px;">
@@ -2824,15 +2828,33 @@
                 // Check file size (max 5MB for images - will be compressed if needed)
                 const maxSize = 5 * 1024 * 1024; // 5MB
                 
+                // Get error/success message elements
+                const inputId = previewDivId.replace('ImagePreview', 'Image');
+                const errorElement = document.getElementById(inputId + 'Error');
+                const successElement = document.getElementById(inputId + 'Success');
+                
+                // Reset messages
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                    errorElement.textContent = '';
+                }
+                if (successElement) {
+                    successElement.style.display = 'none';
+                    successElement.textContent = '';
+                }
+                
+                const originalSizeMB = (file.size / 1024 / 1024).toFixed(2);
+                
                 const reader = new FileReader();
                 reader.onload = async function (e) {
                     const img = new Image();
                     img.onload = async function() {
                         // Compress image if it's too large
                         let finalDataUrl = e.target.result;
+                        let compressedSize = file.size;
                         
                         if (file.size > maxSize) {
-                            console.log(`🗜️ Compressing image from ${(file.size / 1024 / 1024).toFixed(2)}MB...`);
+                            console.log(`🗜️ Compressing image from ${originalSizeMB}MB...`);
                             
                             // Create canvas for compression
                             const canvas = document.createElement('canvas');
@@ -2858,13 +2880,37 @@
                             // Compress to JPEG with quality 0.8
                             finalDataUrl = canvas.toDataURL('image/jpeg', 0.8);
                             
-                            const compressedSize = finalDataUrl.length * 0.75; // Approximate size
-                            console.log(`✅ Compressed to ${(compressedSize / 1024 / 1024).toFixed(2)}MB`);
+                            compressedSize = finalDataUrl.length * 0.75; // Approximate size
+                            const compressedSizeMB = (compressedSize / 1024 / 1024).toFixed(2);
+                            console.log(`✅ Compressed to ${compressedSizeMB}MB`);
                             
                             if (compressedSize > maxSize) {
                                 // Try again with lower quality
                                 finalDataUrl = canvas.toDataURL('image/jpeg', 0.6);
-                                console.log(`🗜️ Re-compressed with lower quality`);
+                                const newSize = finalDataUrl.length * 0.75;
+                                compressedSize = newSize;
+                                console.log(`🗜️ Re-compressed with lower quality to ${(newSize / 1024 / 1024).toFixed(2)}MB`);
+                            }
+                            
+                            const finalSizeMB = (compressedSize / 1024 / 1024).toFixed(2);
+                            const reduction = (100 - (compressedSize / file.size * 100)).toFixed(0);
+                            
+                            // Show success message
+                            if (successElement) {
+                                successElement.textContent = `✓ Compressed: ${originalSizeMB}MB → ${finalSizeMB}MB (${reduction}% smaller)`;
+                                successElement.style.display = 'block';
+                            }
+                            
+                            // Warn if still too large
+                            if (compressedSize > maxSize && errorElement) {
+                                errorElement.textContent = `⚠️ Still ${finalSizeMB}MB after compression. Please upload a smaller image (under 2MB recommended).`;
+                                errorElement.style.display = 'block';
+                            }
+                        } else {
+                            // Show file size even if no compression needed
+                            if (successElement) {
+                                successElement.textContent = `✓ Image size: ${originalSizeMB}MB (Good!)`;
+                                successElement.style.display = 'block';
                             }
                         }
                         
@@ -2872,11 +2918,20 @@
                         document.getElementById(previewDivId).style.display = 'block';
                         
                         // Store compressed data URL for later use
-                        const inputElement = document.getElementById(previewDivId.replace('Preview', ''));
+                        const inputElement = document.getElementById(inputId);
                         if (inputElement) {
                             inputElement.dataset.compressedDataUrl = finalDataUrl;
                         }
                     };
+                    
+                    img.onerror = function() {
+                        console.error('❌ Failed to load image');
+                        if (errorElement) {
+                            errorElement.textContent = '❌ Failed to process image. Please try a different file.';
+                            errorElement.style.display = 'block';
+                        }
+                    };
+                    
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
@@ -3272,7 +3327,20 @@
                     loadUserAdvertisements();
                     loadUserProfile(); // Refresh credits
                 } else {
-                    showNotification(data.message || 'Failed to submit advertisement', 'error');
+                    // Handle specific errors
+                    if (response.status === 413 || data.message?.includes('too large')) {
+                        showNotification(
+                            '⚠️ Image file is too large!\n\n' +
+                            'Please upload smaller images:\n' +
+                            '• Recommended: Under 2MB per image\n' +
+                            '• Use JPG format with lower resolution\n' +
+                            '• Try resizing images before upload\n\n' +
+                            'Your credits have been refunded.',
+                            'error'
+                        );
+                    } else {
+                        showNotification(data.message || 'Failed to submit advertisement', 'error');
+                    }
                 }
             } catch (error) {
                 console.error('Submit ad error:', error);
