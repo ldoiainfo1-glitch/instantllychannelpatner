@@ -2829,8 +2829,11 @@
                 return sum + (h.commission || 0) + (isSelf ? cashCredit + bonusCredit : 0);
             }, 0);
             
+            // REVERSE hierarchy to show Country → Pincode (not Pincode → Country)
+            const reversedHierarchy = [...path.hierarchyPath].reverse();
+            
             // Build table rows for hierarchy
-            const hierarchyRows = path.hierarchyPath.map((h, index) => {
+            const hierarchyRows = reversedHierarchy.map((h, index) => {
                 const levelNum = index + 1;
                 const isSelf = h.status === 'self';
                 const isFilled = h.status === 'filled';
@@ -2842,10 +2845,13 @@
                 const bonusCreditCell = isSelf ? bonusCredit.toLocaleString('en-IN') : '';
                 const cashCommCell = (h.commission || 0).toLocaleString('en-IN');
                 const totalCreditCell = ((h.commission || 0) + (isSelf ? cashCredit + bonusCredit : 0)).toLocaleString('en-IN');
-                const rowColor = isSelf ? '#FFF3CD' : (isFilled ? '#D4EDDA' : '#F8D7DA');
+                
+                // Highlight advertiser (self) row with orange/amber color for visibility
+                const rowColor = isSelf ? '#FFB74D' : (isFilled ? '#D4EDDA' : '#F8D7DA');
+                const rowStyle = isSelf ? 'background-color: #FFB74D; font-weight: bold;' : `background-color: ${rowColor};`;
                 
                 return `
-                    <tr style="background-color: ${rowColor};">
+                    <tr style="${rowStyle}">
                         <td class="text-center">${levelNum}</td>
                         <td><strong>${levelName}</strong></td>
                         <td>${h.location || ''}</td>
