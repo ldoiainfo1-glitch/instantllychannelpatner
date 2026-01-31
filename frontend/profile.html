@@ -2683,35 +2683,49 @@
                     return;
                 }
                 tbody.innerHTML = history.map((h, idx) => {
-                    const name = (h.description && h.description.match && h.description.match(/by ([^\n]+)/)) ? h.description.match(/by ([^\n]+)/)[1] : (currentUser.name || currentUser.phone);
-                    const percentDisplay = h.percent ? `${h.percent}%` : '-';
+                    // Extract name - prefer uploaderName field, fallback to extracting from description
+                    let name = currentUser.name || currentUser.phone;
+                    if (h.uploaderName) {
+                        name = h.uploaderName;
+                    } else if (h.description && h.description.match) {
+                        const matchResult = h.description.match(/by ([^\n(]+)/);
+                        if (matchResult) {
+                            name = matchResult[1].trim();
+                        }
+                    }
+                    
+                    // Fix: Show percentage even if it's 0, only show '-' if undefined/null
+                    const percentDisplay = (h.percent !== undefined && h.percent !== null) ? `${h.percent}%` : '-';
                     
                     // Extract position info - should show UPLOADER's position (who created the ad)
                     let positionDisplay = '-';
                     if (h.positionLevel && h.positionLocation) {
                         // New format: structured position data (uploader's position)
-                        positionDisplay = `${h.positionLevel} (${h.positionLocation})`;
+                        // Format: pincode(401107)
+                        const level = h.positionLevel.toLowerCase();
+                        positionDisplay = `${level}(${h.positionLocation})`;
                     } else if (h.description) {
                         // Try new description format: "Uploader Position: X\nUploader Location: Y"
                         const uploaderPosMatch = h.description.match(/Uploader Position: ([^\n]+)/);
                         const uploaderLocMatch = h.description.match(/Uploader Location: ([^\n]+)/);
                         
                         if (uploaderPosMatch && uploaderLocMatch) {
-                            positionDisplay = `${uploaderPosMatch[1]} (${uploaderLocMatch[1]})`;
+                            const level = uploaderPosMatch[1].toLowerCase();
+                            positionDisplay = `${level}(${uploaderLocMatch[1]})`;
                         } else {
                             // Try alternative format: "from ad by NAME (POSITION)"
                             const adByMatch = h.description.match(/from ad by [^(]+\(([^)]+)\)/);
                             if (adByMatch) {
-                                positionDisplay = adByMatch[1];
+                                const level = adByMatch[1].toLowerCase();
+                                positionDisplay = level;
                             } else {
-                                // Try old description format: "(Parent #X - percent% - LEVEL)"
-                                const oldFormatMatch = h.description.match(/\(Parent #\d+ - [\d.]+% - ([^)]+)\)/);
-                                if (oldFormatMatch) {
-                                    // This is the RECEIVER's position, not what we want for old records
-                                    // For old records, just show a generic label
-                                    positionDisplay = 'Pincode';
+                                // Try extracting Location from description for old self commissions
+                                const locationMatch = h.description.match(/Location: ([^\n]+)/);
+                                if (locationMatch) {
+                                    const level = h.level?.toLowerCase() || 'pincode';
+                                    positionDisplay = `${level}(${locationMatch[1]})`;
                                 } else if (h.level && h.level !== '-') {
-                                    positionDisplay = h.level;
+                                    positionDisplay = h.level.toLowerCase();
                                 }
                             }
                         }

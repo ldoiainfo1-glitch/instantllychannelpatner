@@ -597,6 +597,7 @@ router.post('/', upload.any(), async (req, res) => {
             }).lean();
             
             const uploaderLocation = uploaderApp?.applicantInfo?.pincode || 'N/A';
+            const uploaderPosition = uploaderApp?.position?.level || 'Pincode';
             
             uploader.commissionHistory.push({
               type: 'credit',
@@ -605,7 +606,7 @@ router.post('/', upload.any(), async (req, res) => {
               description: `Commission (Self) from ad\nLevel: ${selfShare.label}\nLocation: ${uploaderLocation}`,
               fromAdId: adId,
               level: selfShare.label,
-              positionLevel: selfShare.label,
+              positionLevel: uploaderPosition,
               positionLocation: uploaderLocation,
               percent: selfShare.percent,
               date: new Date()
