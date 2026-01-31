@@ -2685,11 +2685,30 @@
                 tbody.innerHTML = history.map((h, idx) => {
                     const name = (h.description && h.description.match && h.description.match(/by ([^\n]+)/)) ? h.description.match(/by ([^\n]+)/)[1] : (currentUser.name || currentUser.phone);
                     const percentDisplay = h.percent ? `${h.percent}%` : '-';
+                    
+                    // Extract position info from description or use stored fields
+                    let positionDisplay = '-';
+                    if (h.positionLevel && h.positionLocation) {
+                        // If we have structured position data
+                        positionDisplay = `${h.positionLocation} (${h.positionLevel})`;
+                    } else if (h.description) {
+                        // Try to extract from description
+                        const levelMatch = h.description.match(/Level: ([^\n]+)/);
+                        const locationMatch = h.description.match(/Location: ([^\n]+)/);
+                        if (levelMatch && locationMatch) {
+                            positionDisplay = `${locationMatch[1]} (${levelMatch[1]})`;
+                        } else if (levelMatch) {
+                            positionDisplay = levelMatch[1];
+                        } else if (h.level && h.level !== '-') {
+                            positionDisplay = h.level;
+                        }
+                    }
+                    
                     return `
                         <tr>
                             <td>${idx + 1}</td>
                             <td>${name}</td>
-                            <td>${h.level || '-'}</td>
+                            <td>${positionDisplay}</td>
                             <td>${percentDisplay}</td>
                             <td>₹${Math.abs(h.amount).toLocaleString('en-IN')}</td>
                             <td>${new Date(h.date).toLocaleString('en-IN')}</td>

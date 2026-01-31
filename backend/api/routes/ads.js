@@ -2,9 +2,11 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Position = require('../models/Position');
+const Ad = require('../models/Ad'); // NEW: Local ad storage
 const multer = require('multer');
 const GridFSBucket = require('mongodb').GridFSBucket;
 const mongoose = require('mongoose');
+const { Readable } = require('stream');
 
 // Configure multer for memory storage
 const upload = multer({
@@ -587,13 +589,25 @@ router.post('/', upload.any(), async (req, res) => {
             const selfAmt = Number((AD_COST * (selfShare.percent / 100)).toFixed(2));
             uploader.commissionBalance = (uploader.commissionBalance || 0) + selfAmt;
             uploader.commissionHistory = uploader.commissionHistory || [];
+            
+            // Get uploader's position info
+            const uploaderApp = await Application.findOne({
+              'applicantInfo.phone': uploader.phone,
+              status: 'approved'
+            }).lean();
+            
+            const uploaderLocation = uploaderApp?.applicantInfo?.pincode || 'N/A';
+            
             uploader.commissionHistory.push({
               type: 'credit',
               amount: selfAmt,
               balance: uploader.commissionBalance,
-              description: `Commission (Self) from ad`,
+              description: `Commission (Self) from ad\nLevel: ${selfShare.label}\nLocation: ${uploaderLocation}`,
               fromAdId: adId,
               level: selfShare.label,
+              positionLevel: selfShare.label,
+              positionLocation: uploaderLocation,
+              percent: selfShare.percent,
               date: new Date()
             });
             await uploader.save();
@@ -702,9 +716,12 @@ router.post('/', upload.any(), async (req, res) => {
                   type: 'credit',
                   amount: amt,
                   balance: parent.recipient.commissionBalance,
-                  description: `Commission (Parent #${i + 1} - ${percent}% - ${parent.originalLevel}) from ad by ${uploader.name || uploader.phone}`,
+                  description: `Commission (Parent #${i + 1} - ${percent}% - ${parent.originalLevel}) from ad by ${uploader.name || uploader.phone}\nLevel: ${parent.originalLevel}\nLocation: ${parent.location || 'N/A'}`,
                   fromAdId: adId,
                   level: `Parent ${i + 1}`,
+                  positionLevel: parent.originalLevel,
+                  positionLocation: parent.location || 'N/A',
+                  percent: percent,
                   date: new Date()
                 });
                 await parent.recipient.save();
