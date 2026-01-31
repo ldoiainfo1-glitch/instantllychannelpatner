@@ -2812,62 +2812,139 @@
 
         // Render a single commission path card
         function renderCommissionPath(path, srNo, viewType) {
-            const date = new Date(path.distributionDate).toLocaleString('en-IN');
+            const date = new Date(path.distributionDate).toLocaleString('en-IN', { 
+                day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' 
+            });
             const myCommission = viewType === 'created' 
                 ? path.selfCommission.amount 
                 : path.hierarchyPath.find(h => h.holderPhone === (currentUser.phone || currentUser.mobile))?.commission || 0;
             
-            const hierarchyHtml = path.hierarchyPath.map(h => {
-                const icon = h.status === 'filled' ? '✅' : (h.status === 'self' ? '👤' : '⛔');
-                const color = h.status === 'filled' ? 'success' : (h.status === 'self' ? 'primary' : 'danger');
-                const holderText = h.holder || 'Empty';
-                const commissionText = h.commission > 0 ? `₹${h.commission.toLocaleString('en-IN')} (${h.percent}%)` : '₹0';
-                const sequentialText = h.sequentialPosition ? ` - Parent #${h.sequentialPosition}` : '';
+            // Calculate totals for the table
+            const totalPercent = path.hierarchyPath.reduce((sum, h) => sum + (parseFloat(h.percent) || 0), 0);
+            const totalCashComm = path.hierarchyPath.reduce((sum, h) => sum + (h.commission || 0), 0);
+            const cashCredit = path.creditBreakdown?.cash || path.adAmount || 0;
+            const bonusCredit = (path.creditBreakdown?.extra || 0);
+            const totalCredit = path.hierarchyPath.reduce((sum, h) => {
+                const isSelf = h.status === 'self';
+                return sum + (h.commission || 0) + (isSelf ? cashCredit + bonusCredit : 0);
+            }, 0);
+            
+            // Build table rows for hierarchy
+            const hierarchyRows = path.hierarchyPath.map((h, index) => {
+                const levelNum = index + 1;
+                const isSelf = h.status === 'self';
+                const isFilled = h.status === 'filled';
+                const levelName = h.level ? h.level.charAt(0).toUpperCase() + h.level.slice(1) : '';
+                const holderName = h.holder || '';
+                const phone = h.holderPhone || '';
+                const commPercent = (parseFloat(h.percent) || 0).toFixed(2) + '%';
+                const cashCreditCell = isSelf ? cashCredit.toLocaleString('en-IN') : '';
+                const bonusCreditCell = isSelf ? bonusCredit.toLocaleString('en-IN') : '';
+                const cashCommCell = (h.commission || 0).toLocaleString('en-IN');
+                const totalCreditCell = ((h.commission || 0) + (isSelf ? cashCredit + bonusCredit : 0)).toLocaleString('en-IN');
+                const rowColor = isSelf ? '#FFF3CD' : (isFilled ? '#D4EDDA' : '#F8D7DA');
                 
                 return `
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="badge bg-${color} me-2" style="min-width: 30px;">${icon}</span>
-                        <div class="flex-grow-1">
-                            <strong>${h.level.toUpperCase()}:</strong> ${h.location || 'N/A'}
-                            <br>
-                            <small class="text-muted">${holderText}${h.holderPhone ? ' (' + h.holderPhone + ')' : ''}${sequentialText}</small>
-                        </div>
-                        <div class="text-end">
-                            <strong>${commissionText}</strong>
-                        </div>
-                    </div>`;
+                    <tr style="background-color: ${rowColor};">
+                        <td class="text-center">${levelNum}</td>
+                        <td><strong>${levelName}</strong></td>
+                        <td>${h.location || ''}</td>
+                        <td>${holderName}</td>
+                        <td>${phone}</td>
+                        <td class="text-end">${commPercent}</td>
+                        <td class="text-end">${cashCreditCell}</td>
+                        <td class="text-end">${bonusCreditCell}</td>
+                        <td class="text-end"><strong>${cashCommCell}</strong></td>
+                        <td class="text-end"><strong>${totalCreditCell}</strong></td>
+                    </tr>`;
             }).join('');
             
             return `
-                <div class="card mb-3">
-                    <div class="card-header bg-light">
-                        <div class="row align-items-center">
-                            <div class="col-md-6">
-                                <strong>#${srNo}</strong> - 
-                                ${viewType === 'created' ? 'Your Ad' : 'Commission from ' + path.creatorName}
-                            </div>
-                            <div class="col-md-6 text-end">
-                                <span class="badge bg-primary">Ad Amount: ₹${path.adAmount.toLocaleString('en-IN')}</span>
-                                <span class="badge bg-success ms-2">Your Share: ₹${myCommission.toLocaleString('en-IN')}</span>
-                            </div>
-                        </div>
+                <div class="card mb-4 border-primary">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h5 class="mb-0"><i class="fas fa-ad me-2"></i>Instantlly Commission Distribution</h5>
                     </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <h6 class="mb-3">Distribution Hierarchy:</h6>
-                                ${hierarchyHtml}
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title">Summary</h6>
-                                        <p class="mb-1"><strong>Total Distributed:</strong> ₹${path.totalDistributed.toLocaleString('en-IN')}</p>
-                                        <p class="mb-1"><strong>Filled Positions:</strong> ${path.filledPositions}</p>
-                                        <p class="mb-1"><strong>Empty Positions:</strong> ${path.emptyPositions}</p>
-                                        <p class="mb-1"><strong>Date:</strong> ${date}</p>
-                                        ${path.creditBreakdown ? `<p class="mb-0"><small>Cash: ₹${path.creditBreakdown.cash || 0} | Extra: ₹${path.creditBreakdown.extra || 0}</small></p>` : ''}
-                                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0" style="font-size: 14px;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th colspan="5" class="text-center bg-info text-white">
+                                            <h6 class="mb-0">Commission on Advertisement Sale</h6>
+                                        </th>
+                                        <th colspan="5" class="text-center bg-success text-white">
+                                            <h6 class="mb-0">4 Time Credit Offer</h6>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th colspan="5" class="text-center bg-light">
+                                            <strong>Payment Received Details</strong>
+                                        </th>
+                                        <th colspan="5" class="text-center bg-light">
+                                            <strong>Comm Distributed on Details</strong>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th colspan="2">${date.split(',')[0]}</th>
+                                        <th>Time</th>
+                                        <th class="text-end">${date.split(',')[1]}</th>
+                                        <th>Date</th>
+                                        <th colspan="2">${date.split(',')[0]}</th>
+                                        <th>Time</th>
+                                        <th class="text-end">${date.split(',')[1]}</th>
+                                    </tr>
+                                    <tr>
+                                        <th>Ref No</th>
+                                        <th colspan="3">Ad #${srNo} (${viewType === 'created' ? 'Your Ad' : 'From ' + path.creatorName})</th>
+                                        <th class="text-end bg-success text-white"><strong>₹${path.adAmount.toLocaleString('en-IN')}</strong></th>
+                                        <th colspan="5"></th>
+                                    </tr>
+                                </thead>
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th class="text-center">Level</th>
+                                        <th>Area Head</th>
+                                        <th>Area Name</th>
+                                        <th>Name</th>
+                                        <th>Mob No</th>
+                                        <th class="text-end">Comm %</th>
+                                        <th class="text-end">Cash Credit</th>
+                                        <th class="text-end">Bonus Advt Credit</th>
+                                        <th class="text-end">Cash Comm Credit</th>
+                                        <th class="text-end">Total Credit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${hierarchyRows}
+                                    <tr class="table-primary fw-bold">
+                                        <td colspan="5" class="text-end"><strong>Total</strong></td>
+                                        <td class="text-end"><strong>${totalPercent.toFixed(2)}%</strong></td>
+                                        <td class="text-end"><strong>${cashCredit.toLocaleString('en-IN')}</strong></td>
+                                        <td class="text-end"><strong>${bonusCredit.toLocaleString('en-IN')}</strong></td>
+                                        <td class="text-end"><strong>${totalCashComm.toLocaleString('en-IN')}</strong></td>
+                                        <td class="text-end"><strong>${totalCredit.toLocaleString('en-IN')}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-3 bg-light border-top">
+                            <div class="row text-center">
+                                <div class="col-md-3">
+                                    <small class="text-muted">Your Share</small>
+                                    <h5 class="text-success mb-0">₹${myCommission.toLocaleString('en-IN')}</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Filled Positions</small>
+                                    <h5 class="text-primary mb-0">${path.filledPositions}</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Empty Positions</small>
+                                    <h5 class="text-danger mb-0">${path.emptyPositions}</h5>
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="text-muted">Total Distributed</small>
+                                    <h5 class="text-info mb-0">₹${path.totalDistributed.toLocaleString('en-IN')}</h5>
                                 </div>
                             </div>
                         </div>
