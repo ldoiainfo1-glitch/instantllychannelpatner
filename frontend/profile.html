@@ -2821,10 +2821,63 @@
 
         function previewAdImage(file, previewDivId, previewImgId) {
             if (file) {
+                // Check file size (max 5MB for images - will be compressed if needed)
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                
                 const reader = new FileReader();
-                reader.onload = function (e) {
-                    document.getElementById(previewImgId).src = e.target.result;
-                    document.getElementById(previewDivId).style.display = 'block';
+                reader.onload = async function (e) {
+                    const img = new Image();
+                    img.onload = async function() {
+                        // Compress image if it's too large
+                        let finalDataUrl = e.target.result;
+                        
+                        if (file.size > maxSize) {
+                            console.log(`🗜️ Compressing image from ${(file.size / 1024 / 1024).toFixed(2)}MB...`);
+                            
+                            // Create canvas for compression
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+                            
+                            // Resize if image is too large (max 1920x1080)
+                            const maxWidth = 1920;
+                            const maxHeight = 1080;
+                            
+                            if (width > maxWidth || height > maxHeight) {
+                                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                                width = Math.floor(width * ratio);
+                                height = Math.floor(height * ratio);
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            // Compress to JPEG with quality 0.8
+                            finalDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            
+                            const compressedSize = finalDataUrl.length * 0.75; // Approximate size
+                            console.log(`✅ Compressed to ${(compressedSize / 1024 / 1024).toFixed(2)}MB`);
+                            
+                            if (compressedSize > maxSize) {
+                                // Try again with lower quality
+                                finalDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                                console.log(`🗜️ Re-compressed with lower quality`);
+                            }
+                        }
+                        
+                        document.getElementById(previewImgId).src = finalDataUrl;
+                        document.getElementById(previewDivId).style.display = 'block';
+                        
+                        // Store compressed data URL for later use
+                        const inputElement = document.getElementById(previewDivId.replace('Preview', ''));
+                        if (inputElement) {
+                            inputElement.dataset.compressedDataUrl = finalDataUrl;
+                        }
+                    };
+                    img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
             }
@@ -3103,12 +3156,34 @@
             formData.append('cost', cost); // Add cost
             formData.append('uploaderName', currentUser?.name || 'Channel Partner');
             formData.append('uploaderPhone', currentUser?.phone || phone);
+            
+            // Helper function to convert base64 to Blob
+            const dataURLtoBlob = (dataurl) => {
+                const arr = dataurl.split(',');
+                const mime = arr[0].match(/:(.*?);/)[1];
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while(n--){
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                return new Blob([u8arr], {type:mime});
+            };
+            
             if (mediaType === 'video') {
                 formData.append('bottomMediaType', 'video');
                 formData.append('bottomVideo', bottomFile);
             } else {
                 formData.append('bottomMediaType', 'image');
-                formData.append('bottomImage', bottomFile);
+                // Use compressed image if available
+                const bottomInput = document.getElementById('adBottomImage');
+                if (bottomInput.dataset.compressedDataUrl) {
+                    const compressedBlob = dataURLtoBlob(bottomInput.dataset.compressedDataUrl);
+                    formData.append('bottomImage', compressedBlob, 'bottom-compressed.jpg');
+                    console.log('📦 Using compressed bottom image');
+                } else {
+                    formData.append('bottomImage', bottomFile);
+                }
             }
 
             // 🔹 Fullscreen media (OPTIONAL)
@@ -3118,7 +3193,15 @@
                     formData.append('fullscreenVideo', fullscreenFile);
                 } else {
                     formData.append('fullscreenMediaType', 'image');
-                    formData.append('fullscreenImage', fullscreenFile);
+                    // Use compressed image if available
+                    const fullscreenInput = document.getElementById('adFullscreenImage');
+                    if (fullscreenInput.dataset.compressedDataUrl) {
+                        const compressedBlob = dataURLtoBlob(fullscreenInput.dataset.compressedDataUrl);
+                        formData.append('fullscreenImage', compressedBlob, 'fullscreen-compressed.jpg');
+                        console.log('📦 Using compressed fullscreen image');
+                    } else {
+                        formData.append('fullscreenImage', fullscreenFile);
+                    }
                 }
             }
 

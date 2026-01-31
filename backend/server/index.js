@@ -105,9 +105,9 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/payments/webhook', express.raw({ type: '*/*' }));
-// Reduced limits for 4-instance deployment (512MB RAM each)
-app.use(express.json({ limit: '5mb' }));
-app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+// Increased limits for ad image uploads (base64 encoded images can be large)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Serve uploaded images
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
