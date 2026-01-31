@@ -703,6 +703,10 @@ router.post('/', upload.any(), async (req, res) => {
           // Second pass: Assign sequential percentages to filled parents
           console.log(`\n💰 [COMMISSION] Distributing to ${filledParents.length} filled parent position(s):\n`);
           
+          // Get uploader's position info for display
+          const uploaderPosition = uploaderApp.position?.level || 'Pincode';
+          const uploaderLocation = hierarchy.pincode || uploaderApp.applicantInfo?.village || 'N/A';
+          
           for (let i = 0; i < filledParents.length; i++) {
             try {
               const parent = filledParents[i];
@@ -716,11 +720,12 @@ router.post('/', upload.any(), async (req, res) => {
                   type: 'credit',
                   amount: amt,
                   balance: parent.recipient.commissionBalance,
-                  description: `Commission (Parent #${i + 1} - ${percent}% - ${parent.originalLevel}) from ad by ${uploader.name || uploader.phone}\nLevel: ${parent.originalLevel}\nLocation: ${parent.location || 'N/A'}`,
+                  description: `Commission from ad by ${uploader.name || uploader.phone} (${uploaderPosition})\nUploader Position: ${uploaderPosition}\nUploader Location: ${uploaderLocation}`,
                   fromAdId: adId,
                   level: `Parent ${i + 1}`,
-                  positionLevel: parent.originalLevel,
-                  positionLocation: parent.location || 'N/A',
+                  positionLevel: uploaderPosition,
+                  positionLocation: uploaderLocation,
+                  uploaderName: uploader.name || uploader.phone,
                   percent: percent,
                   date: new Date()
                 });

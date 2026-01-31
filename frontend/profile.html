@@ -2686,27 +2686,33 @@
                     const name = (h.description && h.description.match && h.description.match(/by ([^\n]+)/)) ? h.description.match(/by ([^\n]+)/)[1] : (currentUser.name || currentUser.phone);
                     const percentDisplay = h.percent ? `${h.percent}%` : '-';
                     
-                    // Extract position info from description or use stored fields
+                    // Extract position info - should show UPLOADER's position (who created the ad)
                     let positionDisplay = '-';
                     if (h.positionLevel && h.positionLocation) {
-                        // New format: structured position data
-                        positionDisplay = `${h.positionLocation} (${h.positionLevel})`;
+                        // New format: structured position data (uploader's position)
+                        positionDisplay = `${h.positionLevel} (${h.positionLocation})`;
                     } else if (h.description) {
-                        // Try new description format: "Level: X\nLocation: Y"
-                        const levelMatch = h.description.match(/Level: ([^\n]+)/);
-                        const locationMatch = h.description.match(/Location: ([^\n]+)/);
+                        // Try new description format: "Uploader Position: X\nUploader Location: Y"
+                        const uploaderPosMatch = h.description.match(/Uploader Position: ([^\n]+)/);
+                        const uploaderLocMatch = h.description.match(/Uploader Location: ([^\n]+)/);
                         
-                        if (levelMatch && locationMatch) {
-                            positionDisplay = `${locationMatch[1]} (${levelMatch[1]})`;
-                        } else if (levelMatch) {
-                            positionDisplay = levelMatch[1];
+                        if (uploaderPosMatch && uploaderLocMatch) {
+                            positionDisplay = `${uploaderPosMatch[1]} (${uploaderLocMatch[1]})`;
                         } else {
-                            // Try old description format: "(Parent #X - percent% - LEVEL)"
-                            const oldFormatMatch = h.description.match(/\(Parent #\d+ - [\d.]+% - ([^)]+)\)/);
-                            if (oldFormatMatch) {
-                                positionDisplay = oldFormatMatch[1];
-                            } else if (h.level && h.level !== '-') {
-                                positionDisplay = h.level;
+                            // Try alternative format: "from ad by NAME (POSITION)"
+                            const adByMatch = h.description.match(/from ad by [^(]+\(([^)]+)\)/);
+                            if (adByMatch) {
+                                positionDisplay = adByMatch[1];
+                            } else {
+                                // Try old description format: "(Parent #X - percent% - LEVEL)"
+                                const oldFormatMatch = h.description.match(/\(Parent #\d+ - [\d.]+% - ([^)]+)\)/);
+                                if (oldFormatMatch) {
+                                    // This is the RECEIVER's position, not what we want for old records
+                                    // For old records, just show a generic label
+                                    positionDisplay = 'Pincode';
+                                } else if (h.level && h.level !== '-') {
+                                    positionDisplay = h.level;
+                                }
                             }
                         }
                     }
