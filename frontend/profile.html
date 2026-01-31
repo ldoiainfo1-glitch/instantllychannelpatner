@@ -2695,7 +2695,17 @@
                     }
                     
                     // Fix: Show percentage even if it's 0, only show '-' if undefined/null
-                    const percentDisplay = (h.percent !== undefined && h.percent !== null) ? `${h.percent}%` : '-';
+                    let percentDisplay = '-';
+                    if (h.percent !== undefined && h.percent !== null) {
+                        percentDisplay = `${h.percent}%`;
+                    } else if (h.description) {
+                        // Try to extract percentage from description for old records
+                        // Look for patterns like "10%", "5%", etc. but be specific to avoid false matches
+                        const percentMatch = h.description.match(/(?:Parent #\d+|commission).*?(\d+(?:\.\d+)?)%/i);
+                        if (percentMatch) {
+                            percentDisplay = `${percentMatch[1]}%`;
+                        }
+                    }
                     
                     // Extract position info - should show UPLOADER's position (who created the ad)
                     let positionDisplay = '-';
@@ -2706,26 +2716,36 @@
                         positionDisplay = `${level}(${h.positionLocation})`;
                     } else if (h.description) {
                         // Try new description format: "Uploader Position: X\nUploader Location: Y"
-                        const uploaderPosMatch = h.description.match(/Uploader Position: ([^\n]+)/);
-                        const uploaderLocMatch = h.description.match(/Uploader Location: ([^\n]+)/);
+                        const uploaderPosMatch = h.description.match(/Uploader Position:\s*([^\n]+)/);
+                        const uploaderLocMatch = h.description.match(/Uploader Location:\s*([^\n]+)/);
                         
                         if (uploaderPosMatch && uploaderLocMatch) {
-                            const level = uploaderPosMatch[1].toLowerCase();
-                            positionDisplay = `${level}(${uploaderLocMatch[1]})`;
+                            const level = uploaderPosMatch[1].trim().toLowerCase();
+                            positionDisplay = `${level}(${uploaderLocMatch[1].trim()})`;
                         } else {
                             // Try alternative format: "from ad by NAME (POSITION)"
                             const adByMatch = h.description.match(/from ad by [^(]+\(([^)]+)\)/);
                             if (adByMatch) {
-                                const level = adByMatch[1].toLowerCase();
+                                const level = adByMatch[1].trim().toLowerCase();
                                 positionDisplay = level;
                             } else {
                                 // Try extracting Location from description for old self commissions
-                                const locationMatch = h.description.match(/Location: ([^\n]+)/);
+                                const locationMatch = h.description.match(/Location:\s*([^\n]+)/);
                                 if (locationMatch) {
                                     const level = h.level?.toLowerCase() || 'pincode';
-                                    positionDisplay = `${level}(${locationMatch[1]})`;
-                                } else if (h.level && h.level !== '-') {
-                                    positionDisplay = h.level.toLowerCase();
+                                    positionDisplay = `${level}(${locationMatch[1].trim()})`;
+                                } else {
+                                    // Last resort: try to extract from anywhere in description
+                                    // Look for patterns like "401107" (pincode) in the description
+                                    const pincodeMatch = h.description.match(/\b(\d{6})\b/);
+                                    if (pincodeMatch && h.level && h.level.toLowerCase().includes('parent')) {
+                                        positionDisplay = `pincode(${pincodeMatch[1]})`;
+                                    } else if (h.level && h.level !== '-' && !h.level.toLowerCase().includes('parent')) {
+                                        positionDisplay = h.level.toLowerCase();
+                                    } else {
+                                        // For old parent commissions, show pincode as default
+                                        positionDisplay = 'pincode';
+                                    }
                                 }
                             }
                         }
