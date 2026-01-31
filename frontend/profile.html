@@ -2689,18 +2689,25 @@
                     // Extract position info from description or use stored fields
                     let positionDisplay = '-';
                     if (h.positionLevel && h.positionLocation) {
-                        // If we have structured position data
+                        // New format: structured position data
                         positionDisplay = `${h.positionLocation} (${h.positionLevel})`;
                     } else if (h.description) {
-                        // Try to extract from description
+                        // Try new description format: "Level: X\nLocation: Y"
                         const levelMatch = h.description.match(/Level: ([^\n]+)/);
                         const locationMatch = h.description.match(/Location: ([^\n]+)/);
+                        
                         if (levelMatch && locationMatch) {
                             positionDisplay = `${locationMatch[1]} (${levelMatch[1]})`;
                         } else if (levelMatch) {
                             positionDisplay = levelMatch[1];
-                        } else if (h.level && h.level !== '-') {
-                            positionDisplay = h.level;
+                        } else {
+                            // Try old description format: "(Parent #X - percent% - LEVEL)"
+                            const oldFormatMatch = h.description.match(/\(Parent #\d+ - [\d.]+% - ([^)]+)\)/);
+                            if (oldFormatMatch) {
+                                positionDisplay = oldFormatMatch[1];
+                            } else if (h.level && h.level !== '-') {
+                                positionDisplay = h.level;
+                            }
                         }
                     }
                     
