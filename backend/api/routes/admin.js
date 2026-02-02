@@ -2919,14 +2919,15 @@ router.post('/users/:userId/give-credits', async (req, res) => {
             });
             
             // Build complete path array showing filled and empty positions
+            // Use same levelShares as defined earlier (line 2738) for consistency
             const levelShares = [
               { levelName: 'pincode', percent: 20, label: 'Pincode' },
               { levelName: 'tehsil', percent: 10, label: 'Tehsil' },
               { levelName: 'district', percent: 5, label: 'District' },
               { levelName: 'division', percent: 2.5, label: 'Division' },
-              { levelName: 'state', percent: 1.25, label: 'State' },
-              { levelName: 'zone', percent: 0.6, label: 'Zone' },
-              { levelName: 'country', percent: 0.3, label: 'India' }
+              { levelName: 'state', percent: 10, label: 'State' },       // FIXED: Was 1.25, should be 10
+              { levelName: 'zone', percent: 5, label: 'Zone' },          // FIXED: Was 0.6, should be 5
+              { levelName: 'country', percent: 5, label: 'India' }       // FIXED: Was 0.3, should be 5
             ];
             
             let parentIndex = 0;
