@@ -2742,7 +2742,9 @@ router.post('/users/:userId/give-credits', async (req, res) => {
             { levelName: 'country', percent: 0.3, label: 'India' }
           ];
           
-          // Parent commission percentages (sequential)
+          // Parent commission percentages (sequential - based on fill order, not position)
+          // Parent 1 gets 10%, Parent 2 gets 5%, Parent 3 gets 2.5%, etc.
+          // Empty positions are skipped, next filled position gets next percentage
           const parentPercentages = [10, 5, 2.5, 1.25, 0.6, 0.3];
 
           // Credit recipient with 'self' commission (20%)
@@ -2849,7 +2851,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           for (let i = 0; i < filledParents.length; i++) {
             try {
               const parent = filledParents[i];
-              const percent = parent.level.percent;  // Use position level percentage, not sequential
+              const percent = parentPercentages[i] || 0;  // Sequential: 1st parent=10%, 2nd=5%, 3rd=2.5%
               const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
               
               if (amt > 0) {
@@ -2925,9 +2927,9 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               { levelName: 'tehsil', percent: 10, label: 'Tehsil' },
               { levelName: 'district', percent: 5, label: 'District' },
               { levelName: 'division', percent: 2.5, label: 'Division' },
-              { levelName: 'state', percent: 10, label: 'State' },       // FIXED: Was 1.25, should be 10
-              { levelName: 'zone', percent: 5, label: 'Zone' },          // FIXED: Was 0.6, should be 5
-              { levelName: 'country', percent: 5, label: 'India' }       // FIXED: Was 0.3, should be 5
+              { levelName: 'state', percent: 1.25, label: 'State' },
+              { levelName: 'zone', percent: 0.6, label: 'Zone' },
+              { levelName: 'country', percent: 0.3, label: 'India' }
             ];
             
             let parentIndex = 0;
@@ -2939,7 +2941,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               const filledParent = filledParents.find(p => p.level.levelName === level.levelName);
               
               if (filledParent) {
-                const percent = level.percent;  // Use position level percentage
+                const percent = parentPercentages[parentIndex] || 0;  // Sequential percentage based on fill order
                 const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
                 totalDistributed += amt;
                 filledCount++;
