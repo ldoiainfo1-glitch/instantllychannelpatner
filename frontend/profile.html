@@ -2822,12 +2822,24 @@
             // Calculate totals for the table
             const totalPercent = path.hierarchyPath.reduce((sum, h) => sum + (parseFloat(h.percent) || 0), 0);
             const totalCashComm = path.hierarchyPath.reduce((sum, h) => sum + (h.commission || 0), 0);
-            const cashCredit = path.creditBreakdown?.cash || path.adAmount || 0;
-            const bonusCredit = (path.creditBreakdown?.extra || 0);
-            const totalCredit = path.hierarchyPath.reduce((sum, h) => {
-                const isSelf = h.status === 'self';
-                return sum + (h.commission || 0) + (isSelf ? cashCredit + bonusCredit : 0);
-            }, 0);
+            const cashCreditUsed = path.creditBreakdown?.cash || path.adAmount || 0;
+            const bonusCreditUsed = (path.creditBreakdown?.extra || 0);
+            
+            // Calculate total cash and bonus distributed
+            let totalCashCredit = 0;
+            let totalBonusCredit = 0;
+            
+            // For self (advertiser), they get back the payment amount as credits
+            // This represents the "4x offer" - they paid X, they get back advertising credits
+            path.hierarchyPath.forEach(h => {
+                if (h.status === 'self') {
+                    // Advertiser gets back what they paid as advertising credits
+                    totalCashCredit += cashCreditUsed;
+                    totalBonusCredit += bonusCreditUsed;
+                }
+            });
+            
+            const totalCredit = totalCashComm + totalCashCredit + totalBonusCredit;
             
             // REVERSE hierarchy to show Country → Pincode (not Pincode → Country)
             const reversedHierarchy = [...path.hierarchyPath].reverse();
@@ -2841,10 +2853,14 @@
                 const holderName = h.holder || '';
                 const phone = h.holderPhone || '';
                 const commPercent = (parseFloat(h.percent) || 0).toFixed(2) + '%';
-                const cashCreditCell = isSelf ? cashCredit.toLocaleString('en-IN') : '';
-                const bonusCreditCell = isSelf ? bonusCredit.toLocaleString('en-IN') : '';
+                
+                // Cash Credit: Advertiser gets refund/credit, others get 0
+                // Bonus Credit: Advertiser gets bonus, others get 0
+                // Cash Comm: Everyone gets their commission percentage
+                const cashCreditCell = isSelf ? cashCreditUsed.toLocaleString('en-IN') : '0';
+                const bonusCreditCell = isSelf ? bonusCreditUsed.toLocaleString('en-IN') : '0';
                 const cashCommCell = (h.commission || 0).toLocaleString('en-IN');
-                const totalCreditCell = ((h.commission || 0) + (isSelf ? cashCredit + bonusCredit : 0)).toLocaleString('en-IN');
+                const totalCreditCell = ((h.commission || 0) + (isSelf ? cashCreditUsed + bonusCreditUsed : 0)).toLocaleString('en-IN');
                 
                 // Highlight advertiser (self) row with blue color for visibility
                 const rowColor = isSelf ? '#007bff' : (isFilled ? '#D4EDDA' : '#F8D7DA');
@@ -2926,8 +2942,8 @@
                                     <tr class="table-primary fw-bold">
                                         <td colspan="5" class="text-end"><strong>Total</strong></td>
                                         <td class="text-end"><strong>${totalPercent.toFixed(2)}%</strong></td>
-                                        <td class="text-end"><strong>${cashCredit.toLocaleString('en-IN')}</strong></td>
-                                        <td class="text-end"><strong>${bonusCredit.toLocaleString('en-IN')}</strong></td>
+                                        <td class="text-end"><strong>${totalCashCredit.toLocaleString('en-IN')}</strong></td>
+                                        <td class="text-end"><strong>${totalBonusCredit.toLocaleString('en-IN')}</strong></td>
                                         <td class="text-end"><strong>${totalCashComm.toLocaleString('en-IN')}</strong></td>
                                         <td class="text-end"><strong>${totalCredit.toLocaleString('en-IN')}</strong></td>
                                     </tr>
