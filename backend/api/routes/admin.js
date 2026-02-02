@@ -2728,6 +2728,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
       try {
           const recipient = user;
           const CREDIT_AMOUNT = cashCreditsToAdd; // Commission based on cash credits given
+          const User = require('../models/User');
           const CommissionDistribution = require('../models/CommissionDistribution');
 
           // Commission percentages by position level
