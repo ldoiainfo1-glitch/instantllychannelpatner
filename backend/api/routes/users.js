@@ -328,7 +328,7 @@ router.get('/:userId/credits-history', async (req, res) => {
 router.get('/:userId/commissions', async (req, res) => {
   try {
     const CommissionDistribution = require('../models/CommissionDistribution');
-    const user = await User.findById(req.params.userId).select('phone commissionBalance');
+    const user = await User.findById(req.params.userId).select('phone commissionBalance commissionHistory');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     // Get commission distributions where user received commission
@@ -347,16 +347,39 @@ router.get('/:userId/commissions', async (req, res) => {
       if (userEntry && userEntry.commission > 0) {
         history.push({
           amount: userEntry.commission,
-          description: `Commission from ad by ${dist.creatorName || 'Unknown'} (${dist.selfCommission?.level || 'pincode'})`,
+          description: `Commission from credits given to ${dist.creatorName || 'Unknown'}`,
           date: dist.distributionDate,
           type: 'commission',
           percent: userEntry.percent,
-          positionLevel: dist.selfCommission?.level || 'pincode',
-          positionLocation: dist.selfCommission?.location || '',
+          positionLevel: userEntry.level || 'pincode',
+          positionLocation: userEntry.location || '',
           uploaderName: dist.creatorName
         });
       }
     });
+
+    // ALSO include direct commissionHistory entries (may have additional records)
+    // Merge with distribution-based history
+    if (user.commissionHistory && user.commissionHistory.length > 0) {
+      user.commissionHistory.forEach(entry => {
+        // Only add credit entries (not withdraws)
+        if (entry.type === 'credit' && entry.amount > 0) {
+          history.push({
+            amount: entry.amount,
+            description: entry.description,
+            date: entry.date,
+            type: 'commission',
+            percent: entry.percent,
+            positionLevel: entry.positionLevel || '',
+            positionLocation: entry.positionLocation || '',
+            uploaderName: entry.uploaderName || ''
+          });
+        }
+      });
+    }
+
+    // Sort by date descending and remove duplicates
+    history.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     res.json({
       success: true,
