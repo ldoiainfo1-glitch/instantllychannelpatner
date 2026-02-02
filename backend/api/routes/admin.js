@@ -2725,8 +2725,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
     if (cashCreditsToAdd > 0 && application) {
       console.log(`\n💰 [COMMISSION] Distributing commission on ₹${cashCreditsToAdd} cash credits given to ${user.name}\n`);
       
-      (async () => {
-        try {
+      try {
           const recipient = user;
           const CREDIT_AMOUNT = cashCreditsToAdd; // Commission based on cash credits given
           const CommissionDistribution = require('../models/CommissionDistribution');
@@ -2892,14 +2891,124 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           
           console.log('💸 [COMMISSION] Distribution completed on cash credits given\n');
           
+          // =============================================================================
+          // CREATE COMMISSION DISTRIBUTION RECORD (for Distribution Paths table)
+          // =============================================================================
+          try {
+            const hierarchyPathArray = [];
+            let totalDistributed = 0;
+            let filledCount = 0;
+            let emptyCount = 0;
+            
+            // Add self to path
+            const selfAmt = Number((CREDIT_AMOUNT * 0.2).toFixed(2));
+            totalDistributed += selfAmt;
+            filledCount++;
+            
+            hierarchyPathArray.push({
+              level: 'pincode',
+              location: hierarchy.pincode || recipientLocation,
+              holder: recipient.name,
+              holderPhone: recipient.phone,
+              holderId: recipient._id,
+              status: 'self',
+              commission: selfAmt,
+              percent: 20,
+              sequentialPosition: null
+            });
+            
+            // Build complete path array showing filled and empty positions
+            const levelShares = [
+              { levelName: 'pincode', percent: 20, label: 'Pincode' },
+              { levelName: 'tehsil', percent: 10, label: 'Tehsil' },
+              { levelName: 'district', percent: 5, label: 'District' },
+              { levelName: 'division', percent: 2.5, label: 'Division' },
+              { levelName: 'state', percent: 1.25, label: 'State' },
+              { levelName: 'zone', percent: 0.6, label: 'Zone' },
+              { levelName: 'country', percent: 0.3, label: 'India' }
+            ];
+            
+            let parentIndex = 0;
+            for (let i = 1; i < levelShares.length; i++) {
+              const level = levelShares[i];
+              const location = hierarchy[level.levelName] || level.label;
+              
+              // Check if this position was filled (in filledParents array)
+              const filledParent = filledParents.find(p => p.level.levelName === level.levelName);
+              
+              if (filledParent) {
+                const percent = parentPercentages[parentIndex] || 0;
+                const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
+                totalDistributed += amt;
+                filledCount++;
+                
+                hierarchyPathArray.push({
+                  level: level.levelName,
+                  location: location,
+                  holder: filledParent.recipient.name,
+                  holderPhone: filledParent.recipient.phone,
+                  holderId: filledParent.recipient._id,
+                  status: 'filled',
+                  commission: amt,
+                  percent: percent,
+                  sequentialPosition: parentIndex + 1
+                });
+                
+                parentIndex++;
+              } else {
+                // Position is empty
+                emptyCount++;
+                hierarchyPathArray.push({
+                  level: level.levelName,
+                  location: location,
+                  holder: null,
+                  holderPhone: null,
+                  holderId: null,
+                  status: 'empty',
+                  commission: 0,
+                  percent: 0,
+                  sequentialPosition: null
+                });
+              }
+            }
+            
+            // Create CommissionDistribution record
+            const distributionRecord = new CommissionDistribution({
+              adId: null, // No ad, this is from credits given
+              creatorId: recipient._id,
+              creatorPhone: recipient.phone,
+              creatorName: recipient.name,
+              adAmount: CREDIT_AMOUNT,
+              distributionDate: new Date(),
+              selfCommission: {
+                paid: true,
+                amount: selfAmt,
+                percent: 20
+              },
+              hierarchyPath: hierarchyPathArray,
+              totalDistributed: totalDistributed,
+              filledPositions: filledCount,
+              emptyPositions: emptyCount,
+              creditBreakdown: {
+                cash: CREDIT_AMOUNT,
+                extra: 0
+              }
+            });
+            
+            await distributionRecord.save();
+            console.log(`✅ [COMMISSION PATH] Saved distribution record with ${filledCount} filled and ${emptyCount} empty positions`);
+            
+          } catch (pathErr) {
+            console.error('❌ [COMMISSION PATH] Failed to save distribution record:', pathErr.message);
+          }
+          
         } catch (commErr) {
           console.error('❌ [COMMISSION] Distribution error:', commErr);
         }
-      })();
-    } else {
-      console.log(`ℹ️ [COMMISSION] Skipped - no cash credits added or no application found`);
-    }
-    // =============================================================================
+      } else {
+        console.log(`ℹ️ [COMMISSION] Skipped - no cash credits added or no application found`);
+      }
+      // =============================================================================
     
     console.log(`✅ Credits given to ${user.name}:`, {
       total: user.credits,
