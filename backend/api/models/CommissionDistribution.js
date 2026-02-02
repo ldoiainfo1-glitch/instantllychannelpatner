@@ -3,11 +3,11 @@ const mongoose = require('mongoose');
 // Model to store commission distribution paths for transparency and tracking
 // Shows the complete hierarchy and which positions received commission vs were skipped
 const commissionDistributionSchema = new mongoose.Schema({
-  // Ad reference
+  // Ad reference (optional - null for cash credits distribution)
   adId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Ad',
-    required: true
+    required: false  // FIXED: Changed to false for cash credits distribution
   },
   
   // Creator info
