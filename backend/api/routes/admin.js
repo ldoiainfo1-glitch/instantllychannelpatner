@@ -2849,7 +2849,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           for (let i = 0; i < filledParents.length; i++) {
             try {
               const parent = filledParents[i];
-              const percent = parentPercentages[i] || 0;
+              const percent = parent.level.percent;  // Use position level percentage, not sequential
               const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
               
               if (amt > 0) {
@@ -2938,7 +2938,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               const filledParent = filledParents.find(p => p.level.levelName === level.levelName);
               
               if (filledParent) {
-                const percent = parentPercentages[parentIndex] || 0;
+                const percent = level.percent;  // Use position level percentage
                 const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
                 totalDistributed += amt;
                 filledCount++;
