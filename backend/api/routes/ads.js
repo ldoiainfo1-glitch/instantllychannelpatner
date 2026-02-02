@@ -551,12 +551,18 @@ router.post('/', upload.any(), async (req, res) => {
     console.log('✅ Ad created successfully');
 
     // -----------------------
-    // Commission distribution
+    // Commission distribution - MOVED TO ADMIN GIVE CREDITS ROUTE
     // -----------------------
-    // TWO-TIER COMMISSION SYSTEM:
-    // 1. If ONLY cash credits used (no extra): Self gets 20%, parents get their shares
-    // 2. If extra credits used: Self gets 0%, parents get their shares (skip self)
-    if (deductedFromCash > 0) {
+    // Commission is now distributed when CASH CREDITS are GIVEN to account by admin
+    // NOT when ads are created. See /admin/users/:userId/give-credits route in admin.js
+    //
+    // OLD LOGIC (DISABLED): Commission used to distribute based on ad creation
+    // NEW LOGIC: Commission distributes when user RECEIVES cash credits from admin
+    //
+    // This means: When Urmila receives ₹1,200 cash + ₹3,600 extra = ₹4,800 total
+    // Commission distributes on the ₹1,200 CASH credits at that moment
+    //
+    if (false && deductedFromCash > 0) {
       (async () => {
         try {
           const uploader = user; // user who created the ad

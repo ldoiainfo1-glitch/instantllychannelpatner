@@ -2716,6 +2716,191 @@ router.post('/users/:userId/give-credits', async (req, res) => {
       console.log(`⚠️ No approved application found for ${user.name} (${user.phone})`);
     }
     
+    // =============================================================================
+    // COMMISSION DISTRIBUTION ON CASH CREDITS GIVEN
+    // =============================================================================
+    // NEW SYSTEM: Commission distributes when CASH CREDITS are given to account
+    // Commission is calculated based on cashCreditsToAdd amount (not total credits)
+    // =============================================================================
+    if (cashCreditsToAdd > 0 && application) {
+      console.log(`\n💰 [COMMISSION] Distributing commission on ₹${cashCreditsToAdd} cash credits given to ${user.name}\n`);
+      
+      (async () => {
+        try {
+          const recipient = user;
+          const CREDIT_AMOUNT = cashCreditsToAdd; // Commission based on cash credits given
+          const CommissionDistribution = require('../models/CommissionDistribution');
+
+          // Commission percentages by position level
+          const levelShares = [
+            { levelName: 'pincode', percent: 20, label: 'Pincode' },
+            { levelName: 'tehsil', percent: 10, label: 'Tehsil' },
+            { levelName: 'district', percent: 5, label: 'District' },
+            { levelName: 'division', percent: 2.5, label: 'Division' },
+            { levelName: 'state', percent: 1.25, label: 'State' },
+            { levelName: 'zone', percent: 0.6, label: 'Zone' },
+            { levelName: 'country', percent: 0.3, label: 'India' }
+          ];
+          
+          // Parent commission percentages (sequential)
+          const parentPercentages = [10, 5, 2.5, 1.25, 0.6, 0.3];
+
+          // Credit recipient with 'self' commission (20%)
+          const selfShare = levelShares[0];
+          const selfAmt = Number((CREDIT_AMOUNT * (selfShare.percent / 100)).toFixed(2));
+          
+          const recipientLocation = application.applicantInfo?.pincode || 'N/A';
+          const recipientPosition = application.position?.level || 'Pincode';
+          
+          // Add to cash credits
+          recipient.cashCredits = (recipient.cashCredits || 0) + selfAmt;
+          recipient.credits = (recipient.cashCredits || 0) + (recipient.extraCredits || 0);
+          recipient.cashHistory = recipient.cashHistory || [];
+          recipient.cashHistory.push({
+            type: 'credit',
+            amount: selfAmt,
+            balance: recipient.cashCredits,
+            description: `Commission (Self) ${selfShare.percent}% on ₹${CREDIT_AMOUNT} credits received`,
+            date: new Date()
+          });
+          
+          // Track in commission history
+          recipient.commissionBalance = (recipient.commissionBalance || 0) + selfAmt;
+          recipient.commissionHistory = recipient.commissionHistory || [];
+          recipient.commissionHistory.push({
+            type: 'credit',
+            amount: selfAmt,
+            balance: recipient.commissionBalance,
+            description: `Commission (Self) on credits received\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
+            level: selfShare.label,
+            positionLevel: recipientPosition,
+            positionLocation: recipientLocation,
+            percent: selfShare.percent,
+            date: new Date()
+          });
+          
+          await recipient.save();
+          console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) added to ${recipient.name}'s CASH CREDITS`);
+
+          // Extract location hierarchy
+          const hierarchy = {
+            pincode: application.applicantInfo?.pincode,
+            tehsil: application.applicantInfo?.tehsil,
+            district: application.applicantInfo?.district,
+            division: application.applicantInfo?.division,
+            state: application.applicantInfo?.state,
+            zone: application.applicantInfo?.zone,
+            country: application.applicantInfo?.country || 'India'
+          };
+
+          console.log('📍 [COMMISSION] Recipient hierarchy:', hierarchy);
+
+          // Find position holders in hierarchy
+          const findLevelHolder = async (levelName, excludePhone = null) => {
+            let query = { status: 'approved' };
+            if (excludePhone) {
+              query['applicantInfo.phone'] = { $ne: excludePhone };
+            }
+            
+            const token = hierarchy[levelName];
+            if (token && levelName !== 'country') {
+              const flexToken = String(token).trim().toLowerCase().replace(/[^a-z0-9]+/g, '[-_\\s]*');
+              const levelFlex = levelName.replace(/\s+/g, '[-_\\s]*');
+              query.positionId = { $regex: new RegExp(`${levelFlex}[-_\\s]*head.*${flexToken}`, 'i') };
+            } else if (levelName === 'country') {
+              query.positionId = { $regex: /president|india[-_\s]*head/i };
+            }
+
+            let app = await Application.findOne(query).lean();
+            if (app) return { app, paidLevel: levelName };
+
+            console.log(`ℹ️ [COMMISSION] Position ${levelName} is empty - will be skipped`);
+            return null;
+          };
+
+          // Find all filled parent positions
+          const filledParents = [];
+          
+          for (let i = 1; i < levelShares.length; i++) {
+            const level = levelShares[i];
+            try {
+              const result = await findLevelHolder(level.levelName, recipient.phone);
+              if (result && result.app) {
+                const parentUser = await User.findById(result.app.userId);
+                if (parentUser) {
+                  filledParents.push({
+                    level: level,
+                    recipient: parentUser,
+                    originalLevel: level.label
+                  });
+                  console.log(`✅ [COMMISSION] Found filled position #${filledParents.length}: ${level.label} - ${parentUser.name || parentUser.phone}`);
+                }
+              } else {
+                console.log(`ℹ️ [COMMISSION] Empty position: ${level.label}`);
+              }
+            } catch (innerErr) {
+              console.error(`❌ [COMMISSION] Failed for ${level.label}:`, innerErr.message);
+            }
+          }
+          
+          // Distribute commission to filled parents with sequential percentages
+          console.log(`\n💰 [COMMISSION] Distributing to ${filledParents.length} filled parent position(s):\n`);
+          
+          for (let i = 0; i < filledParents.length; i++) {
+            try {
+              const parent = filledParents[i];
+              const percent = parentPercentages[i] || 0;
+              const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
+              
+              if (amt > 0) {
+                // Add to cash credits
+                parent.recipient.cashCredits = (parent.recipient.cashCredits || 0) + amt;
+                parent.recipient.credits = (parent.recipient.cashCredits || 0) + (parent.recipient.extraCredits || 0);
+                parent.recipient.cashHistory = parent.recipient.cashHistory || [];
+                parent.recipient.cashHistory.push({
+                  type: 'credit',
+                  amount: amt,
+                  balance: parent.recipient.cashCredits,
+                  description: `Commission ${percent}% from ${recipient.name}'s credits received`,
+                  date: new Date()
+                });
+                
+                // Track in commission history
+                parent.recipient.commissionBalance = (parent.recipient.commissionBalance || 0) + amt;
+                parent.recipient.commissionHistory = parent.recipient.commissionHistory || [];
+                parent.recipient.commissionHistory.push({
+                  type: 'credit',
+                  amount: amt,
+                  balance: parent.recipient.commissionBalance,
+                  description: `Commission from credits given to ${recipient.name} (${recipientPosition})\\nRecipient Position: ${recipientPosition}\\nRecipient Location: ${recipientLocation}`,
+                  level: `Parent ${i + 1}`,
+                  positionLevel: recipientPosition,
+                  positionLocation: recipientLocation,
+                  uploaderName: recipient.name || recipient.phone,
+                  percent: percent,
+                  date: new Date()
+                });
+                
+                await parent.recipient.save();
+                
+                console.log(`✅ [COMMISSION] Parent #${i + 1}: ${parent.recipient.name || parent.recipient.phone} (${parent.originalLevel}) → ${percent}% = ₹${amt} added to CASH CREDITS`);
+              }
+            } catch (saveErr) {
+              console.error(`❌ [COMMISSION] Failed to save commission:`, saveErr.message);
+            }
+          }
+          
+          console.log('💸 [COMMISSION] Distribution completed on cash credits given\n');
+          
+        } catch (commErr) {
+          console.error('❌ [COMMISSION] Distribution error:', commErr);
+        }
+      })();
+    } else {
+      console.log(`ℹ️ [COMMISSION] Skipped - no cash credits added or no application found`);
+    }
+    // =============================================================================
+    
     console.log(`✅ Credits given to ${user.name}:`, {
       total: user.credits,
       cash: user.cashCredits,
