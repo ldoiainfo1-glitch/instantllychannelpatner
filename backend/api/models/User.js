@@ -159,6 +159,20 @@ const userSchema = new mongoose.Schema({
     level: {
       type: String
     },
+    // Commission percentage (e.g., 10, 20, 5, 2.5)
+    percent: {
+      type: Number
+    },
+    // Position details for commission tracking
+    positionLevel: {
+      type: String
+    },
+    positionLocation: {
+      type: String
+    },
+    uploaderName: {
+      type: String
+    },
     date: {
       type: Date,
       default: Date.now
