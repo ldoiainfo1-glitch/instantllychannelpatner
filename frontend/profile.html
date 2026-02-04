@@ -3104,12 +3104,12 @@
                 // REVERSE hierarchy to show Country → Pincode
                 const reversedHierarchy = [...distributionPath.hierarchyPath].reverse();
                 
-                // Build table rows with highlighting for current user
+                // Build table rows with highlighting for creator (who distributed the commission)
                 const hierarchyRows = reversedHierarchy.map((h, index) => {
                     const levelNum = index + 1;
                     const isSelf = h.status === 'self';
                     const isFilled = h.status === 'filled';
-                    const isCurrentUser = h.holderPhone === (currentUser.phone || currentUser.mobile);
+                    const isCreator = h.holderPhone === distributionPath.creatorPhone; // Highlight the creator
                     const levelName = h.level ? h.level.charAt(0).toUpperCase() + h.level.slice(1) : '';
                     const holderName = h.holder || '';
                     const phone = h.holderPhone || '';
@@ -3120,12 +3120,10 @@
                     const cashCommCell = (h.commission || 0).toLocaleString('en-IN');
                     const totalCreditCell = ((h.commission || 0) + (isSelf ? cashCreditUsed + bonusCreditUsed : 0)).toLocaleString('en-IN');
                     
-                    // Highlight current user's row in yellow, advertiser in blue, filled in green, empty in red
+                    // Highlight creator's row in yellow (who distributed commission), filled in green, empty in red
                     let rowColor, rowStyle;
-                    if (isCurrentUser) {
+                    if (isCreator) {
                         rowStyle = 'background-color: #fff3cd !important; font-weight: bold; border: 2px solid #ffc107;';
-                    } else if (isSelf) {
-                        rowStyle = 'background-color: #007bff !important; font-weight: bold; color: white;';
                     } else if (isFilled) {
                         rowStyle = 'background-color: #D4EDDA;';
                     } else {
@@ -3137,7 +3135,7 @@
                             <td class="text-center">${levelNum}</td>
                             <td><strong>${levelName}</strong></td>
                             <td>${h.location || ''}</td>
-                            <td>${holderName}${isCurrentUser ? ' <i class="fas fa-user-circle text-warning"></i>' : ''}</td>
+                            <td>${holderName}${isCreator ? ' <i class="fas fa-star text-warning"></i>' : ''}</td>
                             <td>${phone}</td>
                             <td class="text-end">${commPercent}</td>
                             <td class="text-end">${cashCreditCell}</td>
@@ -3226,9 +3224,8 @@
                                     <div class="alert alert-warning mb-0">
                                         <strong>Legend:</strong>
                                         <span class="badge" style="background-color: #fff3cd; color: #000; border: 2px solid #ffc107;">
-                                            <i class="fas fa-user-circle"></i> Your Position
+                                            <i class="fas fa-star"></i> Creator (Distributed Commission)
                                         </span>
-                                        <span class="badge bg-primary ms-2">Advertiser (Self)</span>
                                         <span class="badge ms-2" style="background-color: #D4EDDA; color: #000;">Filled Position</span>
                                         <span class="badge ms-2" style="background-color: #F8D7DA; color: #000;">Empty Position</span>
                                     </div>
