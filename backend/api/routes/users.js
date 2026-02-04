@@ -327,74 +327,32 @@ router.get('/:userId/credits-history', async (req, res) => {
 // Get user commission history and balance
 router.get('/:userId/commissions', async (req, res) => {
   try {
-    const CommissionDistribution = require('../models/CommissionDistribution');
     const user = await User.findById(req.params.userId).select('phone commissionBalance commissionHistory');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    // Use commissionHistory as primary source (has all data including percent)
+    // Use ONLY commissionHistory as single source of truth
+    // CommissionDistribution is for distribution path viewing, not for summary table
     const history = [];
-    const addedKeys = new Set(); // Track to avoid duplicates using timestamp rounded to second + amount
     
     if (user.commissionHistory && user.commissionHistory.length > 0) {
       user.commissionHistory.forEach(entry => {
         // Only add credit entries (not withdraws)
         if (entry.type === 'credit' && entry.amount > 0) {
-          // Round to nearest second and use amount for deduplication
-          const timestamp = Math.floor(new Date(entry.date).getTime() / 1000);
-          const dateKey = `${timestamp}_${entry.amount}`;
-          
-          if (!addedKeys.has(dateKey)) {
-            addedKeys.add(dateKey);
-            history.push({
-              amount: entry.amount,
-              description: entry.description,
-              date: entry.date,
-              type: 'commission',
-              fromAdId: entry.fromAdId || null,
-              _id: entry._id || null,
-              percent: entry.percent,
-              positionLevel: entry.positionLevel || '',
-              positionLocation: entry.positionLocation || '',
-              uploaderName: entry.uploaderName || ''
-            });
-          }
+          history.push({
+            amount: entry.amount,
+            description: entry.description,
+            date: entry.date,
+            type: 'commission',
+            fromAdId: entry.fromAdId || null,
+            _id: entry._id || null,
+            percent: entry.percent,
+            positionLevel: entry.positionLevel || '',
+            positionLocation: entry.positionLocation || '',
+            uploaderName: entry.uploaderName || ''
+          });
         }
       });
     }
-
-    // For entries missing percent, try to get from CommissionDistribution (old data)
-    const distributions = await CommissionDistribution.find({ 
-      'hierarchyPath.holderPhone': user.phone
-    })
-    .sort({ distributionDate: -1 })
-    .limit(100)
-    .lean();
-
-    distributions.forEach(dist => {
-      const userEntry = dist.hierarchyPath.find(h => h.holderPhone === user.phone);
-      if (userEntry && userEntry.commission > 0) {
-        // Round to nearest second for deduplication
-        const timestamp = Math.floor(new Date(dist.distributionDate).getTime() / 1000);
-        const dateKey = `${timestamp}_${userEntry.commission}`;
-        
-        // Only add if not already present (avoid duplicates)
-        if (!addedKeys.has(dateKey)) {
-          addedKeys.add(dateKey);
-          history.push({
-            amount: userEntry.commission,
-            description: `Commission from credits given to ${dist.creatorName || 'Unknown'}`,
-            date: dist.distributionDate,
-            type: 'commission',
-            fromAdId: dist.adId || null,
-            _id: dist._id || null,
-            percent: userEntry.percent,
-            positionLevel: userEntry.level || 'pincode',
-            positionLocation: userEntry.location || '',
-            uploaderName: dist.creatorName
-          });
-        }
-      }
-    });
 
     // Sort by date descending
     history.sort((a, b) => new Date(b.date) - new Date(a.date));
