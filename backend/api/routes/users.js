@@ -333,15 +333,18 @@ router.get('/:userId/commissions', async (req, res) => {
 
     // Use commissionHistory as primary source (has all data including percent)
     const history = [];
-    const addedDates = new Set(); // Track to avoid duplicates
+    const addedKeys = new Set(); // Track to avoid duplicates using timestamp rounded to second + amount
     
     if (user.commissionHistory && user.commissionHistory.length > 0) {
       user.commissionHistory.forEach(entry => {
         // Only add credit entries (not withdraws)
         if (entry.type === 'credit' && entry.amount > 0) {
-          const dateKey = `${entry.date.getTime()}_${entry.amount}`;
-          if (!addedDates.has(dateKey)) {
-            addedDates.add(dateKey);
+          // Round to nearest second and use amount for deduplication
+          const timestamp = Math.floor(new Date(entry.date).getTime() / 1000);
+          const dateKey = `${timestamp}_${entry.amount}`;
+          
+          if (!addedKeys.has(dateKey)) {
+            addedKeys.add(dateKey);
             history.push({
               amount: entry.amount,
               description: entry.description,
@@ -370,10 +373,13 @@ router.get('/:userId/commissions', async (req, res) => {
     distributions.forEach(dist => {
       const userEntry = dist.hierarchyPath.find(h => h.holderPhone === user.phone);
       if (userEntry && userEntry.commission > 0) {
-        const dateKey = `${new Date(dist.distributionDate).getTime()}_${userEntry.commission}`;
+        // Round to nearest second for deduplication
+        const timestamp = Math.floor(new Date(dist.distributionDate).getTime() / 1000);
+        const dateKey = `${timestamp}_${userEntry.commission}`;
+        
         // Only add if not already present (avoid duplicates)
-        if (!addedDates.has(dateKey)) {
-          addedDates.add(dateKey);
+        if (!addedKeys.has(dateKey)) {
+          addedKeys.add(dateKey);
           history.push({
             amount: userEntry.commission,
             description: `Commission from credits given to ${dist.creatorName || 'Unknown'}`,
