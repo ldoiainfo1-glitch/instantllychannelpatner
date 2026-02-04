@@ -2781,7 +2781,14 @@
                     }
                     
                     return `
-                        <tr style="cursor: pointer;" onclick="showDistributionPath('${h.fromAdId || h._id}', '${name}', '${positionDisplay}', '${percentDisplay}', '${Math.abs(h.amount)}', '${h.date}')" 
+                        <tr style="cursor: pointer;" 
+                            data-adid="${h.fromAdId || h._id || ''}"
+                            data-name="${name.replace(/"/g, '&quot;')}"
+                            data-position="${positionDisplay.replace(/"/g, '&quot;')}"
+                            data-percent="${percentDisplay}"
+                            data-amount="${Math.abs(h.amount)}"
+                            data-date="${h.date}"
+                            onclick="showDistributionPathFromRow(this)" 
                             title="Click to view commission distribution details">
                             <td>${idx + 1}</td>
                             <td>${name}</td>
@@ -2997,6 +3004,17 @@
         document.querySelectorAll('input[name="adMediaType"]').forEach(radio => {
             radio.addEventListener('change', updateAdMediaType);
         });
+
+        // Wrapper function to extract data from row attributes
+        function showDistributionPathFromRow(row) {
+            const adId = row.getAttribute('data-adid');
+            const name = row.getAttribute('data-name');
+            const position = row.getAttribute('data-position');
+            const percent = row.getAttribute('data-percent');
+            const amount = row.getAttribute('data-amount');
+            const date = row.getAttribute('data-date');
+            showDistributionPath(adId, name, position, percent, amount, date);
+        }
 
         // Show distribution path modal for a commission entry
         async function showDistributionPath(adId, name, position, percent, amount, date) {
