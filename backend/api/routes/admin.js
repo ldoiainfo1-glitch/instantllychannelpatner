@@ -2784,20 +2784,25 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           await recipient.save();
           console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) added to ${recipient.name}'s CASH CREDITS`);
 
-          // Extract location hierarchy
+          // Extract location hierarchy FROM POSITIONID (not applicantInfo which is often empty)
+          // positionId format: pos_pincode-head_india_west-zone_maharashtra_konkan_thane_thane_401107
+          const posIdParts = application.positionId.split('_');
+          // [0]=pos, [1]=level-head, [2]=country, [3]=zone, [4]=state, [5]=division, [6]=district, [7]=tehsil, [8]=pincode
+          
           const hierarchy = {
-            pincode: application.applicantInfo?.pincode,
-            tehsil: application.applicantInfo?.tehsil,
-            district: application.applicantInfo?.district,
-            division: application.applicantInfo?.division,
-            state: application.applicantInfo?.state,
-            zone: application.applicantInfo?.zone,
-            country: application.applicantInfo?.country || 'India'
+            country: posIdParts[2] || 'india',
+            zone: posIdParts[3] || null,
+            state: posIdParts[4] || null,
+            division: posIdParts[5] || null,
+            district: posIdParts[6] || null,
+            tehsil: posIdParts[7] || null,
+            pincode: posIdParts[8] || null
           };
 
-          console.log('📍 [COMMISSION] Recipient hierarchy:', hierarchy);
+          console.log('📍 [COMMISSION] Recipient hierarchy (from positionId):', hierarchy);
+          console.log('📍 [COMMISSION] Full positionId:', application.positionId);
 
-          // Find position holders in hierarchy
+          // Find position holders in the SAME geographic hierarchy
           const findLevelHolder = async (levelName, excludePhone = null) => {
             let query = { status: 'approved' };
             if (excludePhone) {
@@ -2805,16 +2810,42 @@ router.post('/users/:userId/give-credits', async (req, res) => {
             }
             
             const token = hierarchy[levelName];
-            if (token && levelName !== 'country') {
-              const flexToken = String(token).trim().toLowerCase().replace(/[^a-z0-9]+/g, '[-_\\s]*');
-              const levelFlex = levelName.replace(/\s+/g, '[-_\\s]*');
-              query.positionId = { $regex: new RegExp(`${levelFlex}[-_\\s]*head.*${flexToken}`, 'i') };
-            } else if (levelName === 'country') {
-              query.positionId = { $regex: /president|india[-_\s]*head/i };
+            
+            // Build positionId pattern based on recipient's hierarchy
+            if (levelName === 'country') {
+              // Country head or president
+              query.positionId = { $regex: /pos_president_india|pos_country-head_india/i };
+            } else if (levelName === 'zone' && hierarchy.zone) {
+              // Zone head in same zone: pos_zone-head_india_west-zone
+              const zonePattern = `pos_zone-head_india_${hierarchy.zone}`;
+              query.positionId = { $regex: new RegExp(zonePattern.replace(/-/g, '[-_]'), 'i') };
+            } else if (levelName === 'state' && hierarchy.state) {
+              // State head in same state: pos_state-head_india_west-zone_maharashtra
+              const statePattern = `pos_state-head_india_${hierarchy.zone}_${hierarchy.state}`;
+              query.positionId = { $regex: new RegExp(statePattern.replace(/-/g, '[-_]'), 'i') };
+            } else if (levelName === 'division' && hierarchy.division) {
+              // Division head in same division: pos_division-head_india_west-zone_maharashtra_konkan
+              const divPattern = `pos_division-head_india_${hierarchy.zone}_${hierarchy.state}_${hierarchy.division}`;
+              query.positionId = { $regex: new RegExp(divPattern.replace(/-/g, '[-_]'), 'i') };
+            } else if (levelName === 'district' && hierarchy.district) {
+              // District head: pos_district-head_india_west-zone_maharashtra_konkan_thane
+              const distPattern = `pos_district-head_india_${hierarchy.zone}_${hierarchy.state}_${hierarchy.division}_${hierarchy.district}`;
+              query.positionId = { $regex: new RegExp(distPattern.replace(/-/g, '[-_]'), 'i') };
+            } else if (levelName === 'tehsil' && hierarchy.tehsil) {
+              // Tehsil head: pos_tehsil-head_india_west-zone_maharashtra_konkan_thane_thane
+              const tehsilPattern = `pos_tehsil-head_india_${hierarchy.zone}_${hierarchy.state}_${hierarchy.division}_${hierarchy.district}_${hierarchy.tehsil}`;
+              query.positionId = { $regex: new RegExp(tehsilPattern.replace(/-/g, '[-_]'), 'i') };
+            } else {
+              console.log(`ℹ️ [COMMISSION] No token for ${levelName} - position empty or not in hierarchy`);
+              return null;
             }
 
+            console.log(`🔎 [COMMISSION] Searching ${levelName}:`, query.positionId);
             let app = await Application.findOne(query).lean();
-            if (app) return { app, paidLevel: levelName };
+            if (app) {
+              console.log(`✅ [COMMISSION] Found ${levelName}: ${app.applicantInfo.name} (${app.applicantInfo.phone})`);
+              return { app, paidLevel: levelName };
+            }
 
             console.log(`ℹ️ [COMMISSION] Position ${levelName} is empty - will be skipped`);
             return null;
