@@ -327,39 +327,12 @@ router.get('/:userId/credits-history', async (req, res) => {
 // Get user commission history and balance
 router.get('/:userId/commissions', async (req, res) => {
   try {
-    const CommissionDistribution = require('../models/CommissionDistribution');
     const user = await User.findById(req.params.userId).select('phone commissionBalance commissionHistory');
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
-    // Get commission distributions where user received commission
-    const distributions = await CommissionDistribution.find({ 
-      'hierarchyPath.holderPhone': user.phone
-    })
-    .sort({ distributionDate: -1 })
-    .limit(100)
-    .lean();
-
-    // Build commission history from distributions
+    // Use ONLY direct commissionHistory (avoid duplicates from CommissionDistribution)
     const history = [];
-    distributions.forEach(dist => {
-      // Find this user's entry in the hierarchy
-      const userEntry = dist.hierarchyPath.find(h => h.holderPhone === user.phone);
-      if (userEntry && userEntry.commission > 0) {
-        history.push({
-          amount: userEntry.commission,
-          description: `Commission from credits given to ${dist.creatorName || 'Unknown'}`,
-          date: dist.distributionDate,
-          type: 'commission',
-          percent: userEntry.percent,
-          positionLevel: userEntry.level || 'pincode',
-          positionLocation: userEntry.location || '',
-          uploaderName: dist.creatorName
-        });
-      }
-    });
-
-    // ALSO include direct commissionHistory entries (may have additional records)
-    // Merge with distribution-based history
+    
     if (user.commissionHistory && user.commissionHistory.length > 0) {
       user.commissionHistory.forEach(entry => {
         // Only add credit entries (not withdraws)
@@ -369,6 +342,8 @@ router.get('/:userId/commissions', async (req, res) => {
             description: entry.description,
             date: entry.date,
             type: 'commission',
+            fromAdId: entry.fromAdId || null,
+            _id: entry._id || null,
             percent: entry.percent,
             positionLevel: entry.positionLevel || '',
             positionLocation: entry.positionLocation || '',
@@ -378,7 +353,7 @@ router.get('/:userId/commissions', async (req, res) => {
       });
     }
 
-    // Sort by date descending and remove duplicates
+    // Sort by date descending
     history.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     res.json({
