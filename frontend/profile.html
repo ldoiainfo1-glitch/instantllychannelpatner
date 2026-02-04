@@ -3045,21 +3045,38 @@
                     throw new Error(data.message || 'Failed to load commission paths');
                 }
                 
-                // Find the specific commission distribution by adId
+                // Find the specific commission distribution by adId, or by timestamp+amount if adId is null
                 let distributionPath = null;
+                const clickedDate = new Date(date);
                 
                 // Check in created ads first
                 if (data.created && data.created.length > 0) {
-                    distributionPath = data.created.find(path => 
-                        path.fromAdId === adId || path._id === adId
-                    );
+                    distributionPath = data.created.find(path => {
+                        // Try matching by adId first
+                        if (adId && (path.fromAdId === adId || path._id === adId)) {
+                            return true;
+                        }
+                        // If no adId, match by timestamp (within 5 seconds) and amount
+                        const pathDate = new Date(path.distributionDate);
+                        const timeDiff = Math.abs(pathDate - clickedDate) / 1000; // seconds
+                        const pathAmount = path.hierarchyPath.find(h => h.holderPhone === (currentUser.phone || currentUser.mobile))?.commission || 0;
+                        return timeDiff <= 5 && Math.abs(pathAmount - amount) < 0.01;
+                    });
                 }
                 
                 // If not found, check in received ads
                 if (!distributionPath && data.received && data.received.length > 0) {
-                    distributionPath = data.received.find(path => 
-                        path.fromAdId === adId || path._id === adId
-                    );
+                    distributionPath = data.received.find(path => {
+                        // Try matching by adId first
+                        if (adId && (path.fromAdId === adId || path._id === adId)) {
+                            return true;
+                        }
+                        // If no adId, match by timestamp (within 5 seconds) and amount
+                        const pathDate = new Date(path.distributionDate);
+                        const timeDiff = Math.abs(pathDate - clickedDate) / 1000; // seconds
+                        const pathAmount = path.hierarchyPath.find(h => h.holderPhone === (currentUser.phone || currentUser.mobile))?.commission || 0;
+                        return timeDiff <= 5 && Math.abs(pathAmount - amount) < 0.01;
+                    });
                 }
                 
                 if (!distributionPath) {
