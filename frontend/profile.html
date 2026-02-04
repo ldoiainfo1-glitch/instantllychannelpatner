@@ -878,12 +878,13 @@
                                                 <th>Position</th>
                                                 <th>Commission %</th>
                                                 <th>Amount</th>
-                                                <th>Date Time</th>
+                                                <th>Date</th>
+                                                <th>Time</th>
                                             </tr>
                                         </thead>
                                         <tbody id="commissionTableBody">
                                             <tr>
-                                                <td colspan="6" class="text-center text-muted py-4">No commissions yet</td>
+                                                <td colspan="7" class="text-center text-muted py-4">No commissions yet</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -2794,12 +2795,13 @@
                             <td>${positionDisplay}</td>
                             <td>${percentDisplay}</td>
                             <td>₹${Math.abs(h.amount).toLocaleString('en-IN')}</td>
-                            <td>${new Date(h.date).toLocaleString('en-IN')}</td>
+                            <td>${new Date(h.date).toLocaleDateString('en-IN')}</td>
+                            <td>${new Date(h.date).toLocaleTimeString('en-IN')}</td>
                         </tr>`;
                 }).join('');
             } catch (err) {
                 console.error('Load commissions error', err);
-                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">Failed to load commissions</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4">Failed to load commissions</td></tr>`;
             }
         }
 
