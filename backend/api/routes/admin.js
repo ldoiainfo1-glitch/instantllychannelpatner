@@ -3036,8 +3036,8 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               filledPositions: filledCount,
               emptyPositions: emptyCount,
               creditBreakdown: {
-                cash: CREDIT_AMOUNT,
-                extra: 0
+                cash: cashCreditsToAdd,  // Amount paid (e.g., 1000)
+                extra: extraCreditsToAdd  // Bonus credits (e.g., 200)
               }
             });
             
