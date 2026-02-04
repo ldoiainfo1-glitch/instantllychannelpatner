@@ -603,19 +603,7 @@ router.post('/', upload.any(), async (req, res) => {
             const uploaderLocation = uploaderApp?.applicantInfo?.pincode || 'N/A';
             const uploaderPosition = uploaderApp?.position?.level || 'Pincode';
             
-            // CREDIT AS CASH CREDITS (since paid with cash)
-            uploader.cashCredits = (uploader.cashCredits || 0) + selfAmt;
-            uploader.credits = (uploader.cashCredits || 0) + (uploader.extraCredits || 0);
-            uploader.cashHistory = uploader.cashHistory || [];
-            uploader.cashHistory.push({
-              type: 'credit',
-              amount: selfAmt,
-              balance: uploader.cashCredits,
-              description: `Commission (Self) from ad - ${selfShare.percent}% of ₹${AD_COST}`,
-              date: new Date()
-            });
-            
-            // Also track in commission history for reporting
+            // Track in commission history ONLY (not in cash credits table)
             uploader.commissionBalance = (uploader.commissionBalance || 0) + selfAmt;
             uploader.commissionHistory = uploader.commissionHistory || [];
             uploader.commissionHistory.push({
@@ -632,7 +620,7 @@ router.post('/', upload.any(), async (req, res) => {
             });
             
             await uploader.save();
-            console.log(`✅ [COMMISSION] Self: ₹${selfAmt} added to CASH CREDITS for ${uploader.name || uploader.phone}`);
+            console.log(`✅ [COMMISSION] Self: ₹${selfAmt} added to COMMISSION BALANCE for ${uploader.name || uploader.phone}`);
           } else {
             console.log(`ℹ️ [COMMISSION] Self commission skipped (extra credits used: ₹${deductedFromExtra})`);
           }
@@ -735,20 +723,7 @@ router.post('/', upload.any(), async (req, res) => {
               const amt = Number((AD_COST * (percent / 100)).toFixed(2));
               
               if (amt > 0) {
-                // CREDIT AS CASH CREDITS (if paid with cash) or EXTRA CREDITS (if paid with extra)
-                // Since commission only distributes when cash credits are used, always credit as cash
-                parent.recipient.cashCredits = (parent.recipient.cashCredits || 0) + amt;
-                parent.recipient.credits = (parent.recipient.cashCredits || 0) + (parent.recipient.extraCredits || 0);
-                parent.recipient.cashHistory = parent.recipient.cashHistory || [];
-                parent.recipient.cashHistory.push({
-                  type: 'credit',
-                  amount: amt,
-                  balance: parent.recipient.cashCredits,
-                  description: `Commission ${percent}% from ${uploader.name || uploader.phone}'s ad`,
-                  date: new Date()
-                });
-                
-                // Also track in commission history for reporting
+                // Track in commission history ONLY (not in cash credits table)
                 parent.recipient.commissionBalance = (parent.recipient.commissionBalance || 0) + amt;
                 parent.recipient.commissionHistory = parent.recipient.commissionHistory || [];
                 parent.recipient.commissionHistory.push({
@@ -767,7 +742,7 @@ router.post('/', upload.any(), async (req, res) => {
                 
                 await parent.recipient.save();
                 
-                console.log(`✅ [COMMISSION] Parent #${i + 1}: ${parent.recipient.name || parent.recipient.phone} (${parent.originalLevel}) → ${percent}% = ₹${amt} added to CASH CREDITS`);
+                console.log(`✅ [COMMISSION] Parent #${i + 1}: ${parent.recipient.name || parent.recipient.phone} (${parent.originalLevel}) → ${percent}% = ₹${amt} added to COMMISSION BALANCE`);
               }
             } catch (saveErr) {
               console.error(`❌ [COMMISSION] Failed to save commission:`, saveErr.message);

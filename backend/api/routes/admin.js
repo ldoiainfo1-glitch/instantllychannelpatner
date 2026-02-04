@@ -2754,19 +2754,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           const recipientLocation = application.applicantInfo?.pincode || 'N/A';
           const recipientPosition = application.position?.level || 'Pincode';
           
-          // Add to cash credits
-          recipient.cashCredits = (recipient.cashCredits || 0) + selfAmt;
-          recipient.credits = (recipient.cashCredits || 0) + (recipient.extraCredits || 0);
-          recipient.cashHistory = recipient.cashHistory || [];
-          recipient.cashHistory.push({
-            type: 'credit',
-            amount: selfAmt,
-            balance: recipient.cashCredits,
-            description: `Commission (Self) ${selfShare.percent}% on ₹${CREDIT_AMOUNT} credits received`,
-            date: new Date()
-          });
-          
-          // Track in commission history
+          // Track in commission history ONLY (not in cash credits table)
           recipient.commissionBalance = (recipient.commissionBalance || 0) + selfAmt;
           recipient.commissionHistory = recipient.commissionHistory || [];
           recipient.commissionHistory.push({
@@ -2782,7 +2770,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           });
           
           await recipient.save();
-          console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) added to ${recipient.name}'s CASH CREDITS`);
+          console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) added to ${recipient.name}'s COMMISSION BALANCE (not cash credits)`);
 
           // Extract location hierarchy FROM POSITIONID (not applicantInfo which is often empty)
           // positionId format: pos_pincode-head_india_west-zone_maharashtra_konkan_thane_thane_401107
@@ -2887,19 +2875,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
               
               if (amt > 0) {
-                // Add to cash credits
-                parent.recipient.cashCredits = (parent.recipient.cashCredits || 0) + amt;
-                parent.recipient.credits = (parent.recipient.cashCredits || 0) + (parent.recipient.extraCredits || 0);
-                parent.recipient.cashHistory = parent.recipient.cashHistory || [];
-                parent.recipient.cashHistory.push({
-                  type: 'credit',
-                  amount: amt,
-                  balance: parent.recipient.cashCredits,
-                  description: `Commission ${percent}% from ${recipient.name}'s credits received`,
-                  date: new Date()
-                });
-                
-                // Track in commission history
+                // Track in commission history ONLY (not in cash credits table)
                 parent.recipient.commissionBalance = (parent.recipient.commissionBalance || 0) + amt;
                 parent.recipient.commissionHistory = parent.recipient.commissionHistory || [];
                 
@@ -2927,7 +2903,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
                 
                 await parent.recipient.save();
                 
-                console.log(`✅ [COMMISSION] Parent #${i + 1}: ${parent.recipient.name || parent.recipient.phone} (${parent.originalLevel}) → ${percent}% = ₹${amt} added to CASH CREDITS`);
+                console.log(`✅ [COMMISSION] Parent #${i + 1}: ${parent.recipient.name || parent.recipient.phone} (${parent.originalLevel}) → ${percent}% = ₹${amt} added to COMMISSION BALANCE (not cash credits)`);
               }
             } catch (saveErr) {
               console.error(`❌ [COMMISSION] Failed to save commission:`, saveErr.message);
