@@ -2833,7 +2833,8 @@ router.post('/users/:userId/give-credits', async (req, res) => {
                   filledParents.push({
                     level: level,
                     recipient: parentUser,
-                    originalLevel: level.label
+                    originalLevel: level.label,
+                    application: result.app  // Store parent's application for position info
                   });
                   console.log(`✅ [COMMISSION] Found filled position #${filledParents.length}: ${level.label} - ${parentUser.name || parentUser.phone}`);
                 }
@@ -2870,14 +2871,24 @@ router.post('/users/:userId/give-credits', async (req, res) => {
                 // Track in commission history
                 parent.recipient.commissionBalance = (parent.recipient.commissionBalance || 0) + amt;
                 parent.recipient.commissionHistory = parent.recipient.commissionHistory || [];
+                
+                // Get parent's own position info (not recipient's)
+                const parentPosition = parent.application?.position?.level || parent.originalLevel;
+                const parentLocation = parent.application?.applicantInfo?.pincode || 
+                                      parent.application?.applicantInfo?.district || 
+                                      parent.application?.applicantInfo?.state ||
+                                      parent.application?.applicantInfo?.zone ||
+                                      parent.application?.applicantInfo?.country || 
+                                      parent.originalLevel;
+                
                 parent.recipient.commissionHistory.push({
                   type: 'credit',
                   amount: amt,
                   balance: parent.recipient.commissionBalance,
-                  description: `Commission from credits given to ${recipient.name} (${recipientPosition})\\nRecipient Position: ${recipientPosition}\\nRecipient Location: ${recipientLocation}`,
+                  description: `Commission from credits given to ${recipient.name} (${recipientPosition})\\nYour Position: ${parentPosition}\\nYour Location: ${parentLocation}`,
                   level: `Parent ${i + 1}`,
-                  positionLevel: recipientPosition,
-                  positionLocation: recipientLocation,
+                  positionLevel: parentPosition,  // Parent's own position
+                  positionLocation: parentLocation,  // Parent's own location
                   uploaderName: recipient.name || recipient.phone,
                   percent: percent,
                   date: new Date()
