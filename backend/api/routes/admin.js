@@ -2747,30 +2747,35 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           // Empty positions are skipped, next filled position gets next percentage
           const parentPercentages = [10, 5, 2.5, 1.25, 0.6, 0.3];
 
-          // Credit recipient with 'self' commission (20%)
+          // Credit recipient with 'self' commission (20%) - ONLY if they didn't receive bonus credits
           const selfShare = levelShares[0];
           const selfAmt = Number((CREDIT_AMOUNT * (selfShare.percent / 100)).toFixed(2));
           
           const recipientLocation = application.applicantInfo?.pincode || 'N/A';
           const recipientPosition = application.position?.level || 'Pincode';
           
-          // Track in commission history ONLY (not in cash credits table)
-          recipient.commissionBalance = (recipient.commissionBalance || 0) + selfAmt;
-          recipient.commissionHistory = recipient.commissionHistory || [];
-          recipient.commissionHistory.push({
-            type: 'credit',
-            amount: selfAmt,
-            balance: recipient.commissionBalance,
-            description: `Commission (Self) on credits received\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
-            level: selfShare.label,
-            positionLevel: recipientPosition,
-            positionLocation: recipientLocation,
-            percent: selfShare.percent,
-            date: new Date()
-          });
-          
-          await recipient.save();
-          console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) added to ${recipient.name}'s COMMISSION BALANCE (not cash credits)`);
+          // RULE: If recipient got bonus advertisement credits, they don't get commission (they already got bonus)
+          if (extraCreditsToAdd === 0) {
+            // Track in commission history ONLY (not in cash credits table)
+            recipient.commissionBalance = (recipient.commissionBalance || 0) + selfAmt;
+            recipient.commissionHistory = recipient.commissionHistory || [];
+            recipient.commissionHistory.push({
+              type: 'credit',
+              amount: selfAmt,
+              balance: recipient.commissionBalance,
+              description: `Commission (Self) on credits received\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
+              level: selfShare.label,
+              positionLevel: recipientPosition,
+              positionLocation: recipientLocation,
+              percent: selfShare.percent,
+              date: new Date()
+            });
+            
+            await recipient.save();
+            console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) added to ${recipient.name}'s COMMISSION BALANCE (no bonus credits received)`);
+          } else {
+            console.log(`⚠️  [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) NOT given to ${recipient.name} (already received ${extraCreditsToAdd} bonus credits)`);
+          }
 
           // Extract location hierarchy FROM POSITIONID (not applicantInfo which is often empty)
           // positionId format: pos_pincode-head_india_west-zone_maharashtra_konkan_thane_thane_401107
