@@ -336,8 +336,8 @@ router.get('/:userId/commissions', async (req, res) => {
     
     if (user.commissionHistory && user.commissionHistory.length > 0) {
       user.commissionHistory.forEach(entry => {
-        // Only add credit entries (not withdraws)
-        if (entry.type === 'credit' && entry.amount > 0) {
+        // Add credit entries including 0 amount (for bonus credit case)
+        if (entry.type === 'credit' && entry.amount >= 0) {
           history.push({
             amount: entry.amount,
             description: entry.description,

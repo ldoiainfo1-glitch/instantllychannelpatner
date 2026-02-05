@@ -2755,10 +2755,11 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           const recipientPosition = application.position?.level || 'Pincode';
           
           // RULE: If recipient got bonus advertisement credits, they don't get commission (they already got bonus)
+          recipient.commissionHistory = recipient.commissionHistory || [];
+          
           if (extraCreditsToAdd === 0) {
-            // Track in commission history ONLY (not in cash credits table)
+            // Give commission - Track in commission history ONLY (not in cash credits table)
             recipient.commissionBalance = (recipient.commissionBalance || 0) + selfAmt;
-            recipient.commissionHistory = recipient.commissionHistory || [];
             recipient.commissionHistory.push({
               type: 'credit',
               amount: selfAmt,
@@ -2774,7 +2775,21 @@ router.post('/users/:userId/give-credits', async (req, res) => {
             await recipient.save();
             console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) added to ${recipient.name}'s COMMISSION BALANCE (no bonus credits received)`);
           } else {
-            console.log(`⚠️  [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) NOT given to ${recipient.name} (already received ${extraCreditsToAdd} bonus credits)`);
+            // No commission - but add history entry showing 0% with bonus note
+            recipient.commissionHistory.push({
+              type: 'credit',
+              amount: 0,
+              balance: recipient.commissionBalance || 0,
+              description: `No commission (received ${extraCreditsToAdd.toLocaleString('en-IN')} bonus credits)\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
+              level: selfShare.label,
+              positionLevel: recipientPosition,
+              positionLocation: recipientLocation,
+              percent: 0,
+              date: new Date()
+            });
+            
+            await recipient.save();
+            console.log(`⚠️  [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) NOT given to ${recipient.name} (already received ${extraCreditsToAdd} bonus credits) - added 0% entry to history`);
           }
 
           // Extract location hierarchy FROM POSITIONID (not applicantInfo which is often empty)

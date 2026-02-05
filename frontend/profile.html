@@ -2794,7 +2794,7 @@
                             <td>${name}</td>
                             <td>${positionDisplay}</td>
                             <td>${percentDisplay}</td>
-                            <td>₹${Math.abs(h.amount).toLocaleString('en-IN')}</td>
+                            <td>${h.amount === 0 ? '<span class="badge bg-info">Got Bonus</span>' : '₹' + Math.abs(h.amount).toLocaleString('en-IN')}</td>
                             <td>${new Date(h.date).toLocaleDateString('en-IN')}</td>
                             <td>${new Date(h.date).toLocaleTimeString('en-IN')}</td>
                         </tr>`;
