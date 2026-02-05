@@ -86,6 +86,15 @@ async function distributeRetroactive() {
       date: new Date()
     });
     
+    // Also add to creditsHistory for Credits History tab display
+    recipient.creditsHistory = recipient.creditsHistory || [];
+    recipient.creditsHistory.push({
+      type: 'bonus',
+      amount: selfAmt,
+      description: `Self Commission (20%) - ${selfAmt.toLocaleString('en-IN')} credits (RETROACTIVE)`,
+      date: new Date()
+    });
+    
     await recipient.save();
     console.log(`✅ Self Commission: ₹${selfAmt} (${selfShare.percent}%) → Cash Credits for ${recipient.name}`);
     console.log(`   New Cash Credits: ${recipient.cashCredits}`);

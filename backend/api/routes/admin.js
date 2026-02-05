@@ -2788,6 +2788,15 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               date: new Date()
             });
             
+            // Also add to creditsHistory for Credits History tab display
+            recipient.creditsHistory = recipient.creditsHistory || [];
+            recipient.creditsHistory.push({
+              type: 'bonus',
+              amount: selfAmt,
+              description: `Self Commission (20%) - ${selfAmt.toLocaleString('en-IN')} credits`,
+              date: new Date()
+            });
+            
             await recipient.save();
             console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) converted to CASH CREDITS for ${recipient.name} (no bonus, not withdrawable)`);
           } else {
@@ -3208,6 +3217,15 @@ router.post('/users/:userId/distribute-commission-retroactive', async (req, res)
       positionLevel: recipientPosition,
       positionLocation: recipientLocation,
       percent: selfShare.percent,
+      date: new Date()
+    });
+    
+    // Also add to creditsHistory for Credits History tab display
+    recipient.creditsHistory = recipient.creditsHistory || [];
+    recipient.creditsHistory.push({
+      type: 'bonus',
+      amount: selfAmt,
+      description: `Self Commission (20%) - ${selfAmt.toLocaleString('en-IN')} credits (RETROACTIVE)`,
       date: new Date()
     });
     
