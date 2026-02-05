@@ -58,14 +58,14 @@ async function distributeRetroactive() {
     const recipientPosition = application.position?.level || 'Pincode';
     
     recipient.commissionHistory = recipient.commissionHistory || [];
-    recipient.cashCreditsHistory = recipient.cashCreditsHistory || [];
+    recipient.cashHistory = recipient.cashHistory || [];
     
     // Give SELF commission - Convert to CASH CREDITS
     const oldCashCredits = recipient.cashCredits || 0;
     recipient.cashCredits = oldCashCredits + selfAmt;
     recipient.credits = (recipient.cashCredits || 0) + (recipient.extraCredits || 0);
     
-    recipient.cashCreditsHistory.push({
+    recipient.cashHistory.push({
       type: 'credit',
       amount: selfAmt,
       balance: recipient.cashCredits,

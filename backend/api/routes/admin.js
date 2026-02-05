@@ -2756,7 +2756,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           
           // RULE: If recipient got bonus advertisement credits, they don't get commission (they already got bonus)
           recipient.commissionHistory = recipient.commissionHistory || [];
-          recipient.cashCreditsHistory = recipient.cashCreditsHistory || [];
+          recipient.cashHistory = recipient.cashHistory || [];
           
           if (extraCreditsToAdd === 0) {
             // Give SELF commission (20%) - Convert to CASH CREDITS (not withdrawable)
@@ -2765,8 +2765,8 @@ router.post('/users/:userId/give-credits', async (req, res) => {
             recipient.cashCredits = oldCashCredits + selfAmt;
             recipient.credits = (recipient.cashCredits || 0) + (recipient.extraCredits || 0);
             
-            // Track in cash credits history
-            recipient.cashCreditsHistory.push({
+            // Track in cash history (for Cash Credits Dashboard table)
+            recipient.cashHistory.push({
               type: 'credit',
               amount: selfAmt,
               balance: recipient.cashCredits,
@@ -3181,15 +3181,15 @@ router.post('/users/:userId/distribute-commission-retroactive', async (req, res)
     const recipientPosition = application.position?.level || 'Pincode';
     
     recipient.commissionHistory = recipient.commissionHistory || [];
-    recipient.cashCreditsHistory = recipient.cashCreditsHistory || [];
+    recipient.cashHistory = recipient.cashHistory || [];
     
     // Give SELF commission - Convert to CASH CREDITS
     const oldCashCredits = recipient.cashCredits || 0;
     recipient.cashCredits = oldCashCredits + selfAmt;
     recipient.credits = (recipient.cashCredits || 0) + (recipient.extraCredits || 0);
     
-    // Track in cash credits history
-    recipient.cashCreditsHistory.push({
+    // Track in cash history (for Cash Credits Dashboard table)
+    recipient.cashHistory.push({
       type: 'credit',
       amount: selfAmt,
       balance: recipient.cashCredits,
