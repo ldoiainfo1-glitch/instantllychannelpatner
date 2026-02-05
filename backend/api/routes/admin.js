@@ -2800,21 +2800,23 @@ router.post('/users/:userId/give-credits', async (req, res) => {
             await recipient.save();
             console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) converted to CASH CREDITS for ${recipient.name} (no bonus, not withdrawable)`);
           } else {
-            // No commission - but add history entry showing 0% with bonus note
+            // No cash commission - but received bonus credits, so show bonus percentage
+            const bonusPercent = Number(((extraCreditsToAdd / cashCreditsToAdd) * 100).toFixed(2));
+            
             recipient.commissionHistory.push({
               type: 'credit',
               amount: 0,
               balance: recipient.commissionBalance || 0,
-              description: `No commission (received ${extraCreditsToAdd.toLocaleString('en-IN')} bonus credits)\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
+              description: `No commission (received ${extraCreditsToAdd.toLocaleString('en-IN')} bonus credits - ${bonusPercent}%)\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
               level: selfShare.label,
               positionLevel: recipientPosition,
               positionLocation: recipientLocation,
-              percent: 0,
+              percent: bonusPercent,  // Show bonus percentage instead of 0
               date: new Date()
             });
             
             await recipient.save();
-            console.log(`⚠️  [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) NOT given to ${recipient.name} (already received ${extraCreditsToAdd} bonus credits) - added 0% entry to history`);
+            console.log(`⚠️  [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) NOT given to ${recipient.name} (already received ${extraCreditsToAdd} bonus credits = ${bonusPercent}%) - added ${bonusPercent}% entry to history`);
           }
 
           // Extract location hierarchy FROM POSITIONID (not applicantInfo which is often empty)
@@ -2971,7 +2973,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
             const selfAmt = Number((CREDIT_AMOUNT * 0.2).toFixed(2));
             const selfGetsCommission = (extraCreditsToAdd === 0);
             const actualSelfCommission = selfGetsCommission ? selfAmt : 0;
-            const actualSelfPercent = selfGetsCommission ? 20 : 0;
+            const actualSelfPercent = selfGetsCommission ? 20 : Number(((extraCreditsToAdd / cashCreditsToAdd) * 100).toFixed(2));  // Show bonus % if no commission
             
             totalDistributed += actualSelfCommission;
             filledCount++;
@@ -2984,7 +2986,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               holderId: recipient._id,
               status: 'self',
               commission: actualSelfCommission,
-              percent: actualSelfPercent,
+              percent: actualSelfPercent,  // Shows 20% if commission given, or bonus % if bonus given
               sequentialPosition: null
             });
             
