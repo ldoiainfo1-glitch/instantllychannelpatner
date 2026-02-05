@@ -3107,6 +3107,312 @@ router.post('/users/:userId/give-credits', async (req, res) => {
   }
 });
 
+// Retroactive Commission Distribution: Distribute commission for cash credits that were given before commission system was deployed
+router.post('/users/:userId/distribute-commission-retroactive', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { cashAmount } = req.body;
+
+    console.log(`\n🔄 [RETROACTIVE] Starting retroactive commission distribution for user ${userId}, amount: ₹${cashAmount}`);
+
+    if (!cashAmount || cashAmount <= 0) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Cash amount must be greater than 0' 
+      });
+    }
+
+    const User = require('../models/User');
+    const Application = require('../models/Application');
+    const CommissionDistribution = require('../models/CommissionDistribution');
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'User not found' 
+      });
+    }
+
+    // Find approved application
+    const application = await Application.findOne({ 
+      'applicantInfo.phone': user.phone, 
+      status: 'approved' 
+    });
+
+    if (!application) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'No approved application found for this user' 
+      });
+    }
+
+    if (!application.positionId) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Application has no positionId - cannot determine hierarchy' 
+      });
+    }
+
+    // Use the same commission distribution logic from give-credits
+    const recipient = user;
+    const CREDIT_AMOUNT = cashAmount;
+    const extraCreditsToAdd = 0; // Assume no bonus credits for retroactive distribution
+
+    // Commission percentages
+    const levelShares = [
+      { levelName: 'pincode', percent: 20, label: 'Pincode' },
+      { levelName: 'tehsil', percent: 10, label: 'Tehsil' },
+      { levelName: 'district', percent: 5, label: 'District' },
+      { levelName: 'division', percent: 2.5, label: 'Division' },
+      { levelName: 'state', percent: 1.25, label: 'State' },
+      { levelName: 'zone', percent: 0.6, label: 'Zone' },
+      { levelName: 'country', percent: 0.3, label: 'India' }
+    ];
+    
+    const parentPercentages = [10, 5, 2.5, 1.25, 0.6, 0.3];
+
+    // Self commission (20%) - Convert to cash credits
+    const selfShare = levelShares[0];
+    const selfAmt = Number((CREDIT_AMOUNT * (selfShare.percent / 100)).toFixed(2));
+    
+    const recipientLocation = application.applicantInfo?.pincode || 'N/A';
+    const recipientPosition = application.position?.level || 'Pincode';
+    
+    recipient.commissionHistory = recipient.commissionHistory || [];
+    recipient.cashCreditsHistory = recipient.cashCreditsHistory || [];
+    
+    // Give SELF commission - Convert to CASH CREDITS
+    const oldCashCredits = recipient.cashCredits || 0;
+    recipient.cashCredits = oldCashCredits + selfAmt;
+    recipient.credits = (recipient.cashCredits || 0) + (recipient.extraCredits || 0);
+    
+    // Track in cash credits history
+    recipient.cashCreditsHistory.push({
+      type: 'credit',
+      amount: selfAmt,
+      balance: recipient.cashCredits,
+      description: `Self Commission (20%) converted to Cash Credits (RETROACTIVE)\\nFrom: Credits received\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
+      date: new Date()
+    });
+    
+    // Track in commission history
+    recipient.commissionHistory.push({
+      type: 'credit',
+      subType: 'self',
+      amount: selfAmt,
+      balance: 0,
+      description: `Commission (Self) - Converted to Cash Credits (RETROACTIVE)\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
+      level: selfShare.label,
+      positionLevel: recipientPosition,
+      positionLocation: recipientLocation,
+      percent: selfShare.percent,
+      date: new Date()
+    });
+    
+    await recipient.save();
+    console.log(`✅ [RETROACTIVE] Self: ₹${selfAmt} (${selfShare.percent}%) converted to CASH CREDITS for ${recipient.name}`);
+
+    // Extract hierarchy from positionId
+    const posIdParts = application.positionId.split('_');
+    const hierarchy = {
+      country: posIdParts[2] || 'india',
+      zone: posIdParts[3] || null,
+      state: posIdParts[4] || null,
+      division: posIdParts[5] || null,
+      district: posIdParts[6] || null,
+      tehsil: posIdParts[7] || null,
+      pincode: posIdParts[8] || null
+    };
+
+    console.log('📍 [RETROACTIVE] Hierarchy:', hierarchy);
+
+    // Find parent position holders
+    const findLevelHolder = async (levelName, excludePhone = null) => {
+      let query = { status: 'approved' };
+      if (excludePhone) {
+        query['applicantInfo.phone'] = { $ne: excludePhone };
+      }
+      
+      if (levelName === 'country') {
+        query.positionId = { $regex: /pos_president_india|pos_country-head_india/i };
+      } else if (levelName === 'zone' && hierarchy.zone) {
+        const zonePattern = `pos_zone-head_india_${hierarchy.zone}`;
+        query.positionId = { $regex: new RegExp(zonePattern.replace(/-/g, '[-_]'), 'i') };
+      } else if (levelName === 'state' && hierarchy.state) {
+        const statePattern = `pos_state-head_india_${hierarchy.zone}_${hierarchy.state}`;
+        query.positionId = { $regex: new RegExp(statePattern.replace(/-/g, '[-_]'), 'i') };
+      } else if (levelName === 'division' && hierarchy.division) {
+        const divPattern = `pos_division-head_india_${hierarchy.zone}_${hierarchy.state}_${hierarchy.division}`;
+        query.positionId = { $regex: new RegExp(divPattern.replace(/-/g, '[-_]'), 'i') };
+      } else if (levelName === 'district' && hierarchy.district) {
+        const distPattern = `pos_district-head_india_${hierarchy.zone}_${hierarchy.state}_${hierarchy.division}_${hierarchy.district}`;
+        query.positionId = { $regex: new RegExp(distPattern.replace(/-/g, '[-_]'), 'i') };
+      } else if (levelName === 'tehsil' && hierarchy.tehsil) {
+        const tehsilPattern = `pos_tehsil-head_india_${hierarchy.zone}_${hierarchy.state}_${hierarchy.division}_${hierarchy.district}_${hierarchy.tehsil}`;
+        query.positionId = { $regex: new RegExp(tehsilPattern.replace(/-/g, '[-_]'), 'i') };
+      } else {
+        return null;
+      }
+
+      let app = await Application.findOne(query).lean();
+      if (app) {
+        return { app, paidLevel: levelName };
+      }
+      return null;
+    };
+
+    // Find all filled parent positions
+    const filledParents = [];
+    for (let i = 1; i < levelShares.length; i++) {
+      const level = levelShares[i];
+      const result = await findLevelHolder(level.levelName, recipient.phone);
+      if (result && result.app) {
+        const parentUser = await User.findById(result.app.userId);
+        if (parentUser) {
+          filledParents.push({
+            level: level,
+            recipient: parentUser,
+            originalLevel: level.label,
+            application: result.app
+          });
+        }
+      }
+    }
+    
+    console.log(`💰 [RETROACTIVE] Found ${filledParents.length} parent position(s)`);
+    
+    // Distribute commission to filled parents
+    for (let i = 0; i < filledParents.length; i++) {
+      const parent = filledParents[i];
+      const percent = parentPercentages[i] || 0;
+      const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
+      
+      if (amt > 0) {
+        parent.recipient.commissionBalance = (parent.recipient.commissionBalance || 0) + amt;
+        parent.recipient.commissionHistory = parent.recipient.commissionHistory || [];
+        
+        const parentPosition = parent.application?.position?.level || parent.originalLevel;
+        const parentLocation = parent.application?.applicantInfo?.pincode || 
+                              parent.application?.applicantInfo?.district || 
+                              parent.originalLevel;
+        
+        parent.recipient.commissionHistory.push({
+          type: 'credit',
+          subType: 'parent',
+          amount: amt,
+          balance: parent.recipient.commissionBalance,
+          description: `Commission from credits given to ${recipient.name} (RETROACTIVE)\\nYour Position: ${parentPosition}\\nYour Location: ${parentLocation}`,
+          level: `Parent ${i + 1}`,
+          positionLevel: parentPosition,
+          positionLocation: parentLocation,
+          uploaderName: recipient.name || recipient.phone,
+          percent: percent,
+          date: new Date()
+        });
+        
+        await parent.recipient.save();
+        console.log(`✅ [RETROACTIVE] Parent #${i + 1}: ${parent.recipient.name} → ${percent}% = ₹${amt}`);
+      }
+    }
+    
+    // Create CommissionDistribution record
+    const hierarchyPathArray = [];
+    let totalDistributed = selfAmt;
+    
+    hierarchyPathArray.push({
+      level: 'pincode',
+      location: hierarchy.pincode || recipientLocation,
+      holder: recipient.name,
+      holderPhone: recipient.phone,
+      holderId: recipient._id,
+      status: 'self',
+      commission: selfAmt,
+      percent: 20,
+      sequentialPosition: null
+    });
+    
+    let parentIndex = 0;
+    for (let i = 1; i < levelShares.length; i++) {
+      const level = levelShares[i];
+      const location = hierarchy[level.levelName] || level.label;
+      const filledParent = filledParents.find(p => p.level.levelName === level.levelName);
+      
+      if (filledParent) {
+        const percent = parentPercentages[parentIndex] || 0;
+        const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
+        totalDistributed += amt;
+        
+        hierarchyPathArray.push({
+          level: level.levelName,
+          location: location,
+          holder: filledParent.recipient.name,
+          holderPhone: filledParent.recipient.phone,
+          holderId: filledParent.recipient._id,
+          status: 'filled',
+          commission: amt,
+          percent: percent,
+          sequentialPosition: parentIndex + 1
+        });
+        parentIndex++;
+      } else {
+        hierarchyPathArray.push({
+          level: level.levelName,
+          location: location,
+          holder: null,
+          status: 'empty',
+          commission: 0,
+          percent: 0,
+          sequentialPosition: null
+        });
+      }
+    }
+    
+    const distributionRecord = new CommissionDistribution({
+      adId: null,
+      creatorId: recipient._id,
+      creatorPhone: recipient.phone,
+      creatorName: recipient.name,
+      adAmount: CREDIT_AMOUNT,
+      distributionDate: new Date(),
+      selfCommission: {
+        paid: true,
+        amount: selfAmt,
+        percent: 20
+      },
+      hierarchyPath: hierarchyPathArray,
+      totalDistributed: totalDistributed,
+      filledPositions: filledParents.length + 1,
+      emptyPositions: 6 - filledParents.length,
+      creditBreakdown: {
+        cash: CREDIT_AMOUNT,
+        extra: 0
+      }
+    });
+    
+    await distributionRecord.save();
+    console.log(`✅ [RETROACTIVE] Commission distribution record saved\n`);
+    
+    res.json({
+      success: true,
+      message: `Retroactively distributed ₹${totalDistributed.toFixed(2)} commission on ₹${CREDIT_AMOUNT} cash credits`,
+      distribution: {
+        self: selfAmt,
+        parents: filledParents.length,
+        totalDistributed: totalDistributed
+      }
+    });
+    
+  } catch (error) {
+    console.error('[RETROACTIVE] Error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message 
+    });
+  }
+});
+
 // Get user credit details with cash and extra breakdown
 router.get('/users/:userId/credit-details', async (req, res) => {
   try {
