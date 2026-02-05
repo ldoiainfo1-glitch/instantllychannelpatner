@@ -2941,9 +2941,13 @@ router.post('/users/:userId/give-credits', async (req, res) => {
             let filledCount = 0;
             let emptyCount = 0;
             
-            // Add self to path
+            // Add self to path - check if they get commission based on bonus credits rule
             const selfAmt = Number((CREDIT_AMOUNT * 0.2).toFixed(2));
-            totalDistributed += selfAmt;
+            const selfGetsCommission = (extraCreditsToAdd === 0);
+            const actualSelfCommission = selfGetsCommission ? selfAmt : 0;
+            const actualSelfPercent = selfGetsCommission ? 20 : 0;
+            
+            totalDistributed += actualSelfCommission;
             filledCount++;
             
             hierarchyPathArray.push({
@@ -2953,8 +2957,8 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               holderPhone: recipient.phone,
               holderId: recipient._id,
               status: 'self',
-              commission: selfAmt,
-              percent: 20,
+              commission: actualSelfCommission,
+              percent: actualSelfPercent,
               sequentialPosition: null
             });
             
@@ -3023,9 +3027,9 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               adAmount: CREDIT_AMOUNT,
               distributionDate: new Date(),
               selfCommission: {
-                paid: true,
-                amount: selfAmt,
-                percent: 20
+                paid: selfGetsCommission,
+                amount: actualSelfCommission,
+                percent: actualSelfPercent
               },
               hierarchyPath: hierarchyPathArray,
               totalDistributed: totalDistributed,

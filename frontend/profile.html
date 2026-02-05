@@ -3056,7 +3056,9 @@
                         const pathDate = new Date(path.distributionDate);
                         const timeDiff = Math.abs(pathDate - clickedDate) / 1000; // seconds
                         const pathAmount = path.hierarchyPath.find(h => h.holderPhone === (currentUser.phone || currentUser.mobile))?.commission || 0;
-                        return timeDiff <= 5 && Math.abs(pathAmount - amount) < 0.01;
+                        // Allow match if amount is close OR if both are 0 (for bonus credit case)
+                        const amountMatch = Math.abs(pathAmount - amount) < 0.01 || (pathAmount === 0 && amount === 0);
+                        return timeDiff <= 5 && amountMatch;
                     });
                 }
                 
@@ -3067,7 +3069,9 @@
                         const pathDate = new Date(path.distributionDate);
                         const timeDiff = Math.abs(pathDate - clickedDate) / 1000; // seconds
                         const pathAmount = path.hierarchyPath.find(h => h.holderPhone === (currentUser.phone || currentUser.mobile))?.commission || 0;
-                        return timeDiff <= 5 && Math.abs(pathAmount - amount) < 0.01;
+                        // Allow match if amount is close OR if both are 0 (for bonus credit case)
+                        const amountMatch = Math.abs(pathAmount - amount) < 0.01 || (pathAmount === 0 && amount === 0);
+                        return timeDiff <= 5 && amountMatch;
                     });
                 }
                 
