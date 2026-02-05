@@ -2756,15 +2756,31 @@ router.post('/users/:userId/give-credits', async (req, res) => {
           
           // RULE: If recipient got bonus advertisement credits, they don't get commission (they already got bonus)
           recipient.commissionHistory = recipient.commissionHistory || [];
+          recipient.cashCreditsHistory = recipient.cashCreditsHistory || [];
           
           if (extraCreditsToAdd === 0) {
-            // Give commission - Track in commission history ONLY (not in cash credits table)
-            recipient.commissionBalance = (recipient.commissionBalance || 0) + selfAmt;
-            recipient.commissionHistory.push({
+            // Give SELF commission (20%) - Convert to CASH CREDITS (not withdrawable)
+            // Self commission is added to cashCredits to be used for creating ads, NOT for withdrawal
+            const oldCashCredits = recipient.cashCredits || 0;
+            recipient.cashCredits = oldCashCredits + selfAmt;
+            recipient.credits = (recipient.cashCredits || 0) + (recipient.extraCredits || 0);
+            
+            // Track in cash credits history
+            recipient.cashCreditsHistory.push({
               type: 'credit',
               amount: selfAmt,
-              balance: recipient.commissionBalance,
-              description: `Commission (Self) on credits received\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
+              balance: recipient.cashCredits,
+              description: `Self Commission (20%) converted to Cash Credits\\nFrom: Credits received\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
+              date: new Date()
+            });
+            
+            // Also track in commission history for summary display (but NOT in commissionBalance)
+            recipient.commissionHistory.push({
+              type: 'credit',
+              subType: 'self', // Mark as self commission
+              amount: selfAmt,
+              balance: 0, // Not added to withdrawable balance
+              description: `Commission (Self) - Converted to Cash Credits\\nLevel: ${selfShare.label}\\nLocation: ${recipientLocation}`,
               level: selfShare.label,
               positionLevel: recipientPosition,
               positionLocation: recipientLocation,
@@ -2773,7 +2789,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
             });
             
             await recipient.save();
-            console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) added to ${recipient.name}'s COMMISSION BALANCE (no bonus credits received)`);
+            console.log(`✅ [COMMISSION] Self: ₹${selfAmt} (${selfShare.percent}%) converted to CASH CREDITS for ${recipient.name} (no bonus, not withdrawable)`);
           } else {
             // No commission - but add history entry showing 0% with bonus note
             recipient.commissionHistory.push({
@@ -2895,7 +2911,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
               const amt = Number((CREDIT_AMOUNT * (percent / 100)).toFixed(2));
               
               if (amt > 0) {
-                // Track in commission history ONLY (not in cash credits table)
+                // Track PARENT commission in commissionBalance (WITHDRAWABLE)
                 parent.recipient.commissionBalance = (parent.recipient.commissionBalance || 0) + amt;
                 parent.recipient.commissionHistory = parent.recipient.commissionHistory || [];
                 
@@ -2910,6 +2926,7 @@ router.post('/users/:userId/give-credits', async (req, res) => {
                 
                 parent.recipient.commissionHistory.push({
                   type: 'credit',
+                  subType: 'parent', // Mark as parent commission (withdrawable)
                   amount: amt,
                   balance: parent.recipient.commissionBalance,
                   description: `Commission from credits given to ${recipient.name} (${recipientPosition})\\nYour Position: ${parentPosition}\\nYour Location: ${parentLocation}`,

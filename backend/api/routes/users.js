@@ -343,6 +343,7 @@ router.get('/:userId/commissions', async (req, res) => {
             description: entry.description,
             date: entry.date,
             type: 'commission',
+            subType: entry.subType || null, // 'self' or 'parent'
             fromAdId: entry.fromAdId || null,
             _id: entry._id || null,
             percent: entry.percent,

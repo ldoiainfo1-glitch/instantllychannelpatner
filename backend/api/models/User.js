@@ -141,6 +141,12 @@ const userSchema = new mongoose.Schema({
       enum: ['credit', 'withdraw'],
       required: true
     },
+    // Sub-type to distinguish self commission (converted to credits) vs parent commission (withdrawable)
+    subType: {
+      type: String,
+      enum: ['self', 'parent'],
+      required: false
+    },
     amount: {
       type: Number,
       required: true
