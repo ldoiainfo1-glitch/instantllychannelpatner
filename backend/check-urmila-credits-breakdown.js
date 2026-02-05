@@ -39,6 +39,19 @@ async function checkCreditsBreakdown() {
       console.log('  (empty)');
     }
 
+    console.log('\n📜 CASH CREDITS HISTORY (cashCreditsHistory array - includes commissions):');
+    if (user.cashCreditsHistory && user.cashCreditsHistory.length > 0) {
+      user.cashCreditsHistory.forEach((entry, i) => {
+        console.log(`\n[${i + 1}] ${entry.type.toUpperCase()}`);
+        console.log(`    Amount: ${entry.amount}`);
+        console.log(`    Balance: ${entry.balance}`);
+        console.log(`    Description: ${entry.description}`);
+        console.log(`    Date: ${entry.date}`);
+      });
+    } else {
+      console.log('  (empty)');
+    }
+
     console.log('\n📜 EXTRA HISTORY (extraHistory array):');
     if (user.extraHistory && user.extraHistory.length > 0) {
       user.extraHistory.forEach((entry, i) => {
