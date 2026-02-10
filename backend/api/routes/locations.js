@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Location = require('../models/Location');
+const LocationBulkAuditLog = require('../models/LocationBulkAuditLog');
 const { memoryCacheMiddleware, setCacheHeaders, CACHE_DURATIONS } = require('../../middleware/cache');
 
 // Get ALL location data in one optimized request (for performance)
@@ -909,6 +910,392 @@ router.post('/find-replace/execute', async (req, res) => {
     
   } catch (error) {
     console.error('❌ Error executing find & replace:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ==========================================
+// BULK RE-MAPPING SYSTEM
+// ==========================================
+
+// Bulk Re-Mapping - Preview changes
+router.post('/bulk-remap/preview', async (req, res) => {
+  try {
+    const { locationIds, newMapping, updateFields } = req.body;
+    
+    // Validate inputs
+    if (!locationIds || !Array.isArray(locationIds) || locationIds.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Location IDs array is required' 
+      });
+    }
+    
+    if (!newMapping || typeof newMapping !== 'object') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'New mapping object is required' 
+      });
+    }
+    
+    if (!updateFields || !Array.isArray(updateFields) || updateFields.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Update fields array is required' 
+      });
+    }
+    
+    // Limit to 1000 records
+    if (locationIds.length > 1000) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Maximum 1000 locations can be updated at once. Please narrow your selection.' 
+      });
+    }
+    
+    console.log(`🔍 [BULK-REMAP-PREVIEW] Processing ${locationIds.length} location(s)`);
+    console.log(`   Update fields: ${updateFields.join(', ')}`);
+    console.log(`   New mapping:`, newMapping);
+    
+    // Fetch existing locations
+    const locations = await Location.find({ _id: { $in: locationIds } }).lean();
+    
+    if (locations.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'No locations found with provided IDs' 
+      });
+    }
+    
+    // Build preview changes
+    const previewChanges = locations.map(loc => {
+      const changes = {
+        _id: loc._id,
+        old: {},
+        new: {}
+      };
+      
+      // Only include fields that will be updated
+      updateFields.forEach(field => {
+        changes.old[field] = loc[field] || '';
+        changes.new[field] = newMapping[field] || loc[field] || '';
+      });
+      
+      return changes;
+    });
+    
+    // Check for potential issues (soft warnings)
+    const warnings = [];
+    
+    // Warning if updating many records
+    if (locations.length > 100) {
+      warnings.push(`Large update: ${locations.length} locations will be modified`);
+    }
+    
+    // Count related applications and positions that will be affected
+    const Application = require('../models/Application');
+    const Position = require('../models/Position');
+    
+    const locationFilter = { $or: locationIds.map(id => {
+      const loc = locations.find(l => l._id.toString() === id.toString());
+      if (!loc) return {};
+      
+      const filter = {};
+      if (loc.zone) filter['location.zone'] = loc.zone;
+      if (loc.state) filter['location.state'] = loc.state;
+      if (loc.division) filter['location.division'] = loc.division;
+      if (loc.district) filter['location.district'] = loc.district;
+      if (loc.tehsil) filter['location.tehsil'] = loc.tehsil;
+      if (loc.pincode) filter['location.pincode'] = loc.pincode;
+      if (loc.village) filter['location.village'] = loc.village;
+      
+      return filter;
+    })};
+    
+    const [relatedApplications, relatedPositions] = await Promise.all([
+      Application.countDocuments(locationFilter),
+      Position.countDocuments(locationFilter)
+    ]);
+    
+    if (relatedApplications > 0) {
+      warnings.push(`${relatedApplications} channel partner application(s) will be updated`);
+    }
+    
+    if (relatedPositions > 0) {
+      warnings.push(`${relatedPositions} position(s) will be updated`);
+    }
+    
+    console.log(`✅ [BULK-REMAP-PREVIEW] Preview generated for ${locations.length} location(s)`);
+    console.log(`   Related: ${relatedApplications} applications, ${relatedPositions} positions`);
+    
+    res.json({
+      success: true,
+      totalRecords: locations.length,
+      previewChanges,
+      warnings,
+      relatedData: {
+        applications: relatedApplications,
+        positions: relatedPositions
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ [BULK-REMAP-PREVIEW] Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Bulk Re-Mapping - Execute update
+router.post('/bulk-remap/execute', async (req, res) => {
+  try {
+    const { locationIds, newMapping, updateFields, adminUsername } = req.body;
+    
+    // Validate inputs
+    if (!locationIds || !Array.isArray(locationIds) || locationIds.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Location IDs array is required' 
+      });
+    }
+    
+    if (!newMapping || typeof newMapping !== 'object') {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'New mapping object is required' 
+      });
+    }
+    
+    if (!updateFields || !Array.isArray(updateFields) || updateFields.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Update fields array is required' 
+      });
+    }
+    
+    if (!adminUsername) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Admin username is required' 
+      });
+    }
+    
+    // Limit to 1000 records
+    if (locationIds.length > 1000) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Maximum 1000 locations can be updated at once' 
+      });
+    }
+    
+    const startTime = Date.now();
+    
+    console.log(`🔄 [BULK-REMAP-EXECUTE] Starting bulk update for ${locationIds.length} location(s)`);
+    console.log(`   Admin: ${adminUsername}`);
+    console.log(`   Update fields: ${updateFields.join(', ')}`);
+    
+    // Fetch locations before update (for audit log)
+    const locationsBeforeUpdate = await Location.find({ _id: { $in: locationIds } }).lean();
+    
+    if (locationsBeforeUpdate.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'No locations found with provided IDs' 
+      });
+    }
+    
+    // Build update object (only include selected fields)
+    const updateObject = {};
+    updateFields.forEach(field => {
+      if (newMapping[field] !== undefined && newMapping[field] !== null) {
+        updateObject[field] = newMapping[field].trim();
+      }
+    });
+    
+    console.log('   Update object:', updateObject);
+    
+    // Execute bulk update
+    const updateResult = await Location.updateMany(
+      { _id: { $in: locationIds } },
+      { $set: updateObject }
+    );
+    
+    console.log(`✅ [BULK-REMAP-EXECUTE] Updated ${updateResult.modifiedCount} location(s)`);
+    
+    // Fetch locations after update (for audit log)
+    const locationsAfterUpdate = await Location.find({ _id: { $in: locationIds } }).lean();
+    
+    // Update related Applications
+    const Application = require('../models/Application');
+    let applicationsUpdated = 0;
+    
+    // Build application update operations
+    const appUpdateOps = [];
+    locationsBeforeUpdate.forEach(oldLoc => {
+      const updateFields = {};
+      Object.keys(updateObject).forEach(field => {
+        updateFields[`location.${field}`] = updateObject[field];
+      });
+      
+      // Build filter to find applications with old location values
+      const appFilter = {};
+      if (oldLoc.zone) appFilter['location.zone'] = oldLoc.zone;
+      if (oldLoc.state) appFilter['location.state'] = oldLoc.state;
+      if (oldLoc.division) appFilter['location.division'] = oldLoc.division;
+      if (oldLoc.district) appFilter['location.district'] = oldLoc.district;
+      if (oldLoc.tehsil) appFilter['location.tehsil'] = oldLoc.tehsil;
+      if (oldLoc.pincode) appFilter['location.pincode'] = oldLoc.pincode;
+      if (oldLoc.village) appFilter['location.village'] = oldLoc.village;
+      
+      if (Object.keys(appFilter).length > 0) {
+        appUpdateOps.push({ filter: appFilter, update: updateFields });
+      }
+    });
+    
+    // Execute application updates
+    for (const op of appUpdateOps) {
+      const result = await Application.updateMany(op.filter, { $set: op.update });
+      applicationsUpdated += result.modifiedCount;
+    }
+    
+    console.log(`✅ [BULK-REMAP-EXECUTE] Updated ${applicationsUpdated} application(s)`);
+    
+    // Update related Positions
+    const Position = require('../models/Position');
+    let positionsUpdated = 0;
+    
+    // Build position update operations
+    const posUpdateOps = [];
+    locationsBeforeUpdate.forEach(oldLoc => {
+      const updateFields = {};
+      Object.keys(updateObject).forEach(field => {
+        updateFields[`location.${field}`] = updateObject[field];
+      });
+      
+      // Build filter to find positions with old location values
+      const posFilter = {};
+      if (oldLoc.zone) posFilter['location.zone'] = oldLoc.zone;
+      if (oldLoc.state) posFilter['location.state'] = oldLoc.state;
+      if (oldLoc.division) posFilter['location.division'] = oldLoc.division;
+      if (oldLoc.district) posFilter['location.district'] = oldLoc.district;
+      if (oldLoc.tehsil) posFilter['location.tehsil'] = oldLoc.tehsil;
+      if (oldLoc.pincode) posFilter['location.pincode'] = oldLoc.pincode;
+      if (oldLoc.village) posFilter['location.village'] = oldLoc.village;
+      
+      if (Object.keys(posFilter).length > 0) {
+        posUpdateOps.push({ filter: posFilter, update: updateFields });
+      }
+    });
+    
+    // Execute position updates
+    for (const op of posUpdateOps) {
+      const result = await Position.updateMany(op.filter, { $set: op.update });
+      positionsUpdated += result.modifiedCount;
+    }
+    
+    console.log(`✅ [BULK-REMAP-EXECUTE] Updated ${positionsUpdated} position(s)`);
+    
+    // Create audit log
+    const executionDuration = Date.now() - startTime;
+    
+    const auditLog = new LocationBulkAuditLog({
+      adminId: adminUsername, // Using username as ID (adjust if you have actual admin IDs)
+      adminUsername: adminUsername,
+      operationType: 'bulk-remap',
+      affectedRecordCount: updateResult.modifiedCount,
+      locationIds: locationIds,
+      updatedFields: updateFields,
+      oldValuesJson: locationsBeforeUpdate,
+      newValuesJson: locationsAfterUpdate,
+      relatedUpdates: {
+        applicationsUpdated: applicationsUpdated,
+        positionsUpdated: positionsUpdated
+      },
+      executionStatus: 'success',
+      executionDuration: executionDuration,
+      ipAddress: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('user-agent')
+    });
+    
+    await auditLog.save();
+    
+    console.log(`📝 [BULK-REMAP-EXECUTE] Audit log created: ${auditLog._id}`);
+    console.log(`⏱️  [BULK-REMAP-EXECUTE] Completed in ${executionDuration}ms`);
+    
+    res.json({
+      success: true,
+      message: `Successfully updated ${updateResult.modifiedCount} location(s)`,
+      results: {
+        locationsUpdated: updateResult.modifiedCount,
+        applicationsUpdated: applicationsUpdated,
+        positionsUpdated: positionsUpdated,
+        executionDuration: executionDuration,
+        auditLogId: auditLog._id
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ [BULK-REMAP-EXECUTE] Error:', error);
+    
+    // Try to log failed operation
+    try {
+      const failedAuditLog = new LocationBulkAuditLog({
+        adminId: req.body.adminUsername || 'unknown',
+        adminUsername: req.body.adminUsername || 'unknown',
+        operationType: 'bulk-remap',
+        affectedRecordCount: 0,
+        locationIds: req.body.locationIds || [],
+        updatedFields: req.body.updateFields || [],
+        oldValuesJson: {},
+        newValuesJson: {},
+        executionStatus: 'failed',
+        errorDetails: error.message,
+        ipAddress: req.ip || req.connection.remoteAddress,
+        userAgent: req.get('user-agent')
+      });
+      
+      await failedAuditLog.save();
+    } catch (auditError) {
+      console.error('❌ Failed to create audit log for failed operation:', auditError);
+    }
+    
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get bulk remap audit history
+router.get('/bulk-remap/history', async (req, res) => {
+  try {
+    const { page = 1, limit = 20, adminUsername } = req.query;
+    
+    const filter = {};
+    if (adminUsername) {
+      filter.adminUsername = adminUsername;
+    }
+    
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const [auditLogs, total] = await Promise.all([
+      LocationBulkAuditLog.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      LocationBulkAuditLog.countDocuments(filter)
+    ]);
+    
+    res.json({
+      success: true,
+      auditLogs,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ [BULK-REMAP-HISTORY] Error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
