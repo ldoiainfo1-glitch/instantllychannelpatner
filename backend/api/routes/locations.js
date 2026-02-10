@@ -806,6 +806,58 @@ router.get('/export-all', async (req, res) => {
   }
 });
 
+// Export locations as CSV
+router.get('/export-csv', async (req, res) => {
+  try {
+    console.log('📤 Exporting locations to CSV...');
+    
+    const locations = await Location.find({})
+      .sort({ zone: 1, state: 1, division: 1, district: 1 })
+      .lean();
+    
+    console.log(`✅ Exporting ${locations.length} locations`);
+    
+    // Build CSV content
+    const headers = ['Country', 'Zone', 'State', 'Division', 'District', 'Tehsil', 'Pincode', 'Village'];
+    const csvRows = [headers.join(',')];
+    
+    locations.forEach(loc => {
+      const row = [
+        loc.country || 'India',
+        loc.zone || '',
+        loc.state || '',
+        loc.division || '',
+        loc.district || '',
+        loc.tehsil || '',
+        loc.pincode || '',
+        loc.village || ''
+      ];
+      // Escape values that contain commas or quotes
+      const escapedRow = row.map(value => {
+        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      });
+      csvRows.push(escapedRow.join(','));
+    });
+    
+    const csv = csvRows.join('\n');
+    const filename = `locations-export-${new Date().toISOString().split('T')[0]}.csv`;
+    
+    // Set headers for file download
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+    
+    console.log(`✅ CSV download sent: ${filename}`);
+    
+  } catch (error) {
+    console.error('❌ Error exporting CSV:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Find & Replace - Preview matching locations
 router.post('/find-replace/preview', async (req, res) => {
   try {
