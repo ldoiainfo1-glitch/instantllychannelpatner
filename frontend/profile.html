@@ -2852,6 +2852,29 @@
             }
         }
 
+        // Function to capitalize area names properly
+        function capitalizeAreaName(name) {
+            if (!name) return '';
+            
+            // Handle special cases
+            const nameStr = String(name).trim();
+            
+            // If it's a pincode (6 digits), return as is
+            if (/^\d{6}$/.test(nameStr)) {
+                return nameStr;
+            }
+            
+            // For hyphenated names like "west-zone", capitalize each part
+            if (nameStr.includes('-')) {
+                return nameStr.split('-')
+                    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+                    .join('-');
+            }
+            
+            // For regular names, capitalize first letter
+            return nameStr.charAt(0).toUpperCase() + nameStr.slice(1);
+        }
+
         // Render a single commission path card
         function renderCommissionPath(path, srNo, viewType) {
             const date = new Date(path.distributionDate).toLocaleString('en-IN', { 
@@ -2912,7 +2935,7 @@
                     <tr style="${rowStyle}">
                         <td class="text-center">${levelNum}</td>
                         <td><strong>${levelName}</strong></td>
-                        <td>${h.location || ''}</td>
+                        <td>${capitalizeAreaName(h.location)}</td>
                         <td>${holderName}</td>
                         <td>${phone}</td>
                         <td class="text-end">${commPercent}</td>
@@ -3144,7 +3167,7 @@
                         <tr style="${rowStyle}">
                             <td class="text-center">${levelNum}</td>
                             <td><strong>${levelName}</strong></td>
-                            <td>${h.location || ''}</td>
+                            <td>${capitalizeAreaName(h.location)}</td>
                             <td>${holderName}${isCreator ? ' <i class="fas fa-star text-warning"></i>' : ''}</td>
                             <td>${phone}</td>
                             <td class="text-end">${commPercent}</td>
