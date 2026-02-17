@@ -23,6 +23,20 @@
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 0 !important;
+            margin: 0;
+        }
+
+        .navbar { 
+            padding: 0.75rem 0;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1030;
+        }
+        
+        .navbar-brand { 
+            margin-right: 2rem; 
         }
 
         .login-container {
@@ -32,6 +46,8 @@
             max-width: 450px;
             width: 100%;
             padding: 3rem 2rem;
+            margin: 80px auto;
+            min-height: auto;
         }
 
         .login-header {
@@ -216,12 +232,6 @@
             </div>
         </div>
     </nav>
-
-    <style>
-        .navbar { padding: 0.75rem 0; }
-        .navbar-brand { margin-right: 2rem; }
-        body { padding-top: 80px; }
-    </style>
 
     <!-- Login Container -->
         <div class="login-header">
