@@ -55,12 +55,32 @@
             showLoading();
             const token = localStorage.getItem(AUTH_TOKEN_KEY);
 
+            if (!token) {
+                showError('Please log in with your InstantllyCards mobile app credentials to view vouchers.');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 2000);
+                return;
+            }
+
             const response = await fetch(`${API_BASE_URL}/mlm/vouchers/history?limit=100`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 }
             });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    showError('Authentication failed. Please log in with your InstantllyCards mobile app credentials.');
+                    setTimeout(() => {
+                        localStorage.removeItem(AUTH_TOKEN_KEY);
+                        window.location.href = 'index.html';
+                    }, 2000);
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
             const data = await response.json();
 
@@ -73,7 +93,7 @@
             }
         } catch (error) {
             console.error('Error loading vouchers:', error);
-            showError('Error loading vouchers. Please check your connection and try again.');
+            showError('Error loading vouchers. Please check your connection and try again. Error: ' + error.message);
         } finally {
             hideLoading();
         }
