@@ -427,12 +427,20 @@
                     loadingSpinner.style.display = 'none';
                 }
             } catch (error) {
-                console.error('❌ CATCH ERROR:', error);
+                console.log('❌ CATCH ERROR:', error);
                 console.error('   - Error Name:', error.name);
                 console.error('   - Error Message:', error.message);
                 console.error('   - Error Stack:', error.stack);
                 
-                showAlert('Network error. Please check your connection and try again. Error: ' + error.message, 'danger');
+                // Check if it's a CORS error
+                if (error.message === 'Failed to fetch' && error.name === 'TypeError') {
+                    console.warn('   - This appears to be a CORS error');
+                    console.warn('   - The backend is being updated to allow requests from this domain');
+                    console.warn('   - This should be resolved within 5-10 minutes');
+                    showAlert('Backend is being updated. Please try again in 5 minutes.', 'danger');
+                } else {
+                    showAlert('Network error. Please check your connection and try again. Error: ' + error.message, 'danger');
+                }
                 
                 // Reset button state
                 loginBtn.disabled = false;
