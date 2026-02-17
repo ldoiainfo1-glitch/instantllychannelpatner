@@ -2737,24 +2737,21 @@ async function verifyToken() {
 function updateAuthUI() {
     const loginNavItem = document.getElementById('loginNavItem');
     const profileNavItem = document.getElementById('profileNavItem');
-    const vouchersNavItem = document.getElementById('vouchersNavItem');
     const userNameSpan = document.getElementById('userName');
     const userCreditsSpan = document.getElementById('userCredits');
 
     if (currentUser) {
-        // Hide login, show profile and vouchers
+        // Hide login, show profile
         loginNavItem.classList.add('d-none');
         profileNavItem.classList.remove('d-none');
-        if (vouchersNavItem) vouchersNavItem.classList.remove('d-none');
 
         // Update user info
         userNameSpan.textContent = currentUser.name;
         userCreditsSpan.textContent = currentUser.credits || 0;
     } else {
-        // Show login, hide profile and vouchers
+        // Show login, hide profile
         loginNavItem.classList.remove('d-none');
         profileNavItem.classList.add('d-none');
-        if (vouchersNavItem) vouchersNavItem.classList.add('d-none');
     }
 }
 
