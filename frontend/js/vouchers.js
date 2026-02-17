@@ -28,8 +28,8 @@
     function checkAuth() {
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
         if (!token) {
-            // Redirect to homepage - login modal will open from there
-            window.location.href = 'index.html';
+            // Redirect to voucher login page
+            window.location.href = 'voucher-login.html';
             return;
         }
     }
@@ -56,10 +56,10 @@
             const token = localStorage.getItem(AUTH_TOKEN_KEY);
 
             if (!token) {
-                showError('Please log in with your InstantllyCards mobile app credentials to view vouchers.');
+                showError('Please log in to view vouchers.');
                 setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 2000);
+                    window.location.href = 'voucher-login.html';
+                }, 1500);
                 return;
             }
 
@@ -72,11 +72,11 @@
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    showError('Authentication failed. Please log in with your InstantllyCards mobile app credentials.');
+                    showError('Session expired. Please log in again.');
                     setTimeout(() => {
                         localStorage.removeItem(AUTH_TOKEN_KEY);
-                        window.location.href = 'index.html';
-                    }, 2000);
+                        window.location.href = 'voucher-login.html';
+                    }, 1500);
                     return;
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -93,7 +93,7 @@
             }
         } catch (error) {
             console.error('Error loading vouchers:', error);
-            showError('Error loading vouchers. Please check your connection and try again. Error: ' + error.message);
+            showError('Error loading vouchers. Please check your connection and try again.');
         } finally {
             hideLoading();
         }
