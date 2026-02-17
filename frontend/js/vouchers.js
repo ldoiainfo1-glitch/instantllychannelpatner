@@ -28,7 +28,8 @@
     function checkAuth() {
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
         if (!token) {
-            window.location.href = 'login.html';
+            // Redirect to homepage - login modal will open from there
+            window.location.href = 'index.html';
             return;
         }
     }
