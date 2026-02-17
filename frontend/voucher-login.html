@@ -189,7 +189,41 @@
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top" style="background-color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); z-index: 1000;">
+        <div class="container">
+            <a class="navbar-brand fw-bold d-flex align-items-center" href="index.html" style="text-decoration: none;">
+                <img src="images/logo.jpeg" alt="Instantlly Cards Logo" height="40" class="me-2" style="border-radius: 4px;">
+                <div style="font-size: 1.2rem; font-weight: 700; color: #3b82f6;">Instantlly Channel Partner</div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html#positions">Positions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="voucher-login.html">
+                            <i class="fas fa-ticket-alt me-1"></i>Vouchers
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <style>
+        .navbar { padding: 0.75rem 0; }
+        .navbar-brand { margin-right: 2rem; }
+        body { padding-top: 80px; }
+    </style>
+
+    <!-- Login Container -->
         <div class="login-header">
             <h1>
                 <i class="fas fa-ticket-alt"></i>
