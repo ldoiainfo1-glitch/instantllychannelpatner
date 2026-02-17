@@ -16,6 +16,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
@@ -23,20 +34,30 @@
             align-items: center;
             justify-content: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding-top: 0 !important;
-            margin: 0;
         }
 
         .navbar { 
             padding: 0.75rem 0;
             position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             width: 100%;
             z-index: 1030;
         }
         
         .navbar-brand { 
             margin-right: 2rem; 
+        }
+
+        .login-wrapper {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 80px;
+            padding-bottom: 40px;
         }
 
         .login-container {
@@ -46,8 +67,7 @@
             max-width: 450px;
             width: 100%;
             padding: 3rem 2rem;
-            margin: 80px auto;
-            min-height: auto;
+            margin: 0 auto;
         }
 
         .login-header {
@@ -233,14 +253,15 @@
         </div>
     </nav>
 
-    <!-- Login Container -->
-        <div class="login-header">
-            <h1>
-                <i class="fas fa-ticket-alt"></i>
-                My Vouchers
-            </h1>
-            <p>Sign in with your InstantllyCards mobile app credentials</p>
-        </div>
+    <div class="login-wrapper">
+        <div class="login-container">
+            <div class="login-header">
+                <h1>
+                    <i class="fas fa-ticket-alt"></i>
+                    My Vouchers
+                </h1>
+                <p>Sign in with your InstantllyCards mobile app credentials</p>
+            </div>
 
         <div id="alertContainer"></div>
 
@@ -342,28 +363,61 @@
                 btnText.style.display = 'none';
                 loadingSpinner.style.display = 'inline';
 
-                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                console.log('=== VOUCHER LOGIN DEBUG ===');
+                console.log('1. Starting login request...');
+                console.log('   - Phone:', phone);
+                console.log('   - Password: ****');
+                console.log('   - API Base URL:', API_BASE_URL);
+                console.log('   - Login Endpoint:', `${API_BASE_URL}/auth/login`);
+
+                const loginUrl = `${API_BASE_URL}/auth/login`;
+                const loginPayload = { phone, password };
+
+                console.log('2. Request Details:');
+                console.log('   - Method: POST');
+                console.log('   - URL:', loginUrl);
+                console.log('   - Payload:', JSON.stringify(loginPayload));
+                console.log('   - Headers: Content-Type: application/json');
+
+                const response = await fetch(loginUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ phone, password })
+                    body: JSON.stringify(loginPayload)
                 });
+
+                console.log('3. Response received:');
+                console.log('   - Status:', response.status);
+                console.log('   - Status Text:', response.statusText);
+                console.log('   - OK:', response.ok);
 
                 const data = await response.json();
 
+                console.log('4. Response Data:', data);
+
                 if (response.ok && data.token) {
+                    console.log('5. ✅ LOGIN SUCCESSFUL!');
+                    console.log('   - Token received:', data.token.substring(0, 20) + '...');
+                    
                     // Save token
                     localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+                    console.log('   - Token saved to localStorage');
                     
                     // Show success message
                     showAlert('Login successful! Redirecting to vouchers...', 'success');
                     
                     // Redirect to vouchers page after 1 second
                     setTimeout(() => {
+                        console.log('   - Redirecting to vouchers.html');
                         window.location.href = 'vouchers.html';
                     }, 1000);
                 } else {
+                    console.log('5. ❌ LOGIN FAILED!');
+                    console.log('   - Response OK:', response.ok);
+                    console.log('   - Has Token:', !!data.token);
+                    console.log('   - Error Message:', data.message || 'Unknown error');
+                    
                     // Login failed
                     showAlert(data.message || 'Login failed. Please check your credentials.', 'danger');
                     
@@ -373,8 +427,12 @@
                     loadingSpinner.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                showAlert('Network error. Please check your connection and try again.', 'danger');
+                console.error('❌ CATCH ERROR:', error);
+                console.error('   - Error Name:', error.name);
+                console.error('   - Error Message:', error.message);
+                console.error('   - Error Stack:', error.stack);
+                
+                showAlert('Network error. Please check your connection and try again. Error: ' + error.message, 'danger');
                 
                 // Reset button state
                 loginBtn.disabled = false;
@@ -404,5 +462,7 @@
             }
         }
     </script>
+        </div>
+    </div>
 </body>
 </html>
