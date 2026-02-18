@@ -17,6 +17,22 @@
         sent: []
     };
 
+    // Hardcoded admin voucher — always shown (mirrors InstantllyCards mobile app behaviour)
+    // This represents a voucher sent by admin; MRP ₹6000, 40% off → pay ₹3600
+    const HARDCODED_VOUCHER = {
+        _id: 'hardcoded-voucher-1',
+        voucherNumber: 'INS-001',
+        companyName: 'Instantlly',
+        amount: 3600,
+        MRP: 6000,
+        discountPercentage: 40,
+        issueDate: new Date().toISOString(),
+        expiryDate: new Date('2026-08-30').toISOString(),
+        redeemedStatus: 'unredeemed',
+        source: 'admin',
+        description: 'Instantlly Premium Membership Voucher'
+    };
+
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         checkAuth();
@@ -89,22 +105,47 @@
                 renderVouchers();
                 updateStatistics(data.history);
             } else {
-                showError('Failed to load vouchers: ' + (data.message || 'Unknown error'));
+                // Even when API fails, show the hardcoded voucher (same as mobile app)
+                showFallbackVouchers();
+                showError('Could not sync vouchers: ' + (data.message || 'Unknown error'));
             }
         } catch (error) {
             console.error('Error loading vouchers:', error);
-            showError('Error loading vouchers. Please check your connection and try again.');
+            // Even on network error, show the hardcoded voucher (same as mobile app)
+            showFallbackVouchers();
+            showError('Could not reach server — showing cached vouchers.');
         } finally {
             hideLoading();
         }
     }
 
+    // Show hardcoded voucher only (fallback when API unavailable — mirrors mobile app)
+    function showFallbackVouchers() {
+        vouchersData.all = [HARDCODED_VOUCHER];
+        vouchersData.purchased = [];
+        vouchersData.received = [];
+        vouchersData.sent = [];
+        renderVouchers();
+        // Update counts
+        document.getElementById('totalVouchersCount').textContent = '1';
+        document.getElementById('purchasedCount').textContent = '0';
+        document.getElementById('receivedCount').textContent = '0';
+        document.getElementById('sentCount').textContent = '0';
+        document.getElementById('allBadge').textContent = '1';
+        document.getElementById('purchasedBadge').textContent = '0';
+        document.getElementById('receivedBadge').textContent = '0';
+        document.getElementById('sentBadge').textContent = '0';
+    }
+
     // Update Vouchers Data
     function updateVouchersData(history) {
-        vouchersData.all = history.all || [];
+        // Always prepend the hardcoded voucher (same as mobile app)
+        // Filter out any duplicate in case the API ever returns it too
+        const apiAll = (history.all || []).filter(v => v._id !== HARDCODED_VOUCHER._id);
+        vouchersData.all = [HARDCODED_VOUCHER, ...apiAll];
         
-        // Filter purchased vouchers
-        vouchersData.purchased = vouchersData.all.filter(v => 
+        // Filter purchased vouchers (hardcoded is 'admin' source, so not in purchased tab)
+        vouchersData.purchased = apiAll.filter(v => 
             v.source === 'purchase'
         );
         
@@ -134,7 +175,8 @@
 
     // Update Statistics
     function updateStatistics(history) {
-        const totalCount = history.all?.length || 0;
+        // Use vouchersData.all.length so the hardcoded voucher is counted
+        const totalCount = vouchersData.all.length;
         const purchasedCount = history.purchased || 0;
         const receivedCount = history.received || 0;
         const sentCount = history.sent || 0;
