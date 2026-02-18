@@ -166,12 +166,12 @@
         if (!container) return;
         
         if (!vouchers || vouchers.length === 0) {
+            const labels = { all: 'All', purchased: 'Purchased', received: 'Received', sent: 'Sent' };
             container.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-state-icon">
-                        <i class="fas fa-ticket-alt"></i>
-                    </div>
-                    <p class="empty-state-text">No ${type} vouchers found</p>
+                    <div class="empty-icon-wrap"><i class="fas fa-ticket-alt"></i></div>
+                    <div class="empty-title">No ${labels[type] || type} vouchers yet</div>
+                    <div class="empty-sub">Your ${type} vouchers will appear here once available</div>
                 </div>
             `;
             return;
@@ -197,99 +197,48 @@
     // Create Voucher Card
     function createVoucherCard(voucher, listType) {
         const status = getVoucherStatus(voucher);
-        const statusClass = `status-${status.toLowerCase()}`;
+        const statusPill = status === 'Active' ? 'status-unredeemed' :
+                           status === 'Redeemed' ? 'status-redeemed' : 'status-expired';
         const displayAmount = voucher.amount || voucher.MRP || 1200;
-        const discountPercent = voucher.discountPercentage || 40;
-        const mrp = voucher.MRP || 6000;
+        const discountPercent = voucher.discountPercentage || 0;
+        const mrp = voucher.MRP || 0;
+        const sourceClass = `source-${voucher.source || 'purchase'}`;
+        const sourceLabel = voucher.source ? (voucher.source.charAt(0).toUpperCase() + voucher.source.slice(1)) : 'Purchase';
 
-        const canTransfer = voucher.redeemedStatus === 'unredeemed' && 
-                          new Date(voucher.expiryDate) > new Date() &&
-                          listType !== 'sent';
+        const canTransfer = voucher.redeemedStatus === 'unredeemed' &&
+                            new Date(voucher.expiryDate) > new Date() &&
+                            listType !== 'sent';
+        const canRedeem = voucher.redeemedStatus === 'unredeemed' &&
+                          new Date(voucher.expiryDate) > new Date();
 
         const transferInfo = getTransferInfo(voucher, listType);
 
         return `
-            <div class="voucher-card">
-                <div class="voucher-header-section">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="voucher-number">${escapeHtml(voucher.voucherNumber)}</div>
-                            <div style="font-size: 0.875rem; opacity: 0.9; margin-top: 0.5rem;">
-                                ${escapeHtml(voucher.companyName || 'Instantlly')}
-                            </div>
-                        </div>
-                        <span class="voucher-status-badge ${statusClass}">
-                            ${status}
-                        </span>
+            <div class="voucher-ticket">
+                <div class="voucher-ticket-top">
+                    <div class="biz-logo"><i class="fas fa-bolt"></i></div>
+                    <div class="voucher-ticket-info">
+                        <div class="voucher-biz-name">${escapeHtml(voucher.companyName || 'Instantlly')}</div>
+                        <div class="voucher-number-display">#${escapeHtml(voucher.voucherNumber)}</div>
+                        ${transferInfo ? `<div style="font-size:0.75rem;color:#6b7280;margin-top:3px;"><i class="fas fa-info-circle" style="font-size:0.7rem;"></i> ${escapeHtml(transferInfo)}</div>` : ''}
                     </div>
+                    <div class="voucher-amount-wrap">
+                        <div class="voucher-amount-value">₹${Number(displayAmount).toLocaleString('en-IN')}</div>
+                        <div class="voucher-amount-label">${discountPercent > 0 ? `MRP ₹${Number(mrp).toLocaleString('en-IN')}` : 'Value'}</div>
+                    </div>
+                    ${discountPercent > 0 ? `<span class="discount-badge">-${discountPercent}%</span>` : ''}
                 </div>
-                <div class="voucher-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <div class="voucher-detail-label">Voucher Amount</div>
-                            <div class="voucher-amount">₹${displayAmount.toLocaleString()}</div>
-                            ${discountPercent > 0 ? `
-                                <div style="font-size: 0.875rem; color: #10b981; font-weight: 600;">
-                                    ${discountPercent}% OFF (MRP: ₹${mrp.toLocaleString()})
-                                </div>
-                            ` : ''}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <div class="voucher-detail-label">Expiry Date</div>
-                            <div class="voucher-detail-value">
-                                ${formatDate(voucher.expiryDate)}
-                            </div>
-                        </div>
+                <div class="voucher-ticket-bottom">
+                    <div class="voucher-meta">
+                        <span class="voucher-meta-item"><i class="fas fa-calendar"></i>${formatDate(voucher.issueDate)}</span>
+                        <span class="voucher-validity"><i class="fas fa-star"></i>Valid till ${formatDate(voucher.expiryDate)}</span>
+                        <span class="source-tag ${sourceClass}">${sourceLabel}</span>
+                        <span class="voucher-status-pill ${statusPill}">${status}</span>
                     </div>
-
-                    ${transferInfo ? `
-                        <div class="alert alert-info mb-3" style="font-size: 0.875rem;">
-                            <i class="fas fa-info-circle me-1"></i> ${escapeHtml(transferInfo)}
-                        </div>
-                    ` : ''}
-
-                    ${voucher.description ? `
-                        <div class="mb-3">
-                            <div class="voucher-detail-label">Description</div>
-                            <div class="voucher-detail-value" style="font-size: 0.875rem;">
-                                ${escapeHtml(voucher.description)}
-                            </div>
-                        </div>
-                    ` : ''}
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="voucher-detail-label">Issue Date</div>
-                            <div class="voucher-detail-value" style="font-size: 0.875rem;">
-                                ${formatDate(voucher.issueDate)}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="voucher-detail-label">Source</div>
-                            <div class="voucher-detail-value" style="font-size: 0.875rem; text-transform: capitalize;">
-                                <i class="fas ${getSourceIcon(voucher.source)} me-1"></i>
-                                ${voucher.source}
-                            </div>
-                        </div>
-                        ${voucher.redeemedAt ? `
-                            <div class="col-md-4">
-                                <div class="voucher-detail-label">Redeemed At</div>
-                                <div class="voucher-detail-value" style="font-size: 0.875rem;">
-                                    ${formatDate(voucher.redeemedAt)}
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-primary flex-fill" id="detail-${voucher._id}">
-                            <i class="fas fa-eye me-1"></i>View Details
-                        </button>
-                        ${canTransfer ? `
-                            <button class="btn btn-sm btn-transfer flex-fill" id="transfer-${voucher._id}">
-                                <i class="fas fa-paper-plane me-1"></i>Transfer
-                            </button>
-                        ` : ''}
+                    <div class="voucher-ticket-actions">
+                        <button class="btn-view-v" id="detail-${voucher._id}">Details</button>
+                        ${canTransfer ? `<button class="btn-transfer-v" id="transfer-${voucher._id}"><i class="fas fa-paper-plane" style="font-size:0.75rem;"></i> Transfer</button>` : ''}
+                        <button class="btn-redeem" ${canRedeem ? '' : 'disabled'}>${status === 'Redeemed' ? 'Redeemed' : status === 'Expired' ? 'Expired' : 'Redeem →'}</button>
                     </div>
                 </div>
             </div>
@@ -368,7 +317,7 @@
         }
 
         this.disabled = true;
-        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Transferring...';
+this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Transferring…';
 
         try {
             const token = localStorage.getItem(AUTH_TOKEN_KEY);
@@ -397,7 +346,7 @@
             errorDiv.classList.remove('d-none');
         } finally {
             this.disabled = false;
-            this.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Transfer Voucher';
+            this.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Transfer';
         }
     }
 
@@ -405,85 +354,69 @@
     function openDetailModal(voucher) {
         const content = document.getElementById('voucherDetailContent');
         const status = getVoucherStatus(voucher);
-        const statusClass = `status-${status.toLowerCase()}`;
-        
+        const statusPill = status === 'Active' ? 'status-unredeemed' :
+                           status === 'Redeemed' ? 'status-redeemed' : 'status-expired';
+        const displayAmount = voucher.amount || voucher.MRP || 1200;
+        const discountPercent = voucher.discountPercentage || 0;
+        const mrp = voucher.MRP || 0;
+
+        const row = (label, value) => `
+            <div style="margin-bottom:1rem;">
+                <div style="font-size:0.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px;">${label}</div>
+                <div style="font-size:0.95rem;font-weight:600;color:#111;">${value}</div>
+            </div>
+        `;
+
         content.innerHTML = `
-            <div class="voucher-header-section mb-4">
-                <div class="d-flex justify-content-between align-items-start">
+            <div style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden;">
+                <div style="position:absolute;inset:0;background:radial-gradient(circle at 80% 50%,rgba(255,255,255,0.12),transparent);pointer-events:none;"></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
                     <div>
-                        <div class="voucher-number">${escapeHtml(voucher.voucherNumber)}</div>
-                        <div style="font-size: 1rem; opacity: 0.9; margin-top: 0.5rem;">
-                            ${escapeHtml(voucher.companyName || 'Instantlly')}
-                        </div>
+                        <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);margin-bottom:3px;">${escapeHtml(voucher.companyName || 'Instantlly')}</div>
+                        <div style="font-family:'Courier New',monospace;font-size:1.1rem;font-weight:700;color:#fff;">#${escapeHtml(voucher.voucherNumber)}</div>
                     </div>
-                    <span class="voucher-status-badge ${statusClass}">
-                        ${status}
-                    </span>
+                    <div style="text-align:right;">
+                        <div style="font-size:1.9rem;font-weight:800;color:#fff;line-height:1;">₹${Number(displayAmount).toLocaleString('en-IN')}</div>
+                        ${discountPercent > 0 ? `<div style="font-size:0.75rem;color:rgba(255,255,255,0.8);">${discountPercent}% OFF · MRP ₹${Number(mrp).toLocaleString('en-IN')}</div>` : ''}
+                    </div>
+                </div>
+                <div style="margin-top:0.75rem;">
+                    <span class="voucher-status-pill ${statusPill}">${status}</span>
+                    <span class="source-tag source-${voucher.source || 'purchase'}" style="margin-left:0.5rem;">${voucher.source || 'purchase'}</span>
                 </div>
             </div>
 
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="voucher-detail-label">Voucher Amount</div>
-                    <div class="voucher-amount">₹${(voucher.amount || voucher.MRP || 1200).toLocaleString()}</div>
-                    ${voucher.discountPercentage ? `
-                        <div style="font-size: 0.875rem; color: #10b981; font-weight: 600;">
-                            ${voucher.discountPercentage}% OFF (MRP: ₹${(voucher.MRP || 6000).toLocaleString()})
-                        </div>
-                    ` : ''}
-                </div>
-                <div class="col-md-6">
-                    <div class="voucher-detail-label">Validity</div>
-                    <div class="voucher-detail-value">
-                        ${escapeHtml(voucher.validity || `Valid till ${formatDate(voucher.expiryDate)}`)}
-                    </div>
-                </div>
+            <div class="row">
+                <div class="col-6">${row('Issue Date', formatDate(voucher.issueDate))}</div>
+                <div class="col-6">${row('Expiry Date', formatDate(voucher.expiryDate))}</div>
+                ${voucher.redeemedAt ? `<div class="col-6">${row('Redeemed On', formatDate(voucher.redeemedAt))}</div>` : ''}
+                <div class="col-6">${row('Source', `<i class="fas ${getSourceIcon(voucher.source)} me-1" style="font-size:0.85rem;"></i>${voucher.source || 'N/A'}`)}</div>
             </div>
 
             ${voucher.description ? `
-                <div class="mb-4">
-                    <div class="voucher-detail-label">Description</div>
-                    <div class="voucher-detail-value">${escapeHtml(voucher.description)}</div>
+                <div style="background:#f9fafb;border-radius:10px;padding:1rem;margin-top:0.5rem;">
+                    <div style="font-size:0.72rem;color:#9ca3af;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;">Description</div>
+                    <div style="font-size:0.9rem;color:#374151;">${escapeHtml(voucher.description)}</div>
                 </div>
             ` : ''}
 
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    <div class="voucher-detail-label">Issue Date</div>
-                    <div class="voucher-detail-value">${formatDate(voucher.issueDate)}</div>
-                </div>
-                <div class="col-md-4">
-                    <div class="voucher-detail-label">Expiry Date</div>
-                    <div class="voucher-detail-value">${formatDate(voucher.expiryDate)}</div>
-                </div>
-                <div class="col-md-4">
-                    <div class="voucher-detail-label">Source</div>
-                    <div class="voucher-detail-value" style="text-transform: capitalize;">
-                        <i class="fas ${getSourceIcon(voucher.source)} me-1"></i>
-                        ${voucher.source}
-                    </div>
-                </div>
-            </div>
-
             ${voucher.transferHistory && voucher.transferHistory.length > 0 ? `
-                <div class="mb-4">
-                    <div class="voucher-detail-label mb-2">Transfer History</div>
-                    ${voucher.transferHistory.map(transfer => `
-                        <div class="transfer-history-item">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <strong>${escapeHtml(typeof transfer.from === 'object' ? transfer.from.name : 'Unknown')}</strong>
-                                    <span class="transfer-arrow">→</span>
-                                    <strong>${escapeHtml(typeof transfer.to === 'object' ? transfer.to.name : 'Unknown')}</strong>
-                                </div>
-                                <small class="text-muted">${formatDate(transfer.transferredAt)}</small>
+                <div style="margin-top:1.25rem;">
+                    <div style="font-size:0.78rem;font-weight:700;color:#374151;margin-bottom:0.75rem;"><i class="fas fa-history me-1" style="color:#4f46e5;"></i> Transfer History</div>
+                    ${voucher.transferHistory.map(t => `
+                        <div style="background:#f9fafb;border-radius:10px;padding:0.75rem 1rem;margin-bottom:0.5rem;display:flex;justify-content:space-between;align-items:center;">
+                            <div style="font-size:0.85rem;">
+                                <strong>${escapeHtml(typeof t.from === 'object' ? t.from.name || 'Unknown' : 'Unknown')}</strong>
+                                <span style="color:#4f46e5;font-weight:700;margin:0 0.4rem;">→</span>
+                                <strong>${escapeHtml(typeof t.to === 'object' ? t.to.name || 'Unknown' : 'Unknown')}</strong>
                             </div>
+                            <small style="color:#9ca3af;">${formatDate(t.transferredAt)}</small>
                         </div>
                     `).join('')}
                 </div>
             ` : ''}
         `;
-        
+
         const modal = new bootstrap.Modal(document.getElementById('voucherDetailModal'));
         modal.show();
     }
@@ -494,10 +427,9 @@
             const container = document.getElementById(`${type}VouchersList`);
             if (container) {
                 container.innerHTML = `
-                    <div class="loading-spinner">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
+                    <div class="loading-overlay">
+                        <div class="spinner-ring"></div>
+                        <div style="font-size:0.9rem;color:#9ca3af;font-weight:500;">Loading vouchers…</div>
                     </div>
                 `;
             }
@@ -506,17 +438,19 @@
 
     // Hide Loading
     function hideLoading() {
-        // Loading is hidden when content is rendered
+        // Content render replaces the loading overlay automatically
     }
 
     // Show Error
     function showError(message) {
-        alert('Error: ' + message);
+        if (window.showToast) { window.showToast(message, 'error'); }
+        else { console.error(message); }
     }
 
     // Show Success
     function showSuccess(message) {
-        alert('Success: ' + message);
+        if (window.showToast) { window.showToast(message, 'success'); }
+        else { console.log(message); }
     }
 
     // Escape HTML to prevent XSS

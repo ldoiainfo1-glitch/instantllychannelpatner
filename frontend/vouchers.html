@@ -6,101 +6,527 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>My Vouchers - Instantlly Channel Partner</title>
+    <title>My Vouchers - Instantlly</title>
     <link rel="icon" href="images/logo.jpeg" type="image/jpeg">
-    
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Custom CSS -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     
     <style>
+        * { font-family: 'Inter', sans-serif; }
+
         body {
-            padding-top: 70px;
-            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            padding-top: 72px;
+            background: #f5f6fa;
             min-height: 100vh;
         }
 
-        .vouchers-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem 0;
-            border-radius: 0 0 20px 20px;
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
-            margin-bottom: 2rem;
+        /* ─── NAVBAR ─── */
+        .top-navbar {
+            background: #fff;
+            border-bottom: 1px solid #ececec;
+            padding: 0 1.5rem;
+            height: 72px;
         }
-
-        .stat-card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            overflow: hidden;
-            background: white;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid;
+        .brand-logo { height: 38px; border-radius: 8px; }
+        .brand-title { font-size: 1.1rem; font-weight: 700; color: #111; }
+        .brand-sub { font-size: 0.7rem; color: #888; }
+        .nav-link-item {
+            font-size: 0.88rem; font-weight: 500; color: #555;
+            text-decoration: none; padding: 0.4rem 0.8rem;
+            border-radius: 8px; transition: all 0.2s;
         }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        .nav-link-item:hover { background: #f0f4ff; color: #4f46e5; }
+        .nav-link-item.active-nav { color: #4f46e5; }
+        .btn-logout {
+            background: #fff0f0; color: #e53e3e; border: none;
+            font-size: 0.85rem; font-weight: 600; padding: 0.45rem 1rem;
+            border-radius: 8px; transition: all 0.2s;
         }
+        .btn-logout:hover { background: #ffe0e0; color: #c53030; }
 
-        .stat-card.total { border-left-color: #3b82f6; }
-        .stat-card.purchased { border-left-color: #10b981; }
-        .stat-card.received { border-left-color: #06b6d4; }
-        .stat-card.sent { border-left-color: #f59e0b; }
-
-        .stat-card .card-body {
-            padding: 1.5rem;
-        }
-
-        .stat-icon {
-            font-size: 2.5rem;
-            opacity: 0.2;
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: #6b7280;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #111827;
-        }
-
-        .voucher-card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            overflow: hidden;
-            background: white;
-            margin-bottom: 1.5rem;
-        }
-
-        .voucher-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
-
-        .voucher-header-section {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            padding: 1.5rem;
+        /* ─── HERO BANNER ─── */
+        .hero-banner {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+            padding: 2.5rem 0 3.5rem;
             position: relative;
             overflow: hidden;
         }
+        .hero-banner::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        .hero-banner::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; right: 0; height: 40px;
+            background: #f5f6fa;
+            clip-path: ellipse(55% 100% at 50% 100%);
+        }
+        .hero-icon-wrap {
+            width: 52px; height: 52px; border-radius: 14px;
+            background: rgba(255,255,255,0.2);
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; color: #fff; margin-bottom: 1rem;
+        }
+        .hero-title { font-size: 1.9rem; font-weight: 800; color: #fff; margin-bottom: 0.3rem; }
+        .hero-sub { font-size: 0.95rem; color: rgba(255,255,255,0.8); }
 
-        .voucher-header-section::before {
+        /* ─── STAT CARDS ─── */
+        .stats-row { margin-top: -1.5rem; position: relative; z-index: 2; }
+        .stat-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 1.3rem 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+            border: 1px solid rgba(0,0,0,0.04);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; gap: 1rem;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+        .stat-icon-wrap {
+            width: 50px; height: 50px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0;
+        }
+        .stat-icon-wrap.blue   { background: #eff6ff; color: #3b82f6; }
+        .stat-icon-wrap.green  { background: #f0fdf4; color: #22c55e; }
+        .stat-icon-wrap.cyan   { background: #ecfeff; color: #06b6d4; }
+        .stat-icon-wrap.amber  { background: #fffbeb; color: #f59e0b; }
+        .stat-label { font-size: 0.78rem; color: #9ca3af; font-weight: 500; margin-bottom: 2px; }
+        .stat-value { font-size: 1.9rem; font-weight: 800; color: #111; line-height: 1; }
+
+        /* ─── SECTION CARD ─── */
+        .section-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+        .section-header {
+            padding: 1.25rem 1.75rem;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .section-title { font-size: 1rem; font-weight: 700; color: #111; margin: 0; }
+        .btn-refresh {
+            background: #f0f4ff; color: #4f46e5; border: none;
+            font-size: 0.82rem; font-weight: 600; padding: 0.45rem 1rem;
+            border-radius: 8px; transition: all 0.2s;
+        }
+        .btn-refresh:hover { background: #e0e7ff; color: #3730a3; }
+
+        /* ─── TABS ─── */
+        .voucher-tabs {
+            display: flex; gap: 0;
+            padding: 0 1.75rem;
+            border-bottom: 2px solid #f3f4f6;
+            background: #fafafa;
+        }
+        .vtab-btn {
+            background: none; border: none;
+            padding: 1rem 1.25rem;
+            font-size: 0.85rem; font-weight: 500; color: #9ca3af;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem;
+        }
+        .vtab-btn:hover { color: #4f46e5; }
+        .vtab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; font-weight: 600; }
+        .vtab-badge {
+            font-size: 0.7rem; font-weight: 700;
+            padding: 1px 7px; border-radius: 20px; min-width: 20px; text-align: center;
+        }
+        .vtab-badge.all     { background: #e5e7eb; color: #374151; }
+        .vtab-badge.bought  { background: #d1fae5; color: #065f46; }
+        .vtab-badge.recv    { background: #cffafe; color: #164e63; }
+        .vtab-badge.sent    { background: #fef3c7; color: #92400e; }
+        .vtab-pane { display: none; padding: 1.75rem; }
+        .vtab-pane.active   { display: block; }
+
+        /* ─── VOUCHER TICKET CARD ─── */
+        .voucher-ticket {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            border: 1px solid #f0f0f0;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 1rem;
+        }
+        .voucher-ticket:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+        .voucher-ticket-top {
+            padding: 1.25rem 1.5rem;
+            display: flex; align-items: center; gap: 1rem;
+            border-bottom: 2px dashed #f0f0f0;
+            position: relative;
+        }
+        .biz-logo {
+            width: 52px; height: 52px; border-radius: 12px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1.5rem; flex-shrink: 0;
+        }
+        .biz-logo img { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; }
+        .voucher-ticket-info { flex: 1; min-width: 0; }
+        .voucher-biz-name { font-size: 1rem; font-weight: 700; color: #111; margin-bottom: 2px; }
+        .voucher-number-display {
+            font-size: 0.78rem; color: #9ca3af;
+            font-family: 'Courier New', monospace; font-weight: 500;
+        }
+        .voucher-amount-wrap { text-align: right; flex-shrink: 0; }
+        .voucher-amount-value {
+            font-size: 1.7rem; font-weight: 800; color: #e53e3e; line-height: 1;
+        }
+        .voucher-amount-label { font-size: 0.7rem; color: #9ca3af; font-weight: 500; }
+        .discount-badge {
+            position: absolute; top: 14px; right: 14px;
+            background: #e53e3e; color: #fff;
+            font-size: 0.75rem; font-weight: 700;
+            padding: 4px 10px; border-radius: 20px;
+        }
+        /* circle cuts for ticket effect */
+        .voucher-ticket-top::before,
+        .voucher-ticket-top::after {
+            content: '';
+            position: absolute; bottom: -10px;
+            width: 20px; height: 20px;
+            background: #f5f6fa; border-radius: 50%;
+            border: 1px solid #f0f0f0;
+        }
+        .voucher-ticket-top::before { left: -10px; }
+        .voucher-ticket-top::after  { right: -10px; }
+
+        .voucher-ticket-bottom {
+            padding: 1rem 1.5rem;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 0.75rem;
+        }
+        .voucher-meta { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
+        .voucher-meta-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: #6b7280; }
+        .voucher-meta-item i { font-size: 0.75rem; color: #9ca3af; }
+        .voucher-validity { font-size: 0.78rem; font-weight: 600; color: #d97706; }
+        .voucher-validity i { margin-right: 3px; }
+        .voucher-status-pill {
+            font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+        }
+        .status-unredeemed { background: #d1fae5; color: #065f46; }
+        .status-redeemed   { background: #e5e7eb; color: #374151; }
+        .status-expired    { background: #fee2e2; color: #991b1b; }
+
+        .voucher-ticket-actions { display: flex; gap: 0.5rem; align-items: center; }
+        .btn-redeem {
+            background: #111; color: #fff; border: none;
+            font-size: 0.82rem; font-weight: 600;
+            padding: 0.5rem 1.2rem; border-radius: 10px;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .btn-redeem:hover { background: #333; }
+        .btn-redeem:disabled { background: #9ca3af; cursor: not-allowed; }
+        .btn-transfer-v {
+            background: #ede9fe; color: #4f46e5; border: none;
+            font-size: 0.82rem; font-weight: 600;
+            padding: 0.5rem 1.2rem; border-radius: 10px;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .btn-transfer-v:hover { background: #ddd6fe; }
+        .btn-view-v {
+            background: #f3f4f6; color: #374151; border: none;
+            font-size: 0.82rem; font-weight: 600;
+            padding: 0.5rem 0.9rem; border-radius: 10px;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .btn-view-v:hover { background: #e5e7eb; }
+
+        /* ─── SOURCE TAG ─── */
+        .source-tag {
+            font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
+            border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em;
+        }
+        .source-purchase { background: #dbeafe; color: #1e40af; }
+        .source-transfer { background: #f3e8ff; color: #6d28d9; }
+        .source-admin    { background: #d1fae5; color: #065f46; }
+
+        /* ─── EMPTY STATE ─── */
+        .empty-state {
+            text-align: center; padding: 4rem 2rem;
+        }
+        .empty-icon-wrap {
+            width: 80px; height: 80px; border-radius: 24px;
+            background: #f3f4f6; color: #d1d5db;
+            font-size: 2rem; display: inline-flex;
+            align-items: center; justify-content: center; margin-bottom: 1.25rem;
+        }
+        .empty-title { font-size: 1.1rem; font-weight: 700; color: #374151; margin-bottom: 0.4rem; }
+        .empty-sub   { font-size: 0.88rem; color: #9ca3af; }
+
+        /* ─── LOADING ─── */
+        .loading-overlay {
+            text-align: center; padding: 3rem;
+        }
+        .spinner-ring {
+            width: 42px; height: 42px;
+            border: 3px solid #e5e7eb;
+            border-top-color: #4f46e5;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block; margin-bottom: 1rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── MODALS ─── */
+        .modal-content { border: none; border-radius: 20px; }
+        .modal-header {
+            border-bottom: 1px solid #f3f4f6; padding: 1.25rem 1.5rem;
+        }
+        .modal-title { font-size: 1rem; font-weight: 700; }
+        .modal-body  { padding: 1.5rem; }
+        .modal-footer { border-top: 1px solid #f3f4f6; padding: 1rem 1.5rem; }
+        .form-label { font-size: 0.85rem; font-weight: 600; color: #374151; }
+        .form-control {
+            border-radius: 10px; border: 1.5px solid #e5e7eb;
+            font-size: 0.9rem; padding: 0.6rem 1rem;
+        }
+        .form-control:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+        .btn-primary-modal {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none; color: #fff;
+            font-weight: 600; border-radius: 10px;
+            padding: 0.55rem 1.4rem; font-size: 0.9rem;
+        }
+        .btn-primary-modal:hover { opacity: 0.9; color: #fff; }
+        .btn-secondary-modal {
+            background: #f3f4f6; border: none; color: #374151;
+            font-weight: 600; border-radius: 10px;
+            padding: 0.55rem 1.4rem; font-size: 0.9rem;
+        }
+
+        /* ─── ALERTS ─── */
+        .toast-bar {
+            position: fixed; top: 85px; right: 1.5rem; z-index: 9999;
+            padding: 0.85rem 1.5rem; border-radius: 12px;
+            font-weight: 600; font-size: 0.9rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            transform: translateY(-20px); opacity: 0;
+            transition: all 0.3s; pointer-events: none;
+        }
+        .toast-bar.show { transform: translateY(0); opacity: 1; }
+        .toast-bar.success { background: #d1fae5; color: #065f46; }
+        .toast-bar.error   { background: #fee2e2; color: #991b1b; }
+
+        @media (max-width: 576px) {
+            .hero-title { font-size: 1.5rem; }
+            .stat-card { padding: 1rem; }
+            .stat-value { font-size: 1.5rem; }
+            .voucher-ticket-actions { width: 100%; justify-content: flex-end; }
+            .vtab-btn { padding: 0.75rem 0.75rem; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Toast -->
+    <div class="toast-bar" id="toastBar"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar top-navbar fixed-top shadow-sm">
+        <div class="container-fluid d-flex align-items-center justify-content-between">
+            <a class="d-flex align-items-center gap-2 text-decoration-none" href="index.html">
+                <img src="images/logo.jpeg" alt="Instantlly" class="brand-logo">
+                <div>
+                    <div class="brand-title">Instantlly</div>
+                    <div class="brand-sub">Voucher Dashboard</div>
+                </div>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+                <div class="d-flex align-items-center gap-1 flex-wrap mt-2 mt-lg-0">
+                    <a class="nav-link-item" href="index.html"><i class="fas fa-home me-1"></i>Home</a>
+                    <a class="nav-link-item" href="profile.html"><i class="fas fa-user me-1"></i>Profile</a>
+                    <a class="nav-link-item active-nav" href="vouchers.html"><i class="fas fa-ticket-alt me-1"></i>Vouchers</a>
+                    <a class="nav-link-item" href="#" onclick="goToPromotions(); return false;"><i class="fas fa-bullhorn me-1"></i>Promotions</a>
+                    <button class="btn-logout ms-2" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i>Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+        <div class="container text-center position-relative" style="z-index:1;">
+            <div class="hero-icon-wrap"><i class="fas fa-ticket-alt"></i></div>
+            <div class="hero-title">My Vouchers</div>
+            <div class="hero-sub">View, redeem & transfer your vouchers</div>
+        </div>
+    </div>
+
+    <div class="container" style="max-width:1200px; padding-bottom: 3rem;">
+
+        <!-- Stats -->
+        <div class="row stats-row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon-wrap blue"><i class="fas fa-ticket-alt"></i></div>
+                    <div>
+                        <div class="stat-label">Total</div>
+                        <div class="stat-value" id="totalVouchersCount">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon-wrap green"><i class="fas fa-shopping-bag"></i></div>
+                    <div>
+                        <div class="stat-label">Purchased</div>
+                        <div class="stat-value" id="purchasedCount">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon-wrap cyan"><i class="fas fa-gift"></i></div>
+                    <div>
+                        <div class="stat-label">Received</div>
+                        <div class="stat-value" id="receivedCount">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon-wrap amber"><i class="fas fa-paper-plane"></i></div>
+                    <div>
+                        <div class="stat-label">Sent</div>
+                        <div class="stat-value" id="sentCount">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vouchers Card -->
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title"><i class="fas fa-list me-2" style="color:#4f46e5;"></i>Vouchers List</h2>
+                <button class="btn-refresh" id="refreshVouchersBtn"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="voucher-tabs">
+                <button class="vtab-btn active" onclick="switchTab('all', this)">
+                    <i class="fas fa-border-all"></i>All
+                    <span class="vtab-badge all" id="allBadge">0</span>
+                </button>
+                <button class="vtab-btn" onclick="switchTab('purchased', this)">
+                    <i class="fas fa-shopping-bag"></i>Purchased
+                    <span class="vtab-badge bought" id="purchasedBadge">0</span>
+                </button>
+                <button class="vtab-btn" onclick="switchTab('received', this)">
+                    <i class="fas fa-gift"></i>Received
+                    <span class="vtab-badge recv" id="receivedBadge">0</span>
+                </button>
+                <button class="vtab-btn" onclick="switchTab('sent', this)">
+                    <i class="fas fa-paper-plane"></i>Sent
+                    <span class="vtab-badge sent" id="sentBadge">0</span>
+                </button>
+            </div>
+
+            <!-- Panes -->
+            <div class="vtab-pane active" id="pane-all">
+                <div id="allVouchersList"></div>
+            </div>
+            <div class="vtab-pane" id="pane-purchased">
+                <div id="purchasedVouchersList"></div>
+            </div>
+            <div class="vtab-pane" id="pane-received">
+                <div id="receivedVouchersList"></div>
+            </div>
+            <div class="vtab-pane" id="pane-sent">
+                <div id="sentVouchersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-exchange-alt me-2" style="color:#4f46e5;"></i>Transfer Voucher</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Voucher Number</label>
+                        <input type="text" class="form-control" id="transferVoucherNumber" readonly style="background:#f9fafb;">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Recipient Phone Number <span style="color:#e53e3e;">*</span></label>
+                        <input type="tel" class="form-control" id="recipientPhone" placeholder="+91XXXXXXXXXX">
+                        <div class="form-text">Enter the recipient's registered phone number</div>
+                    </div>
+                    <div id="transferError" class="alert alert-danger d-none py-2" style="border-radius:10px; font-size:0.85rem;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-modal" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-primary-modal" id="confirmTransferBtn">
+                        <i class="fas fa-paper-plane me-1"></i>Transfer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="voucherDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-ticket-alt me-2" style="color:#4f46e5;"></i>Voucher Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="voucherDetailContent"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-modal" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Tab switcher
+        function switchTab(name, btn) {
+            document.querySelectorAll('.vtab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.vtab-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('pane-' + name).classList.add('active');
+        }
+
+        // Toast helper
+        function showToast(msg, type = 'success') {
+            const t = document.getElementById('toastBar');
+            t.textContent = msg;
+            t.className = 'toast-bar ' + type + ' show';
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        function goToPromotions() {
+            window.location.href = 'promotions.html';
+        }
+        function logout() {
+            localStorage.removeItem('authToken');
+            window.location.href = 'voucher-login.html';
+        }
+    </script>
+
+    <script src="js/vouchers.js"></script>
+</body>
+</html>
             content: '';
             position: absolute;
             top: -50%;
