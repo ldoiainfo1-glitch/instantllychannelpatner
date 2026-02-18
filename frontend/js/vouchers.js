@@ -38,6 +38,10 @@
         checkAuth();
         initializeEventListeners();
         loadVouchers();
+        loadNetworkOverview();
+        loadCreditStatistics();
+        loadDiscountSummary();
+        loadDirectBuyers();
     });
 
     // Check Authentication
@@ -512,5 +516,219 @@ this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Transferring…';
     window.goToPromotions = function() {
         window.location.href = 'promotion.html';
     };
+
+    // ═══════════════════════════════════════════════════════════
+    // SECTION 1 — Network Overview  (GET /mlm/overview)
+    // Mirrors SummaryCard.tsx in the mobile app
+    // ═══════════════════════════════════════════════════════════
+    async function loadNetworkOverview() {
+        const token = localStorage.getItem(AUTH_TOKEN_KEY);
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/mlm/overview`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            const m = data.metrics || {};
+            set('ovAvailableCredits',  fmtNum(m.availableCredits));
+            set('ovCreditsDistributed', fmtNum(m.totalVouchersTransferred));
+            set('ovNetworkUsers',      fmtNum(m.totalNetworkUsers));
+            set('ovVirtualSavings',    '₹' + fmtNum(m.virtualCommission));
+        } catch (e) { console.error('Network overview error', e); }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // SECTION 2 — Credit Statistics  (GET /mlm/credits/dashboard)
+    // Mirrors CreditStatisticsCard.tsx in the mobile app
+    // ═══════════════════════════════════════════════════════════
+    async function loadCreditStatistics() {
+        const token = localStorage.getItem(AUTH_TOKEN_KEY);
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/mlm/credits/dashboard`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) return;
+            const d = await res.json();
+
+            const balance = d.creditBalance || 0;
+            set('creditBalance', fmtNum(balance) + ' credits');
+            set('csReceived',     fmtNum(d.totalCreditsReceived || 0) + ' credits');
+            set('csTransferred',  fmtNum(d.totalCreditsTransferred || 0) + ' credits');
+            set('csBalance',      fmtNum(balance) + ' credits');
+            set('csReceivedBack', fmtNum(d.creditTransferredReceivedBack || 0) + ' credits');
+
+            // Transfer history list
+            const transfers = d.recentTransfers || [];
+            set('thCount', transfers.length);
+            const list = document.getElementById('transferHistoryList');
+            if (list) {
+                if (transfers.length === 0) {
+                    list.innerHTML = '<div style="font-size:0.85rem;color:#9ca3af;padding:0.5rem 0;">No transfers yet</div>';
+                } else {
+                    list.innerHTML = transfers.map(t => {
+                        const color = t.status === 'completed' || t.status === 'approved' ? '#10b981'
+                                    : t.status === 'pending' || t.status === 'waiting_approval' ? '#f59e0b'
+                                    : '#ef4444';
+                        const icon  = t.status === 'completed' || t.status === 'approved' ? 'fa-check-circle'
+                                    : t.status === 'pending' ? 'fa-clock'
+                                    : 'fa-times-circle';
+                        const statusLabel = (t.status || 'pending').charAt(0).toUpperCase() + (t.status || 'pending').slice(1);
+                        return `
+                            <div class="th-item">
+                                <div class="th-left">
+                                    <div class="th-status-icon" style="background:${color}20;">
+                                        <i class="fas ${icon}" style="color:${color};font-size:0.85rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div class="th-name">${escapeHtml(t.recipientName || 'Unknown')}</div>
+                                        <div class="th-date">${formatDate(t.date)}</div>
+                                    </div>
+                                </div>
+                                <div class="th-right">
+                                    <div class="th-amount">₹${fmtNum(t.amount || 0)}</div>
+                                    <span class="th-status-badge" style="background:${color}20;color:${color};">${escapeHtml(statusLabel)}</span>
+                                </div>
+                            </div>`;
+                    }).join('');
+                }
+            }
+
+            // Timers (credit countdown)
+            const timers = d.timers || [];
+            if (timers.length > 0) {
+                const timerSection = document.getElementById('timerSection');
+                const timerRows = document.getElementById('timerRows');
+                if (timerSection) timerSection.style.display = 'block';
+                if (timerRows) {
+                    timerRows.innerHTML = timers.map(tm => {
+                        let label = 'Transfer';
+                        let timeVal = '--';
+                        if (tm.paymentStatus === 'pending') {
+                            label = 'Payment Pending';
+                            timeVal = formatCountdown(tm.expiresAt);
+                        } else if (tm.paymentStatus === 'waiting_approval') {
+                            label = 'Admin Review';
+                            timeVal = 'Pending';
+                        } else {
+                            timeVal = formatCountdown(tm.transferExpiresAt);
+                        }
+                        return `
+                            <div class="timer-row">
+                                <div class="timer-left"><i class="fas fa-hourglass-half" style="color:#4f46e5;font-size:0.85rem;"></i>${escapeHtml(label)}</div>
+                                <div class="timer-value">${timeVal}</div>
+                            </div>`;
+                    }).join('');
+                }
+            }
+        } catch (e) { console.error('Credit stats error', e); }
+    }
+
+    // Toggle transfer history accordion
+    window.toggleTransferHistory = function() {
+        const btn  = document.getElementById('thToggleBtn');
+        const list = document.getElementById('transferHistoryList');
+        if (!btn || !list) return;
+        btn.classList.toggle('open');
+        list.classList.toggle('open');
+    };
+
+    // ═══════════════════════════════════════════════════════════
+    // SECTION 3 — Discount Savings  (GET /mlm/discount/summary)
+    // Mirrors DiscountDashboardCard.tsx in the mobile app
+    // ═══════════════════════════════════════════════════════════
+    async function loadDiscountSummary() {
+        const token = localStorage.getItem(AUTH_TOKEN_KEY);
+        if (!token) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/mlm/discount/summary`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            const s = data.summary || {};
+
+            set('discLevel',      'Level ' + (s.currentLevel || 1));
+            set('discPercent',    (s.discountPercent || 40) + '%');
+            set('discPayable',    '₹' + fmtNum(s.payableAmount || 3600));
+            set('discVirtual',    '₹' + fmtNum(s.virtualCommission || 0));
+            set('discDisclaimer', s.disclaimer || 'This amount represents savings unlocked via discounts and is not withdrawable.');
+
+            if (s.nextLevelTarget) {
+                const pb = document.getElementById('discProgressBox');
+                if (pb) pb.style.display = 'block';
+                set('discProgressText', `Level ${s.nextLevelTarget.level} · ${s.nextLevelTarget.targetDiscountPercent}% discount`);
+                set('discProgressSub',  `${s.nextLevelTarget.remainingDownline} more members needed`);
+            }
+        } catch (e) { console.error('Discount summary error', e); }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // SECTION 4 — Direct Buyers  (GET /mlm/network/direct-buyers)
+    // Mirrors DirectBuyersList.tsx in the mobile app
+    // ═══════════════════════════════════════════════════════════
+    async function loadDirectBuyers() {
+        const token = localStorage.getItem(AUTH_TOKEN_KEY);
+        if (!token) return;
+        const container = document.getElementById('directBuyersList');
+        try {
+            const res = await fetch(`${API_BASE_URL}/mlm/network/direct-buyers?limit=10`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) {
+                if (container) container.innerHTML = '<div class="empty-state" style="padding:1.5rem;"><div class="empty-icon-wrap" style="width:52px;height:52px;font-size:1.4rem;"><i class="fas fa-user-friends"></i></div><div class="empty-sub">No direct buyers yet</div></div>';
+                return;
+            }
+            const data = await res.json();
+            const buyers = data.buyers || [];
+            if (!container) return;
+
+            if (buyers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="padding:1.5rem;">
+                        <div class="empty-icon-wrap" style="width:52px;height:52px;font-size:1.4rem;"><i class="fas fa-user-friends"></i></div>
+                        <div class="empty-title" style="font-size:0.95rem;">No direct buyers yet</div>
+                        <div class="empty-sub">People who join through your link will appear here</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = buyers.map(b => `
+                <div class="buyer-row">
+                    <div>
+                        <div class="buyer-name">${escapeHtml(b.name || 'Unknown')}</div>
+                        <div class="buyer-meta">${escapeHtml(b.phone || '')}${b.teamSize !== undefined ? ` · Team: ${b.teamSize}` : ''}</div>
+                    </div>
+                    ${b.phone ? `<a class="btn-call" href="tel:${escapeHtml(b.phone)}"><i class="fas fa-phone" style="font-size:0.8rem;"></i> Call</a>` : ''}
+                </div>`).join('');
+        } catch (e) {
+            console.error('Direct buyers error', e);
+            if (container) container.innerHTML = '<div style="font-size:0.85rem;color:#9ca3af;padding:0.5rem 0;">Could not load buyers</div>';
+        }
+    }
+
+    // ─── Shared helpers ───────────────────────────────────────
+    function set(id, text) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+    }
+
+    function fmtNum(n) {
+        if (n === undefined || n === null) return '0';
+        n = Number(n);
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000)    return (n / 1000).toFixed(1) + 'K';
+        return n.toLocaleString('en-IN');
+    }
+
+    function formatCountdown(target) {
+        if (!target) return '--';
+        const diff = new Date(target).getTime() - Date.now();
+        if (diff <= 0) return 'Expired';
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        return `${h}h ${m}m`;
+    }
 
 })();

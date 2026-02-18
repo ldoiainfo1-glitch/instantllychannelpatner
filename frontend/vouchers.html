@@ -317,12 +317,187 @@
         .toast-bar.success { background: #d1fae5; color: #065f46; }
         .toast-bar.error   { background: #fee2e2; color: #991b1b; }
 
+        /* ─── NETWORK OVERVIEW CARD ─── */
+        .overview-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .overview-card-title {
+            font-size: 1rem; font-weight: 700; color: #111; margin-bottom: 1.25rem;
+        }
+        .overview-metrics-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+        }
+        .overview-metric {
+            background: #f9fafb; border-radius: 12px;
+            padding: 0.9rem 1rem; display: flex; align-items: center; gap: 0.75rem;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .ov-icon {
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; flex-shrink: 0;
+        }
+        .ov-icon.green  { background: #d1fae520; color: #10b981; }
+        .ov-icon.blue   { background: #dbeafe20; color: #3b82f6; }
+        .ov-icon.purple { background: #ede9fe20; color: #8b5cf6; }
+        .ov-icon.amber  { background: #fef3c720; color: #f59e0b; }
+        .ov-label { font-size: 0.75rem; color: #6b7280; margin-bottom: 2px; }
+        .ov-value { font-size: 1.1rem; font-weight: 700; color: #1f2937; }
+
+        /* ─── CREDIT STATISTICS CARD ─── */
+        .credit-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .credit-header {
+            display: flex; align-items: flex-start; justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+        .credit-balance-badge {
+            display: flex; align-items: center; gap: 5px;
+            background: #d1fae520; padding: 5px 12px; border-radius: 20px;
+        }
+        .credit-balance-badge span { font-size: 0.82rem; font-weight: 700; color: #10b981; }
+        .credit-stat-item {
+            display: flex; align-items: center; gap: 0.9rem;
+            background: #f9fafb; border-radius: 12px;
+            padding: 0.9rem 1rem; margin-bottom: 0.75rem;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .cs-icon {
+            width: 48px; height: 48px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0;
+        }
+        .cs-label { font-size: 0.8rem; color: #6b7280; margin-bottom: 3px; }
+        .cs-value { font-size: 1.25rem; font-weight: 700; }
+
+        /* Transfer history accordion */
+        .transfer-history-toggle {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            background: #f3f4f6; border: none; border-radius: 10px;
+            padding: 0.75rem 1rem; cursor: pointer; margin-bottom: 0.75rem;
+            font-size: 0.88rem; font-weight: 600; color: #1f2937;
+        }
+        .transfer-history-toggle i { transition: transform 0.2s; }
+        .transfer-history-toggle.open i.chevron { transform: rotate(180deg); }
+        .transfer-history-list { display: none; }
+        .transfer-history-list.open { display: block; }
+        .th-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #fff; border-radius: 10px; padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem; border: 1px solid rgba(0,0,0,0.05);
+        }
+        .th-left { display: flex; align-items: center; gap: 0.6rem; }
+        .th-status-icon {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
+        }
+        .th-name { font-size: 0.88rem; font-weight: 600; color: #1f2937; }
+        .th-date { font-size: 0.75rem; color: #9ca3af; }
+        .th-right { text-align: right; }
+        .th-amount { font-size: 0.95rem; font-weight: 700; color: #1f2937; margin-bottom: 3px; }
+        .th-status-badge { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+
+        /* Timer section */
+        .timer-section {
+            margin-top: 1rem; padding-top: 1rem;
+            border-top: 1px solid #f3f4f6;
+        }
+        .timer-title { font-size: 0.9rem; font-weight: 600; color: #1f2937; margin-bottom: 0.6rem; }
+        .timer-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.4rem 0; font-size: 0.85rem;
+        }
+        .timer-left { display: flex; align-items: center; gap: 6px; color: #475569; }
+        .timer-value { font-weight: 600; color: #0f172a; }
+
+        /* ─── DISCOUNT SAVINGS CARD ─── */
+        .discount-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .discount-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        .level-badge {
+            display: flex; align-items: center; gap: 5px;
+            background: #fef3c7; padding: 6px 12px; border-radius: 10px;
+        }
+        .level-badge span { font-size: 0.82rem; font-weight: 600; color: #92400e; }
+        .discount-metrics {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .disc-metric {
+            background: #fff; border-radius: 12px; padding: 0.9rem;
+            border: 1px solid rgba(0,0,0,0.06); text-align: center;
+        }
+        .disc-metric-label { font-size: 0.72rem; color: #64748b; margin-bottom: 4px; }
+        .disc-metric-value { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
+        .progress-box {
+            background: #f0fdf4; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem;
+        }
+        .progress-box-title { font-size: 0.85rem; font-weight: 600; color: #1f2937; margin-bottom: 0.4rem; }
+        .progress-box-text { font-size: 0.82rem; color: #166534; font-weight: 500; }
+        .progress-box-sub { font-size: 0.76rem; color: #15803d; margin-top: 2px; }
+        .disclaimer-box {
+            display: flex; gap: 0.5rem; align-items: flex-start;
+            background: #f8fafc; border-radius: 10px; padding: 0.75rem 1rem;
+        }
+        .disclaimer-box i { color: #64748b; margin-top: 2px; flex-shrink: 0; }
+        .disclaimer-box span { font-size: 0.78rem; color: #64748b; line-height: 1.5; }
+
+        /* ─── DIRECT BUYERS CARD ─── */
+        .buyers-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .buyers-card-title { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 1rem; }
+        .buyer-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.9rem 0; border-top: 1px solid rgba(0,0,0,0.05);
+        }
+        .buyer-name { font-size: 0.9rem; font-weight: 600; color: #0f172a; }
+        .buyer-meta { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
+        .btn-call {
+            display: flex; align-items: center; gap: 5px;
+            background: #e2e8f0; border: none; border-radius: 10px;
+            padding: 0.45rem 0.9rem; font-size: 0.8rem; font-weight: 600;
+            color: #0f172a; cursor: pointer; text-decoration: none;
+            transition: background 0.2s;
+        }
+        .btn-call:hover { background: #cbd5e1; color: #0f172a; }
+
         @media (max-width: 576px) {
             .hero-title { font-size: 1.5rem; }
             .stat-card { padding: 1rem; }
             .stat-value { font-size: 1.5rem; }
             .voucher-ticket-actions { width: 100%; justify-content: flex-end; }
             .vtab-btn { padding: 0.75rem 0.75rem; font-size: 0.8rem; }
+            .overview-metrics-grid { grid-template-columns: 1fr 1fr; }
+            .discount-metrics { grid-template-columns: 1fr 1fr 1fr; }
+        }
+        @media (max-width: 400px) {
+            .discount-metrics { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -403,6 +578,147 @@
                         <div class="stat-label">Sent</div>
                         <div class="stat-value" id="sentCount">0</div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION 1: Network Overview ════ -->
+        <div class="overview-card" id="networkOverviewCard">
+            <div class="section-header" style="padding:0 0 1rem 0; border:none; margin-bottom:0.25rem;">
+                <h2 class="section-title"><i class="fas fa-network-wired me-2" style="color:#8b5cf6;"></i>Network Overview</h2>
+                <span id="overviewLoading" style="font-size:0.78rem;color:#9ca3af;"></span>
+            </div>
+            <div class="overview-metrics-grid">
+                <div class="overview-metric">
+                    <div class="ov-icon green"><i class="fas fa-wallet"></i></div>
+                    <div>
+                        <div class="ov-label">Available Credits</div>
+                        <div class="ov-value" id="ovAvailableCredits">—</div>
+                    </div>
+                </div>
+                <div class="overview-metric">
+                    <div class="ov-icon blue"><i class="fas fa-share-alt"></i></div>
+                    <div>
+                        <div class="ov-label">Credits Distributed</div>
+                        <div class="ov-value" id="ovCreditsDistributed">—</div>
+                    </div>
+                </div>
+                <div class="overview-metric">
+                    <div class="ov-icon purple"><i class="fas fa-users"></i></div>
+                    <div>
+                        <div class="ov-label">Network Users</div>
+                        <div class="ov-value" id="ovNetworkUsers">—</div>
+                    </div>
+                </div>
+                <div class="overview-metric">
+                    <div class="ov-icon amber"><i class="fas fa-trending-up"></i></div>
+                    <div>
+                        <div class="ov-label">Virtual Savings</div>
+                        <div class="ov-value" id="ovVirtualSavings">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION 2: Credit Statistics ════ -->
+        <div class="credit-card" id="creditStatsCard">
+            <div class="credit-header">
+                <div>
+                    <div class="overview-card-title" style="margin-bottom:3px;">Credit Statistics</div>
+                    <div style="font-size:0.8rem;color:#6b7280;">Your complete credit overview</div>
+                </div>
+                <div class="credit-balance-badge">
+                    <i class="fas fa-wallet" style="color:#10b981;font-size:0.9rem;"></i>
+                    <span id="creditBalance">0 credits</span>
+                </div>
+            </div>
+
+            <div class="credit-stat-item">
+                <div class="cs-icon" style="background:#10b98115;"><i class="fas fa-arrow-circle-down" style="color:#10b981;"></i></div>
+                <div style="flex:1;">
+                    <div class="cs-label">Total Credit Received</div>
+                    <div class="cs-value" style="color:#10b981;" id="csReceived">0 credits</div>
+                </div>
+            </div>
+            <div class="credit-stat-item">
+                <div class="cs-icon" style="background:#ef444415;"><i class="fas fa-arrow-circle-up" style="color:#ef4444;"></i></div>
+                <div style="flex:1;">
+                    <div class="cs-label">Total Credit Transferred</div>
+                    <div class="cs-value" style="color:#ef4444;" id="csTransferred">0 credits</div>
+                </div>
+            </div>
+            <div class="credit-stat-item">
+                <div class="cs-icon" style="background:#3b82f615;"><i class="fas fa-wallet" style="color:#3b82f6;"></i></div>
+                <div style="flex:1;">
+                    <div class="cs-label">Current Balance</div>
+                    <div class="cs-value" style="color:#3b82f6;" id="csBalance">0 credits</div>
+                </div>
+            </div>
+            <div class="credit-stat-item">
+                <div class="cs-icon" style="background:#8b5cf615;"><i class="fas fa-undo" style="color:#8b5cf6;"></i></div>
+                <div style="flex:1;">
+                    <div class="cs-label">Credits Received Back</div>
+                    <div class="cs-value" style="color:#8b5cf6;" id="csReceivedBack">0 credits</div>
+                </div>
+            </div>
+
+            <!-- Transfer history accordion -->
+            <button class="transfer-history-toggle" id="thToggleBtn" onclick="toggleTransferHistory()">
+                <span><i class="fas fa-exchange-alt me-2"></i>Credit Transfer to Each Person (<span id="thCount">0</span>)</span>
+                <i class="fas fa-chevron-down chevron"></i>
+            </button>
+            <div class="transfer-history-list" id="transferHistoryList"></div>
+
+            <!-- Credit countdown timers -->
+            <div class="timer-section" id="timerSection" style="display:none;">
+                <div class="timer-title"><i class="fas fa-clock me-2" style="color:#4f46e5;"></i>Credit Countdown</div>
+                <div id="timerRows"></div>
+            </div>
+        </div>
+
+        <!-- ════ SECTION 3: Discount Savings Dashboard ════ -->
+        <div class="discount-card" id="discountCard">
+            <div class="discount-header">
+                <div>
+                    <div class="overview-card-title" style="margin-bottom:3px;">Discount Savings Dashboard</div>
+                    <div style="font-size:0.8rem;color:#64748b;">Your savings from network growth</div>
+                </div>
+                <div class="level-badge">
+                    <i class="fas fa-trophy" style="color:#f59e0b;font-size:0.9rem;"></i>
+                    <span id="discLevel">Level 1</span>
+                </div>
+            </div>
+            <div class="discount-metrics">
+                <div class="disc-metric">
+                    <div class="disc-metric-label">Discount Level</div>
+                    <div class="disc-metric-value" id="discPercent">40%</div>
+                </div>
+                <div class="disc-metric">
+                    <div class="disc-metric-label">You Pay</div>
+                    <div class="disc-metric-value" id="discPayable">₹3600</div>
+                </div>
+                <div class="disc-metric">
+                    <div class="disc-metric-label">Virtual Savings</div>
+                    <div class="disc-metric-value" id="discVirtual">₹0</div>
+                </div>
+            </div>
+            <div class="progress-box" id="discProgressBox" style="display:none;">
+                <div class="progress-box-title"><i class="fas fa-chart-line me-1"></i> Next Level Progress</div>
+                <div class="progress-box-text" id="discProgressText"></div>
+                <div class="progress-box-sub" id="discProgressSub"></div>
+            </div>
+            <div class="disclaimer-box">
+                <i class="fas fa-info-circle"></i>
+                <span id="discDisclaimer">This amount represents savings unlocked via discounts and is not withdrawable.</span>
+            </div>
+        </div>
+
+        <!-- ════ SECTION 4: Direct Buyers ════ -->
+        <div class="buyers-card" id="directBuyersCard">
+            <div class="buyers-card-title"><i class="fas fa-user-friends me-2" style="color:#4f46e5;"></i>Direct Buyers</div>
+            <div id="directBuyersList">
+                <div class="loading-overlay" style="padding:2rem;">
+                    <div class="spinner-ring"></div>
                 </div>
             </div>
         </div>
