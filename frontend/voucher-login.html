@@ -279,7 +279,7 @@
                     type="tel" 
                     class="form-control" 
                     id="voucherPhone" 
-                    placeholder="Enter your phone number"
+                    placeholder="Enter 10-digit mobile number"
                     required
                 >
             </div>
@@ -345,12 +345,21 @@
         voucherLoginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const phone = voucherPhone.value.trim();
+            let phone = voucherPhone.value.trim();
             const password = voucherPassword.value;
 
             if (!phone || !password) {
                 showAlert('Please enter both phone number and password', 'danger');
                 return;
+            }
+
+            // Auto-add +91 if not already present
+            if (!phone.startsWith('+')) {
+                if (phone.startsWith('91') && phone.length === 12) {
+                    phone = '+' + phone; // Already has country code
+                } else {
+                    phone = '+91' + phone; // Add India country code
+                }
             }
 
             await handleVoucherLogin(phone, password);
