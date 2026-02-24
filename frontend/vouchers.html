@@ -499,6 +499,202 @@
         @media (max-width: 400px) {
             .discount-metrics { grid-template-columns: 1fr 1fr; }
         }
+
+        /* ─── VOUCHER STATS CARD (mirrors VoucherStatsCard.tsx) ─── */
+        .vs-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .vs-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+        .vs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+        .vs-icon-badge { width:48px;height:48px;border-radius:50%;background:#10b98115;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#10b981; }
+        .vs-stats-grid { display: flex; justify-content: space-between; margin-bottom: 1.25rem; }
+        .vs-stat-item { flex:1; text-align:center; }
+        .vs-stat-icon { width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem; }
+        .vs-stat-value { font-size:1.4rem;font-weight:800;color:#111; }
+        .vs-stat-label { font-size:0.72rem;color:#9ca3af;font-weight:500; }
+        .vs-buy-btn {
+            width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;
+            border:none;border-radius:12px;padding:0.9rem;font-size:0.95rem;font-weight:700;
+            display:flex;align-items:center;justify-content:center;gap:0.5rem;
+            transition:opacity 0.2s;
+        }
+        .vs-buy-btn:hover { opacity:0.9; }
+
+        /* ─── DISTRIBUTION CREDITS TABLE (mirrors DistributionCreditsTable.tsx) ─── */
+        .dist-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .dist-table-wrap { overflow-x: auto; margin-bottom: 0.75rem; }
+        .dist-table { width:100%; border-collapse:collapse; min-width:540px; }
+        .dist-table th { font-size:0.78rem;font-weight:700;color:#1f2937;padding:0.7rem 0.75rem;background:#f3f4f6;text-align:left;border-radius:8px; }
+        .dist-td { font-size:0.85rem;color:#1f2937;padding:0.75rem 0.75rem;border-bottom:1px solid #f3f4f6; }
+        .dist-name { font-weight:600; font-size:0.85rem; }
+        .dist-phone { font-size:0.75rem;color:#6b7280; }
+        .dist-credits { font-weight:700;color:#10b981; }
+        .dist-transfer-btn {
+            background:#10b981;color:#fff;border:none;border-radius:8px;
+            padding:0.4rem 0.85rem;font-size:0.78rem;font-weight:600;cursor:pointer;
+            display:inline-flex;align-items:center;gap:4px;transition:background 0.2s;
+        }
+        .dist-transfer-btn:hover { background:#059669; }
+        .dist-transfer-btn.dist-locked { background:#e5e7eb;color:#9ca3af;cursor:not-allowed; }
+        .dist-info-footer { display:flex;gap:0.5rem;align-items:flex-start;background:#f8fafc;border-radius:10px;padding:0.75rem 1rem; }
+        .dist-info-footer i { color:#64748b;margin-top:2px;flex-shrink:0; }
+        .dist-info-footer span { font-size:0.78rem;color:#64748b;line-height:1.5; }
+
+        /* ─── BUYER ENTRY WITH TRANSFER BUTTONS (mirrors DirectBuyersList.tsx) ─── */
+        .buyer-entry { border-top:1px solid rgba(0,0,0,0.05); padding:0.9rem 0; }
+        .buyer-entry:first-child { border-top:none; }
+        .buyer-btn-row { display:flex;gap:0.5rem;margin-top:0.6rem; }
+        .btn-transfer-credits-buyer {
+            flex:1;background:#3b82f6;color:#fff;border:none;border-radius:10px;
+            padding:0.5rem 0.9rem;font-size:0.8rem;font-weight:600;
+            display:flex;align-items:center;justify-content:center;gap:5px;
+            cursor:pointer;transition:background 0.2s;
+        }
+        .btn-transfer-credits-buyer:hover { background:#2563eb; }
+        .btn-transfer-voucher-buyer {
+            flex:1;background:#8b5cf6;color:#fff;border:none;border-radius:10px;
+            padding:0.5rem 0.9rem;font-size:0.8rem;font-weight:600;
+            display:flex;align-items:center;justify-content:center;gap:5px;
+            cursor:pointer;transition:background 0.2s;
+        }
+        .btn-transfer-voucher-buyer:hover { background:#7c3aed; }
+        .btn-admin-transfer-header {
+            display:flex;align-items:center;gap:5px;
+            background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;
+            padding:0.45rem 0.9rem;font-size:0.8rem;font-weight:600;color:#3b82f6;
+            cursor:pointer;transition:background 0.2s;
+        }
+        .btn-admin-transfer-header:hover { background:#dbeafe; }
+
+        /* ─── NETWORK TREE CARD (mirrors NetworkListView.tsx) ─── */
+        .net-card {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .net-toggle-row { display:flex;gap:0;background:#e5e7eb;border-radius:12px;padding:4px;margin-bottom:1.25rem; }
+        .net-toggle-btn {
+            flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+            background:none;border:none;border-radius:10px;padding:0.65rem;font-size:0.88rem;
+            font-weight:600;color:#6b7280;cursor:pointer;transition:all 0.2s;
+        }
+        .net-toggle-active { background:#10b981 !important;color:#fff !important; }
+        .tree-root-card { background:#fff;border-radius:14px;padding:1rem 1.25rem;border:1px solid rgba(0,0,0,0.06);margin-bottom:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+        .tree-root-header { display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem; }
+        .tree-root-avatar { width:44px;height:44px;border-radius:50%;background:#10b98120;display:flex;align-items:center;justify-content:center;color:#10b981;font-size:1.1rem; }
+        .tree-root-info { flex:1; }
+        .tree-root-name { font-size:1rem;font-weight:700;color:#1f2937; }
+        .tree-root-label { font-size:0.75rem;color:#6b7280; }
+        .tree-root-stats { display:flex;gap:1rem;font-size:0.82rem;color:#374151;font-weight:500; }
+        .tree-root-stats span { display:flex;align-items:center;gap:5px; }
+        .tree-toggle-plain { background:none;border:none;cursor:pointer;padding:4px;margin-left:auto; }
+        .tree-user-row {
+            display:flex;align-items:center;gap:0.5rem;
+            background:#f9fafb;border-radius:12px;padding:0.6rem 0.9rem;
+            margin-bottom:0.4rem;border:1px solid rgba(0,0,0,0.04);
+        }
+        .tree-user-avatar-sm { width:32px;height:32px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+        .tree-user-info-wrap { flex:1;min-width:0; }
+        .tree-user-name { font-size:0.88rem;font-weight:600;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+        .tree-user-meta { font-size:0.73rem;color:#6b7280; }
+        .tree-transfer-btn {
+            background:#3b82f6;color:#fff;border:none;border-radius:8px;
+            padding:0.35rem 0.75rem;font-size:0.75rem;font-weight:600;
+            cursor:pointer;white-space:nowrap;transition:background 0.2s;
+            display:flex;align-items:center;gap:4px;
+        }
+        .tree-transfer-btn:hover { background:#2563eb; }
+        .tree-transfer-slot { background:#8b5cf6; }
+        .tree-transfer-slot:hover { background:#7c3aed; }
+        .tree-spacer { width:24px;display:inline-block; }
+
+        /* ─── BUY VOUCHERS PANEL (mirrors BuyVoucherScreen.tsx) ─── */
+        .buy-panel {
+            position:fixed;inset:0;background:#f5f7fa;z-index:2000;
+            display:none;flex-direction:column;overflow-y:auto;
+        }
+        .buy-panel-header {
+            background:#fff;border-bottom:1px solid #ececec;
+            padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;
+            position:sticky;top:0;z-index:1;
+        }
+        .buy-panel-title { font-size:1.1rem;font-weight:700;color:#1f2937; }
+        .buy-panel-body { padding:1.5rem;max-width:600px;margin:0 auto;width:100%; }
+        .buy-timer-card {
+            background:linear-gradient(135deg,#ef4444,#dc2626);
+            border-radius:14px;padding:1rem 1.25rem;
+            display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;
+        }
+        .buy-timer-label { font-size:0.8rem;color:rgba(255,255,255,0.9);margin-bottom:4px; }
+        .buy-timer-value { font-size:1.6rem;font-weight:800;color:#fff;font-family:'Courier New',monospace; }
+        .buy-info-card,.buy-qty-card,.buy-price-card,.buy-notes-card {
+            background:#fff;border-radius:14px;padding:1.25rem;
+            margin-bottom:1.25rem;border:1px solid rgba(0,0,0,0.06);
+        }
+        .buy-card-title { font-size:0.95rem;font-weight:700;color:#1f2937;margin-bottom:0.9rem;display:flex;align-items:center;gap:0.5rem; }
+        .buy-info-row { display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;font-size:0.88rem;border-top:1px solid #f3f4f6; }
+        .buy-info-row:first-of-type { border-top:none; }
+        .buy-info-label { color:#6b7280; }
+        .buy-info-value { font-weight:600;color:#1f2937; }
+        .buy-discount-value { color:#ef4444;font-weight:700; }
+        .buy-qty-selector { display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:0.75rem; }
+        .buy-qty-btn {
+            width:44px;height:44px;border-radius:50%;border:2px solid #e5e7eb;
+            background:#fff;font-size:1.2rem;font-weight:700;cursor:pointer;
+            display:flex;align-items:center;justify-content:center;transition:all 0.2s;
+        }
+        .buy-qty-btn:hover:not(:disabled) { border-color:#10b981;color:#10b981; }
+        .buy-qty-btn:disabled { opacity:0.4;cursor:not-allowed; }
+        .buy-qty-display { font-size:2rem;font-weight:800;color:#1f2937;min-width:60px;text-align:center; }
+        .buy-qty-unit { font-size:0.8rem;color:#6b7280;font-weight:500; }
+        .buy-price-row { display:flex;justify-content:space-between;padding:0.5rem 0;font-size:0.88rem; }
+        .buy-price-divider { border:none;border-top:1px solid #e5e7eb;margin:0.5rem 0; }
+        .buy-total-row { display:flex;justify-content:space-between;padding:0.5rem 0;font-size:1rem;font-weight:700; }
+        .buy-savings-badge { display:flex;align-items:center;gap:6px;background:#d1fae5;border-radius:8px;padding:0.5rem 0.75rem;margin-top:0.5rem; }
+        .buy-savings-badge span { font-size:0.82rem;font-weight:600;color:#065f46; }
+        .buy-note-item { display:flex;align-items:flex-start;gap:0.5rem;margin-bottom:0.5rem;font-size:0.82rem;color:#374151; }
+        .buy-note-item i { color:#10b981;margin-top:2px;flex-shrink:0; }
+        .buy-footer {
+            padding:1rem 1.5rem;background:#fff;border-top:1px solid #ececec;
+            position:sticky;bottom:0;max-width:600px;margin:0 auto;width:100%;
+        }
+        .buy-confirm-btn {
+            width:100%;background:linear-gradient(135deg,#10b981,#059669);
+            color:#fff;border:none;border-radius:14px;
+            padding:1rem;font-size:0.95rem;font-weight:700;
+            display:flex;align-items:center;justify-content:center;gap:0.5rem;
+            cursor:pointer;transition:opacity 0.2s;
+        }
+        .buy-confirm-btn:hover { opacity:0.9; }
+        .buy-confirm-btn:disabled { background:#9ca3af;cursor:not-allowed; }
+
+        /* ─── TRANSFER CREDITS MODAL ─── */
+        .tc-recipient-box {
+            background:#f0fdf4;border-radius:10px;padding:0.9rem 1rem;
+            margin-bottom:1rem;border:1px solid #bbf7d0;
+        }
+        .tc-recipient-name { font-size:1rem;font-weight:700;color:#1f2937; }
+        .tc-recipient-phone { font-size:0.82rem;color:#6b7280; }
+        .tc-balance-row { display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem; }
+        .tc-balance-badge { background:#d1fae520;border:1px solid #a7f3d0;border-radius:8px;padding:0.4rem 0.75rem;font-size:0.82rem;font-weight:700;color:#065f46; }
+        .tc-amount-selector { display:flex;align-items:center;justify-content:center;gap:1rem; }
     </style>
 </head>
 
@@ -533,10 +729,17 @@
 
     <!-- Hero Banner -->
     <div class="hero-banner">
-        <div class="container text-center position-relative" style="z-index:1;">
-            <div class="hero-icon-wrap"><i class="fas fa-ticket-alt"></i></div>
-            <div class="hero-title">My Vouchers</div>
-            <div class="hero-sub">View, redeem & transfer your vouchers</div>
+        <div class="container position-relative" style="z-index:1;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="text-center flex-grow-1">
+                    <div class="hero-icon-wrap"><i class="fas fa-ticket-alt"></i></div>
+                    <div class="hero-title">Vouchers &amp; Network</div>
+                    <div class="hero-sub">5× Referral Credit Distribution</div>
+                </div>
+                <button id="historyBtn" style="background:rgba(255,255,255,0.2);border:none;border-radius:12px;padding:0.6rem 0.9rem;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">
+                    <i class="fas fa-history"></i> History
+                </button>
+            </div>
         </div>
     </div>
 
@@ -571,7 +774,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6 col-md-3" id="virtualSavingsStat">
                 <div class="stat-card">
                     <div class="stat-icon-wrap amber"><i class="fas fa-paper-plane"></i></div>
                     <div>
@@ -580,6 +783,37 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- ════ VoucherStatsCard (mirrors VoucherStatsCard.tsx — hidden for admin) ════ -->
+        <div id="voucherStatsCard" class="vs-card" style="display:none;" onclick="openBuyVouchersPanel()">
+            <div class="vs-header">
+                <div>
+                    <div style="font-size:1rem;font-weight:700;color:#1f2937;margin-bottom:3px;">My Vouchers</div>
+                    <div style="font-size:0.78rem;color:#6b7280;">Tap to purchase more vouchers</div>
+                </div>
+                <div class="vs-icon-badge"><i class="fas fa-ticket-alt"></i></div>
+            </div>
+            <div class="vs-stats-grid">
+                <div class="vs-stat-item">
+                    <div class="vs-stat-icon" style="background:#10b98115;"><i class="fas fa-check-circle" style="color:#10b981;"></i></div>
+                    <div class="vs-stat-value" id="vsAvailable">0</div>
+                    <div class="vs-stat-label">Available</div>
+                </div>
+                <div class="vs-stat-item">
+                    <div class="vs-stat-icon" style="background:#3b82f615;"><i class="fas fa-layer-group" style="color:#3b82f6;"></i></div>
+                    <div class="vs-stat-value" id="vsTotal">0</div>
+                    <div class="vs-stat-label">Total</div>
+                </div>
+                <div class="vs-stat-item">
+                    <div class="vs-stat-icon" style="background:#8b5cf615;"><i class="fas fa-shield-alt" style="color:#8b5cf6;"></i></div>
+                    <div class="vs-stat-value" id="vsRedeemed">0</div>
+                    <div class="vs-stat-label">Redeemed</div>
+                </div>
+            </div>
+            <button class="vs-buy-btn">
+                <i class="fas fa-shopping-cart"></i> Buy Vouchers <i class="fas fa-arrow-right"></i>
+            </button>
         </div>
 
         <!-- ════ SECTION 1: Network Overview ════ -->
@@ -676,6 +910,29 @@
             </div>
         </div>
 
+        <!-- ════ Distribution Credits Table (mirrors DistributionCreditsTable.tsx — MLM users only) ════ -->
+        <div id="distributionCreditsCard" class="dist-card" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <div>
+                    <div style="font-size:1rem;font-weight:700;color:#1f2937;margin-bottom:3px;"><i class="fas fa-network-wired me-2" style="color:#3b82f6;"></i>Distribution Credits</div>
+                    <div style="font-size:0.78rem;color:#6b7280;">Credits unlock after sharing 5 vouchers</div>
+                </div>
+                <div style="width:40px;height:40px;border-radius:50%;background:#3b82f615;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:1rem;"><i class="fas fa-network-wired"></i></div>
+            </div>
+            <div class="dist-table-wrap">
+                <table class="dist-table">
+                    <thead><tr>
+                        <th>Level</th><th>Recipient</th><th>Credits</th><th>Vouchers</th><th>Status</th><th>Action</th>
+                    </tr></thead>
+                    <tbody id="distributionTableBody"></tbody>
+                </table>
+            </div>
+            <div class="dist-info-footer">
+                <i class="fas fa-info-circle"></i>
+                <span>Share 5 vouchers to unlock credit transfer. You have 2 days to connect 5 people after purchase.</span>
+            </div>
+        </div>
+
         <!-- ════ SECTION 3: Discount Savings Dashboard ════ -->
         <div class="discount-card" id="discountCard">
             <div class="discount-header">
@@ -713,9 +970,14 @@
             </div>
         </div>
 
-        <!-- ════ SECTION 4: Direct Buyers ════ -->
+        <!-- ════ SECTION 4: Direct Buyers (mirrors DirectBuyersList.tsx) ════ -->
         <div class="buyers-card" id="directBuyersCard">
-            <div class="buyers-card-title"><i class="fas fa-user-friends me-2" style="color:#4f46e5;"></i>Direct Buyers</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                <div class="buyers-card-title" style="margin:0;"><i class="fas fa-user-friends me-2" style="color:#4f46e5;"></i>Direct Buyers</div>
+                <button id="adminTransferBtn" class="btn-admin-transfer-header" style="display:none;" onclick="openAdminVoucherTransferModal('','')">
+                    <i class="fas fa-paper-plane" style="font-size:0.75rem;"></i> Transfer
+                </button>
+            </div>
             <div id="directBuyersList">
                 <div class="loading-overlay" style="padding:2rem;">
                     <div class="spinner-ring"></div>
@@ -723,8 +985,25 @@
             </div>
         </div>
 
+        <!-- ════ Network Tree / List View (mirrors NetworkListView.tsx + toggle) ════ -->
+        <div id="networkTreeCard" class="net-card" style="display:none;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                <div style="font-size:1rem;font-weight:700;color:#1f2937;"><i class="fas fa-sitemap me-2" style="color:#8b5cf6;"></i>My Network</div>
+            </div>
+            <!-- View Toggle (List / Tree) -->
+            <div class="net-toggle-row">
+                <button class="net-toggle-btn net-toggle-active" id="netViewList">
+                    <i class="fas fa-list"></i> List
+                </button>
+                <button class="net-toggle-btn" id="netViewTree">
+                    <i class="fas fa-code-branch"></i> Tree
+                </button>
+            </div>
+            <div id="networkTreeContainer"></div>
+        </div>
+
         <!-- Vouchers Card -->
-        <div class="section-card">
+        <div class="section-card" id="vouchersListCard">
             <div class="section-header">
                 <h2 class="section-title"><i class="fas fa-list me-2" style="color:#4f46e5;"></i>Vouchers List</h2>
                 <button class="btn-refresh" id="refreshVouchersBtn"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
@@ -766,17 +1045,122 @@
         </div>
     </div>
 
-    <!-- Transfer Modal -->
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         BUY VOUCHERS PANEL (mirrors BuyVoucherScreen.tsx)
+    ════════════════════════════════════════════════════════════════════════ -->
+    <div id="buyVouchersPanel" class="buy-panel">
+        <!-- Header -->
+        <div class="buy-panel-header">
+            <button onclick="closeBuyVouchersPanel()" style="background:none;border:none;padding:4px;cursor:pointer;font-size:1.2rem;color:#374151;"><i class="fas fa-arrow-left"></i></button>
+            <span class="buy-panel-title">Buy Vouchers</span>
+        </div>
+
+        <div class="buy-panel-body">
+            <!-- Timer -->
+            <div class="buy-timer-card">
+                <i class="fas fa-clock" style="font-size:1.5rem;color:#fff;"></i>
+                <div>
+                    <div class="buy-timer-label">Time Remaining to Purchase</div>
+                    <div class="buy-timer-value" id="buyTimerDisplay">01:00:00</div>
+                </div>
+            </div>
+
+            <!-- Voucher Info -->
+            <div class="buy-info-card">
+                <div class="buy-card-title"><i class="fas fa-ticket-alt" style="color:#10b981;"></i>Voucher Details</div>
+                <div class="buy-info-row"><span class="buy-info-label">Price per Voucher:</span><span class="buy-info-value">₹1,200</span></div>
+                <div class="buy-info-row"><span class="buy-info-label">Minimum Purchase:</span><span class="buy-info-value">5 Vouchers</span></div>
+                <div class="buy-info-row"><span class="buy-info-label">Discount:</span><span class="buy-discount-value">40% OFF</span></div>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="buy-qty-card">
+                <div class="buy-card-title"><i class="fas fa-sort-amount-up" style="color:#4f46e5;"></i>Select Quantity</div>
+                <div style="font-size:0.78rem;color:#6b7280;margin-bottom:0.75rem;">Must be in multiples of 5</div>
+                <div class="buy-qty-selector">
+                    <button class="buy-qty-btn" id="buyQtyMinus"><i class="fas fa-minus"></i></button>
+                    <div style="text-align:center;">
+                        <div class="buy-qty-display" id="buyQtyDisplay">5</div>
+                        <div class="buy-qty-unit">Vouchers</div>
+                    </div>
+                    <button class="buy-qty-btn" id="buyQtyPlus"><i class="fas fa-plus"></i></button>
+                </div>
+            </div>
+
+            <!-- Price Breakdown -->
+            <div class="buy-price-card">
+                <div class="buy-card-title"><i class="fas fa-receipt" style="color:#f59e0b;"></i>Price Breakdown</div>
+                <div class="buy-price-row"><span style="color:#6b7280;">Original Price:</span><span id="buyOriginalPrice" style="font-weight:600;">₹6,000</span></div>
+                <div class="buy-price-row"><span style="color:#6b7280;">Discount (40%):</span><span id="buyDiscount" style="font-weight:600;color:#ef4444;">-₹2,400</span></div>
+                <hr class="buy-price-divider">
+                <div class="buy-total-row"><span>Total Payable:</span><span id="buyTotal">₹3,600</span></div>
+                <div class="buy-savings-badge"><i class="fas fa-check-circle" style="color:#10b981;"></i><span id="buySavings">You save ₹2,400!</span></div>
+            </div>
+
+            <!-- Notes -->
+            <div class="buy-notes-card">
+                <div class="buy-card-title"><i class="fas fa-info-circle" style="color:#3b82f6;"></i>Important Points</div>
+                <div class="buy-note-item"><i class="fas fa-check"></i><span>Each person must connect 5 people to build their network</span></div>
+                <div class="buy-note-item"><i class="fas fa-check"></i><span>You have 2 days to connect 5 people after purchase</span></div>
+                <div class="buy-note-item"><i class="fas fa-check"></i><span>Credits transfer only after sharing 5 vouchers</span></div>
+                <div class="buy-note-item"><i class="fas fa-check"></i><span>If you fail to connect 5 people, credits return to admin</span></div>
+            </div>
+        </div>
+
+        <!-- Buy Button -->
+        <div class="buy-footer">
+            <button class="buy-confirm-btn" id="confirmBuyBtn">
+                <i class="fas fa-credit-card"></i>
+                <span id="buyBtnLabel">Pay ₹3,600 via Payment Gateway</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Transfer Credits Modal (mirrors TransferCreditsModal.tsx) -->
+    <div class="modal fade" id="transferCreditsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-coins me-2" style="color:#3b82f6;"></i>Transfer Credits</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="tc-recipient-box">
+                        <div class="tc-recipient-name" id="tcRecipientName">—</div>
+                        <div class="tc-recipient-phone" id="tcRecipientPhone">—</div>
+                    </div>
+                    <div class="tc-balance-row">
+                        <span style="font-size:0.82rem;color:#374151;font-weight:500;">Available Credits:</span>
+                        <span class="tc-balance-badge" id="tcAvailableCredits">0 credits</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount (1–5 credits) <span style="color:#e53e3e;">*</span></label>
+                        <input type="number" class="form-control" id="tcAmount" min="1" max="5" value="1" placeholder="Enter 1 to 5">
+                        <div class="form-text">Transfer amount must be between 1 and 5 credits</div>
+                    </div>
+                    <div id="tcError" class="alert alert-danger d-none py-2" style="border-radius:10px;font-size:0.85rem;"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-modal" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-primary-modal" id="confirmTransferCreditsBtn" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
+                        <i class="fas fa-coins me-1"></i>Transfer Credits
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Voucher Modal (mirrors VoucherTransferModal.tsx) -->
     <div class="modal fade" id="transferModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-exchange-alt me-2" style="color:#4f46e5;"></i>Transfer Voucher</h5>
+                    <h5 class="modal-title"><i class="fas fa-ticket-alt me-2" style="color:#8b5cf6;"></i>Transfer Voucher</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Voucher Number</label>
+                        <label class="form-label">Voucher</label>
                         <input type="text" class="form-control" id="transferVoucherNumber" readonly style="background:#f9fafb;">
                     </div>
                     <div class="mb-3">
@@ -784,11 +1168,16 @@
                         <input type="tel" class="form-control" id="recipientPhone" placeholder="+91XXXXXXXXXX">
                         <div class="form-text">Enter the recipient's registered phone number</div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="transferQty" min="1" max="100" value="1" placeholder="Number of uses">
+                        <div class="form-text">How many times this voucher can be used by recipient</div>
+                    </div>
                     <div id="transferError" class="alert alert-danger d-none py-2" style="border-radius:10px; font-size:0.85rem;"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary-modal" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn-primary-modal" id="confirmTransferBtn">
+                    <button type="button" class="btn-primary-modal" id="confirmTransferBtn" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
                         <i class="fas fa-paper-plane me-1"></i>Transfer
                     </button>
                 </div>
