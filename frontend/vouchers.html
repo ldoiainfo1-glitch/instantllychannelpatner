@@ -17,34 +17,79 @@
         * { font-family: 'Inter', sans-serif; }
 
         body {
-            padding-top: 72px;
+            padding-top: 68px;
             background: #f5f6fa;
             min-height: 100vh;
         }
 
         /* ─── NAVBAR ─── */
         .top-navbar {
-            background: #fff;
-            border-bottom: 1px solid #ececec;
+            background: rgba(255,255,255,0.97);
+            border-bottom: 1px solid rgba(0,0,0,0.07);
             padding: 0 1.5rem;
-            height: 72px;
+            height: 68px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
-        .brand-logo { height: 38px; border-radius: 8px; }
-        .brand-title { font-size: 1.1rem; font-weight: 700; color: #111; }
-        .brand-sub { font-size: 0.7rem; color: #888; }
+        .brand-logo {
+            height: 36px; width: 36px; border-radius: 10px;
+            object-fit: cover;
+            box-shadow: 0 2px 8px rgba(79,70,229,0.18);
+        }
+        .brand-title {
+            font-size: 1.05rem; font-weight: 800;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+        .brand-sub {
+            font-size: 0.65rem; color: #a0aec0; font-weight: 500;
+            letter-spacing: 0.02em;
+        }
+
+        /* Nav pill container */
+        .nav-pills-wrap {
+            display: flex; align-items: center; gap: 2px;
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 4px;
+        }
         .nav-link-item {
-            font-size: 0.88rem; font-weight: 500; color: #555;
-            text-decoration: none; padding: 0.4rem 0.8rem;
-            border-radius: 8px; transition: all 0.2s;
+            font-size: 0.84rem; font-weight: 500; color: #6b7280;
+            text-decoration: none; padding: 0.42rem 0.85rem;
+            border-radius: 9px; transition: all 0.2s;
+            display: flex; align-items: center; gap: 5px;
+            white-space: nowrap;
         }
-        .nav-link-item:hover { background: #f0f4ff; color: #4f46e5; }
-        .nav-link-item.active-nav { color: #4f46e5; }
+        .nav-link-item i { font-size: 0.78rem; }
+        .nav-link-item:hover { background: #fff; color: #4f46e5; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .nav-link-item.active-nav {
+            background: #fff;
+            color: #4f46e5;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(79,70,229,0.15);
+        }
+        .nav-link-item.active-nav i { color: #4f46e5; }
+
+        /* Logout */
         .btn-logout {
-            background: #fff0f0; color: #e53e3e; border: none;
-            font-size: 0.85rem; font-weight: 600; padding: 0.45rem 1rem;
-            border-radius: 8px; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: #fff; border: none;
+            font-size: 0.82rem; font-weight: 600;
+            padding: 0.45rem 1.05rem;
+            border-radius: 10px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(239,68,68,0.25);
+            cursor: pointer;
         }
-        .btn-logout:hover { background: #ffe0e0; color: #c53030; }
+        .btn-logout:hover {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+            transform: translateY(-1px);
+        }
+        .btn-logout i { font-size: 0.8rem; }
 
         /* ─── HERO BANNER ─── */
         .hero-banner {
@@ -487,6 +532,12 @@
         }
         .btn-call:hover { background: #cbd5e1; color: #0f172a; }
 
+        @media (max-width: 767px) {
+            /* Mobile nav pill becomes column */
+            .nav-pills-wrap { background: transparent; padding: 0; border-radius: 0; }
+            .nav-link-item { padding: 0.65rem 0.85rem; width: 100%; border-radius: 10px !important; }
+            .nav-link-item.active-nav { background: #f0f0ff; }
+        }
         @media (max-width: 576px) {
             .hero-title { font-size: 1.5rem; }
             .stat-card { padding: 1rem; }
@@ -703,8 +754,10 @@
     <div class="toast-bar" id="toastBar"></div>
 
     <!-- Navbar -->
-    <nav class="navbar top-navbar fixed-top shadow-sm">
-        <div class="container-fluid d-flex align-items-center justify-content-between">
+    <nav class="navbar top-navbar fixed-top">
+        <div class="container-fluid d-flex align-items-center justify-content-between px-3">
+
+            <!-- Brand -->
             <a class="d-flex align-items-center gap-2 text-decoration-none" href="index.html">
                 <img src="images/logo.jpeg" alt="Instantlly" class="brand-logo">
                 <div>
@@ -712,16 +765,33 @@
                     <div class="brand-sub">Voucher Dashboard</div>
                 </div>
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+
+            <!-- Desktop nav -->
+            <div class="d-none d-md-flex align-items-center gap-3">
+                <div class="nav-pills-wrap">
+                    <a class="nav-link-item" href="index.html"><i class="fas fa-house"></i>Home</a>
+                    <a class="nav-link-item" href="profile.html"><i class="fas fa-user"></i>Profile</a>
+                    <a class="nav-link-item active-nav" href="vouchers.html"><i class="fas fa-ticket-alt"></i>Vouchers</a>
+                    <a class="nav-link-item" href="#" onclick="goToPromotions(); return false;"><i class="fas fa-bullhorn"></i>Promotions</a>
+                </div>
+                <button class="btn-logout" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i>Logout</button>
+            </div>
+
+            <!-- Mobile toggler -->
+            <button class="navbar-toggler border-0 d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenuMobile" style="padding:0.3rem;">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse justify-content-end" id="navMenu">
-                <div class="d-flex align-items-center gap-1 flex-wrap mt-2 mt-lg-0">
-                    <a class="nav-link-item" href="index.html"><i class="fas fa-home me-1"></i>Home</a>
-                    <a class="nav-link-item" href="profile.html"><i class="fas fa-user me-1"></i>Profile</a>
-                    <a class="nav-link-item active-nav" href="vouchers.html"><i class="fas fa-ticket-alt me-1"></i>Vouchers</a>
-                    <a class="nav-link-item" href="#" onclick="goToPromotions(); return false;"><i class="fas fa-bullhorn me-1"></i>Promotions</a>
-                    <button class="btn-logout ms-2" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i>Logout</button>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="collapse navbar-collapse d-md-none" id="navMenuMobile">
+            <div style="padding:0.75rem 1rem 1rem; border-top:1px solid rgba(0,0,0,0.06); background:#fff;">
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                    <a class="nav-link-item" href="index.html" style="border-radius:10px;"><i class="fas fa-house"></i>Home</a>
+                    <a class="nav-link-item" href="profile.html" style="border-radius:10px;"><i class="fas fa-user"></i>Profile</a>
+                    <a class="nav-link-item active-nav" href="vouchers.html" style="border-radius:10px;"><i class="fas fa-ticket-alt"></i>Vouchers</a>
+                    <a class="nav-link-item" href="#" onclick="goToPromotions(); return false;" style="border-radius:10px;"><i class="fas fa-bullhorn"></i>Promotions</a>
+                    <button class="btn-logout mt-2" onclick="logout()" style="align-self:flex-start;"><i class="fas fa-arrow-right-from-bracket"></i>Logout</button>
                 </div>
             </div>
         </div>
