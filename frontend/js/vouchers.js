@@ -627,7 +627,7 @@
 
     // ─── Shared user card (matches app UserCardNetwork exactly) ───────────────
     function buildUserCard(user, isDirect) {
-        const initials = user.isPlaceholder ? '?' : getInitials(user.name);
+        const initials = getInitials(user.name) || '?';
         const credits  = fmtNum(user.creditsReceived || 0);
         const pool     = '₹' + fmtNum(Math.round(user.structuralCreditPool || 0));
         const hex      = avatarColorHex(user.level);
