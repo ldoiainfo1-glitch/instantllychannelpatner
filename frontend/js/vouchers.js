@@ -616,43 +616,175 @@
         renderNetworkView(mode);
     }
 
-    function renderNetworkView(mode) {
-        const container=document.getElementById('networkTreeContainer'); if(!container||!state.networkTree) return;
-        container.innerHTML=renderTreeNode(state.networkTree,0,true);
-        container.querySelectorAll('[data-tree-toggle]').forEach(btn=>{
-            btn.addEventListener('click',()=>{
-                const childDiv=document.getElementById('children-'+btn.dataset.treeToggle);
-                if(childDiv){const open=childDiv.style.display!=='none';childDiv.style.display=open?'none':'block';btn.querySelector('.tree-chevron')?.style.setProperty('transform',open?'rotate(0deg)':'rotate(180deg)');}
-            });
-        });
+    // ─── Network helpers ──────────────────────────────────────────────────────
+    function getInitials(name) {
+        if (!name) return '?';
+        return name.split(' ').filter(Boolean).map(n => n[0]).join('').toUpperCase().slice(0, 2);
     }
-
-    function renderTreeNode(user, level, isRoot) {
-        const hasChildren=user.directChildren&&user.directChildren.length>0; const indent=level*16;
-        const childrenHtml=hasChildren?`<div id="children-${escapeAttr(user.id)}" ${isRoot?'':'style="display:none;"'}>${user.directChildren.map(c=>renderTreeNode(c,level+1,false)).join('')}</div>`:'';
-        if (isRoot) return `
-            <div class="tree-root-card">
-                <div class="tree-root-header">
-                    <div class="tree-root-avatar"><i class="fas fa-user"></i></div>
-                    <div><div class="tree-root-name">${escapeHtml(user.name)}</div><div class="tree-root-lbl">You (Root)</div></div>
-                    ${hasChildren?`<button class="tree-toggle-btn" data-tree-toggle="${escapeAttr(user.id)}" style="margin-left:auto;background:none;border:none;cursor:pointer;padding:4px;"><i class="fas fa-chevron-up tree-chevron" style="transition:transform 0.2s;color:#6B7280;"></i></button>`:''}
-                </div>
-                <div class="tree-root-stats"><span><i class="fas fa-users" style="color:#10B981;"></i> ${user.totalNetworkCount} Users</span><span><i class="fas fa-link" style="color:#3B82F6;"></i> ${user.directCount} Direct</span></div>
-            </div>${childrenHtml}`;
-        return `
-        <div class="tree-user-row" style="margin-left:${indent}px;">
-            ${hasChildren?`<button class="tree-toggle-btn" data-tree-toggle="${escapeAttr(user.id)}" style="background:none;border:none;cursor:pointer;padding:2px;width:22px;"><i class="fas fa-chevron-right tree-chevron" style="transition:transform 0.2s;color:#6B7280;font-size:0.75rem;"></i></button>`:'<span class="tree-spacer"></span>'}
-            <div class="tree-user-avatar ${avatarColor(user.level)}">${user.isPlaceholder?'?':user.name.charAt(0).toUpperCase()}</div>
-            <div class="tree-user-info"><div class="tree-user-name">${escapeHtml(user.name)}</div><div class="tree-user-credits-row"><i class="tree-credits-icon fas fa-layer-group"></i><span class="tree-credits-val">Lv.${user.level}${user.phone?' · '+escapeHtml(user.phone):''}</span></div></div>
-            <div class="tree-right">
-                ${!user.isPlaceholder&&state.isVoucherAdmin?`<button class="tree-arrow-btn" onclick="openAdminVoucherTransferModal('${escapeAttr(user.phone||'')}','${escapeAttr(user.name)}')"><i class="fas fa-arrow-right"></i></button>`:
-                !user.isPlaceholder?`<button class="tree-arrow-btn" onclick="openTransferCreditsModal('${escapeAttr(user.id)}','${escapeAttr(user.name)}','${escapeAttr(user.phone||'')}')"><i class="fas fa-coins" style="font-size:0.7rem;"></i></button>`:
-                `<button class="tree-arrow-btn slot" onclick="openSpecialTransferModal(${user.level},'${escapeAttr(user.name)}')"><i class="fas fa-plus" style="font-size:0.7rem;"></i></button>`}
-            </div>
-        </div>${childrenHtml}`;
-    }
-
     function avatarColor(level) { return ['av-green','av-blue','av-purple','av-amber','av-rose','av-cyan','av-indigo'][(level||0)%7]; }
+    const AVATAR_HEX = ['#10B981','#3B82F6','#8B5CF6','#F59E0B','#F43F5E','#06B6D4','#6366F1'];
+    function avatarColorHex(level) { return AVATAR_HEX[(level||0)%7]; }
+
+    // ─── Shared user card (matches app UserCardNetwork exactly) ───────────────
+    function buildUserCard(user, isDirect) {
+        const initials = user.isPlaceholder ? '?' : getInitials(user.name);
+        const credits  = fmtNum(user.creditsReceived || 0);
+        const pool     = '₹' + fmtNum(Math.round(user.structuralCreditPool || 0));
+        const hex      = avatarColorHex(user.level);
+        const transferBtn = user.isPlaceholder
+            ? `<button class="tree-arrow-btn slot" onclick="openSpecialTransferModal(${user.level},'${escapeAttr(user.name)}')"><i class="fas fa-plus" style="font-size:0.7rem;"></i></button>`
+            : state.isVoucherAdmin
+                ? `<button class="tree-arrow-btn" onclick="openAdminVoucherTransferModal('${escapeAttr(user.phone||'')}','${escapeAttr(user.name)}')"><i class="fas fa-arrow-right"></i></button>`
+                : isDirect
+                    ? `<button class="tree-arrow-btn" onclick="openTransferCreditsModal('${escapeAttr(user.id)}','${escapeAttr(user.name)}','${escapeAttr(user.phone||'')}')"><i class="fas fa-arrow-right"></i></button>`
+                    : '';
+        const netBadge = user.totalNetworkCount > 0
+            ? `<div class="tree-net-badge" style="background:${hex}20;color:${hex};"><i class="fas fa-users" style="font-size:0.62rem;"></i><span>${user.totalNetworkCount}</span></div>`
+            : '';
+        return `
+        <div class="tree-user-row">
+            <div class="tree-user-avatar ${avatarColor(user.level)}" style="background:${hex}30;color:${hex};">${initials}</div>
+            <div class="tree-user-info">
+                <div class="tree-user-name-row">
+                    <span class="tree-user-name">${escapeHtml(user.name)}</span>
+                    ${user.isActive&&!user.isPlaceholder ? '<span class="tree-active-dot"></span>' : ''}
+                </div>
+                <div class="tree-user-credits-row">
+                    <i class="fas fa-gift tree-credits-icon"></i><span class="tree-credits-val">${credits} credits</span>
+                    <i class="fas fa-chart-line tree-credits-icon"></i><span class="tree-credits-val">${pool}</span>
+                    <i class="fas fa-layer-group tree-credits-icon"></i>
+                </div>
+            </div>
+            <div class="tree-right">${netBadge}${transferBtn}</div>
+        </div>`;
+    }
+
+    // ════════════════════════════════════════════════════════════════════
+    //  NETWORK — LIST MODE  (matches app NetworkListView: collapsible flat list)
+    // ════════════════════════════════════════════════════════════════════
+    function renderListNode(user, level, isRoot) {
+        const hasChildren = !!(user.directChildren && user.directChildren.length > 0);
+        const uid = escapeAttr(user.id);
+
+        if (isRoot) {
+            const childRows = hasChildren
+                ? user.directChildren.map(c => renderListNode(c, level + 1, false)).join('')
+                : '';
+            return `
+            <div class="net-list-section">
+                <div class="tree-root-card${hasChildren ? ' net-root-clickable' : ''}" id="root-card-${uid}"
+                     ${hasChildren ? `onclick="toggleNetSection('${uid}')"` : ''}>
+                    <div class="tree-root-header">
+                        <div class="tree-root-avatar"><i class="fas fa-user"></i></div>
+                        <div style="flex:1;">
+                            <div class="tree-root-name">${escapeHtml(user.name)}</div>
+                            <div class="tree-root-lbl">You (Root)</div>
+                        </div>
+                        ${hasChildren ? `<i class="fas fa-chevron-down" id="chevron-root-${uid}" style="color:#6B7280;transition:transform 0.2s;font-size:0.9rem;"></i>` : ''}
+                    </div>
+                    <div class="tree-root-stats">
+                        <span><i class="fas fa-users" style="color:#10B981;"></i> ${user.totalNetworkCount} Users</span>
+                        <span><i class="fas fa-code-branch" style="color:#3B82F6;"></i> ${user.directChildren.length} Direct</span>
+                    </div>
+                </div>
+                <div class="net-children-wrap" id="net-children-${uid}">${childRows}</div>
+            </div>`;
+        }
+
+        // Non-root: indented row with optional expand button
+        const childRows = hasChildren
+            ? user.directChildren.map(c => renderListNode(c, level + 1, false)).join('')
+            : '';
+        const indent = (level - 1) * 12;
+        return `
+        <div class="net-list-item" style="margin-left:${indent}px;">
+            <div class="net-list-item-top">
+                ${hasChildren
+                    ? `<button class="net-expand-btn" data-net-uid="${uid}"><i class="fas fa-chevron-right tree-chevron" style="font-size:0.65rem;color:#6B7280;transition:transform 0.2s;"></i></button>`
+                    : '<span class="net-expand-spacer"></span>'}
+                <div style="flex:1;">${buildUserCard(user, level === 1)}</div>
+            </div>
+            ${hasChildren ? `<div class="net-children-wrap" id="net-children-${uid}" style="display:none;">${childRows}</div>` : ''}
+        </div>`;
+    }
+
+    window.toggleNetSection = function(uid) {
+        const wrap    = document.getElementById('net-children-' + uid);
+        const chevron = document.getElementById('chevron-root-' + uid);
+        if (!wrap) return;
+        const isOpen = wrap.style.display !== 'none';
+        wrap.style.display = isOpen ? 'none' : 'block';
+        if (chevron) chevron.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+    };
+
+    // ════════════════════════════════════════════════════════════════════
+    //  NETWORK — TREE MODE  (matches app NetworkTreeView: connector lines)
+    // ════════════════════════════════════════════════════════════════════
+    function renderTreeNodeView(user, level, isRoot, isLast) {
+        const hasChildren = !!(user.directChildren && user.directChildren.length > 0);
+
+        if (isRoot) {
+            const childrenHtml = hasChildren
+                ? `<div class="tree-children-indent">${user.directChildren.map((c, i) => renderTreeNodeView(c, level + 1, false, i === user.directChildren.length - 1)).join('')}</div>`
+                : '';
+            return `
+            <div class="tree-root-wrap">
+                <div class="tree-root-card">
+                    <div class="tree-root-header">
+                        <div class="tree-root-avatar"><i class="fas fa-user"></i></div>
+                        <div style="flex:1;">
+                            <div class="tree-root-name">${escapeHtml(user.name)}</div>
+                            <div class="tree-root-lbl">You (Root)</div>
+                        </div>
+                    </div>
+                    <div class="tree-root-stats">
+                        <span><i class="fas fa-users" style="color:#10B981;"></i> ${user.totalNetworkCount} Users</span>
+                        <span><i class="fas fa-code-branch" style="color:#3B82F6;"></i> ${user.directChildren.length} Direct</span>
+                    </div>
+                </div>
+                ${childrenHtml}
+            </div>`;
+        }
+
+        const childrenHtml = hasChildren
+            ? `<div class="tree-children-indent tree-children-sub">${user.directChildren.map((c, i) => renderTreeNodeView(c, level + 1, false, i === user.directChildren.length - 1)).join('')}</div>`
+            : '';
+
+        return `
+        <div class="tree-node-outer${isLast ? ' tree-node-last' : ''}">
+            <div class="tree-conn-wrap">
+                <div class="tree-conn-v${isLast ? ' last' : ''}"></div>
+                <div class="tree-conn-h"></div>
+            </div>
+            ${buildUserCard(user, level === 1)}
+            ${childrenHtml}
+        </div>`;
+    }
+
+    // ─── Render dispatcher ────────────────────────────────────────────────────
+    function renderNetworkView(mode) {
+        const container = document.getElementById('networkTreeContainer');
+        if (!container || !state.networkTree) return;
+
+        if (mode === 'list') {
+            container.innerHTML = renderListNode(state.networkTree, 0, true);
+            // Wire expand buttons for non-root nodes
+            container.querySelectorAll('[data-net-uid]').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const uid = btn.dataset.netUid;
+                    const wrap = document.getElementById('net-children-' + uid);
+                    if (!wrap) return;
+                    const isOpen = wrap.style.display !== 'none';
+                    wrap.style.display = isOpen ? 'none' : 'block';
+                    const chevron = btn.querySelector('.tree-chevron');
+                    if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+                });
+            });
+        } else {
+            container.innerHTML = `<div style="overflow-x:auto;">${renderTreeNodeView(state.networkTree, 0, true, false)}</div>`;
+        }
+    }
 
     window.switchDashTab=function(name,btn){
         document.querySelectorAll('.dash-vtab').forEach(b=>b.classList.remove('active'));

@@ -407,7 +407,7 @@
         }
         .btn-tv:hover { background: #7C3AED; }
 
-        /* Network tree (matches app NetworkListView) */
+        /* Network tree (matches app NetworkListView / NetworkTreeView) */
         .net-toggle-row {
             display: flex; background: #E5E7EB; border-radius: 12px; padding: 4px; margin-bottom: 14px;
         }
@@ -424,57 +424,86 @@
             border: 2px solid #10B981; margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(16,185,129,0.15);
         }
+        .net-root-clickable { cursor: pointer; }
+        .net-root-clickable:hover { box-shadow: 0 4px 14px rgba(16,185,129,0.25); }
         .tree-root-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
         .tree-root-avatar {
             width: 44px; height: 44px; border-radius: 50%;
             background: rgba(16,185,129,0.12); display: flex;
-            align-items: center; justify-content: center; color: #10B981; font-size: 1.1rem;
+            align-items: center; justify-content: center; color: #10B981; font-size: 1.1rem; flex-shrink: 0;
         }
         .tree-root-name { font-size: 0.95rem; font-weight: 700; color: #1F2937; }
         .tree-root-lbl  { font-size: 0.68rem; color: #10B981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
         .tree-root-stats { display: flex; gap: 16px; font-size: 0.78rem; color: #374151; font-weight: 500; }
         .tree-root-stats span { display: flex; align-items: center; gap: 5px; }
-        .tree-toggle-btn { background: none; border: none; cursor: pointer; padding: 4px; margin-left: auto; }
 
-        /* User row — matches app screenshot exactly */
+        /* User row — matches app UserCardNetwork exactly */
         .tree-user-row {
             display: flex; align-items: center; gap: 10px;
-            background: #fff; border-radius: 12px; padding: 10px 14px;
+            background: #fff; border-radius: 12px; padding: 10px 12px;
             margin-bottom: 8px; border: 1px solid rgba(0,0,0,0.06);
             box-shadow: 0 1px 4px rgba(0,0,0,0.05);
         }
         .tree-user-avatar {
-            width: 36px; height: 36px; border-radius: 18px;
+            width: 40px; height: 40px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.78rem; font-weight: 700; color: #fff; flex-shrink: 0;
+            font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
         }
         .tree-user-info { flex: 1; min-width: 0; }
-        .tree-user-name { font-size: 0.85rem; font-weight: 600; color: #1F2937; }
-        .tree-user-credits-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
-        .tree-credits-icon { font-size: 0.65rem; color: #9CA3AF; }
-        .tree-credits-val  { font-size: 0.68rem; color: #6B7280; }
+        /* Name row — name + active dot */
+        .tree-user-name-row { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+        .tree-user-name { font-size: 0.85rem; font-weight: 600; color: #1F2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tree-active-dot { width: 7px; height: 7px; border-radius: 50%; background: #10B981; flex-shrink: 0; }
+        /* Stats row — gift credits | chart ₹pool | layers */
+        .tree-user-credits-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+        .tree-credits-icon { font-size: 0.6rem; color: #9CA3AF; }
+        .tree-credits-val  { font-size: 0.65rem; color: #6B7280; margin-right: 4px; }
+        /* Right section */
         .tree-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-        .tree-commission { display: flex; align-items: center; gap: 3px; font-size: 0.75rem; font-weight: 600; color: #1F2937; }
-        .tree-level-tag { font-size: 0.65rem; font-weight: 700; color: #9CA3AF; }
+        .tree-net-badge {
+            display: flex; align-items: center; gap: 3px;
+            padding: 4px 8px; border-radius: 12px;
+            font-size: 0.7rem; font-weight: 700;
+        }
         .tree-arrow-btn {
             width: 34px; height: 34px; border-radius: 17px; border: none;
-            background: #10B981; display: flex; align-items: center; justify-content: center;
-            color: #fff; cursor: pointer; transition: background 0.2s; font-size: 0.78rem;
+            background: rgba(16,185,129,0.15); display: flex; align-items: center; justify-content: center;
+            color: #10B981; cursor: pointer; transition: background 0.2s; font-size: 0.85rem;
         }
-        .tree-arrow-btn:hover { background: #059669; }
-        .tree-arrow-btn.slot { background: #8B5CF6; }
-        .tree-arrow-btn.slot:hover { background: #7C3AED; }
-        .tree-spacer { width: 22px; display: inline-block; }
-        .tree-children { margin-left: 14px; }
+        .tree-arrow-btn:hover { background: rgba(16,185,129,0.3); }
+        .tree-arrow-btn.slot { background: rgba(139,92,246,0.15); color: #8B5CF6; }
+        .tree-arrow-btn.slot:hover { background: rgba(139,92,246,0.3); }
 
-        /* Avatar colors */
-        .av-blue   { background: #3B82F6; }
-        .av-purple { background: #8B5CF6; }
-        .av-amber  { background: #F59E0B; }
-        .av-rose   { background: #F43F5E; }
-        .av-green  { background: #10B981; }
-        .av-cyan   { background: #06B6D4; }
-        .av-indigo { background: #6366F1; }
+        /* ── LIST MODE ─────────────────────────────────────── */
+        .net-list-section { }
+        .net-list-item { display: flex; flex-direction: column; margin-bottom: 2px; }
+        .net-list-item-top { display: flex; align-items: flex-start; gap: 2px; }
+        .net-expand-btn {
+            background: none; border: none; cursor: pointer;
+            padding: 14px 4px 0 0; flex-shrink: 0; width: 20px;
+        }
+        .net-expand-spacer { width: 20px; flex-shrink: 0; }
+        .net-children-wrap { margin-left: 12px; }
+
+        /* ── TREE MODE ─────────────────────────────────────── */
+        .tree-root-wrap { }
+        .tree-children-indent { margin-left: 20px; padding-left: 0; }
+        .tree-children-sub    { margin-left: 16px; }
+        .tree-node-outer { position: relative; padding-left: 22px; margin-bottom: 8px; }
+        /* Connector lines */
+        .tree-conn-wrap { position: absolute; left: 0; top: 0; width: 22px; height: 100%; pointer-events: none; }
+        .tree-conn-v    { position: absolute; left: 2px; top: 0; width: 2px; height: 100%; background: rgba(0,0,0,0.12); }
+        .tree-conn-v.last { height: 22px; }
+        .tree-conn-h    { position: absolute; left: 2px; top: 20px; width: 20px; height: 2px; background: rgba(0,0,0,0.12); }
+
+        /* Avatar colors — background is now set inline via hex30, keep for fallback */
+        .av-blue   { }
+        .av-purple { }
+        .av-amber  { }
+        .av-rose   { }
+        .av-green  { }
+        .av-cyan   { }
+        .av-indigo { }
 
         /* Dashboard voucher tabs */
         .dash-vtabs { display: flex; border-bottom: 2px solid #F3F4F6; background: #FAFAFA; }
