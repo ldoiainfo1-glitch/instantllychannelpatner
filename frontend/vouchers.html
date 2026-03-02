@@ -4,1250 +4,849 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <title>My Vouchers - Instantlly</title>
     <link rel="icon" href="images/logo.jpeg" type="image/jpeg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        * { font-family: 'Inter', sans-serif; }
+        * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+        body { background: #F8FAFC; min-height: 100vh; margin: 0; padding: 0; }
 
-        body {
-            padding-top: 68px;
-            background: #f5f6fa;
-            min-height: 100vh;
-        }
+        /* SCREEN SYSTEM */
+        .screen { display: none; flex-direction: column; min-height: 100vh; background: #F8FAFC; }
+        .screen.active { display: flex; }
 
-        /* ─── NAVBAR ─── */
-        .top-navbar {
-            background: rgba(255,255,255,0.97);
-            border-bottom: 1px solid rgba(0,0,0,0.07);
-            padding: 0 1.5rem;
-            height: 68px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-        .brand-logo {
-            height: 36px; width: 36px; border-radius: 10px;
-            object-fit: cover;
-            box-shadow: 0 2px 8px rgba(79,70,229,0.18);
-        }
-        .brand-title {
-            font-size: 1.05rem; font-weight: 800;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.1;
-        }
-        .brand-sub {
-            font-size: 0.65rem; color: #a0aec0; font-weight: 500;
-            letter-spacing: 0.02em;
-        }
-
-        /* Nav pill container */
-        .nav-pills-wrap {
-            display: flex; align-items: center; gap: 2px;
-            background: #f3f4f6;
-            border-radius: 12px;
-            padding: 4px;
-        }
-        .nav-link-item {
-            font-size: 0.84rem; font-weight: 500; color: #6b7280;
-            text-decoration: none; padding: 0.42rem 0.85rem;
-            border-radius: 9px; transition: all 0.2s;
-            display: flex; align-items: center; gap: 5px;
-            white-space: nowrap;
-        }
-        .nav-link-item i { font-size: 0.78rem; }
-        .nav-link-item:hover { background: #fff; color: #4f46e5; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-        .nav-link-item.active-nav {
-            background: #fff;
-            color: #4f46e5;
-            font-weight: 700;
-            box-shadow: 0 2px 8px rgba(79,70,229,0.15);
-        }
-        .nav-link-item.active-nav i { color: #4f46e5; }
-
-        /* Logout */
-        .btn-logout {
-            display: flex; align-items: center; gap: 6px;
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color: #fff; border: none;
-            font-size: 0.82rem; font-weight: 600;
-            padding: 0.45rem 1.05rem;
-            border-radius: 10px;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(239,68,68,0.25);
-            cursor: pointer;
-        }
-        .btn-logout:hover {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            box-shadow: 0 4px 14px rgba(239,68,68,0.35);
-            transform: translateY(-1px);
-        }
-        .btn-logout i { font-size: 0.8rem; }
-
-        /* ─── HERO BANNER ─── */
-        .hero-banner {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
-            padding: 2.5rem 0 3.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-        .hero-banner::before {
-            content: '';
-            position: absolute; inset: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-        .hero-banner::after {
-            content: '';
-            position: absolute;
-            bottom: -1px; left: 0; right: 0; height: 40px;
-            background: #f5f6fa;
-            clip-path: ellipse(55% 100% at 50% 100%);
-        }
-        .hero-icon-wrap {
-            width: 52px; height: 52px; border-radius: 14px;
-            background: rgba(255,255,255,0.2);
-            display: inline-flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; color: #fff; margin-bottom: 1rem;
-        }
-        .hero-title { font-size: 1.9rem; font-weight: 800; color: #fff; margin-bottom: 0.3rem; }
-        .hero-sub { font-size: 0.95rem; color: rgba(255,255,255,0.8); }
-
-        /* ─── STAT CARDS ─── */
-        .stats-row { margin-top: -1.5rem; position: relative; z-index: 2; }
-        .stat-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 1.3rem 1.5rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.07);
-            border: 1px solid rgba(0,0,0,0.04);
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex; align-items: center; gap: 1rem;
-        }
-        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
-        .stat-icon-wrap {
-            width: 50px; height: 50px; border-radius: 14px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.3rem; flex-shrink: 0;
-        }
-        .stat-icon-wrap.blue   { background: #eff6ff; color: #3b82f6; }
-        .stat-icon-wrap.green  { background: #f0fdf4; color: #22c55e; }
-        .stat-icon-wrap.cyan   { background: #ecfeff; color: #06b6d4; }
-        .stat-icon-wrap.amber  { background: #fffbeb; color: #f59e0b; }
-        .stat-label { font-size: 0.78rem; color: #9ca3af; font-weight: 500; margin-bottom: 2px; }
-        .stat-value { font-size: 1.9rem; font-weight: 800; color: #111; line-height: 1; }
-
-        /* ─── SECTION CARD ─── */
-        .section-card {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.04);
-            overflow: hidden;
-        }
-        .section-header {
-            padding: 1.25rem 1.75rem;
-            border-bottom: 1px solid #f3f4f6;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .section-title { font-size: 1rem; font-weight: 700; color: #111; margin: 0; }
-        .btn-refresh {
-            background: #f0f4ff; color: #4f46e5; border: none;
-            font-size: 0.82rem; font-weight: 600; padding: 0.45rem 1rem;
-            border-radius: 8px; transition: all 0.2s;
-        }
-        .btn-refresh:hover { background: #e0e7ff; color: #3730a3; }
-
-        /* ─── TABS ─── */
-        .voucher-tabs {
-            display: flex; gap: 0;
-            padding: 0 1.75rem;
-            border-bottom: 2px solid #f3f4f6;
-            background: #fafafa;
-        }
-        .vtab-btn {
-            background: none; border: none;
-            padding: 1rem 1.25rem;
-            font-size: 0.85rem; font-weight: 500; color: #9ca3af;
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px; cursor: pointer;
-            transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem;
-        }
-        .vtab-btn:hover { color: #4f46e5; }
-        .vtab-btn.active { color: #4f46e5; border-bottom-color: #4f46e5; font-weight: 600; }
-        .vtab-badge {
-            font-size: 0.7rem; font-weight: 700;
-            padding: 1px 7px; border-radius: 20px; min-width: 20px; text-align: center;
-        }
-        .vtab-badge.all     { background: #e5e7eb; color: #374151; }
-        .vtab-badge.bought  { background: #d1fae5; color: #065f46; }
-        .vtab-badge.recv    { background: #cffafe; color: #164e63; }
-        .vtab-badge.sent    { background: #fef3c7; color: #92400e; }
-        .vtab-pane { display: none; padding: 1.75rem; }
-        .vtab-pane.active   { display: block; }
-
-        /* ─── VOUCHER TICKET CARD ─── */
-        .voucher-ticket {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-            border: 1px solid #f0f0f0;
-            overflow: hidden;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-bottom: 1rem;
-        }
-        .voucher-ticket:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
-        .voucher-ticket-top {
-            padding: 1.25rem 1.5rem;
-            display: flex; align-items: center; gap: 1rem;
-            border-bottom: 2px dashed #f0f0f0;
-            position: relative;
-        }
-        .biz-logo {
-            width: 52px; height: 52px; border-radius: 12px;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            display: flex; align-items: center; justify-content: center;
-            color: #fff; font-size: 1.5rem; flex-shrink: 0;
-        }
-        .biz-logo img { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; }
-        .voucher-ticket-info { flex: 1; min-width: 0; }
-        .voucher-biz-name { font-size: 1rem; font-weight: 700; color: #111; margin-bottom: 2px; }
-        .voucher-number-display {
-            font-size: 0.78rem; color: #9ca3af;
-            font-family: 'Courier New', monospace; font-weight: 500;
-        }
-        .voucher-amount-wrap { text-align: right; flex-shrink: 0; }
-        .voucher-amount-value {
-            font-size: 1.7rem; font-weight: 800; color: #e53e3e; line-height: 1;
-        }
-        .voucher-amount-label { font-size: 0.7rem; color: #9ca3af; font-weight: 500; }
-        .discount-badge {
-            position: absolute; top: 14px; right: 14px;
-            background: #e53e3e; color: #fff;
-            font-size: 0.75rem; font-weight: 700;
-            padding: 4px 10px; border-radius: 20px;
-        }
-        /* circle cuts for ticket effect */
-        .voucher-ticket-top::before,
-        .voucher-ticket-top::after {
-            content: '';
-            position: absolute; bottom: -10px;
-            width: 20px; height: 20px;
-            background: #f5f6fa; border-radius: 50%;
-            border: 1px solid #f0f0f0;
-        }
-        .voucher-ticket-top::before { left: -10px; }
-        .voucher-ticket-top::after  { right: -10px; }
-
-        .voucher-ticket-bottom {
-            padding: 1rem 1.5rem;
-            display: flex; align-items: center; justify-content: space-between;
-            flex-wrap: wrap; gap: 0.75rem;
-        }
-        .voucher-meta { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; }
-        .voucher-meta-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: #6b7280; }
-        .voucher-meta-item i { font-size: 0.75rem; color: #9ca3af; }
-        .voucher-validity { font-size: 0.78rem; font-weight: 600; color: #d97706; }
-        .voucher-validity i { margin-right: 3px; }
-        .voucher-status-pill {
-            font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px;
-        }
-        .status-unredeemed { background: #d1fae5; color: #065f46; }
-        .status-redeemed   { background: #e5e7eb; color: #374151; }
-        .status-expired    { background: #fee2e2; color: #991b1b; }
-
-        .voucher-ticket-actions { display: flex; gap: 0.5rem; align-items: center; }
-        .btn-redeem {
-            background: #111; color: #fff; border: none;
-            font-size: 0.82rem; font-weight: 600;
-            padding: 0.5rem 1.2rem; border-radius: 10px;
-            transition: all 0.2s; cursor: pointer;
-        }
-        .btn-redeem:hover { background: #333; }
-        .btn-redeem:disabled { background: #9ca3af; cursor: not-allowed; }
-        .btn-transfer-v {
-            background: #ede9fe; color: #4f46e5; border: none;
-            font-size: 0.82rem; font-weight: 600;
-            padding: 0.5rem 1.2rem; border-radius: 10px;
-            transition: all 0.2s; cursor: pointer;
-        }
-        .btn-transfer-v:hover { background: #ddd6fe; }
-        .btn-view-v {
-            background: #f3f4f6; color: #374151; border: none;
-            font-size: 0.82rem; font-weight: 600;
-            padding: 0.5rem 0.9rem; border-radius: 10px;
-            transition: all 0.2s; cursor: pointer;
-        }
-        .btn-view-v:hover { background: #e5e7eb; }
-
-        /* ─── SOURCE TAG ─── */
-        .source-tag {
-            font-size: 0.7rem; font-weight: 600; padding: 2px 8px;
-            border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em;
-        }
-        .source-purchase { background: #dbeafe; color: #1e40af; }
-        .source-transfer { background: #f3e8ff; color: #6d28d9; }
-        .source-admin    { background: #d1fae5; color: #065f46; }
-
-        /* ─── EMPTY STATE ─── */
-        .empty-state {
-            text-align: center; padding: 4rem 2rem;
-        }
-        .empty-icon-wrap {
-            width: 80px; height: 80px; border-radius: 24px;
-            background: #f3f4f6; color: #d1d5db;
-            font-size: 2rem; display: inline-flex;
-            align-items: center; justify-content: center; margin-bottom: 1.25rem;
-        }
-        .empty-title { font-size: 1.1rem; font-weight: 700; color: #374151; margin-bottom: 0.4rem; }
-        .empty-sub   { font-size: 0.88rem; color: #9ca3af; }
-
-        /* ─── LOADING ─── */
-        .loading-overlay {
-            text-align: center; padding: 3rem;
-        }
-        .spinner-ring {
-            width: 42px; height: 42px;
-            border: 3px solid #e5e7eb;
-            border-top-color: #4f46e5;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            display: inline-block; margin-bottom: 1rem;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ─── MODALS ─── */
-        .modal-content { border: none; border-radius: 20px; }
-        .modal-header {
-            border-bottom: 1px solid #f3f4f6; padding: 1.25rem 1.5rem;
-        }
-        .modal-title { font-size: 1rem; font-weight: 700; }
-        .modal-body  { padding: 1.5rem; }
-        .modal-footer { border-top: 1px solid #f3f4f6; padding: 1rem 1.5rem; }
-        .form-label { font-size: 0.85rem; font-weight: 600; color: #374151; }
-        .form-control {
-            border-radius: 10px; border: 1.5px solid #e5e7eb;
-            font-size: 0.9rem; padding: 0.6rem 1rem;
-        }
-        .form-control:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
-        .btn-primary-modal {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border: none; color: #fff;
-            font-weight: 600; border-radius: 10px;
-            padding: 0.55rem 1.4rem; font-size: 0.9rem;
-        }
-        .btn-primary-modal:hover { opacity: 0.9; color: #fff; }
-        .btn-secondary-modal {
-            background: #f3f4f6; border: none; color: #374151;
-            font-weight: 600; border-radius: 10px;
-            padding: 0.55rem 1.4rem; font-size: 0.9rem;
-        }
-
-        /* ─── ALERTS ─── */
+        /* Toast */
         .toast-bar {
-            position: fixed; top: 85px; right: 1.5rem; z-index: 9999;
-            padding: 0.85rem 1.5rem; border-radius: 12px;
-            font-weight: 600; font-size: 0.9rem;
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            padding: 12px 20px; border-radius: 12px;
+            font-weight: 600; font-size: 0.88rem;
             box-shadow: 0 8px 24px rgba(0,0,0,0.15);
             transform: translateY(-20px); opacity: 0;
             transition: all 0.3s; pointer-events: none;
         }
         .toast-bar.show { transform: translateY(0); opacity: 1; }
-        .toast-bar.success { background: #d1fae5; color: #065f46; }
-        .toast-bar.error   { background: #fee2e2; color: #991b1b; }
+        .toast-bar.success { background: #D1FAE5; color: #065F46; }
+        .toast-bar.error   { background: #FEE2E2; color: #991B1B; }
 
-        /* ─── NETWORK OVERVIEW CARD ─── */
-        .overview-card {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.04);
-            padding: 1.5rem;
-            margin-bottom: 1.25rem;
+        /* SPINNER */
+        .spinner-ring {
+            width: 42px; height: 42px; border: 3px solid #E5E7EB;
+            border-top-color: #3B82F6; border-radius: 50%;
+            animation: spin 0.8s linear infinite; display: inline-block;
         }
-        .overview-card-title {
-            font-size: 1rem; font-weight: 700; color: #111; margin-bottom: 1.25rem;
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ===========================================
+           SCREEN 1 — My Vouchers List
+        =========================================== */
+
+        /* Blue gradient header (matches app VoucherListScreen) */
+        .list-header {
+            background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+            padding: 16px 20px 22px;
+            border-bottom-left-radius: 24px;
+            border-bottom-right-radius: 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0; gap: 12px;
         }
-        .overview-metrics-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
+        .list-header-brand { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+        .list-header-icon-wrap {
+            width: 42px; height: 42px; background: rgba(255,255,255,0.2);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: #fff; flex-shrink: 0;
         }
-        .overview-metric {
-            background: #f9fafb; border-radius: 12px;
-            padding: 0.9rem 1rem; display: flex; align-items: center; gap: 0.75rem;
-            border: 1px solid rgba(0,0,0,0.04);
+        .list-header-title { font-size: 1.3rem; font-weight: 700; color: #fff; margin: 0; }
+        .list-header-sub   { font-size: 0.75rem; color: rgba(255,255,255,0.8); margin: 0; }
+        .list-header-nav {
+            display: flex; align-items: center; gap: 6px; flex-shrink: 0;
         }
-        .ov-icon {
-            width: 40px; height: 40px; border-radius: 50%;
+        .list-nav-btn {
+            background: rgba(255,255,255,0.15); border: none; border-radius: 8px;
+            width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+            color: rgba(255,255,255,0.85); font-size: 0.85rem; cursor: pointer;
+            text-decoration: none; transition: background 0.2s;
+        }
+        .list-nav-btn:hover, .list-nav-btn.active { background: rgba(255,255,255,0.3); color: #fff; }
+        .list-nav-logout { background: rgba(239,68,68,0.7); }
+        .list-nav-logout:hover { background: rgba(239,68,68,1); }
+
+        /* Voucher list scroll area */
+        .list-scroll { flex: 1; overflow-y: auto; padding: 20px; }
+        .list-scroll::-webkit-scrollbar { width: 0; }
+
+        /* App-matching voucher card */
+        .vc-card {
+            background: #fff; border-radius: 20px; padding: 24px;
+            margin-bottom: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.09);
+            border: 1px solid #E5E7EB; cursor: pointer; position: relative;
+            transition: transform 0.15s, box-shadow 0.15s; overflow: hidden;
+        }
+        .vc-card:hover  { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,0.14); }
+        .vc-card:active { transform: scale(0.98); }
+
+        /* Red discount badge — top right */
+        .vc-disc-badge {
+            position: absolute; top: 16px; right: 16px;
+            background: #DC2626; color: #fff;
+            font-size: 0.72rem; font-weight: 800;
+            padding: 5px 12px; border-radius: 20px; z-index: 2;
+        }
+
+        /* Card header: logo + info + amount */
+        .vc-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+        .vc-logo-box {
+            width: 64px; height: 64px; border-radius: 14px;
+            background: #EFF6FF; overflow: hidden; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1rem; flex-shrink: 0;
         }
-        .ov-icon.green  { background: #d1fae520; color: #10b981; }
-        .ov-icon.blue   { background: #dbeafe20; color: #3b82f6; }
-        .ov-icon.purple { background: #ede9fe20; color: #8b5cf6; }
-        .ov-icon.amber  { background: #fef3c720; color: #f59e0b; }
-        .ov-label { font-size: 0.75rem; color: #6b7280; margin-bottom: 2px; }
-        .ov-value { font-size: 1.1rem; font-weight: 700; color: #1f2937; }
+        .vc-logo-box img { width: 100%; height: 100%; object-fit: cover; }
+        .vc-logo-box.placeholder img { width: 52px; height: 52px; object-fit: contain; }
+        .vc-company { flex: 1; min-width: 0; }
+        .vc-company-name { font-size: 1.05rem; font-weight: 800; color: #1F2937; margin-bottom: 4px; }
+        .vc-info-row { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+        .vc-info-row i { font-size: 0.65rem; color: #9CA3AF; }
+        .vc-info-row span { font-size: 0.68rem; color: #6B7280; }
+        .vc-amount-col { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; padding-right: 68px; }
+        .vc-amt-symbol { font-size: 0.95rem; font-weight: 700; color: #DC2626; line-height: 1; }
+        .vc-amt-value  { font-size: 2.1rem; font-weight: 900; color: #DC2626; line-height: 1; }
+        .vc-amt-disc   { font-size: 0.72rem; font-weight: 700; color: #059669; margin-top: 2px; }
+        .vc-amt-label  { font-size: 0.65rem; font-weight: 600; color: #9CA3AF; margin-top: 2px; }
 
-        /* ─── CREDIT STATISTICS CARD ─── */
-        .credit-card {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.04);
-            padding: 1.5rem;
-            margin-bottom: 1.25rem;
+        /* Description */
+        .vc-desc {
+            padding: 10px 0; border-top: 1px solid #E5E7EB; margin-bottom: 10px;
+            font-size: 0.78rem; color: #6B7280; text-align: center; line-height: 1.5;
         }
-        .credit-header {
-            display: flex; align-items: flex-start; justify-content: space-between;
-            margin-bottom: 1.25rem;
+
+        /* Validity footer */
+        .vc-validity { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .vc-validity i { font-size: 0.72rem; color: #F59E0B; }
+        .vc-validity span { font-size: 0.72rem; font-weight: 600; color: #D97706; }
+
+        /* Status overlay (redeemed/expired) */
+        .vc-status-overlay {
+            position: absolute; inset: 0; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center; pointer-events: none;
         }
-        .credit-balance-badge {
-            display: flex; align-items: center; gap: 5px;
-            background: #d1fae520; padding: 5px 12px; border-radius: 20px;
-        }
-        .credit-balance-badge span { font-size: 0.82rem; font-weight: 700; color: #10b981; }
-        .credit-stat-item {
-            display: flex; align-items: center; gap: 0.9rem;
-            background: #f9fafb; border-radius: 12px;
-            padding: 0.9rem 1rem; margin-bottom: 0.75rem;
-            border: 1px solid rgba(0,0,0,0.04);
-        }
-        .cs-icon {
-            width: 48px; height: 48px; border-radius: 50%;
+        .vc-status-text { font-size: 1.4rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+
+        /* Empty / loading */
+        .vc-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; }
+        .vc-empty   { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; }
+        .vc-empty-icon {
+            width: 80px; height: 80px; border-radius: 24px; background: #F3F4F6;
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem; flex-shrink: 0;
+            font-size: 2rem; color: #D1D5DB; margin-bottom: 16px;
         }
-        .cs-label { font-size: 0.8rem; color: #6b7280; margin-bottom: 3px; }
-        .cs-value { font-size: 1.25rem; font-weight: 700; }
+        .vc-empty-title { font-size: 1.15rem; font-weight: 700; color: #1F2937; margin-bottom: 8px; }
+        .vc-empty-sub   { font-size: 0.85rem; color: #6B7280; line-height: 1.55; max-width: 280px; }
 
-        /* Transfer history accordion */
-        .transfer-history-toggle {
+        /* ===========================================
+           SCREEN 2 — Voucher Detail
+        =========================================== */
+        .detail-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px; background: #fff;
+            border-bottom: 1px solid #E5E7EB; flex-shrink: 0;
+        }
+        .detail-close-btn {
+            width: 44px; height: 44px; background: #F3F4F6;
+            border: none; border-radius: 22px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; color: #1F2937; cursor: pointer; transition: background 0.2s;
+        }
+        .detail-close-btn:hover { background: #E5E7EB; }
+        .detail-header-title { font-size: 1.1rem; font-weight: 600; color: #1F2937; }
+        .detail-placeholder  { width: 44px; }
+
+        .detail-scroll { flex: 1; overflow-y: auto; }
+        .detail-scroll::-webkit-scrollbar { width: 0; }
+
+        .detail-img-wrap {
+            min-height: 340px; background: #111827;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .detail-img-wrap img { width: 100%; max-height: 520px; object-fit: contain; display: block; }
+
+        /* Styled voucher when no image — matches app look */
+        .detail-card-visual {
+            width: 100%; background: linear-gradient(135deg, #1F2937, #111827);
+            padding: 48px 28px; display: flex; flex-direction: column;
+            align-items: center; text-align: center;
+        }
+        .dcv-logo {
+            width: 80px; height: 80px; border-radius: 20px;
+            background: rgba(255,255,255,0.1); display: flex;
+            align-items: center; justify-content: center; margin-bottom: 20px;
+        }
+        .dcv-logo img { width: 62px; height: 62px; object-fit: contain; }
+        .dcv-name   { font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .dcv-phone  { font-size: 0.82rem; color: rgba(255,255,255,0.65); margin-bottom: 3px; }
+        .dcv-addr   { font-size: 0.82rem; color: rgba(255,255,255,0.65); margin-bottom: 20px; }
+        .dcv-disc-badge { background: #DC2626; color: #fff; font-size: 0.85rem; font-weight: 800; padding: 6px 18px; border-radius: 20px; margin-bottom: 14px; }
+        .dcv-amount { font-size: 3.5rem; font-weight: 900; color: #DC2626; line-height: 1; margin-bottom: 6px; }
+        .dcv-disc-pct { font-size: 0.95rem; font-weight: 700; color: #10B981; margin-bottom: 4px; }
+        .dcv-value-label { font-size: 0.78rem; color: rgba(255,255,255,0.5); margin-bottom: 24px; }
+        .dcv-validity { display: flex; align-items: center; gap: 6px; }
+        .dcv-validity i { color: #F59E0B; }
+        .dcv-validity span { font-size: 0.82rem; font-weight: 600; color: #D97706; }
+
+        /* Action buttons */
+        .detail-buttons { padding: 20px; display: flex; flex-direction: column; gap: 12px; background: #fff; }
+        .btn-redeem-now {
+            background: #10B981; border: none; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 16px 20px; cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 4px 14px rgba(16,185,129,0.35); text-decoration: none;
+        }
+        .btn-redeem-now:hover { background: #059669; box-shadow: 0 6px 20px rgba(16,185,129,0.45); transform: translateY(-1px); }
+        .btn-redeem-now span, .btn-redeem-now i { color: #fff; font-size: 1rem; font-weight: 700; }
+        .btn-no-voucher {
+            display: flex; align-items: center; gap: 10px;
+            background: #FEF3C7; border-radius: 12px; padding: 16px 20px;
+        }
+        .btn-no-voucher i { color: #F59E0B; font-size: 1.1rem; flex-shrink: 0; }
+        .btn-no-voucher span { font-size: 0.8rem; font-weight: 600; color: #92400E; line-height: 1.4; }
+        .btn-continue-dash {
+            background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 16px 20px; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-continue-dash:hover { background: #E5E7EB; transform: translateY(-1px); }
+        .btn-continue-dash span, .btn-continue-dash i { font-size: 1rem; font-weight: 700; color: #1F2937; }
+
+        /* ===========================================
+           SCREEN 3 — Vouchers & Network Dashboard
+        =========================================== */
+        .dash-header {
+            background: #fff; border-bottom: 1px solid rgba(0,0,0,0.07);
+            padding: 14px 20px; display: flex; align-items: center;
+            justify-content: space-between; flex-shrink: 0;
+        }
+        .dash-header-left { display: flex; align-items: center; gap: 12px; }
+        .dash-back-btn {
+            width: 40px; height: 40px; background: #F3F4F6; border: none;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; color: #1F2937; cursor: pointer; transition: background 0.2s;
+        }
+        .dash-back-btn:hover { background: #E5E7EB; }
+        .dash-header-title    { font-size: 1.2rem; font-weight: 700; color: #1F2937; margin: 0; }
+        .dash-header-subtitle { font-size: 0.75rem; color: #6B7280; margin: 0; }
+        .dash-history-btn {
+            width: 40px; height: 40px; background: #F3F4F6; border: none;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 0.95rem; color: #1F2937; cursor: pointer; transition: background 0.2s;
+        }
+        .dash-history-btn:hover { background: #E5E7EB; }
+
+        .dash-scroll { flex: 1; overflow-y: auto; padding: 20px; }
+        .dash-scroll::-webkit-scrollbar { width: 4px; }
+        .dash-scroll::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 2px; }
+
+        /* Stat cards row */
+        .dash-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .dash-stat-card {
+            background: #fff; border-radius: 16px; padding: 14px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04);
+            display: flex; align-items: center; gap: 10px;
+            transition: transform 0.2s;
+        }
+        .dash-stat-card:hover { transform: translateY(-2px); }
+        .dash-stat-icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+        .si-blue   { background: #EFF6FF; color: #3B82F6; }
+        .si-green  { background: #F0FDF4; color: #22C55E; }
+        .si-purple { background: #F5F3FF; color: #8B5CF6; }
+        .si-amber  { background: #FFFBEB; color: #F59E0B; }
+        .dash-stat-label { font-size: 0.7rem; color: #9CA3AF; font-weight: 500; margin-bottom: 2px; }
+        .dash-stat-value { font-size: 1.4rem; font-weight: 800; color: #111; line-height: 1; }
+
+        /* Section card */
+        .dash-card {
+            background: #fff; border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04);
+            overflow: hidden; margin-bottom: 16px;
+        }
+        .dash-card-header {
+            padding: 14px 18px; border-bottom: 1px solid #F3F4F6;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .dash-card-title { font-size: 0.92rem; font-weight: 700; color: #111; margin: 0; }
+        .dash-card-body  { padding: 14px 18px; }
+        .btn-refresh {
+            background: #F0F4FF; color: #4F46E5; border: none;
+            font-size: 0.8rem; font-weight: 600; padding: 6px 12px;
+            border-radius: 8px; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-refresh:hover { background: #E0E7FF; }
+
+        /* Voucher Stats Card (clickable) */
+        .vs-card {
+            background: #fff; border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.04);
+            padding: 18px; margin-bottom: 16px;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .vs-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+        .vs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .vs-icon { width: 46px; height: 46px; border-radius: 50%; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #10B981; }
+        .vs-stats { display: flex; justify-content: space-between; margin-bottom: 14px; }
+        .vs-stat-item { flex: 1; text-align: center; }
+        .vs-stat-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; }
+        .vs-stat-value { font-size: 1.35rem; font-weight: 800; color: #111; }
+        .vs-stat-label { font-size: 0.65rem; color: #9CA3AF; font-weight: 500; }
+        .vs-buy-btn {
+            width: 100%; background: linear-gradient(135deg, #10B981, #059669);
+            color: #fff; border: none; border-radius: 12px; padding: 12px;
+            font-size: 0.88rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer; transition: opacity 0.2s;
+        }
+        .vs-buy-btn:hover { opacity: 0.9; }
+
+        /* Overview metrics */
+        .ov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .ov-metric {
+            background: #F9FAFB; border-radius: 12px; padding: 12px;
+            display: flex; align-items: center; gap: 10px;
+            border: 1px solid rgba(0,0,0,0.04);
+        }
+        .ov-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+        .ov-icon.green  { background: rgba(16,185,129,0.1); color: #10B981; }
+        .ov-icon.blue   { background: rgba(59,130,246,0.1); color: #3B82F6; }
+        .ov-icon.purple { background: rgba(139,92,246,0.1); color: #8B5CF6; }
+        .ov-icon.amber  { background: rgba(245,158,11,0.1); color: #F59E0B; }
+        .ov-label { font-size: 0.7rem; color: #6B7280; margin-bottom: 2px; }
+        .ov-value { font-size: 0.95rem; font-weight: 700; color: #1F2937; }
+
+        /* Credit stats */
+        .cs-item {
+            display: flex; align-items: center; gap: 12px;
+            background: #F9FAFB; border-radius: 12px; padding: 12px;
+            margin-bottom: 10px; border: 1px solid rgba(0,0,0,0.04);
+        }
+        .cs-icon { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; flex-shrink: 0; }
+        .cs-label { font-size: 0.72rem; color: #6B7280; margin-bottom: 3px; }
+        .cs-value { font-size: 1.05rem; font-weight: 700; }
+
+        /* Transfer history */
+        .th-toggle {
             width: 100%; display: flex; justify-content: space-between; align-items: center;
-            background: #f3f4f6; border: none; border-radius: 10px;
-            padding: 0.75rem 1rem; cursor: pointer; margin-bottom: 0.75rem;
-            font-size: 0.88rem; font-weight: 600; color: #1f2937;
+            background: #F3F4F6; border: none; border-radius: 10px;
+            padding: 11px 14px; cursor: pointer; margin-bottom: 10px;
+            font-size: 0.83rem; font-weight: 600; color: #1F2937;
         }
-        .transfer-history-toggle i { transition: transform 0.2s; }
-        .transfer-history-toggle.open i.chevron { transform: rotate(180deg); }
-        .transfer-history-list { display: none; }
-        .transfer-history-list.open { display: block; }
+        .th-toggle i.chevron { transition: transform 0.2s; }
+        .th-toggle.open i.chevron { transform: rotate(180deg); }
+        .th-list { display: none; }
+        .th-list.open { display: block; }
         .th-item {
             display: flex; justify-content: space-between; align-items: center;
-            background: #fff; border-radius: 10px; padding: 0.75rem 1rem;
-            margin-bottom: 0.5rem; border: 1px solid rgba(0,0,0,0.05);
+            background: #fff; border-radius: 10px; padding: 10px 12px;
+            margin-bottom: 8px; border: 1px solid rgba(0,0,0,0.05);
         }
-        .th-left { display: flex; align-items: center; gap: 0.6rem; }
-        .th-status-icon {
-            width: 32px; height: 32px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; font-size: 0.8rem;
-        }
-        .th-name { font-size: 0.88rem; font-weight: 600; color: #1f2937; }
-        .th-date { font-size: 0.75rem; color: #9ca3af; }
-        .th-right { text-align: right; }
-        .th-amount { font-size: 0.95rem; font-weight: 700; color: #1f2937; margin-bottom: 3px; }
-        .th-status-badge { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+        .th-left { display: flex; align-items: center; gap: 8px; }
+        .th-si { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+        .th-name { font-size: 0.83rem; font-weight: 600; color: #1F2937; }
+        .th-date { font-size: 0.7rem; color: #9CA3AF; }
+        .th-amount { font-size: 0.88rem; font-weight: 700; color: #1F2937; margin-bottom: 3px; text-align: right; }
+        .th-badge { font-size: 0.65rem; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+        .timer-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #F3F4F6; }
+        .timer-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.8rem; }
 
-        /* Timer section */
-        .timer-section {
-            margin-top: 1rem; padding-top: 1rem;
-            border-top: 1px solid #f3f4f6;
-        }
-        .timer-title { font-size: 0.9rem; font-weight: 600; color: #1f2937; margin-bottom: 0.6rem; }
-        .timer-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0.4rem 0; font-size: 0.85rem;
-        }
-        .timer-left { display: flex; align-items: center; gap: 6px; color: #475569; }
-        .timer-value { font-weight: 600; color: #0f172a; }
+        /* Discount card */
+        .disc-metrics { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .disc-metric { background: #fff; border-radius: 10px; padding: 10px; border: 1px solid rgba(0,0,0,0.06); text-align: center; }
+        .disc-metric-label { font-size: 0.65rem; color: #64748B; margin-bottom: 4px; }
+        .disc-metric-value { font-size: 0.95rem; font-weight: 700; color: #0F172A; }
+        .progress-box { background: #F0FDF4; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
+        .disclaimer-box { display: flex; gap: 8px; background: #F8FAFC; border-radius: 10px; padding: 10px 14px; }
+        .disclaimer-box i { color: #64748B; margin-top: 2px; flex-shrink: 0; font-size: 0.82rem; }
+        .disclaimer-box span { font-size: 0.72rem; color: #64748B; line-height: 1.5; }
+        .level-badge { display: flex; align-items: center; gap: 5px; background: #FEF3C7; padding: 5px 10px; border-radius: 10px; }
+        .level-badge span { font-size: 0.75rem; font-weight: 600; color: #92400E; }
 
-        /* ─── DISCOUNT SAVINGS CARD ─── */
-        .discount-card {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.04);
-            padding: 1.5rem;
-            margin-bottom: 1.25rem;
-        }
-        .discount-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 1.25rem;
-        }
-        .level-badge {
-            display: flex; align-items: center; gap: 5px;
-            background: #fef3c7; padding: 6px 12px; border-radius: 10px;
-        }
-        .level-badge span { font-size: 0.82rem; font-weight: 600; color: #92400e; }
-        .discount-metrics {
-            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-        .disc-metric {
-            background: #fff; border-radius: 12px; padding: 0.9rem;
-            border: 1px solid rgba(0,0,0,0.06); text-align: center;
-        }
-        .disc-metric-label { font-size: 0.72rem; color: #64748b; margin-bottom: 4px; }
-        .disc-metric-value { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
-        .progress-box {
-            background: #f0fdf4; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem;
-        }
-        .progress-box-title { font-size: 0.85rem; font-weight: 600; color: #1f2937; margin-bottom: 0.4rem; }
-        .progress-box-text { font-size: 0.82rem; color: #166534; font-weight: 500; }
-        .progress-box-sub { font-size: 0.76rem; color: #15803d; margin-top: 2px; }
-        .disclaimer-box {
-            display: flex; gap: 0.5rem; align-items: flex-start;
-            background: #f8fafc; border-radius: 10px; padding: 0.75rem 1rem;
-        }
-        .disclaimer-box i { color: #64748b; margin-top: 2px; flex-shrink: 0; }
-        .disclaimer-box span { font-size: 0.78rem; color: #64748b; line-height: 1.5; }
-
-        /* ─── DIRECT BUYERS CARD ─── */
-        .buyers-card {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.04);
-            padding: 1.5rem;
-            margin-bottom: 1.25rem;
-        }
-        .buyers-card-title { font-size: 1rem; font-weight: 700; color: #0f172a; margin-bottom: 1rem; }
-        .buyer-row {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0.9rem 0; border-top: 1px solid rgba(0,0,0,0.05);
-        }
-        .buyer-name { font-size: 0.9rem; font-weight: 600; color: #0f172a; }
-        .buyer-meta { font-size: 0.78rem; color: #64748b; margin-top: 2px; }
-        .btn-call {
-            display: flex; align-items: center; gap: 5px;
-            background: #e2e8f0; border: none; border-radius: 10px;
-            padding: 0.45rem 0.9rem; font-size: 0.8rem; font-weight: 600;
-            color: #0f172a; cursor: pointer; text-decoration: none;
-            transition: background 0.2s;
-        }
-        .btn-call:hover { background: #cbd5e1; color: #0f172a; }
-
-        @media (max-width: 767px) {
-            /* Mobile nav pill becomes column */
-            .nav-pills-wrap { background: transparent; padding: 0; border-radius: 0; }
-            .nav-link-item { padding: 0.65rem 0.85rem; width: 100%; border-radius: 10px !important; }
-            .nav-link-item.active-nav { background: #f0f0ff; }
-        }
-        @media (max-width: 576px) {
-            .hero-title { font-size: 1.5rem; }
-            .stat-card { padding: 1rem; }
-            .stat-value { font-size: 1.5rem; }
-            .voucher-ticket-actions { width: 100%; justify-content: flex-end; }
-            .vtab-btn { padding: 0.75rem 0.75rem; font-size: 0.8rem; }
-            .overview-metrics-grid { grid-template-columns: 1fr 1fr; }
-            .discount-metrics { grid-template-columns: 1fr 1fr 1fr; }
-        }
-        @media (max-width: 400px) {
-            .discount-metrics { grid-template-columns: 1fr 1fr; }
-        }
-
-        /* ─── VOUCHER STATS CARD (mirrors VoucherStatsCard.tsx) ─── */
-        .vs-card {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.04);
-            padding: 1.5rem;
-            margin-bottom: 1.25rem;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .vs-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
-        .vs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
-        .vs-icon-badge { width:48px;height:48px;border-radius:50%;background:#10b98115;display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#10b981; }
-        .vs-stats-grid { display: flex; justify-content: space-between; margin-bottom: 1.25rem; }
-        .vs-stat-item { flex:1; text-align:center; }
-        .vs-stat-icon { width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 0.5rem; }
-        .vs-stat-value { font-size:1.4rem;font-weight:800;color:#111; }
-        .vs-stat-label { font-size:0.72rem;color:#9ca3af;font-weight:500; }
-        .vs-buy-btn {
-            width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;
-            border:none;border-radius:12px;padding:0.9rem;font-size:0.95rem;font-weight:700;
-            display:flex;align-items:center;justify-content:center;gap:0.5rem;
-            transition:opacity 0.2s;
-        }
-        .vs-buy-btn:hover { opacity:0.9; }
-
-        /* ─── DISTRIBUTION CREDITS TABLE (mirrors DistributionCreditsTable.tsx) ─── */
-        .dist-card {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.04);
-            padding: 1.5rem;
-            margin-bottom: 1.25rem;
-        }
-        .dist-table-wrap { overflow-x: auto; margin-bottom: 0.75rem; }
-        .dist-table { width:100%; border-collapse:collapse; min-width:540px; }
-        .dist-table th { font-size:0.78rem;font-weight:700;color:#1f2937;padding:0.7rem 0.75rem;background:#f3f4f6;text-align:left;border-radius:8px; }
-        .dist-td { font-size:0.85rem;color:#1f2937;padding:0.75rem 0.75rem;border-bottom:1px solid #f3f4f6; }
-        .dist-name { font-weight:600; font-size:0.85rem; }
-        .dist-phone { font-size:0.75rem;color:#6b7280; }
-        .dist-credits { font-weight:700;color:#10b981; }
+        /* Distribution table */
+        .dist-table-wrap { overflow-x: auto; margin-bottom: 10px; }
+        .dist-table { width: 100%; border-collapse: collapse; min-width: 480px; }
+        .dist-table th { font-size: 0.72rem; font-weight: 700; color: #1F2937; padding: 8px; background: #F3F4F6; text-align: left; }
+        .dist-td { font-size: 0.8rem; color: #1F2937; padding: 10px 8px; border-bottom: 1px solid #F3F4F6; }
         .dist-transfer-btn {
-            background:#10b981;color:#fff;border:none;border-radius:8px;
-            padding:0.4rem 0.85rem;font-size:0.78rem;font-weight:600;cursor:pointer;
-            display:inline-flex;align-items:center;gap:4px;transition:background 0.2s;
+            background: #10B981; color: #fff; border: none; border-radius: 8px;
+            padding: 5px 10px; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: background 0.2s;
         }
-        .dist-transfer-btn:hover { background:#059669; }
-        .dist-transfer-btn.dist-locked { background:#e5e7eb;color:#9ca3af;cursor:not-allowed; }
-        .dist-info-footer { display:flex;gap:0.5rem;align-items:flex-start;background:#f8fafc;border-radius:10px;padding:0.75rem 1rem; }
-        .dist-info-footer i { color:#64748b;margin-top:2px;flex-shrink:0; }
-        .dist-info-footer span { font-size:0.78rem;color:#64748b;line-height:1.5; }
+        .dist-transfer-btn:hover { background: #059669; }
+        .dist-transfer-btn.locked { background: #E5E7EB; color: #9CA3AF; cursor: not-allowed; }
 
-        /* ─── BUYER ENTRY WITH TRANSFER BUTTONS (mirrors DirectBuyersList.tsx) ─── */
-        .buyer-entry { border-top:1px solid rgba(0,0,0,0.05); padding:0.9rem 0; }
-        .buyer-entry:first-child { border-top:none; }
-        .buyer-btn-row { display:flex;gap:0.5rem;margin-top:0.6rem; }
-        .btn-transfer-credits-buyer {
-            flex:1;background:#3b82f6;color:#fff;border:none;border-radius:10px;
-            padding:0.5rem 0.9rem;font-size:0.8rem;font-weight:600;
-            display:flex;align-items:center;justify-content:center;gap:5px;
-            cursor:pointer;transition:background 0.2s;
+        /* Direct buyers */
+        .buyer-entry { border-top: 1px solid rgba(0,0,0,0.05); padding: 12px 0; }
+        .buyer-entry:first-child { border-top: none; padding-top: 0; }
+        .buyer-row { display: flex; justify-content: space-between; align-items: center; }
+        .buyer-name { font-size: 0.85rem; font-weight: 600; color: #0F172A; }
+        .buyer-meta { font-size: 0.72rem; color: #64748B; margin-top: 2px; }
+        .btn-call {
+            display: flex; align-items: center; gap: 5px; background: #E2E8F0; border: none;
+            border-radius: 10px; padding: 7px 12px; font-size: 0.75rem; font-weight: 600;
+            color: #0F172A; cursor: pointer; text-decoration: none; transition: background 0.2s;
         }
-        .btn-transfer-credits-buyer:hover { background:#2563eb; }
-        .btn-transfer-voucher-buyer {
-            flex:1;background:#8b5cf6;color:#fff;border:none;border-radius:10px;
-            padding:0.5rem 0.9rem;font-size:0.8rem;font-weight:600;
-            display:flex;align-items:center;justify-content:center;gap:5px;
-            cursor:pointer;transition:background 0.2s;
+        .btn-call:hover { background: #CBD5E1; color: #0F172A; }
+        .buyer-btn-row { display: flex; gap: 8px; margin-top: 8px; }
+        .btn-tc {
+            flex: 1; background: #3B82F6; color: #fff; border: none; border-radius: 10px;
+            padding: 8px 10px; font-size: 0.75rem; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+            cursor: pointer; transition: background 0.2s;
         }
-        .btn-transfer-voucher-buyer:hover { background:#7c3aed; }
-        .btn-admin-transfer-header {
-            display:flex;align-items:center;gap:5px;
-            background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;
-            padding:0.45rem 0.9rem;font-size:0.8rem;font-weight:600;color:#3b82f6;
-            cursor:pointer;transition:background 0.2s;
+        .btn-tc:hover { background: #2563EB; }
+        .btn-tv {
+            flex: 1; background: #8B5CF6; color: #fff; border: none; border-radius: 10px;
+            padding: 8px 10px; font-size: 0.75rem; font-weight: 600;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+            cursor: pointer; transition: background 0.2s;
         }
-        .btn-admin-transfer-header:hover { background:#dbeafe; }
+        .btn-tv:hover { background: #7C3AED; }
 
-        /* ─── NETWORK TREE CARD (mirrors NetworkListView.tsx) ─── */
-        .net-card {
-            background: #fff;
-            border-radius: 20px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.04);
-            padding: 1.5rem;
-            margin-bottom: 1.25rem;
+        /* Network tree (matches app NetworkListView) */
+        .net-toggle-row {
+            display: flex; background: #E5E7EB; border-radius: 12px; padding: 4px; margin-bottom: 14px;
         }
-        .net-toggle-row { display:flex;gap:0;background:#e5e7eb;border-radius:12px;padding:4px;margin-bottom:1.25rem; }
         .net-toggle-btn {
-            flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
-            background:none;border:none;border-radius:10px;padding:0.65rem;font-size:0.88rem;
-            font-weight:600;color:#6b7280;cursor:pointer;transition:all 0.2s;
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+            background: none; border: none; border-radius: 10px; padding: 10px;
+            font-size: 0.82rem; font-weight: 600; color: #6B7280; cursor: pointer; transition: all 0.2s;
         }
-        .net-toggle-active { background:#10b981 !important;color:#fff !important; }
-        .tree-root-card { background:#fff;border-radius:14px;padding:1rem 1.25rem;border:1px solid rgba(0,0,0,0.06);margin-bottom:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-        .tree-root-header { display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem; }
-        .tree-root-avatar { width:44px;height:44px;border-radius:50%;background:#10b98120;display:flex;align-items:center;justify-content:center;color:#10b981;font-size:1.1rem; }
-        .tree-root-info { flex:1; }
-        .tree-root-name { font-size:1rem;font-weight:700;color:#1f2937; }
-        .tree-root-label { font-size:0.75rem;color:#6b7280; }
-        .tree-root-stats { display:flex;gap:1rem;font-size:0.82rem;color:#374151;font-weight:500; }
-        .tree-root-stats span { display:flex;align-items:center;gap:5px; }
-        .tree-toggle-plain { background:none;border:none;cursor:pointer;padding:4px;margin-left:auto; }
-        .tree-user-row {
-            display:flex;align-items:center;gap:0.5rem;
-            background:#f9fafb;border-radius:12px;padding:0.6rem 0.9rem;
-            margin-bottom:0.4rem;border:1px solid rgba(0,0,0,0.04);
-        }
-        .tree-user-avatar-sm { width:32px;height:32px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
-        .tree-user-info-wrap { flex:1;min-width:0; }
-        .tree-user-name { font-size:0.88rem;font-weight:600;color:#1f2937;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
-        .tree-user-meta { font-size:0.73rem;color:#6b7280; }
-        .tree-transfer-btn {
-            background:#3b82f6;color:#fff;border:none;border-radius:8px;
-            padding:0.35rem 0.75rem;font-size:0.75rem;font-weight:600;
-            cursor:pointer;white-space:nowrap;transition:background 0.2s;
-            display:flex;align-items:center;gap:4px;
-        }
-        .tree-transfer-btn:hover { background:#2563eb; }
-        .tree-transfer-slot { background:#8b5cf6; }
-        .tree-transfer-slot:hover { background:#7c3aed; }
-        .tree-spacer { width:24px;display:inline-block; }
+        .net-toggle-btn.active { background: #10B981; color: #fff; }
 
-        /* ─── BUY VOUCHERS PANEL (mirrors BuyVoucherScreen.tsx) ─── */
+        /* Root user card — green border like app screenshot */
+        .tree-root-card {
+            background: #fff; border-radius: 14px; padding: 14px 16px;
+            border: 2px solid #10B981; margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(16,185,129,0.15);
+        }
+        .tree-root-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .tree-root-avatar {
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(16,185,129,0.12); display: flex;
+            align-items: center; justify-content: center; color: #10B981; font-size: 1.1rem;
+        }
+        .tree-root-name { font-size: 0.95rem; font-weight: 700; color: #1F2937; }
+        .tree-root-lbl  { font-size: 0.68rem; color: #10B981; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+        .tree-root-stats { display: flex; gap: 16px; font-size: 0.78rem; color: #374151; font-weight: 500; }
+        .tree-root-stats span { display: flex; align-items: center; gap: 5px; }
+        .tree-toggle-btn { background: none; border: none; cursor: pointer; padding: 4px; margin-left: auto; }
+
+        /* User row — matches app screenshot exactly */
+        .tree-user-row {
+            display: flex; align-items: center; gap: 10px;
+            background: #fff; border-radius: 12px; padding: 10px 14px;
+            margin-bottom: 8px; border: 1px solid rgba(0,0,0,0.06);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+        .tree-user-avatar {
+            width: 36px; height: 36px; border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.78rem; font-weight: 700; color: #fff; flex-shrink: 0;
+        }
+        .tree-user-info { flex: 1; min-width: 0; }
+        .tree-user-name { font-size: 0.85rem; font-weight: 600; color: #1F2937; }
+        .tree-user-credits-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+        .tree-credits-icon { font-size: 0.65rem; color: #9CA3AF; }
+        .tree-credits-val  { font-size: 0.68rem; color: #6B7280; }
+        .tree-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+        .tree-commission { display: flex; align-items: center; gap: 3px; font-size: 0.75rem; font-weight: 600; color: #1F2937; }
+        .tree-level-tag { font-size: 0.65rem; font-weight: 700; color: #9CA3AF; }
+        .tree-arrow-btn {
+            width: 34px; height: 34px; border-radius: 17px; border: none;
+            background: #10B981; display: flex; align-items: center; justify-content: center;
+            color: #fff; cursor: pointer; transition: background 0.2s; font-size: 0.78rem;
+        }
+        .tree-arrow-btn:hover { background: #059669; }
+        .tree-arrow-btn.slot { background: #8B5CF6; }
+        .tree-arrow-btn.slot:hover { background: #7C3AED; }
+        .tree-spacer { width: 22px; display: inline-block; }
+        .tree-children { margin-left: 14px; }
+
+        /* Avatar colors */
+        .av-blue   { background: #3B82F6; }
+        .av-purple { background: #8B5CF6; }
+        .av-amber  { background: #F59E0B; }
+        .av-rose   { background: #F43F5E; }
+        .av-green  { background: #10B981; }
+        .av-cyan   { background: #06B6D4; }
+        .av-indigo { background: #6366F1; }
+
+        /* Dashboard voucher tabs */
+        .dash-vtabs { display: flex; border-bottom: 2px solid #F3F4F6; background: #FAFAFA; }
+        .dash-vtab {
+            background: none; border: none; padding: 12px 14px;
+            font-size: 0.8rem; font-weight: 500; color: #9CA3AF;
+            border-bottom: 2px solid transparent; margin-bottom: -2px;
+            cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 5px;
+        }
+        .dash-vtab:hover { color: #4F46E5; }
+        .dash-vtab.active { color: #4F46E5; border-bottom-color: #4F46E5; font-weight: 600; }
+        .dash-vtab-badge {
+            font-size: 0.65rem; font-weight: 700; padding: 1px 7px;
+            border-radius: 20px; background: #E5E7EB; color: #374151;
+        }
+        .dash-vtab.active .dash-vtab-badge { background: #EDE9FE; color: #4F46E5; }
+        .dash-vtab-pane { display: none; padding: 14px; }
+        .dash-vtab-pane.active { display: block; }
+
+        /* Dashboard voucher ticket */
+        .dvt-card {
+            background: #fff; border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07); border: 1px solid #F0F0F0;
+            overflow: hidden; margin-bottom: 12px; transition: transform 0.2s;
+        }
+        .dvt-card:hover { transform: translateY(-2px); }
+        .dvt-top {
+            padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+            border-bottom: 2px dashed #F0F0F0; position: relative;
+        }
+        .dvt-logo {
+            width: 48px; height: 48px; border-radius: 10px;
+            background: linear-gradient(135deg, #4F46E5, #7C3AED);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1.3rem; flex-shrink: 0;
+        }
+        .dvt-logo img { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; }
+        .dvt-info { flex: 1; min-width: 0; }
+        .dvt-biz-name { font-size: 0.95rem; font-weight: 700; color: #111; margin-bottom: 2px; }
+        .dvt-num { font-size: 0.72rem; color: #9CA3AF; font-family: 'Courier New', monospace; }
+        .dvt-amount-wrap { text-align: right; flex-shrink: 0; }
+        .dvt-amount-val { font-size: 1.6rem; font-weight: 800; color: #E53E3E; line-height: 1; }
+        .dvt-amount-lbl { font-size: 0.65rem; color: #9CA3AF; }
+        .dvt-disc-badge {
+            position: absolute; top: 12px; right: 12px;
+            background: #E53E3E; color: #fff; font-size: 0.7rem; font-weight: 700;
+            padding: 3px 9px; border-radius: 20px;
+        }
+        .dvt-top::before, .dvt-top::after {
+            content: ''; position: absolute; bottom: -10px;
+            width: 18px; height: 18px; background: #F8FAFC;
+            border-radius: 50%; border: 1px solid #F0F0F0;
+        }
+        .dvt-top::before { left: -9px; }
+        .dvt-top::after  { right: -9px; }
+        .dvt-bottom {
+            padding: 10px 16px; display: flex; align-items: center;
+            justify-content: space-between; flex-wrap: wrap; gap: 8px;
+        }
+        .dvt-validity { font-size: 0.72rem; font-weight: 600; color: #D97706; }
+        .dvt-status-pill { font-size: 0.65rem; font-weight: 700; padding: 2px 9px; border-radius: 20px; }
+        .s-active   { background: #D1FAE5; color: #065F46; }
+        .s-redeemed { background: #E5E7EB; color: #374151; }
+        .s-expired  { background: #FEE2E2; color: #991B1B; }
+        .dvt-actions { display: flex; gap: 6px; }
+        .btn-dvt-view     { background: #F3F4F6; color: #374151; border: none; font-size: 0.75rem; font-weight: 600; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .btn-dvt-view:hover { background: #E5E7EB; }
+        .btn-dvt-transfer { background: #EDE9FE; color: #4F46E5; border: none; font-size: 0.75rem; font-weight: 600; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .btn-dvt-transfer:hover { background: #DDD6FE; }
+        .btn-dvt-redeem   { background: #111; color: #fff; border: none; font-size: 0.75rem; font-weight: 600; padding: 6px 10px; border-radius: 8px; cursor: pointer; transition: background 0.2s; }
+        .btn-dvt-redeem:hover   { background: #333; }
+        .btn-dvt-redeem:disabled { background: #9CA3AF; cursor: not-allowed; }
+
+        /* Source tags */
+        .src-tag { font-size: 0.62rem; font-weight: 600; padding: 2px 7px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .src-purchase { background: #DBEAFE; color: #1E40AF; }
+        .src-transfer { background: #F3E8FF; color: #6D28D9; }
+        .src-admin    { background: #D1FAE5; color: #065F46; }
+        .src-special  { background: #FEF3C7; color: #92400E; }
+
+        /* BUY PANEL */
         .buy-panel {
-            position:fixed;inset:0;background:#f5f7fa;z-index:2000;
-            display:none;flex-direction:column;overflow-y:auto;
+            position: fixed; inset: 0; background: #F5F7FA; z-index: 2000;
+            display: none; flex-direction: column; overflow-y: auto;
         }
         .buy-panel-header {
-            background:#fff;border-bottom:1px solid #ececec;
-            padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem;
-            position:sticky;top:0;z-index:1;
+            background: #fff; border-bottom: 1px solid #ECECEC;
+            padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+            position: sticky; top: 0; z-index: 1;
         }
-        .buy-panel-title { font-size:1.1rem;font-weight:700;color:#1f2937; }
-        .buy-panel-body { padding:1.5rem;max-width:600px;margin:0 auto;width:100%; }
+        .buy-panel-title { font-size: 1.05rem; font-weight: 700; color: #1F2937; }
+        .buy-body { padding: 20px; max-width: 600px; margin: 0 auto; width: 100%; }
         .buy-timer-card {
-            background:linear-gradient(135deg,#ef4444,#dc2626);
-            border-radius:14px;padding:1rem 1.25rem;
-            display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            border-radius: 14px; padding: 14px 18px;
+            display: flex; align-items: center; gap: 14px; margin-bottom: 14px;
         }
-        .buy-timer-label { font-size:0.8rem;color:rgba(255,255,255,0.9);margin-bottom:4px; }
-        .buy-timer-value { font-size:1.6rem;font-weight:800;color:#fff;font-family:'Courier New',monospace; }
-        .buy-info-card,.buy-qty-card,.buy-price-card,.buy-notes-card {
-            background:#fff;border-radius:14px;padding:1.25rem;
-            margin-bottom:1.25rem;border:1px solid rgba(0,0,0,0.06);
+        .buy-timer-label { font-size: 0.75rem; color: rgba(255,255,255,0.9); margin-bottom: 4px; }
+        .buy-timer-val { font-size: 1.6rem; font-weight: 800; color: #fff; font-family: 'Courier New', monospace; }
+        .buy-info-card, .buy-qty-card, .buy-price-card, .buy-notes-card {
+            background: #fff; border-radius: 14px; padding: 14px;
+            margin-bottom: 14px; border: 1px solid rgba(0,0,0,0.06);
         }
-        .buy-card-title { font-size:0.95rem;font-weight:700;color:#1f2937;margin-bottom:0.9rem;display:flex;align-items:center;gap:0.5rem; }
-        .buy-info-row { display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;font-size:0.88rem;border-top:1px solid #f3f4f6; }
-        .buy-info-row:first-of-type { border-top:none; }
-        .buy-info-label { color:#6b7280; }
-        .buy-info-value { font-weight:600;color:#1f2937; }
-        .buy-discount-value { color:#ef4444;font-weight:700; }
-        .buy-qty-selector { display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:0.75rem; }
-        .buy-qty-btn {
-            width:44px;height:44px;border-radius:50%;border:2px solid #e5e7eb;
-            background:#fff;font-size:1.2rem;font-weight:700;cursor:pointer;
-            display:flex;align-items:center;justify-content:center;transition:all 0.2s;
-        }
-        .buy-qty-btn:hover:not(:disabled) { border-color:#10b981;color:#10b981; }
-        .buy-qty-btn:disabled { opacity:0.4;cursor:not-allowed; }
-        .buy-qty-display { font-size:2rem;font-weight:800;color:#1f2937;min-width:60px;text-align:center; }
-        .buy-qty-unit { font-size:0.8rem;color:#6b7280;font-weight:500; }
-        .buy-price-row { display:flex;justify-content:space-between;padding:0.5rem 0;font-size:0.88rem; }
-        .buy-price-divider { border:none;border-top:1px solid #e5e7eb;margin:0.5rem 0; }
-        .buy-total-row { display:flex;justify-content:space-between;padding:0.5rem 0;font-size:1rem;font-weight:700; }
-        .buy-savings-badge { display:flex;align-items:center;gap:6px;background:#d1fae5;border-radius:8px;padding:0.5rem 0.75rem;margin-top:0.5rem; }
-        .buy-savings-badge span { font-size:0.82rem;font-weight:600;color:#065f46; }
-        .buy-note-item { display:flex;align-items:flex-start;gap:0.5rem;margin-bottom:0.5rem;font-size:0.82rem;color:#374151; }
-        .buy-note-item i { color:#10b981;margin-top:2px;flex-shrink:0; }
+        .buy-card-title { font-size: 0.88rem; font-weight: 700; color: #1F2937; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+        .buy-info-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.82rem; border-top: 1px solid #F3F4F6; }
+        .buy-info-row:first-of-type { border-top: none; }
+        .buy-qty-selector { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 10px; }
+        .buy-qty-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #E5E7EB; background: #fff; font-size: 1.2rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .buy-qty-btn:hover:not(:disabled) { border-color: #10B981; color: #10B981; }
+        .buy-qty-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .buy-qty-display { font-size: 2rem; font-weight: 800; color: #1F2937; min-width: 56px; text-align: center; }
+        .buy-price-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.82rem; }
+        .buy-total-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.92rem; font-weight: 700; }
+        .buy-savings { display: flex; align-items: center; gap: 6px; background: #D1FAE5; border-radius: 8px; padding: 8px 12px; margin-top: 6px; }
+        .buy-savings span { font-size: 0.78rem; font-weight: 600; color: #065F46; }
+        .buy-note-item { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 7px; font-size: 0.78rem; color: #374151; }
         .buy-footer {
-            padding:1rem 1.5rem;background:#fff;border-top:1px solid #ececec;
-            position:sticky;bottom:0;max-width:600px;margin:0 auto;width:100%;
+            padding: 14px 20px; background: #fff; border-top: 1px solid #ECECEC;
+            position: sticky; bottom: 0; max-width: 600px; margin: 0 auto; width: 100%;
         }
         .buy-confirm-btn {
-            width:100%;background:linear-gradient(135deg,#10b981,#059669);
-            color:#fff;border:none;border-radius:14px;
-            padding:1rem;font-size:0.95rem;font-weight:700;
-            display:flex;align-items:center;justify-content:center;gap:0.5rem;
-            cursor:pointer;transition:opacity 0.2s;
+            width: 100%; background: linear-gradient(135deg, #10B981, #059669);
+            color: #fff; border: none; border-radius: 14px; padding: 14px;
+            font-size: 0.9rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            cursor: pointer; transition: opacity 0.2s;
         }
-        .buy-confirm-btn:hover { opacity:0.9; }
-        .buy-confirm-btn:disabled { background:#9ca3af;cursor:not-allowed; }
+        .buy-confirm-btn:hover { opacity: 0.9; }
+        .buy-confirm-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
 
-        /* ─── TRANSFER CREDITS MODAL ─── */
-        .tc-recipient-box {
-            background:#f0fdf4;border-radius:10px;padding:0.9rem 1rem;
-            margin-bottom:1rem;border:1px solid #bbf7d0;
+        /* Modals */
+        .modal-content { border: none; border-radius: 20px; }
+        .modal-header { border-bottom: 1px solid #F3F4F6; padding: 16px 20px; }
+        .modal-title  { font-size: 0.95rem; font-weight: 700; }
+        .modal-body   { padding: 20px; }
+        .modal-footer { border-top: 1px solid #F3F4F6; padding: 12px 20px; }
+        .form-label   { font-size: 0.8rem; font-weight: 600; color: #374151; }
+        .form-control { border-radius: 10px; border: 1.5px solid #E5E7EB; font-size: 0.85rem; padding: 9px 14px; }
+        .form-control:focus { border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+        .btn-modal-primary {
+            background: linear-gradient(135deg, #4F46E5, #7C3AED); border: none; color: #fff;
+            font-weight: 600; border-radius: 10px; padding: 9px 18px; font-size: 0.85rem; cursor: pointer;
         }
-        .tc-recipient-name { font-size:1rem;font-weight:700;color:#1f2937; }
-        .tc-recipient-phone { font-size:0.82rem;color:#6b7280; }
-        .tc-balance-row { display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem; }
-        .tc-balance-badge { background:#d1fae520;border:1px solid #a7f3d0;border-radius:8px;padding:0.4rem 0.75rem;font-size:0.82rem;font-weight:700;color:#065f46; }
-        .tc-amount-selector { display:flex;align-items:center;justify-content:center;gap:1rem; }
-    </style>
+        .btn-modal-primary:hover { opacity: 0.9; color: #fff; }
+        .btn-modal-secondary {
+            background: #F3F4F6; border: none; color: #374151;
+            font-weight: 600; border-radius: 10px; padding: 9px 18px; font-size: 0.85rem; cursor: pointer;
+        }
+        .tc-recipient-box { background: #F0FDF4; border-radius: 10px; padding: 12px; margin-bottom: 12px; border: 1px solid #BBF7D0; }
+        .tc-recipient-name { font-size: 0.95rem; font-weight: 700; color: #1F2937; }
+        .tc-recipient-phone { font-size: 0.78rem; color: #6B7280; }
+        .tc-balance-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .tc-balance-badge { background: rgba(16,185,129,0.1); border: 1px solid #A7F3D0; border-radius: 8px; padding: 4px 12px; font-size: 0.78rem; font-weight: 700; color: #065F46; }
+
+        /* Empty state */
+        .empty-state { text-align: center; padding: 40px 20px; }
+        .empty-state-icon { width: 72px; height: 72px; border-radius: 20px; background: #F3F4F6; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: #D1D5DB; margin: 0 auto 14px; }
+        .empty-state-title { font-size: 1rem; font-weight: 700; color: #374151; margin-bottom: 5px; }
+        .empty-state-sub   { font-size: 0.82rem; color: #9CA3AF; }
+
+        .loading-overlay { text-align: center; padding: 40px; }
+
+        /* Responsive */
+        @media (max-width: 576px) {
+            .disc-metrics { grid-template-columns: 1fr 1fr; }
+            .dvt-disc-badge { display: none; }
+        }
+        @media (max-width: 380px) {
+            .tree-credits-val { display: none; }
+        }
+</style>
 </head>
-
 <body>
-    <!-- Toast -->
+
+    <!-- Toast notification -->
     <div class="toast-bar" id="toastBar"></div>
 
-    <!-- Navbar -->
-    <nav class="navbar top-navbar fixed-top">
-        <div class="container-fluid d-flex align-items-center justify-content-between px-3">
-
-            <!-- Brand -->
-            <a class="d-flex align-items-center gap-2 text-decoration-none" href="index.html">
-                <img src="images/logo.jpeg" alt="Instantlly" class="brand-logo">
+    <!-- ============================================================
+         SCREEN 1 — My Vouchers (default · matches VoucherListScreen)
+    ============================================================ -->
+    <div id="screen-list" class="screen active">
+        <!-- Blue gradient header -->
+        <div class="list-header">
+            <div class="list-header-brand">
+                <div class="list-header-icon-wrap"><i class="fas fa-ticket-alt"></i></div>
                 <div>
-                    <div class="brand-title">Instantlly</div>
-                    <div class="brand-sub">Voucher Dashboard</div>
-                </div>
-            </a>
-
-            <!-- Desktop nav -->
-            <div class="d-none d-md-flex align-items-center gap-3">
-                <div class="nav-pills-wrap">
-                    <a class="nav-link-item" href="index.html"><i class="fas fa-house"></i>Home</a>
-                    <a class="nav-link-item" href="profile.html"><i class="fas fa-user"></i>Profile</a>
-                    <a class="nav-link-item active-nav" href="vouchers.html"><i class="fas fa-ticket-alt"></i>Vouchers</a>
-                    <a class="nav-link-item" href="#" onclick="goToPromotions(); return false;"><i class="fas fa-bullhorn"></i>Promotions</a>
-                </div>
-                <button class="btn-logout" onclick="logout()"><i class="fas fa-arrow-right-from-bracket"></i>Logout</button>
-            </div>
-
-            <!-- Mobile toggler -->
-            <button class="navbar-toggler border-0 d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#navMenuMobile" style="padding:0.3rem;">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        </div>
-
-        <!-- Mobile menu -->
-        <div class="collapse navbar-collapse d-md-none" id="navMenuMobile">
-            <div style="padding:0.75rem 1rem 1rem; border-top:1px solid rgba(0,0,0,0.06); background:#fff;">
-                <div style="display:flex;flex-direction:column;gap:4px;">
-                    <a class="nav-link-item" href="index.html" style="border-radius:10px;"><i class="fas fa-house"></i>Home</a>
-                    <a class="nav-link-item" href="profile.html" style="border-radius:10px;"><i class="fas fa-user"></i>Profile</a>
-                    <a class="nav-link-item active-nav" href="vouchers.html" style="border-radius:10px;"><i class="fas fa-ticket-alt"></i>Vouchers</a>
-                    <a class="nav-link-item" href="#" onclick="goToPromotions(); return false;" style="border-radius:10px;"><i class="fas fa-bullhorn"></i>Promotions</a>
-                    <button class="btn-logout mt-2" onclick="logout()" style="align-self:flex-start;"><i class="fas fa-arrow-right-from-bracket"></i>Logout</button>
+                    <div class="list-header-title">My Vouchers</div>
+                    <div class="list-header-sub" id="voucherCountText">Loading…</div>
                 </div>
             </div>
+            <div class="list-header-nav">
+                <a class="list-nav-btn" href="index.html" title="Home"><i class="fas fa-house"></i></a>
+                <a class="list-nav-btn" href="profile.html" title="Profile"><i class="fas fa-user"></i></a>
+                <a class="list-nav-btn active" href="vouchers.html" title="Vouchers"><i class="fas fa-ticket-alt"></i></a>
+                <a class="list-nav-btn" href="promotions.html" title="Promotions"><i class="fas fa-bullhorn"></i></a>
+                <button class="list-nav-btn list-nav-logout" onclick="logout()" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
         </div>
-    </nav>
+        <!-- Voucher cards -->
+        <div class="list-scroll" id="voucherListContainer">
+            <div class="vc-loading">
+                <div class="spinner-ring"></div>
+                <div style="font-size:0.85rem;color:#6B7280;margin-top:10px;">Loading vouchers…</div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Hero Banner -->
-    <div class="hero-banner">
-        <div class="container position-relative" style="z-index:1;">
-            <div class="d-flex align-items-center justify-content-between">
-                <div class="text-center flex-grow-1">
-                    <div class="hero-icon-wrap"><i class="fas fa-ticket-alt"></i></div>
-                    <div class="hero-title">Vouchers &amp; Network</div>
-                    <div class="hero-sub">5× Referral Credit Distribution</div>
-                </div>
-                <button id="historyBtn" style="background:rgba(255,255,255,0.2);border:none;border-radius:12px;padding:0.6rem 0.9rem;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;">
-                    <i class="fas fa-history"></i> History
+    <!-- ============================================================
+         SCREEN 2 — Voucher Detail (matches VoucherDetailScreen)
+    ============================================================ -->
+    <div id="screen-detail" class="screen">
+        <div class="detail-header">
+            <button class="detail-close-btn" onclick="goToScreen('list')"><i class="fas fa-times"></i></button>
+            <span class="detail-header-title">Voucher Details</span>
+            <div class="detail-placeholder"></div>
+        </div>
+        <div class="detail-scroll">
+            <div class="detail-img-wrap" id="detailImgWrap"><!-- populated by JS --></div>
+            <div class="detail-buttons">
+                <div id="detailRedeemSection"><!-- Redeem Now or no-voucher message --></div>
+                <button class="btn-continue-dash" onclick="openDashboard()">
+                    <span>Continue to Dashboard</span>
+                    <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="container" style="max-width:1200px; padding-bottom: 3rem;">
-
-        <!-- Stats -->
-        <div class="row stats-row g-3 mb-4">
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon-wrap blue"><i class="fas fa-ticket-alt"></i></div>
-                    <div>
-                        <div class="stat-label">Total</div>
-                        <div class="stat-value" id="totalVouchersCount">0</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon-wrap green"><i class="fas fa-shopping-bag"></i></div>
-                    <div>
-                        <div class="stat-label">Purchased</div>
-                        <div class="stat-value" id="purchasedCount">0</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon-wrap cyan"><i class="fas fa-gift"></i></div>
-                    <div>
-                        <div class="stat-label">Received</div>
-                        <div class="stat-value" id="receivedCount">0</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3" id="virtualSavingsStat">
-                <div class="stat-card">
-                    <div class="stat-icon-wrap amber"><i class="fas fa-paper-plane"></i></div>
-                    <div>
-                        <div class="stat-label">Sent</div>
-                        <div class="stat-value" id="sentCount">0</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ════ VoucherStatsCard (mirrors VoucherStatsCard.tsx — hidden for admin) ════ -->
-        <div id="voucherStatsCard" class="vs-card" style="display:none;" onclick="openBuyVouchersPanel()">
-            <div class="vs-header">
+    <!-- ============================================================
+         SCREEN 3 — Vouchers & Network Dashboard
+    ============================================================ -->
+    <div id="screen-dashboard" class="screen">
+        <!-- Header: ← Vouchers & Network + clock icon -->
+        <div class="dash-header">
+            <div class="dash-header-left">
+                <button class="dash-back-btn" onclick="goToScreen('list')"><i class="fas fa-arrow-left"></i></button>
                 <div>
-                    <div style="font-size:1rem;font-weight:700;color:#1f2937;margin-bottom:3px;">My Vouchers</div>
-                    <div style="font-size:0.78rem;color:#6b7280;">Tap to purchase more vouchers</div>
-                </div>
-                <div class="vs-icon-badge"><i class="fas fa-ticket-alt"></i></div>
-            </div>
-            <div class="vs-stats-grid">
-                <div class="vs-stat-item">
-                    <div class="vs-stat-icon" style="background:#10b98115;"><i class="fas fa-check-circle" style="color:#10b981;"></i></div>
-                    <div class="vs-stat-value" id="vsAvailable">0</div>
-                    <div class="vs-stat-label">Available</div>
-                </div>
-                <div class="vs-stat-item">
-                    <div class="vs-stat-icon" style="background:#3b82f615;"><i class="fas fa-layer-group" style="color:#3b82f6;"></i></div>
-                    <div class="vs-stat-value" id="vsTotal">0</div>
-                    <div class="vs-stat-label">Total</div>
-                </div>
-                <div class="vs-stat-item">
-                    <div class="vs-stat-icon" style="background:#8b5cf615;"><i class="fas fa-shield-alt" style="color:#8b5cf6;"></i></div>
-                    <div class="vs-stat-value" id="vsRedeemed">0</div>
-                    <div class="vs-stat-label">Redeemed</div>
+                    <div class="dash-header-title">Vouchers &amp; Network</div>
+                    <div class="dash-header-subtitle" id="dashSubtitle">5× Referral Credit Distribution</div>
                 </div>
             </div>
-            <button class="vs-buy-btn">
-                <i class="fas fa-shopping-cart"></i> Buy Vouchers <i class="fas fa-arrow-right"></i>
+            <button class="dash-history-btn" onclick="window.location.href='credits-history.html'" title="History">
+                <i class="far fa-clock"></i>
             </button>
         </div>
 
-        <!-- ════ SECTION 1: Network Overview ════ -->
-        <div class="overview-card" id="networkOverviewCard">
-            <div class="section-header" style="padding:0 0 1rem 0; border:none; margin-bottom:0.25rem;">
-                <h2 class="section-title"><i class="fas fa-network-wired me-2" style="color:#8b5cf6;"></i>Network Overview</h2>
-                <span id="overviewLoading" style="font-size:0.78rem;color:#9ca3af;"></span>
-            </div>
-            <div class="overview-metrics-grid">
-                <div class="overview-metric">
-                    <div class="ov-icon green"><i class="fas fa-wallet"></i></div>
-                    <div>
-                        <div class="ov-label">Available Credits</div>
-                        <div class="ov-value" id="ovAvailableCredits">—</div>
-                    </div>
-                </div>
-                <div class="overview-metric">
-                    <div class="ov-icon blue"><i class="fas fa-share-alt"></i></div>
-                    <div>
-                        <div class="ov-label">Credits Distributed</div>
-                        <div class="ov-value" id="ovCreditsDistributed">—</div>
-                    </div>
-                </div>
-                <div class="overview-metric">
-                    <div class="ov-icon purple"><i class="fas fa-users"></i></div>
-                    <div>
-                        <div class="ov-label">Network Users</div>
-                        <div class="ov-value" id="ovNetworkUsers">—</div>
-                    </div>
-                </div>
-                <div class="overview-metric">
-                    <div class="ov-icon amber"><i class="fas fa-trending-up"></i></div>
-                    <div>
-                        <div class="ov-label">Virtual Savings</div>
-                        <div class="ov-value" id="ovVirtualSavings">—</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ════ SECTION 2: Credit Statistics ════ -->
-        <div class="credit-card" id="creditStatsCard">
-            <div class="credit-header">
-                <div>
-                    <div class="overview-card-title" style="margin-bottom:3px;">Credit Statistics</div>
-                    <div style="font-size:0.8rem;color:#6b7280;">Your complete credit overview</div>
-                </div>
-                <div class="credit-balance-badge">
-                    <i class="fas fa-wallet" style="color:#10b981;font-size:0.9rem;"></i>
-                    <span id="creditBalance">0 credits</span>
-                </div>
-            </div>
-
-            <div class="credit-stat-item">
-                <div class="cs-icon" style="background:#10b98115;"><i class="fas fa-arrow-circle-down" style="color:#10b981;"></i></div>
-                <div style="flex:1;">
-                    <div class="cs-label">Total Credit Received</div>
-                    <div class="cs-value" style="color:#10b981;" id="csReceived">0 credits</div>
-                </div>
-            </div>
-            <div class="credit-stat-item">
-                <div class="cs-icon" style="background:#ef444415;"><i class="fas fa-arrow-circle-up" style="color:#ef4444;"></i></div>
-                <div style="flex:1;">
-                    <div class="cs-label">Total Credit Transferred</div>
-                    <div class="cs-value" style="color:#ef4444;" id="csTransferred">0 credits</div>
-                </div>
-            </div>
-            <div class="credit-stat-item">
-                <div class="cs-icon" style="background:#3b82f615;"><i class="fas fa-wallet" style="color:#3b82f6;"></i></div>
-                <div style="flex:1;">
-                    <div class="cs-label">Current Balance</div>
-                    <div class="cs-value" style="color:#3b82f6;" id="csBalance">0 credits</div>
-                </div>
-            </div>
-            <div class="credit-stat-item">
-                <div class="cs-icon" style="background:#8b5cf615;"><i class="fas fa-undo" style="color:#8b5cf6;"></i></div>
-                <div style="flex:1;">
-                    <div class="cs-label">Credits Received Back</div>
-                    <div class="cs-value" style="color:#8b5cf6;" id="csReceivedBack">0 credits</div>
-                </div>
-            </div>
-
-            <!-- Transfer history accordion -->
-            <button class="transfer-history-toggle" id="thToggleBtn" onclick="toggleTransferHistory()">
-                <span><i class="fas fa-exchange-alt me-2"></i>Credit Transfer to Each Person (<span id="thCount">0</span>)</span>
-                <i class="fas fa-chevron-down chevron"></i>
-            </button>
-            <div class="transfer-history-list" id="transferHistoryList"></div>
-
-            <!-- Credit countdown timers -->
-            <div class="timer-section" id="timerSection" style="display:none;">
-                <div class="timer-title"><i class="fas fa-clock me-2" style="color:#4f46e5;"></i>Credit Countdown</div>
-                <div id="timerRows"></div>
-            </div>
-        </div>
-
-        <!-- ════ Distribution Credits Table (mirrors DistributionCreditsTable.tsx — MLM users only) ════ -->
-        <div id="distributionCreditsCard" class="dist-card" style="display:none;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-                <div>
-                    <div style="font-size:1rem;font-weight:700;color:#1f2937;margin-bottom:3px;"><i class="fas fa-network-wired me-2" style="color:#3b82f6;"></i>Distribution Credits</div>
-                    <div style="font-size:0.78rem;color:#6b7280;">Credits unlock after sharing 5 vouchers</div>
-                </div>
-                <div style="width:40px;height:40px;border-radius:50%;background:#3b82f615;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:1rem;"><i class="fas fa-network-wired"></i></div>
-            </div>
-            <div class="dist-table-wrap">
-                <table class="dist-table">
-                    <thead><tr>
-                        <th>Level</th><th>Recipient</th><th>Credits</th><th>Vouchers</th><th>Status</th><th>Action</th>
-                    </tr></thead>
-                    <tbody id="distributionTableBody"></tbody>
-                </table>
-            </div>
-            <div class="dist-info-footer">
-                <i class="fas fa-info-circle"></i>
-                <span>Share 5 vouchers to unlock credit transfer. You have 2 days to connect 5 people after purchase.</span>
-            </div>
-        </div>
-
-        <!-- ════ SECTION 3: Discount Savings Dashboard ════ -->
-        <div class="discount-card" id="discountCard">
-            <div class="discount-header">
-                <div>
-                    <div class="overview-card-title" style="margin-bottom:3px;">Discount Savings Dashboard</div>
-                    <div style="font-size:0.8rem;color:#64748b;">Your savings from network growth</div>
-                </div>
-                <div class="level-badge">
-                    <i class="fas fa-trophy" style="color:#f59e0b;font-size:0.9rem;"></i>
-                    <span id="discLevel">Level 1</span>
-                </div>
-            </div>
-            <div class="discount-metrics">
-                <div class="disc-metric">
-                    <div class="disc-metric-label">Discount Level</div>
-                    <div class="disc-metric-value" id="discPercent">40%</div>
-                </div>
-                <div class="disc-metric">
-                    <div class="disc-metric-label">You Pay</div>
-                    <div class="disc-metric-value" id="discPayable">₹3600</div>
-                </div>
-                <div class="disc-metric">
-                    <div class="disc-metric-label">Virtual Savings</div>
-                    <div class="disc-metric-value" id="discVirtual">₹0</div>
-                </div>
-            </div>
-            <div class="progress-box" id="discProgressBox" style="display:none;">
-                <div class="progress-box-title"><i class="fas fa-chart-line me-1"></i> Next Level Progress</div>
-                <div class="progress-box-text" id="discProgressText"></div>
-                <div class="progress-box-sub" id="discProgressSub"></div>
-            </div>
-            <div class="disclaimer-box">
-                <i class="fas fa-info-circle"></i>
-                <span id="discDisclaimer">This amount represents savings unlocked via discounts and is not withdrawable.</span>
-            </div>
-        </div>
-
-        <!-- ════ SECTION 4: Direct Buyers (mirrors DirectBuyersList.tsx) ════ -->
-        <div class="buyers-card" id="directBuyersCard">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-                <div class="buyers-card-title" style="margin:0;"><i class="fas fa-user-friends me-2" style="color:#4f46e5;"></i>Direct Buyers</div>
-                <button id="adminTransferBtn" class="btn-admin-transfer-header" style="display:none;" onclick="openAdminVoucherTransferModal('','')">
-                    <i class="fas fa-paper-plane" style="font-size:0.75rem;"></i> Transfer
-                </button>
-            </div>
-            <div id="directBuyersList">
-                <div class="loading-overlay" style="padding:2rem;">
-                    <div class="spinner-ring"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ════ Network Tree / List View (mirrors NetworkListView.tsx + toggle) ════ -->
-        <div id="networkTreeCard" class="net-card" style="display:none;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-                <div style="font-size:1rem;font-weight:700;color:#1f2937;"><i class="fas fa-sitemap me-2" style="color:#8b5cf6;"></i>My Network</div>
-            </div>
-            <!-- View Toggle (List / Tree) -->
-            <div class="net-toggle-row">
-                <button class="net-toggle-btn net-toggle-active" id="netViewList">
-                    <i class="fas fa-list"></i> List
-                </button>
-                <button class="net-toggle-btn" id="netViewTree">
-                    <i class="fas fa-code-branch"></i> Tree
-                </button>
-            </div>
-            <div id="networkTreeContainer"></div>
-        </div>
-
-        <!-- Vouchers Card -->
-        <div class="section-card" id="vouchersListCard">
-            <div class="section-header">
-                <h2 class="section-title"><i class="fas fa-list me-2" style="color:#4f46e5;"></i>Vouchers List</h2>
-                <button class="btn-refresh" id="refreshVouchersBtn"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
-            </div>
-
-            <!-- Tabs -->
-            <div class="voucher-tabs">
-                <button class="vtab-btn active" onclick="switchTab('all', this)">
-                    <i class="fas fa-border-all"></i>All
-                    <span class="vtab-badge all" id="allBadge">0</span>
-                </button>
-                <button class="vtab-btn" onclick="switchTab('purchased', this)">
-                    <i class="fas fa-shopping-bag"></i>Purchased
-                    <span class="vtab-badge bought" id="purchasedBadge">0</span>
-                </button>
-                <button class="vtab-btn" onclick="switchTab('received', this)">
-                    <i class="fas fa-gift"></i>Received
-                    <span class="vtab-badge recv" id="receivedBadge">0</span>
-                </button>
-                <button class="vtab-btn" onclick="switchTab('sent', this)">
-                    <i class="fas fa-paper-plane"></i>Sent
-                    <span class="vtab-badge sent" id="sentBadge">0</span>
-                </button>
-            </div>
-
-            <!-- Panes -->
-            <div class="vtab-pane active" id="pane-all">
-                <div id="allVouchersList"></div>
-            </div>
-            <div class="vtab-pane" id="pane-purchased">
-                <div id="purchasedVouchersList"></div>
-            </div>
-            <div class="vtab-pane" id="pane-received">
-                <div id="receivedVouchersList"></div>
-            </div>
-            <div class="vtab-pane" id="pane-sent">
-                <div id="sentVouchersList"></div>
+        <!-- Dashboard content (loaded on first open) -->
+        <div class="dash-scroll" id="dashScrollContent">
+            <div class="loading-overlay">
+                <div class="spinner-ring" style="margin:0 auto 12px;"></div>
+                <div style="font-size:0.85rem;color:#6B7280;">Loading dashboard…</div>
             </div>
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════
-         BUY VOUCHERS PANEL (mirrors BuyVoucherScreen.tsx)
-    ════════════════════════════════════════════════════════════════════════ -->
+    <!-- ============================================================
+         BUY VOUCHERS PANEL (full-screen overlay · mirrors BuyVoucherScreen)
+    ============================================================ -->
     <div id="buyVouchersPanel" class="buy-panel">
-        <!-- Header -->
         <div class="buy-panel-header">
-            <button onclick="closeBuyVouchersPanel()" style="background:none;border:none;padding:4px;cursor:pointer;font-size:1.2rem;color:#374151;"><i class="fas fa-arrow-left"></i></button>
+            <button onclick="closeBuyVouchersPanel()" style="background:none;border:none;padding:4px;cursor:pointer;font-size:1.1rem;color:#374151;"><i class="fas fa-arrow-left"></i></button>
             <span class="buy-panel-title">Buy Vouchers</span>
         </div>
-
-        <div class="buy-panel-body">
-            <!-- Timer -->
+        <div class="buy-body">
             <div class="buy-timer-card">
-                <i class="fas fa-clock" style="font-size:1.5rem;color:#fff;"></i>
+                <i class="fas fa-clock" style="font-size:1.4rem;color:#fff;"></i>
                 <div>
                     <div class="buy-timer-label">Time Remaining to Purchase</div>
-                    <div class="buy-timer-value" id="buyTimerDisplay">01:00:00</div>
+                    <div class="buy-timer-val" id="buyTimerDisplay">01:00:00</div>
                 </div>
             </div>
-
-            <!-- Voucher Info -->
             <div class="buy-info-card">
-                <div class="buy-card-title"><i class="fas fa-ticket-alt" style="color:#10b981;"></i>Voucher Details</div>
-                <div class="buy-info-row"><span class="buy-info-label">Price per Voucher:</span><span class="buy-info-value">₹1,200</span></div>
-                <div class="buy-info-row"><span class="buy-info-label">Minimum Purchase:</span><span class="buy-info-value">5 Vouchers</span></div>
-                <div class="buy-info-row"><span class="buy-info-label">Discount:</span><span class="buy-discount-value">40% OFF</span></div>
+                <div class="buy-card-title"><i class="fas fa-ticket-alt" style="color:#10B981;"></i>Voucher Details</div>
+                <div class="buy-info-row"><span style="color:#6B7280;">Price per Voucher:</span><span style="font-weight:600;">&#8377;1,200</span></div>
+                <div class="buy-info-row"><span style="color:#6B7280;">Minimum Purchase:</span><span style="font-weight:600;">5 Vouchers</span></div>
+                <div class="buy-info-row"><span style="color:#6B7280;">Discount:</span><span style="font-weight:700;color:#EF4444;">40% OFF</span></div>
             </div>
-
-            <!-- Quantity Selector -->
             <div class="buy-qty-card">
-                <div class="buy-card-title"><i class="fas fa-sort-amount-up" style="color:#4f46e5;"></i>Select Quantity</div>
-                <div style="font-size:0.78rem;color:#6b7280;margin-bottom:0.75rem;">Must be in multiples of 5</div>
+                <div class="buy-card-title"><i class="fas fa-sort-amount-up" style="color:#4F46E5;"></i>Select Quantity</div>
+                <div style="font-size:0.72rem;color:#6B7280;margin-bottom:8px;">Must be in multiples of 5</div>
                 <div class="buy-qty-selector">
                     <button class="buy-qty-btn" id="buyQtyMinus"><i class="fas fa-minus"></i></button>
                     <div style="text-align:center;">
                         <div class="buy-qty-display" id="buyQtyDisplay">5</div>
-                        <div class="buy-qty-unit">Vouchers</div>
+                        <div style="font-size:0.72rem;color:#6B7280;">Vouchers</div>
                     </div>
                     <button class="buy-qty-btn" id="buyQtyPlus"><i class="fas fa-plus"></i></button>
                 </div>
             </div>
-
-            <!-- Price Breakdown -->
             <div class="buy-price-card">
-                <div class="buy-card-title"><i class="fas fa-receipt" style="color:#f59e0b;"></i>Price Breakdown</div>
-                <div class="buy-price-row"><span style="color:#6b7280;">Original Price:</span><span id="buyOriginalPrice" style="font-weight:600;">₹6,000</span></div>
-                <div class="buy-price-row"><span style="color:#6b7280;">Discount (40%):</span><span id="buyDiscount" style="font-weight:600;color:#ef4444;">-₹2,400</span></div>
-                <hr class="buy-price-divider">
-                <div class="buy-total-row"><span>Total Payable:</span><span id="buyTotal">₹3,600</span></div>
-                <div class="buy-savings-badge"><i class="fas fa-check-circle" style="color:#10b981;"></i><span id="buySavings">You save ₹2,400!</span></div>
+                <div class="buy-card-title"><i class="fas fa-receipt" style="color:#F59E0B;"></i>Price Breakdown</div>
+                <div class="buy-price-row"><span style="color:#6B7280;">Original Price:</span><span id="buyOriginalPrice" style="font-weight:600;">&#8377;6,000</span></div>
+                <div class="buy-price-row"><span style="color:#6B7280;">Discount (40%):</span><span id="buyDiscount" style="font-weight:600;color:#EF4444;">-&#8377;2,400</span></div>
+                <hr style="border:none;border-top:1px solid #E5E7EB;margin:8px 0;">
+                <div class="buy-total-row"><span>Total Payable:</span><span id="buyTotal">&#8377;3,600</span></div>
+                <div class="buy-savings"><i class="fas fa-check-circle" style="color:#10B981;"></i><span id="buySavings">You save &#8377;2,400!</span></div>
             </div>
-
-            <!-- Notes -->
             <div class="buy-notes-card">
-                <div class="buy-card-title"><i class="fas fa-info-circle" style="color:#3b82f6;"></i>Important Points</div>
-                <div class="buy-note-item"><i class="fas fa-check"></i><span>Each person must connect 5 people to build their network</span></div>
-                <div class="buy-note-item"><i class="fas fa-check"></i><span>You have 2 days to connect 5 people after purchase</span></div>
-                <div class="buy-note-item"><i class="fas fa-check"></i><span>Credits transfer only after sharing 5 vouchers</span></div>
-                <div class="buy-note-item"><i class="fas fa-check"></i><span>If you fail to connect 5 people, credits return to admin</span></div>
+                <div class="buy-card-title"><i class="fas fa-info-circle" style="color:#3B82F6;"></i>Important Points</div>
+                <div class="buy-note-item"><i class="fas fa-check" style="color:#10B981;margin-top:2px;flex-shrink:0;"></i><span>Each person must connect 5 people to build their network</span></div>
+                <div class="buy-note-item"><i class="fas fa-check" style="color:#10B981;margin-top:2px;flex-shrink:0;"></i><span>You have 2 days to connect 5 people after purchase</span></div>
+                <div class="buy-note-item"><i class="fas fa-check" style="color:#10B981;margin-top:2px;flex-shrink:0;"></i><span>Credits transfer only after sharing 5 vouchers</span></div>
+                <div class="buy-note-item"><i class="fas fa-check" style="color:#10B981;margin-top:2px;flex-shrink:0;"></i><span>If you fail to connect 5 people, credits return to admin</span></div>
             </div>
         </div>
-
-        <!-- Buy Button -->
         <div class="buy-footer">
             <button class="buy-confirm-btn" id="confirmBuyBtn">
                 <i class="fas fa-credit-card"></i>
-                <span id="buyBtnLabel">Pay ₹3,600 via Payment Gateway</span>
+                <span id="buyBtnLabel">Pay &#8377;3,600 via Payment Gateway</span>
             </button>
         </div>
     </div>
 
-    <!-- Transfer Credits Modal (mirrors TransferCreditsModal.tsx) -->
+    <!-- Transfer Credits Modal -->
     <div class="modal fade" id="transferCreditsModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-coins me-2" style="color:#3b82f6;"></i>Transfer Credits</h5>
+                    <h5 class="modal-title"><i class="fas fa-coins me-2" style="color:#3B82F6;"></i>Transfer Credits</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="tc-recipient-box">
-                        <div class="tc-recipient-name" id="tcRecipientName">—</div>
-                        <div class="tc-recipient-phone" id="tcRecipientPhone">—</div>
+                        <div class="tc-recipient-name" id="tcRecipientName">&#8212;</div>
+                        <div class="tc-recipient-phone" id="tcRecipientPhone">&#8212;</div>
                     </div>
                     <div class="tc-balance-row">
-                        <span style="font-size:0.82rem;color:#374151;font-weight:500;">Available Credits:</span>
+                        <span style="font-size:0.78rem;color:#374151;font-weight:500;">Available Credits:</span>
                         <span class="tc-balance-badge" id="tcAvailableCredits">0 credits</span>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Amount (1–5 credits) <span style="color:#e53e3e;">*</span></label>
+                        <label class="form-label">Amount (1&#8211;5 credits) <span style="color:#E53E3E;">*</span></label>
                         <input type="number" class="form-control" id="tcAmount" min="1" max="5" value="1" placeholder="Enter 1 to 5">
                         <div class="form-text">Transfer amount must be between 1 and 5 credits</div>
                     </div>
-                    <div id="tcError" class="alert alert-danger d-none py-2" style="border-radius:10px;font-size:0.85rem;"></div>
+                    <div id="tcError" class="alert alert-danger d-none py-2" style="border-radius:10px;font-size:0.8rem;"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-secondary-modal" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn-primary-modal" id="confirmTransferCreditsBtn" style="background:linear-gradient(135deg,#3b82f6,#2563eb);">
-                        <i class="fas fa-coins me-1"></i>Transfer Credits
-                    </button>
+                    <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-modal-primary" id="confirmTransferCreditsBtn"><i class="fas fa-coins me-1"></i>Transfer Credits</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Transfer Voucher Modal (mirrors VoucherTransferModal.tsx) -->
+    <!-- Transfer Voucher Modal -->
     <div class="modal fade" id="transferModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-ticket-alt me-2" style="color:#8b5cf6;"></i>Transfer Voucher</h5>
+                    <h5 class="modal-title"><i class="fas fa-ticket-alt me-2" style="color:#8B5CF6;"></i>Transfer Voucher</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Voucher</label>
-                        <input type="text" class="form-control" id="transferVoucherNumber" readonly style="background:#f9fafb;">
+                        <input type="text" class="form-control" id="transferVoucherNumber" readonly style="background:#F9FAFB;">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Recipient Phone Number <span style="color:#e53e3e;">*</span></label>
+                        <label class="form-label">Recipient Phone <span style="color:#E53E3E;">*</span></label>
                         <input type="tel" class="form-control" id="recipientPhone" placeholder="+91XXXXXXXXXX">
                         <div class="form-text">Enter the recipient's registered phone number</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Quantity</label>
-                        <input type="number" class="form-control" id="transferQty" min="1" max="100" value="1" placeholder="Number of uses">
-                        <div class="form-text">How many times this voucher can be used by recipient</div>
+                        <input type="number" class="form-control" id="transferQty" min="1" max="100" value="1">
                     </div>
-                    <div id="transferError" class="alert alert-danger d-none py-2" style="border-radius:10px; font-size:0.85rem;"></div>
+                    <div id="transferError" class="alert alert-danger d-none py-2" style="border-radius:10px;font-size:0.8rem;"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn-secondary-modal" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn-primary-modal" id="confirmTransferBtn" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);">
+                    <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn-modal-primary" id="confirmTransferBtn" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED);">
                         <i class="fas fa-paper-plane me-1"></i>Transfer
                     </button>
                 </div>
@@ -1255,50 +854,7 @@
         </div>
     </div>
 
-    <!-- Detail Modal -->
-    <div class="modal fade" id="voucherDetailModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-ticket-alt me-2" style="color:#4f46e5;"></i>Voucher Details</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="voucherDetailContent"></div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary-modal" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <script>
-        // Tab switcher
-        function switchTab(name, btn) {
-            document.querySelectorAll('.vtab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.vtab-pane').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('pane-' + name).classList.add('active');
-        }
-
-        // Toast helper
-        function showToast(msg, type = 'success') {
-            const t = document.getElementById('toastBar');
-            t.textContent = msg;
-            t.className = 'toast-bar ' + type + ' show';
-            setTimeout(() => t.classList.remove('show'), 3000);
-        }
-
-        function goToPromotions() {
-            window.location.href = 'promotions.html';
-        }
-        function logout() {
-            localStorage.removeItem('authToken');
-            window.location.href = 'voucher-login.html';
-        }
-    </script>
-
     <script src="js/vouchers.js"></script>
 </body>
 </html>
