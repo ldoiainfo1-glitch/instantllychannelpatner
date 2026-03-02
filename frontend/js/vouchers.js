@@ -236,7 +236,7 @@
     }
 
     window.handleRedeemNow = function () {
-        if (state.availableVouchers > 0) window.location.href = 'promotions.html';
+        if (state.availableVouchers > 0) window.location.href = 'https://instantllychannelpatner.vercel.app/profile.html';
         else showToast('No available vouchers. Purchase vouchers first.', 'error');
     };
 
