@@ -7,19 +7,28 @@ const User = require('../models/User');
 require("dotenv").config();
 
 
-// Initialize Razorpay instance
-// const razorpay = new Razorpay({
-//   key_id: process.env.RAZORPAY_KEY_ID || 'rrzp_test_Rp5V6GpYmfdQN4',
-//   key_secret: process.env.RAZORPAY_KEY_SECRET || 'Dr2IaUpX7jw1khlfFLhR4Vcd'
-// });
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Initialize Razorpay instance (safe init - won't crash server if keys missing)
+let razorpay = null;
+try {
+  if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+    console.log('✅ Razorpay initialized');
+  } else {
+    console.warn('⚠️ Razorpay keys not set - payment routes will return 503');
+  }
+} catch (e) {
+  console.error('⚠️ Razorpay init failed:', e.message);
+}
 
 // Create Razorpay order
 router.post('/create-order', async (req, res) => {
   try {
+    if (!razorpay) {
+      return res.status(503).json({ error: 'Payment service not configured' });
+    }
     const { amount, positionId, applicantPhone } = req.body;
 
     if (!amount || !positionId || !applicantPhone) {
