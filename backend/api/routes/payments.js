@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
-const Position = require('../models/Position');
-const User = require('../models/User');
-require("dotenv").config();
+
+// Razorpay is not used - all payment routes return 503
+router.post('/create-order', (req, res) => res.status(503).json({ error: 'Payment service not enabled' }));
+router.post('/verify-payment', (req, res) => res.status(503).json({ error: 'Payment service not enabled' }));
+router.post('/webhook', (req, res) => res.status(503).json({ error: 'Payment service not enabled' }));
+router.get('/payment/:paymentId', (req, res) => res.status(503).json({ error: 'Payment service not enabled' }));
+
+module.exports = router;
+
 
 
 // Initialize Razorpay instance (safe init - won't crash server if keys missing)
