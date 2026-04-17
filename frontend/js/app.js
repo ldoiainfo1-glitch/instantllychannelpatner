@@ -1,6 +1,6 @@
 // Configuration - Updated for Vercel deployment fix
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5000/api'
+    ? 'http://localhost:5001/api'
     : 'https://api.channel-partner.instantllycards.com/api';
 
 
@@ -4354,7 +4354,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
         let hierarchyRowsHTML = '';
         hierarchy.forEach((level) => {
             const rowStyle = level.isCurrentUser 
-                ? 'background: #FFE5E5; font-weight: bold;' 
+                ? 'background: #cce5ff; color: #0a1f5c; font-weight: bold;' 
                 : '';
             
             hierarchyRowsHTML += `
@@ -4421,12 +4421,9 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     <div class="modal-body">
                         <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: white; display: flex; flex-direction: column;">
                             <!-- Header Section: Company Logo & Name -->
-                            <div style="background: #000; color: white; padding: 15px 20px; text-align: center; flex-shrink: 0;">
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 8px;">
-                                    <img src="images/logo.png" style="width: 50px; height: 50px;">
-                                    <h2 style="margin: 0; font-size: 26px; font-weight: bold;">
-                                        Instan<span style="color: #00bfff;">tlly</span> Cards
-                                    </h2>
+                            <div style="background: #0a1f5c; color: white; padding: 15px 20px; text-align: center; flex-shrink: 0;">
+                                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                                    <img src="Logo01.png" style="height: 90px; object-fit: contain;">
                                 </div>
                                 <p style="margin: 5px 0; font-size: 14px; line-height: 1.4;">
                                     We Are Appointing Sole Head For India, Zone, State, Division, District, Tehsil, Pincode, Village
@@ -4463,7 +4460,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                 <div style="background: white; color: black; padding: 15px; border-radius: 8px; flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
                                     <table style="width: 100%; border-collapse: collapse; font-size: 13px; flex: 1;">
                                         <thead>
-                                            <tr style="background: #333; color: white;">
+                                            <tr style="background: #0a1f5c; color: white;">
                                                 <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Position</th>
                                                 <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Area</th>
                                                 <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">C.P. Name</th>
