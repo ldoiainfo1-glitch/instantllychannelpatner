@@ -4423,7 +4423,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                             <!-- Header Section: Company Logo & Name -->
                             <div style="background: #0a1f5c; color: white; padding: 15px 20px; text-align: center; flex-shrink: 0;">
                                 <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
-                                    <img src="Logo01.png" style="height: 90px; object-fit: contain;">
+                                    <img src="images/Logo01.png" style="height: 90px; object-fit: contain;">
                                 </div>
                                 <p style="margin: 5px 0; font-size: 14px; line-height: 1.4;">
                                     We Are Appointing Sole Head For India, Zone, State, Division, District, Tehsil, Pincode, Village
