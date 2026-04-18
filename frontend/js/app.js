@@ -4421,11 +4421,11 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     <div class="modal-body">
                         <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: white; display: flex; flex-direction: column;">
                             <!-- Header Section: Company Logo & Name -->
-                            <div style="background: #0a1f5c; color: white; padding: 15px 20px; text-align: center; flex-shrink: 0;">
-                                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
-                                    <img src="images/Logo01.png" style="height: 90px; object-fit: contain;">
+                            <div style="background: #0a1f5c; color: white; padding: 10px 20px 8px 20px; text-align: center; flex-shrink: 0;">
+                                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: -14px;">
+                                    <img src="images/Logo01.png" style="height: 100px; object-fit: contain;">
                                 </div>
-                                <p style="margin: 5px 0; font-size: 14px; line-height: 1.4;">
+                                <p style="margin: 0; font-size: 17px; line-height: 1.4;">
                                     We Are Appointing Sole Head For India, Zone, State, Division, District, Tehsil, Pincode, Village
                                 </p>
                                 <p style="margin: 5px 0 0 0; font-size: 14px; font-weight: bold;">
