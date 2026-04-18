@@ -3950,7 +3950,7 @@ function fallbackCopyTextToClipboard(text) {
 //                                         <div style="color: #000000; font-size: 0.65rem; line-height: 1.2; margin-bottom: 10px;">We Are Appointing Sole Head</div>
 //                                         <div style="color: #000000; font-size: 0.65rem; line-height: 1.2;">for India, Zone, State, Division,</div>
 //                                         <div style="color: #000000; font-size: 0.65rem; line-height: 1.2;">District, Tehsil, Pincode, Village</div>
-//                                         <div style="color: #000000; font-size: 0.7rem; font-weight: bold; margin-top: 10px;">Mob: $9833752025</div>
+//                                         <div style="color: #000000; font-size: 0.7rem; font-weight: bold; margin-top: 10px;">Mob: $9076106061</div>
 //                                         <div style="color: #000000; font-size: 0.65rem; margin-top: 5px;">Web: instantly.com</div>
 //                                     </div>
 
@@ -4429,7 +4429,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                     We Are Appointing Sole Head For India, Zone, State, Division, District, Tehsil, Pincode, Village
                                 </p>
                                 <p style="margin: 5px 0 0 0; font-size: 14px; font-weight: bold;">
-                                    Mob: 9833752025 | Web: instantlly.com
+                                    Mob: 9076106061 | Web: instantlly.com
                                 </p>
                             </div>
 
