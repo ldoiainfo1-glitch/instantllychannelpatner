@@ -4420,17 +4420,20 @@ async function showIDCard(name, phone, photo, positionLocation) {
 
                     <div class="modal-body">
                         <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: white; display: flex; flex-direction: column;">
-                            <!-- Header Section: Company Logo & Name -->
-                            <div style="background: #0a1f5c; color: white; padding: 10px 20px 8px 20px; text-align: center; flex-shrink: 0;">
-                                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 4px;">
-                                    <img src="images/india-property-network-logo.svg" alt="India Property Network Ltd" style="height: 145px; width: auto; object-fit: contain;">
+                            <!-- Header Section: India Property Network -->
+                            <div style="background: #000000; color: white; padding: 10px 14px; flex-shrink: 0; display: flex; align-items: center; gap: 18px;">
+                                <div style="width: 110px; height: 110px; background: #ffffff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                    <img src="images/india-property-network-logo.svg" alt="India Property Network Ltd" style="width: 100%; height: 100%; object-fit: contain; display: block;">
                                 </div>
-                                <p style="margin: 0; font-size: 17px; line-height: 1.4;">
-                                    We Are Appointing Sole Head For India, Zone, State, Division, District, Tehsil, Pincode, Village
-                                </p>
-                                <p style="margin: 5px 0 0 0; font-size: 14px; font-weight: bold;">
-                                    Mob: 9076106061
-                                </p>
+                                <div style="flex: 1; text-align: center; min-width: 0;">
+                                    <p style="margin: 0; color: #f2df72; font-size: 19px; line-height: 1.35; font-weight: 800;">
+                                        Appointing Head for India, Zone, State,<br>
+                                        Division, District, Tehsil, Pincode, Village
+                                    </p>
+                                    <p style="margin: 8px 0 0 0; color: #ffffff; font-size: 24px; line-height: 1; font-weight: 900; letter-spacing: 0;">
+                                        9076106061
+                                    </p>
+                                </div>
                             </div>
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
