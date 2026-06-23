@@ -4354,15 +4354,15 @@ async function showIDCard(name, phone, photo, positionLocation) {
         let hierarchyRowsHTML = '';
         hierarchy.forEach((level) => {
             const rowStyle = level.isCurrentUser 
-                ? 'background: #cce5ff; color: #0a1f5c; font-weight: bold;' 
+                ? 'background: #EAF4FF; color: #0F172A; font-weight: bold;' 
                 : '';
             
             hierarchyRowsHTML += `
                 <tr style="${rowStyle}">
-                    <td style="padding: 6px 8px; border: 1px solid #ddd; font-size: 13px;">${level.position}</td>
-                    <td style="padding: 6px 8px; border: 1px solid #ddd; font-size: 13px;">${level.area || ''}</td>
-                    <td style="padding: 6px 8px; border: 1px solid #ddd; font-size: 13px;">${level.cpName || ''}</td>
-                    <td style="padding: 6px 8px; border: 1px solid #ddd; font-size: 13px;">${level.cpMob || ''}</td>
+                    <td style="padding: 6px 8px; border: 1px solid #D7E7F8; font-size: 13px;">${level.position}</td>
+                    <td style="padding: 6px 8px; border: 1px solid #D7E7F8; font-size: 13px;">${level.area || ''}</td>
+                    <td style="padding: 6px 8px; border: 1px solid #D7E7F8; font-size: 13px;">${level.cpName || ''}</td>
+                    <td style="padding: 6px 8px; border: 1px solid #D7E7F8; font-size: 13px;">${level.cpMob || ''}</td>
                 </tr>
             `;
         });
@@ -4419,34 +4419,34 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     </div>
 
                     <div class="modal-body">
-                        <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: white; display: flex; flex-direction: column;">
+                        <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: #EAF4FF; display: flex; flex-direction: column; border: 3px solid #0F172A; box-sizing: border-box;">
                             <!-- Header Section: India Property Network -->
-                            <div style="background: #d7ecff; color: #0a1f5c; padding: 10px 14px; flex-shrink: 0; display: flex; align-items: flex-start; gap: 16px; min-height: 178px; box-sizing: border-box; border-bottom: 5px solid #0a1f5c;">
+                            <div style="background: #EAF4FF; color: #0F172A; padding: 10px 14px; flex-shrink: 0; display: flex; align-items: flex-start; gap: 16px; min-height: 178px; box-sizing: border-box; border: 3px solid #FFFFFF; border-bottom: 5px solid #0F172A;">
                                 <div style="width: 136px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
-                                    <div style="width: 126px; height: 122px; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 1px 4px rgba(10,31,92,0.18);">
+                                    <div style="width: 126px; height: 122px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #0F172A; box-shadow: 0 2px 8px rgba(15,23,42,0.12);">
                                         <img src="images/india-property-network-logo.png" alt="India Property Network Ltd" style="width: 100%; height: 100%; object-fit: contain; display: block;">
                                     </div>
-                                    <p style="margin: 8px 0 0 0; color: #0a1f5c; font-size: 20px; line-height: 1; font-weight: 900; text-align: center; letter-spacing: 0;">
+                                    <p style="margin: 8px 0 0 0; color: #2563EB; font-size: 20px; line-height: 1; font-weight: 900; text-align: center; letter-spacing: 0;">
                                         9076106061
                                     </p>
                                 </div>
                                 <div style="flex: 1; min-width: 0; padding-top: 8px;">
-                                    <p style="margin: 0 0 10px 0; color: #0a1f5c; font-size: 22px; line-height: 1.15; font-weight: 900;">
+                                    <p style="margin: 0 0 10px 0; color: #0F172A; font-size: 22px; line-height: 1.15; font-weight: 900;">
                                         We do Everything Related to All India Property
                                     </p>
-                                    <p style="margin: 0; color: #17426f; font-size: 17px; line-height: 1.34; font-weight: 600;">
+                                    <p style="margin: 0; color: #0F172A; font-size: 17px; line-height: 1.34; font-weight: 600;">
                                         Sale, Purchase, Finance, Joint Venture, Redevelopment Development, Rental, for Flat, Bungalow, Shop, Office, N.A. Land, Agriculture Land.
                                     </p>
                                 </div>
                             </div>
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
-                            <div style="padding: 20px 20px 25px 20px; background: #ff0000; color: white; flex: 1; display: flex; flex-direction: column;">
+                            <div style="padding: 20px 20px 25px 20px; background: linear-gradient(135deg, #2563EB 0%, #0F172A 100%); color: #FFFFFF; flex: 1; display: flex; flex-direction: column; border-top: 3px solid #FFFFFF; box-sizing: border-box;">
                                 <!-- User Info Section: Photo + Name/Phone -->
                                 <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px; flex-shrink: 0;">
                                     <!-- Photo Column -->
                                     <div style="flex-shrink: 0;">
-                                        <div style="width: 130px; height: 130px; border: 4px solid white; overflow: hidden; background: white;">
+                                        <div style="width: 130px; height: 130px; border: 4px solid #FFFFFF; outline: 2px solid #0F172A; overflow: hidden; background: #FFFFFF;">
                                             <img src="${photo}" 
                                                  style="width: 100%; height: 100%; object-fit: cover;">
                                         </div>
@@ -4464,14 +4464,14 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                 </div>
 
                                 <!-- Hierarchy Table (Compact) -->
-                                <div style="background: white; color: black; padding: 15px; border-radius: 8px; flex: 1; overflow-y: auto; display: flex; flex-direction: column;">
+                                <div style="background: #FFFFFF; color: #0F172A; padding: 15px; border: 3px solid #FFFFFF; border-radius: 8px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 3px 10px rgba(15,23,42,0.18);">
                                     <table style="width: 100%; border-collapse: collapse; font-size: 13px; flex: 1;">
                                         <thead>
-                                            <tr style="background: #0a1f5c; color: white;">
-                                                <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Position</th>
-                                                <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">Area</th>
-                                                <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">C.P. Name</th>
-                                                <th style="padding: 10px 8px; border: 1px solid #ddd; text-align: left;">C.P. Mob</th>
+                                            <tr style="background: #0F172A; color: #FFFFFF;">
+                                                <th style="padding: 10px 8px; border: 1px solid #2563EB; text-align: left;">Position</th>
+                                                <th style="padding: 10px 8px; border: 1px solid #2563EB; text-align: left;">Area</th>
+                                                <th style="padding: 10px 8px; border: 1px solid #2563EB; text-align: left;">C.P. Name</th>
+                                                <th style="padding: 10px 8px; border: 1px solid #2563EB; text-align: left;">C.P. Mob</th>
                                             </tr>
                                         </thead>
                                         <tbody>
