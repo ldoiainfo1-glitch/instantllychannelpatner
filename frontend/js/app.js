@@ -4432,7 +4432,8 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                 </div>
                                 <div style="flex: 1; min-width: 0; padding-top: 8px;">
                                     <p style="margin: 0 0 10px 0; color: #FFFFFF; font-size: 22px; line-height: 1.15; font-weight: 900;">
-                                        We do Everything Related to All India Property
+                                        We do Everything Related to<br>
+                                        <span style="display: block; text-align: center; white-space: nowrap;">All India Property</span>
                                     </p>
                                     <p style="margin: 0; color: #FFFFFF; font-size: 17px; line-height: 1.34; font-weight: 600;">
                                         Sale, Purchase, Finance, Joint Venture, Redevelopment Development, Rental, for Flat, Bungalow, Shop, Office, N.A. Land, Agriculture Land.
