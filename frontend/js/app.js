@@ -4464,7 +4464,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                 </div>
 
                                 <!-- Hierarchy Table (Compact) -->
-                                <div style="background: #FFFFFF; color: #0F172A; padding: 15px; border: 3px solid #000000; border-radius: 8px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 3px 10px rgba(15,23,42,0.18);">
+                                <div style="background: #a6ccf5; color: #0F172A; padding: 15px; border: 3px solid #000000; border-radius: 8px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 3px 10px rgba(15,23,42,0.18);">
                                     <table style="width: 100%; border-collapse: collapse; font-size: 13px; flex: 1; border: 3px solid #000000;">
                                         <thead>
                                             <tr style="background: #0F172A; color: #FFFFFF;">
