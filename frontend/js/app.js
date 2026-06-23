@@ -4421,7 +4421,22 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     <div class="modal-body">
                         <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: white; display: flex; flex-direction: column;">
                             <!-- Header Section: India Property Network -->
-                            <img src="images/india-property-header.svg" alt="India Property Network property services" style="width: 100%; height: auto; display: block; flex-shrink: 0;">
+                            <div style="background: #000000; color: white; padding: 12px 14px; flex-shrink: 0; display: flex; align-items: center; gap: 16px; min-height: 145px; box-sizing: border-box;">
+                                <div style="width: 122px; height: 122px; background: #ffffff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                    <img src="images/india-property-network-logo.png" alt="India Property Network Ltd" style="width: 100%; height: 100%; object-fit: contain; display: block;">
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <p style="margin: 0 0 9px 0; color: #f5dd51; font-size: 22px; line-height: 1.15; font-weight: 900;">
+                                        We do Everything Related to All India Property
+                                    </p>
+                                    <p style="margin: 0; color: #ffffff; font-size: 17px; line-height: 1.35; font-weight: 500;">
+                                        Sale, Purchase, Finance, Joint Venture, Redevelopment Development, Rental, for Flat, Bungalow, Shop, Office, N.A. Land, Agriculture Land.
+                                    </p>
+                                    <p style="margin: 9px 0 0 0; color: #ffffff; font-size: 22px; line-height: 1; font-weight: 900; text-align: center;">
+                                        9076106061
+                                    </p>
+                                </div>
+                            </div>
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
                             <div style="padding: 20px 20px 25px 20px; background: #ff0000; color: white; flex: 1; display: flex; flex-direction: column;">
