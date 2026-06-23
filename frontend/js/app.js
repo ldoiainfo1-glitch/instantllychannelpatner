@@ -4354,7 +4354,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
         let hierarchyRowsHTML = '';
         hierarchy.forEach((level) => {
             const rowStyle = level.isCurrentUser 
-                ? 'background: #EAF4FF; color: #0F172A; font-weight: bold;' 
+                ? 'background: #a6ccf5; color: #0F172A; font-weight: bold;' 
                 : '';
             
             hierarchyRowsHTML += `
@@ -4368,7 +4368,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
         });
 
         const modalHTML = `
-        <style>
+        <style> 
             #idCardModal .modal-dialog {
                 max-width: 600px;
                 margin: 1rem auto;
@@ -4419,7 +4419,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     </div>
 
                     <div class="modal-body">
-                        <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: #EAF4FF; display: flex; flex-direction: column; border: 3px solid #0F172A; box-sizing: border-box;">
+                        <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: #a6ccf5; display: flex; flex-direction: column; border: 3px solid #0F172A; box-sizing: border-box;">
                             <!-- Header Section: India Property Network -->
                             <div style="background: #2563EB; color: #FFFFFF; padding: 10px 14px; flex-shrink: 0; display: flex; align-items: flex-start; gap: 16px; min-height: 178px; box-sizing: border-box; border: 3px solid #FFFFFF; border-bottom: 5px solid #0F172A;">
                                 <div style="width: 136px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
@@ -4441,7 +4441,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                             </div>
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
-                            <div style="padding: 20px 20px 25px 20px; background: #EAF4FF; color: #0F172A; flex: 1; display: flex; flex-direction: column; border-top: 3px solid #FFFFFF; box-sizing: border-box;">
+                            <div style="padding: 20px 20px 25px 20px; background: #a6ccf5; color: #0F172A; flex: 1; display: flex; flex-direction: column; border-top: 3px solid #FFFFFF; box-sizing: border-box;">
                                 <!-- User Info Section: Photo + Name/Phone -->
                                 <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px; flex-shrink: 0;">
                                     <!-- Photo Column -->
