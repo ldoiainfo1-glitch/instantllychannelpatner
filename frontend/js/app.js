@@ -4518,6 +4518,57 @@ async function showIDCard(name, phone, photo, positionLocation) {
 
 async function downloadIDCardAsImage(name) {
     const element = document.getElementById("idCardContent");
+    if (!element) {
+        alert('ID Card content not found. Please try again.');
+        return;
+    }
+    
+    const imageRestores = [];
+
+    const waitForImage = (img) => new Promise((resolve) => {
+        if (img.complete && img.naturalWidth > 0) {
+            resolve();
+            return;
+        }
+
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+    });
+
+    const convertSvgBlobToPngDataUrl = (blob) => new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(blob);
+        const image = new Image();
+
+        image.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+            URL.revokeObjectURL(objectUrl);
+            resolve(canvas.toDataURL('image/png'));
+        };
+
+        image.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Could not load ID card logo for download'));
+        };
+
+        image.src = objectUrl;
+    });
+
+    const logoImg = element.querySelector('img[src="images/india-property-network-logo.svg"]');
+    if (logoImg) {
+        imageRestores.push({ img: logoImg, src: logoImg.src });
+        const logoResponse = await fetch(logoImg.getAttribute('src'));
+        const logoBlob = await logoResponse.blob();
+        logoImg.src = await convertSvgBlobToPngDataUrl(logoBlob);
+        await waitForImage(logoImg);
+    }
     
     // Temporarily remove the scale transform to capture full-size image
     const originalTransform = element.style.transform;
@@ -4525,28 +4576,33 @@ async function downloadIDCardAsImage(name) {
     
     // Wait for browser to reflow
     await new Promise(resolve => setTimeout(resolve, 100));
+    await Promise.all(Array.from(element.querySelectorAll('img')).map(waitForImage));
 
-    // Get actual element dimensions - fixed at 540x772
-    const canvas = await html2canvas(element, {
-        scale: 2,
-        width: 540,
-        height: 772,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-        windowHeight: 772,
-        scrollY: -window.scrollY,
-        scrollX: -window.scrollX
-    });
+    try {
+        // Get actual element dimensions - fixed at 540x772
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            width: 540,
+            height: 772,
+            backgroundColor: "#ffffff",
+            useCORS: true,
+            windowHeight: 772,
+            scrollY: -window.scrollY,
+            scrollX: -window.scrollX
+        });
 
-    // Restore the original transform
-    element.style.transform = originalTransform;
+        const url = canvas.toDataURL("image/png");
 
-    const url = canvas.toDataURL("image/png");
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `ID_Card_${name}.png`;
-    link.click();
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `ID_Card_${name}.png`;
+        link.click();
+    } finally {
+        element.style.transform = originalTransform;
+        imageRestores.forEach(({ img, src }) => {
+            img.src = src;
+        });
+    }
 }
 
 
