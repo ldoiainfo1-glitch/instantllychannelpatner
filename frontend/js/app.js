@@ -4359,10 +4359,10 @@ async function showIDCard(name, phone, photo, positionLocation) {
             
             hierarchyRowsHTML += `
                 <tr style="${rowStyle}">
-                    <td style="padding: 6px 8px; border: 1px solid #D7E7F8; font-size: 13px;">${level.position}</td>
-                    <td style="padding: 6px 8px; border: 1px solid #D7E7F8; font-size: 13px;">${level.area || ''}</td>
-                    <td style="padding: 6px 8px; border: 1px solid #D7E7F8; font-size: 13px;">${level.cpName || ''}</td>
-                    <td style="padding: 6px 8px; border: 1px solid #D7E7F8; font-size: 13px;">${level.cpMob || ''}</td>
+                    <td style="padding: 6px 8px; border: 2px solid #000000; font-size: 13px;">${level.position}</td>
+                    <td style="padding: 6px 8px; border: 2px solid #000000; font-size: 13px;">${level.area || ''}</td>
+                    <td style="padding: 6px 8px; border: 2px solid #000000; font-size: 13px;">${level.cpName || ''}</td>
+                    <td style="padding: 6px 8px; border: 2px solid #000000; font-size: 13px;">${level.cpMob || ''}</td>
                 </tr>
             `;
         });
@@ -4464,14 +4464,14 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                 </div>
 
                                 <!-- Hierarchy Table (Compact) -->
-                                <div style="background: #FFFFFF; color: #0F172A; padding: 15px; border: 3px solid #FFFFFF; border-radius: 8px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 3px 10px rgba(15,23,42,0.18);">
-                                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; flex: 1;">
+                                <div style="background: #FFFFFF; color: #0F172A; padding: 15px; border: 3px solid #000000; border-radius: 8px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; box-shadow: 0 3px 10px rgba(15,23,42,0.18);">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; flex: 1; border: 3px solid #000000;">
                                         <thead>
                                             <tr style="background: #0F172A; color: #FFFFFF;">
-                                                <th style="padding: 10px 8px; border: 1px solid #2563EB; text-align: left;">Position</th>
-                                                <th style="padding: 10px 8px; border: 1px solid #2563EB; text-align: left;">Area</th>
-                                                <th style="padding: 10px 8px; border: 1px solid #2563EB; text-align: left;">C.P. Name</th>
-                                                <th style="padding: 10px 8px; border: 1px solid #2563EB; text-align: left;">C.P. Mob</th>
+                                                <th style="padding: 10px 8px; border: 2px solid #000000; text-align: left;">Position</th>
+                                                <th style="padding: 10px 8px; border: 2px solid #000000; text-align: left;">Area</th>
+                                                <th style="padding: 10px 8px; border: 2px solid #000000; text-align: left;">C.P. Name</th>
+                                                <th style="padding: 10px 8px; border: 2px solid #000000; text-align: left;">C.P. Mob</th>
                                             </tr>
                                         </thead>
                                         <tbody>
