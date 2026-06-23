@@ -4421,20 +4421,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     <div class="modal-body">
                         <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: white; display: flex; flex-direction: column;">
                             <!-- Header Section: India Property Network -->
-                            <div style="background: #000000; color: white; padding: 10px 14px; flex-shrink: 0; display: flex; align-items: center; gap: 18px;">
-                                <div style="width: 110px; height: 110px; background: #ffffff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-                                    <img src="images/india-property-network-logo.svg" alt="India Property Network Ltd" style="width: 100%; height: 100%; object-fit: contain; display: block;">
-                                </div>
-                                <div style="flex: 1; text-align: center; min-width: 0;">
-                                    <p style="margin: 0; color: #f2df72; font-size: 19px; line-height: 1.35; font-weight: 800;">
-                                        Appointing Head for India, Zone, State,<br>
-                                        Division, District, Tehsil, Pincode, Village
-                                    </p>
-                                    <p style="margin: 8px 0 0 0; color: #ffffff; font-size: 24px; line-height: 1; font-weight: 900; letter-spacing: 0;">
-                                        9076106061
-                                    </p>
-                                </div>
-                            </div>
+                            <img src="images/india-property-header.svg" alt="India Property Network property services" style="width: 100%; height: auto; display: block; flex-shrink: 0;">
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
                             <div style="padding: 20px 20px 25px 20px; background: #ff0000; color: white; flex: 1; display: flex; flex-direction: column;">
@@ -4561,13 +4548,15 @@ async function downloadIDCardAsImage(name) {
         image.src = objectUrl;
     });
 
-    const logoImg = element.querySelector('img[src="images/india-property-network-logo.svg"]');
-    if (logoImg) {
-        imageRestores.push({ img: logoImg, src: logoImg.src });
-        const logoResponse = await fetch(logoImg.getAttribute('src'));
-        const logoBlob = await logoResponse.blob();
-        logoImg.src = await convertSvgBlobToPngDataUrl(logoBlob);
-        await waitForImage(logoImg);
+    const svgImages = Array.from(element.querySelectorAll('img'))
+        .filter((img) => img.getAttribute('src')?.toLowerCase().endsWith('.svg'));
+
+    for (const svgImg of svgImages) {
+        imageRestores.push({ img: svgImg, src: svgImg.src });
+        const svgResponse = await fetch(svgImg.getAttribute('src'));
+        const svgBlob = await svgResponse.blob();
+        svgImg.src = await convertSvgBlobToPngDataUrl(svgBlob);
+        await waitForImage(svgImg);
     }
     
     // Temporarily remove the scale transform to capture full-size image
