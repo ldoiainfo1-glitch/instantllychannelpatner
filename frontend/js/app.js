@@ -4421,9 +4421,9 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     <div class="modal-body">
                         <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: white; display: flex; flex-direction: column;">
                             <!-- Header Section: India Property Network -->
-                            <div style="background: #d7ecff; color: #0a1f5c; padding: 10px 14px; flex-shrink: 0; display: flex; align-items: flex-start; gap: 16px; min-height: 158px; box-sizing: border-box; border-bottom: 5px solid #0a1f5c;">
-                                <div style="width: 126px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
-                                    <div style="width: 116px; height: 100px; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 1px 4px rgba(10,31,92,0.18);">
+                            <div style="background: #d7ecff; color: #0a1f5c; padding: 10px 14px; flex-shrink: 0; display: flex; align-items: flex-start; gap: 16px; min-height: 178px; box-sizing: border-box; border-bottom: 5px solid #0a1f5c;">
+                                <div style="width: 136px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
+                                    <div style="width: 126px; height: 122px; background: #ffffff; display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 1px 4px rgba(10,31,92,0.18);">
                                         <img src="images/india-property-network-logo.png" alt="India Property Network Ltd" style="width: 100%; height: 100%; object-fit: contain; display: block;">
                                     </div>
                                     <p style="margin: 8px 0 0 0; color: #0a1f5c; font-size: 20px; line-height: 1; font-weight: 900; text-align: center; letter-spacing: 0;">
