@@ -4441,7 +4441,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                             </div>
 
                             <!-- Main Content Section: Photo + Hierarchy Table -->
-                            <div style="padding: 20px 20px 25px 20px; background: #0F172A; color: #FFFFFF; flex: 1; display: flex; flex-direction: column; border-top: 3px solid #FFFFFF; box-sizing: border-box;">
+                            <div style="padding: 20px 20px 25px 20px; background: #EAF4FF; color: #0F172A; flex: 1; display: flex; flex-direction: column; border-top: 3px solid #FFFFFF; box-sizing: border-box;">
                                 <!-- User Info Section: Photo + Name/Phone -->
                                 <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px; flex-shrink: 0;">
                                     <!-- Photo Column -->
