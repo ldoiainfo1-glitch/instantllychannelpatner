@@ -4354,15 +4354,21 @@ async function showIDCard(name, phone, photo, positionLocation) {
         let hierarchyRowsHTML = '';
         hierarchy.forEach((level) => {
             const rowStyle = level.isCurrentUser 
-                ? 'background: #a6ccf5; color: #0F172A; font-weight: bold;' 
-                : '';
+                ? 'background: linear-gradient(90deg, rgba(231, 245, 222, 0.98), rgba(241, 250, 235, 0.98)); color: #1f6f28; font-weight: 800;' 
+                : 'background: rgba(255, 255, 255, 0.88); color: #0a2458;';
+            const hasInformation = Boolean(level.cpName || level.cpMob);
+            const informationCells = hasInformation
+                ? `
+                    <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: center; line-height: 1.15;">${level.cpName || '-'}</td>
+                    <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: center; line-height: 1.15;">${level.cpMob || '-'}</td>
+                `
+                : `<td colspan="2" style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: center; line-height: 1.15;">-</td>`;
             
             hierarchyRowsHTML += `
                 <tr style="${rowStyle}">
-                    <td style="padding: 6px 8px; border: 2px solid #000000; font-size: 13px;">${level.position}</td>
-                    <td style="padding: 6px 8px; border: 2px solid #000000; font-size: 13px;">${level.area || ''}</td>
-                    <td style="padding: 6px 8px; border: 2px solid #000000; font-size: 13px;">${level.cpName || ''}</td>
-                    <td style="padding: 6px 8px; border: 2px solid #000000; font-size: 13px;">${level.cpMob || ''}</td>
+                    <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; font-weight: 800; line-height: 1.15;">${level.position}</td>
+                    <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: center; line-height: 1.15;">${level.area || ''}</td>
+                    ${informationCells}
                 </tr>
             `;
         });
@@ -4419,60 +4425,74 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     </div>
 
                     <div class="modal-body">
-                        <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: #a6ccf5; display: flex; flex-direction: column; border: 3px solid #0F172A; box-sizing: border-box;">
+                        <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: #ffffff; display: flex; flex-direction: column; border: 3px solid #08285f; border-radius: 10px; box-sizing: border-box; overflow: hidden; position: relative;">
                             <!-- Header Section: India Property Network -->
-                            <div style="background: #2563EB; color: #FFFFFF; padding: 10px 14px; flex-shrink: 0; display: flex; align-items: flex-start; gap: 16px; min-height: 178px; box-sizing: border-box; border: 3px solid #FFFFFF; border-bottom: 5px solid #0F172A;">
-                                <div style="width: 136px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start;">
-                                    <div style="width: 126px; height: 122px; background: #FFFFFF; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid #0F172A; box-shadow: 0 2px 8px rgba(15,23,42,0.12);">
-                                        <img src="images/india-property-network-logo.png" alt="India Property Network Ltd" style="width: 100%; height: 100%; object-fit: contain; display: block;">
-                                    </div>
-                                    <p style="margin: 8px 0 0 0; color: #FFFFFF; font-size: 20px; line-height: 1; font-weight: 900; text-align: center; letter-spacing: 0;">
-                                        9076106061
-                                    </p>
+                            <div style="background: #ffffff; color: #08285f; padding: 12px 24px 10px 24px; flex-shrink: 0; display: flex; align-items: center; gap: 20px; height: 184px; box-sizing: border-box; border-bottom: 0;">
+                                <div style="width: 190px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
+                                    <img src="images/india-property-network-logo.png" alt="India Property Network Ltd" style="width: 190px; height: 140px; object-fit: contain; display: block;">
                                 </div>
-                                <div style="flex: 1; min-width: 0; padding-top: 8px;">
-                                    <p style="margin: 0 0 10px 0; color: #FFFFFF; font-size: 22px; line-height: 1.15; font-weight: 900;">
-                                        We do Everything Related to<br>
-                                        <span style="display: block; text-align: center; white-space: nowrap;">All India Property</span>
+                                <div style="width: 1px; align-self: stretch; background: #08285f; opacity: 0.7;"></div>
+                                <div style="flex: 1; min-width: 0; padding-top: 4px;">
+                                    <p style="margin: 0 0 10px 0; color: #08285f; font-size: 22px; line-height: 1.15; font-weight: 900; letter-spacing: 0;">
+                                        We do Everything Related<br>
+                                        to All <span style="color: #1f7a2e;">India Property</span>
                                     </p>
-                                    <p style="margin: 0; color: #FFFFFF; font-size: 17px; line-height: 1.34; font-weight: 600;">
+                                    <div style="width: 46px; height: 3px; background: #1f7a2e; margin: 0 0 10px 0;"></div>
+                                    <p style="margin: 0; color: #111827; font-size: 13px; line-height: 1.35; font-weight: 500;">
                                         Sale, Purchase, Finance, Joint Venture, Redevelopment Development, Rental, for Flat, Bungalow, Shop, Office, N.A. Land, Agriculture Land.
                                     </p>
                                 </div>
                             </div>
 
+                            <!-- Contact + Services Strip -->
+                            <div style="height: 60px; background: linear-gradient(90deg, #08285f 0%, #06215a 60%, #031741 100%); color: #ffffff; display: flex; align-items: center; border-bottom: 4px solid #1f7a2e; flex-shrink: 0; box-sizing: border-box;">
+                                <div style="width: 205px; display: flex; align-items: center; gap: 8px; padding-left: 16px; box-sizing: border-box; border-right: 1px solid rgba(255,255,255,0.55);">
+                                    <span style="width: 32px; height: 32px; border-radius: 50%; background: #4d9b2f; display: inline-flex; align-items: center; justify-content: center; font-size: 16px;"><i class="fas fa-phone"></i></span>
+                                    <span style="font-size: 24px; line-height: 1; font-weight: 900; letter-spacing: 0;">9076106061</span>
+                                </div>
+                                <div style="flex: 1; display: grid; grid-template-columns: repeat(4, 1fr); height: 100%; align-items: center; text-align: center;">
+                                    <div style="border-right: 1px solid rgba(255,255,255,0.5); font-size: 9px; font-weight: 800; line-height: 1.05;"><i class="fas fa-home" style="display:block; font-size:22px; margin-bottom:3px;"></i>RESIDENTIAL</div>
+                                    <div style="border-right: 1px solid rgba(255,255,255,0.5); font-size: 9px; font-weight: 800; line-height: 1.05;"><i class="fas fa-city" style="display:block; font-size:22px; margin-bottom:3px;"></i>COMMERCIAL</div>
+                                    <div style="border-right: 1px solid rgba(255,255,255,0.5); font-size: 9px; font-weight: 800; line-height: 1.05;"><i class="fas fa-map-marker-alt" style="display:block; font-size:22px; margin-bottom:3px;"></i>PLOTS & LAND</div>
+                                    <div style="font-size: 9px; font-weight: 800; line-height: 1.05;"><i class="fas fa-chart-line" style="display:block; font-size:22px; margin-bottom:3px;"></i>INVESTMENT<br>SOLUTIONS</div>
+                                </div>
+                            </div>
+
                             <!-- Main Content Section: Photo + Hierarchy Table -->
-                            <div style="padding: 20px 20px 25px 20px; background: #a6ccf5; color: #0F172A; flex: 1; display: flex; flex-direction: column; border-top: 3px solid #FFFFFF; box-sizing: border-box;">
+                            <div style="padding: 15px 20px 19px 20px; background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(239,247,234,0.94)); color: #08285f; flex: 1; display: flex; flex-direction: column; box-sizing: border-box; position: relative;">
+                                <img src="images/property-house-hero.png" alt="" style="position: absolute; right: 10px; top: 46px; width: 210px; height: 148px; object-fit: contain; object-position: center center; opacity: 0.72; filter: saturate(0.95); mix-blend-mode: multiply; pointer-events: none;">
+                                <div style="position: absolute; right: -22px; bottom: -8px; width: 118px; height: 54px; background: #1f7a2e; transform: skewX(-24deg); opacity: 0.95;"></div>
                                 <!-- User Info Section: Photo + Name/Phone -->
-                                <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px; flex-shrink: 0;">
+                                <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 12px; flex-shrink: 0; position: relative; z-index: 1;">
                                     <!-- Photo Column -->
                                     <div style="flex-shrink: 0;">
-                                        <div style="width: 130px; height: 130px; border: 4px solid #FFFFFF; outline: 2px solid #0F172A; overflow: hidden; background: #FFFFFF;">
+                                        <div style="width: 132px; height: 132px; border: 4px solid #FFFFFF; border-radius: 12px; overflow: hidden; background: #FFFFFF; box-shadow: 0 2px 9px rgba(8,40,95,0.18);">
                                             <img src="${photo}" 
                                                  style="width: 100%; height: 100%; object-fit: cover;">
                                         </div>
                                     </div>
                                     
                                     <!-- User Details Column -->
-                                    <div style="flex: 1;">
-                                        <h3 style="margin: 0 0 12px 0; font-size: 22px; font-weight: bold;">Channel Partner</h3>
-                                        <div style="font-size: 20px; line-height: 1.6;">
-                                            <p style="margin: 5px 0;"><strong>Name:</strong> ${name}</p>
-                                            <p style="margin: 5px 0;"><strong>Mob:</strong> ${phone}</p>
-                                            <p style="margin: 5px 0;"><strong>Pincode:</strong> ${userPincode}</p>
+                                    <div style="flex: 1; min-width: 0; padding-top: 8px;">
+                                        <div style="margin: 0 0 10px 0; height: 32px; background: linear-gradient(90deg, #1f7a2e 0 6%, #08285f 6% 94%, #1f7a2e 94% 100%); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 21px; font-weight: 900; letter-spacing: 0; transform: skewX(-14deg);">
+                                            <span style="display: block; transform: skewX(14deg);">CHANNEL PARTNER</span>
+                                        </div>
+                                        <div style="font-size: 16px; line-height: 1.55; color: #08285f; font-weight: 600;">
+                                            <p style="margin: 2px 0; white-space: nowrap;"><i class="fas fa-user-circle" style="width: 24px; color: #08285f;"></i><strong style="display: inline-block; width: 78px;">Name :</strong> ${name}</p>
+                                            <p style="margin: 2px 0; white-space: nowrap;"><i class="fas fa-phone" style="width: 24px; color: #1f7a2e;"></i><strong style="display: inline-block; width: 78px;">Mob :</strong> ${phone}</p>
+                                            <p style="margin: 2px 0; white-space: nowrap;"><i class="fas fa-map-marker-alt" style="width: 24px; color: #08285f;"></i><strong style="display: inline-block; width: 78px;">Pincode :</strong> ${userPincode}</p>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Hierarchy Table (Compact) -->
-                                <div style="background: transparent; color: #0F172A; padding: 0; border: none; border-radius: 0; flex: 1; overflow-y: auto; display: flex; flex-direction: column; box-shadow: none;">
-                                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; flex: 1; border: 3px solid #000000;">
+                                <div style="background: transparent; color: #08285f; padding: 0; border: none; border-radius: 8px; flex: 1; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 2px 8px rgba(8,40,95,0.1); position: relative; z-index: 1;">
+                                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; flex: 1; border: 1px solid rgba(8,40,95,0.42);">
                                         <thead>
-                                            <tr style="background: #0F172A; color: #FFFFFF;">
-                                                <th style="padding: 10px 8px; border: 2px solid #000000; text-align: left;">Position</th>
-                                                <th style="padding: 10px 8px; border: 2px solid #000000; text-align: left;">Area</th>
-                                                <th style="padding: 10px 8px; border: 2px solid #000000; text-align: left;">C.P. Name</th>
-                                                <th style="padding: 10px 8px; border: 2px solid #000000; text-align: left;">C.P. Mob</th>
+                                            <tr style="background: linear-gradient(90deg, #08285f, #05245d); color: #FFFFFF;">
+                                                <th style="padding: 8px 8px; border: 1px solid rgba(255,255,255,0.38); text-align: center; font-size: 12px;">POSITION</th>
+                                                <th style="padding: 8px 8px; border: 1px solid rgba(255,255,255,0.38); text-align: center; font-size: 12px;">DETAILS</th>
+                                                <th style="padding: 8px 8px; border: 1px solid rgba(255,255,255,0.38); text-align: center; font-size: 12px;" colspan="2">INFORMATION</th>
                                             </tr>
                                         </thead>
                                         <tbody>
