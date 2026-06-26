@@ -327,13 +327,13 @@
         const userPhone = promotionData.phone || '-';
         const userPhoto = promotionData.photo || '';
         const userCountry = promotionData.country || 'India';
-        const userZone = promotionData.zone || '';
-        const userState = promotionData.state || '';
-        const userDivision = promotionData.division || '';
-        const userDistrict = promotionData.district || '';
-        const userTehsil = promotionData.tehsil || '';
-        const userPincode = promotionData.pincode || '';
-        const userVillage = promotionData.village || '';
+        let userZone = promotionData.zone || '';
+        let userState = promotionData.state || '';
+        let userDivision = promotionData.division || '';
+        let userDistrict = promotionData.district || '';
+        let userTehsil = promotionData.tehsil || '';
+        let userPincode = promotionData.pincode || '';
+        let userVillage = promotionData.village || '';
         
         // Fix designation - convert old "President of India" to proper format with location name
         let userDesignation = promotionData.designation || '';
@@ -377,7 +377,7 @@
         };
         
         // Initialize page
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             // Display user info
             document.getElementById('userName').textContent = userName;
             document.getElementById('userMobile').textContent = userPhone;
@@ -385,7 +385,30 @@
                     document.getElementById('userPhoto').src = window.CacheBuster ? window.CacheBuster.addCacheBuster(userPhoto) : userPhoto;
             }
             document.getElementById('userInfoCard').classList.remove('d-none');
-            
+
+            // Enrich missing location fields (e.g. Zone) from hierarchy API
+            try {
+                const hierResp = await fetch(`${API_BASE_URL}/dynamic-positions/hierarchy/${userPhone}`);
+                if (hierResp.ok) {
+                    const hierData = await hierResp.json();
+                    (hierData.hierarchy || []).forEach(level => {
+                        const area = level.area || '';
+                        switch (level.position) {
+                            case 'Zone':     if (!userZone)     userZone     = area; break;
+                            case 'State':    if (!userState)    userState    = area; break;
+                            case 'Division': if (!userDivision) userDivision = area; break;
+                            case 'District': if (!userDistrict) userDistrict = area; break;
+                            case 'Tehsil':   if (!userTehsil)   userTehsil   = area; break;
+                            case 'Pincode':  if (!userPincode)  userPincode  = area; break;
+                            case 'Village':  if (!userVillage)  userVillage  = area; break;
+                        }
+                    });
+                    console.log('✅ Location enriched:', { userZone, userState, userDivision, userDistrict, userTehsil, userPincode, userVillage });
+                }
+            } catch (e) {
+                console.warn('⚠️ Could not enrich location from hierarchy:', e);
+            }
+
             // Load promotions
             loadPromotions();
         });
