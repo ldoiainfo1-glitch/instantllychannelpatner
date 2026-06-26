@@ -4864,6 +4864,9 @@ function openPromotion(userId, name, phone, photo, location, designation) {
         state: location?.state || '',
         division: location?.division || '',
         district: location?.district || '',
+        tehsil: location?.tehsil || '',
+        pincode: location?.pincode || '',
+        village: location?.village || '',
         designation: designation
     };
     
