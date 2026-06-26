@@ -4367,7 +4367,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
             hierarchyRowsHTML += `
                 <tr style="${rowStyle}">
                     <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; font-weight: 800; line-height: 1.15;">${level.position}</td>
-                    <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: center; line-height: 1.15;">${level.area || ''}</td>
+                    <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: left; padding-left: 14px; line-height: 1.15; font-weight: 700;">${level.area || ''}</td>
                     ${informationCells}
                 </tr>
             `;
@@ -4427,19 +4427,22 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     <div class="modal-body">
                         <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: #ffffff; display: flex; flex-direction: column; border: 3px solid #08285f; border-radius: 10px; box-sizing: border-box; overflow: hidden; position: relative;">
                             <!-- Header Section: India Property Network -->
-                            <div style="background: #ffffff; color: #08285f; padding: 12px 24px 10px 24px; flex-shrink: 0; display: flex; align-items: center; gap: 20px; height: 184px; box-sizing: border-box; border-bottom: 0;">
-                                <div style="width: 190px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;">
-                                    <img src="images/india-property-network-logo.png" alt="India Property Network Ltd" style="width: 190px; height: 140px; object-fit: contain; display: block;">
+                            <div style="background: #ffffff; color: #08285f; padding: 12px 12px 10px 4px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 184px; box-sizing: border-box; border-bottom: 0;">
+                                <div style="width: 155px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-start;">
+                                    <img src="images/india-property-network-logo.png" alt="India Property Network Ltd" style="width: 150px; height: 140px; object-fit: contain; display: block;">
                                 </div>
-                                <div style="width: 1px; align-self: stretch; background: #08285f; opacity: 0.7;"></div>
-                                <div style="flex: 1; min-width: 0; padding-top: 4px;">
-                                    <p style="margin: 0 0 10px 0; color: #08285f; font-size: 22px; line-height: 1.15; font-weight: 900; letter-spacing: 0;">
-                                        We do Everything Related<br>
-                                        to All <span style="color: #1f7a2e;">India Property</span>
+                                <div style="width: 1px; height: 110px; background: #08285f; opacity: 0.7; align-self: center; flex-shrink: 0;"></div>
+                                <div style="flex: 1; min-width: 0; padding-top: 4px; text-align: center;">
+                                    <p style="margin: 0 0 8px 0; color: #08285f; font-size: 21px; line-height: 1.2; font-weight: 900; letter-spacing: 0;">
+                                        We do Everything<br>
+                                        Related to<br>
+                                        <span style="color: #1f7a2e;">All India Property</span>
                                     </p>
-                                    <div style="width: 46px; height: 3px; background: #1f7a2e; margin: 0 0 10px 0;"></div>
-                                    <p style="margin: 0; color: #111827; font-size: 13px; line-height: 1.35; font-weight: 500;">
-                                        Sale, Purchase, Finance, Joint Venture, Redevelopment Development, Rental, for Flat, Bungalow, Shop, Office, N.A. Land, Agriculture Land.
+                                    <div style="width: 46px; height: 3px; background: #1f7a2e; margin: 0 auto 8px auto;"></div>
+                                    <p style="margin: 0; color: #111827; font-size: 13.5px; line-height: 1.4; font-weight: 500;">
+                                        Sale, Purchase, Finance, Joint Venture,<br>
+                                        Redevelopment Development, Rental, for Flat,<br>
+                                        Bungalow, Shop, Office, N.A. Land, Agriculture Land.
                                     </p>
                                 </div>
                             </div>
@@ -4478,9 +4481,9 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                             <span style="display: block; transform: skewX(14deg);">CHANNEL PARTNER</span>
                                         </div>
                                         <div style="font-size: 16px; line-height: 1.55; color: #08285f; font-weight: 600;">
-                                            <p style="margin: 2px 0; white-space: nowrap;"><i class="fas fa-user-circle" style="width: 24px; color: #08285f;"></i><strong style="display: inline-block; width: 78px;">Name :</strong> ${name}</p>
-                                            <p style="margin: 2px 0; white-space: nowrap;"><i class="fas fa-phone" style="width: 24px; color: #1f7a2e;"></i><strong style="display: inline-block; width: 78px;">Mob :</strong> ${phone}</p>
-                                            <p style="margin: 2px 0; white-space: nowrap;"><i class="fas fa-map-marker-alt" style="width: 24px; color: #08285f;"></i><strong style="display: inline-block; width: 78px;">Pincode :</strong> ${userPincode}</p>
+                                            <p style="margin: 2px 0; white-space: nowrap;"><i class="fas fa-user-circle" style="width: 24px; color: #08285f;"></i><strong style="display: inline-block; width: 78px;">Name :</strong> <strong>${name}</strong></p>
+                                            <p style="margin: 2px 0; white-space: nowrap;"><i class="fas fa-phone" style="width: 24px; color: #1f7a2e;"></i><strong style="display: inline-block; width: 78px;">Mob :</strong> <strong>${phone}</strong></p>
+                                            <p style="margin: 2px 0; white-space: nowrap;"><i class="fas fa-map-marker-alt" style="width: 24px; color: #08285f;"></i><strong style="display: inline-block; width: 78px;">Pincode :</strong> <strong>${userPincode}</strong></p>
                                         </div>
                                     </div>
                                 </div>
