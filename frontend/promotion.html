@@ -697,31 +697,32 @@
                         
                         // Build location path line (NO designation - only location hierarchy)
                         // Show full hierarchical path: Country, Zone, State, Div, District, Tehsil, Pincode, Village
+                        const capWords = s => s ? s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : s;
                         let thirdLine = '';
                         
                         // Always start with Country
-                        thirdLine = `Country: ${userCountry}`;
+                        thirdLine = `Country: ${capWords(userCountry)}`;
                         
                         // Add Zone if available
-                        if (userZone) thirdLine += `, Zone: ${userZone}`;
+                        if (userZone) thirdLine += `, Zone: ${capWords(userZone)}`;
                         
                         // Add State if available
-                        if (userState) thirdLine += `, State: ${userState}`;
+                        if (userState) thirdLine += `, State: ${capWords(userState)}`;
                         
                         // Add Division if available
-                        if (userDivision) thirdLine += `, Div: ${userDivision}`;
+                        if (userDivision) thirdLine += `, Div: ${capWords(userDivision)}`;
                         
                         // Add District if available
-                        if (userDistrict) thirdLine += `, District: ${userDistrict}`;
+                        if (userDistrict) thirdLine += `, District: ${capWords(userDistrict)}`;
                         
                         // Add Tehsil if available
-                        if (userTehsil) thirdLine += `, Tehsil: ${userTehsil}`;
+                        if (userTehsil) thirdLine += `, Tehsil: ${capWords(userTehsil)}`;
                         
                         // Add Pincode if available
                         if (userPincode) thirdLine += `, Pincode: ${userPincode}`;
                         
                         // Add Village if available
-                        if (userVillage) thirdLine += `, Village: ${userVillage}`;
+                        if (userVillage) thirdLine += `, Village: ${capWords(userVillage)}`;
                         
                         // NO Designation added - only location path
                         
@@ -925,31 +926,32 @@
                         
                         // Build combined location and designation line (3rd line format)
                         // Show full hierarchical path with all available location fields
+                        const capWords2 = s => s ? s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : s;
                         let thirdLine = '';
                         
                         // Always start with Country
-                        thirdLine = `Country: ${userCountry}`;
+                        thirdLine = `Country: ${capWords2(userCountry)}`;
                         
                         // Add Zone if available
-                        if (userZone) thirdLine += `, Zone: ${userZone}`;
+                        if (userZone) thirdLine += `, Zone: ${capWords2(userZone)}`;
                         
                         // Add State if available
-                        if (userState) thirdLine += `, State: ${userState}`;
+                        if (userState) thirdLine += `, State: ${capWords2(userState)}`;
                         
                         // Add Division if available
-                        if (userDivision) thirdLine += `, Div: ${userDivision}`;
+                        if (userDivision) thirdLine += `, Div: ${capWords2(userDivision)}`;
                         
                         // Add District if available
-                        if (userDistrict) thirdLine += `, District: ${userDistrict}`;
+                        if (userDistrict) thirdLine += `, District: ${capWords2(userDistrict)}`;
                         
                         // Add Tehsil if available
-                        if (userTehsil) thirdLine += `, Tehsil: ${userTehsil}`;
+                        if (userTehsil) thirdLine += `, Tehsil: ${capWords2(userTehsil)}`;
                         
                         // Add Pincode if available
                         if (userPincode) thirdLine += `, Pincode: ${userPincode}`;
                         
                         // Add Village if available
-                        if (userVillage) thirdLine += `, Village: ${userVillage}`;
+                        if (userVillage) thirdLine += `, Village: ${capWords2(userVillage)}`;
                         
                         // NO Designation added - only location path
                         
