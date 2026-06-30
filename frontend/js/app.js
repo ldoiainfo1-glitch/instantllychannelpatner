@@ -4852,13 +4852,9 @@ function selectReferrer(phone, name) {
 }
 
 // Open Promotion Page with sessionStorage (avoids URI_TOO_LONG error)
-function openPromotion(userId, name, phone, photo, location, designation) {
-    // Store promotion data in sessionStorage (NOT in URL - photos are too large)
-    const promotionData = {
-        userId: userId,
-        name: name,
-        phone: phone,
-        photo: photo,
+async function openPromotion(userId, name, phone, photo, location, designation) {
+    // Fetch full hierarchy from API (same as ID card) to get complete location data
+    let fullLocation = {
         country: location?.country || 'India',
         zone: location?.zone || '',
         state: location?.state || '',
@@ -4866,10 +4862,40 @@ function openPromotion(userId, name, phone, photo, location, designation) {
         district: location?.district || '',
         tehsil: location?.tehsil || '',
         pincode: location?.pincode || '',
-        village: location?.village || '',
+        village: location?.village || ''
+    };
+
+    try {
+        const hierResp = await fetch(`${API_BASE_URL}/dynamic-positions/hierarchy/${phone}`);
+        if (hierResp.ok) {
+            const hierData = await hierResp.json();
+            (hierData.hierarchy || []).forEach(level => {
+                const area = level.area || '';
+                switch (level.position) {
+                    case 'Zone':     if (!fullLocation.zone)     fullLocation.zone     = area; break;
+                    case 'State':    if (!fullLocation.state)    fullLocation.state    = area; break;
+                    case 'Division': if (!fullLocation.division) fullLocation.division = area; break;
+                    case 'District': if (!fullLocation.district) fullLocation.district = area; break;
+                    case 'Tehsil':   if (!fullLocation.tehsil)   fullLocation.tehsil   = area; break;
+                    case 'Pincode':  if (!fullLocation.pincode)  fullLocation.pincode  = area; break;
+                    case 'Village':  if (!fullLocation.village)  fullLocation.village  = area; break;
+                }
+            });
+            console.log('✅ Location enriched for promotion:', fullLocation);
+        }
+    } catch (e) {
+        console.warn('⚠️ Could not fetch hierarchy for promotion, using position data:', e);
+    }
+
+    const promotionData = {
+        userId: userId,
+        name: name,
+        phone: phone,
+        photo: photo,
+        ...fullLocation,
         designation: designation
     };
-    
+
     console.log('📦 Storing promotion data in sessionStorage:', promotionData);
     sessionStorage.setItem('promotionData', JSON.stringify(promotionData));
     window.location.href = 'promotion.html';
