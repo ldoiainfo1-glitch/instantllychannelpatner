@@ -336,25 +336,26 @@
         let userVillage = promotionData.village || '';
         
         // Fix designation - convert old "President of India" to proper format with location name
+        const _capLoc = s => s ? s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : s;
         let userDesignation = promotionData.designation || '';
         if (userDesignation === 'President of India' || userDesignation.includes('IND-COUNTRY') || userDesignation.includes('pos_')) {
             // Generate proper designation with location name included
             if (promotionData.village && promotionData.village.trim()) {
-                userDesignation = `Village ${promotionData.village} Head`;
+                userDesignation = `Head Of Village : ${_capLoc(promotionData.village)}`;
             } else if (promotionData.pincode && promotionData.pincode.trim()) {
-                userDesignation = `Pincode ${promotionData.pincode} Head`;
+                userDesignation = `Head Of Pincode : ${promotionData.pincode}`;
             } else if (promotionData.tehsil && promotionData.tehsil.trim()) {
-                userDesignation = `Tehsil ${promotionData.tehsil} Head`;
+                userDesignation = `Head Of Tehsil : ${_capLoc(promotionData.tehsil)}`;
             } else if (promotionData.district && promotionData.district.trim()) {
-                userDesignation = `District ${promotionData.district} Head`;
+                userDesignation = `Head Of District : ${_capLoc(promotionData.district)}`;
             } else if (promotionData.division && promotionData.division.trim()) {
-                userDesignation = `Division ${promotionData.division} Head`;
+                userDesignation = `Head Of Division : ${_capLoc(promotionData.division)}`;
             } else if (promotionData.state && promotionData.state.trim()) {
-                userDesignation = `State ${promotionData.state} Head`;
+                userDesignation = `Head Of State : ${_capLoc(promotionData.state)}`;
             } else if (promotionData.zone && promotionData.zone.trim()) {
-                userDesignation = `Zone ${promotionData.zone} Head`;
+                userDesignation = `Head Of Zone : ${_capLoc(promotionData.zone)}`;
             } else {
-                userDesignation = 'India Head';
+                userDesignation = 'Head Of India';
             }
             console.log('🔄 Fixed designation from', promotionData.designation, 'to', userDesignation);
         }
@@ -693,6 +694,13 @@
                         // Name and phone on the same row
                         ctx.fillText(`${userName}    ${userPhone}`, textStartX, textStartY + 40);
                         
+                        // Draw designation (e.g. "Tehsil Dhanbad Head")
+                        if (userDesignation) {
+                            ctx.font = 'bold 38px Arial';
+                            ctx.fillStyle = '#b45309';
+                            ctx.fillText(userDesignation, textStartX, textStartY + 82);
+                        }
+                        
                         // Build location path line (NO designation - only location hierarchy)
                         // Show full hierarchical path: Country, Zone, State, Div, District, Tehsil, Pincode, Village
                         const capWords = s => s ? s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : s;
@@ -731,7 +739,7 @@
                             const maxWidth = userPhoto ? 780 : 960;
                             const words = thirdLine.split(' ');
                             let line = '';
-                            let y = textStartY + 105;
+                            let y = textStartY + 130;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
@@ -740,6 +748,15 @@
                                     ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
                                     y += 45;
+                                } else {
+                                    line = testLine;
+                                }
+                            }
+                            ctx.fillText(line.trim(), textStartX, y);
+                        }
+                        
+                        // Return as data URL
+                        resolve(canvas.toDataURL('image/png'));
                     };
                     
                     // Check if user has a photo
@@ -749,7 +766,7 @@
                         userPhotoImg.crossOrigin = 'anonymous';
                         
                         userPhotoImg.onload = () => {
-                            // Draw user photo (circular) with professional styling
+                            // Draw user photo (square) with professional styling
                             const photoSize = 160;
                             const photoX = 60;
                             const photoY = detailsStartY + 60;
@@ -762,21 +779,19 @@
                             ctx.shadowOffsetY = 5;
                             
                             ctx.beginPath();
-                            ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                            ctx.rect(photoX, photoY, photoSize, photoSize);
                             ctx.closePath();
                             ctx.clip();
                             ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
                             ctx.restore();
                             
-                            // Draw photo border with gradient
+                            // Draw square photo border with gradient
                             const borderGradient = ctx.createLinearGradient(photoX, photoY, photoX, photoY + photoSize);
                             borderGradient.addColorStop(0, '#f59e0b');
                             borderGradient.addColorStop(1, '#d97706');
                             ctx.strokeStyle = borderGradient;
                             ctx.lineWidth = 6;
-                            ctx.beginPath();
-                            ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-                            ctx.stroke();
+                            ctx.strokeRect(photoX, photoY, photoSize, photoSize);
                             
                             // Draw user details and logo
                             drawUserDetailsAndLogo();
@@ -910,6 +925,13 @@
                         ctx.font = 'bold 46px Arial';
                         ctx.fillText(`${userName}    ${userPhone}`, textStartX, textStartY + 40);
                         
+                        // Draw designation (e.g. "Tehsil Dhanbad Head")
+                        if (userDesignation) {
+                            ctx.font = 'bold 38px Arial';
+                            ctx.fillStyle = '#b45309';
+                            ctx.fillText(userDesignation, textStartX, textStartY + 82);
+                        }
+                        
                         // Build combined location and designation line (3rd line format)
                         // Show full hierarchical path with all available location fields
                         const capWords2 = s => s ? s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : s;
@@ -917,7 +939,6 @@
                         
                         // Always start with Country
                         thirdLine = `Country: ${capWords2(userCountry)}`;
-                        
                         // Add Zone if available
                         if (userZone) thirdLine += `, Zone: ${capWords2(userZone)}`;
                         
@@ -948,7 +969,7 @@
                             const maxWidth = userPhoto ? 780 : 960;
                             const words = thirdLine.split(' ');
                             let line = '';
-                            let y = textStartY + 105;
+                            let y = textStartY + 130;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
@@ -957,6 +978,15 @@
                                     ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
                                     y += 45;
+                                } else {
+                                    line = testLine;
+                                }
+                            }
+                            ctx.fillText(line.trim(), textStartX, y);
+                        }
+                        
+                        // Download the canvas as image
+                        canvas.toBlob((blob) => {
                             const url = URL.createObjectURL(blob);
                             const link = document.createElement('a');
                             link.href = url;
