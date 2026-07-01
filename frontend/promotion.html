@@ -689,11 +689,9 @@
                         
                         // Draw user details text with larger font sizes
                         ctx.fillStyle = '#7c2d12';
-                        ctx.font = 'bold 52px Arial';
-                        ctx.fillText(userName, textStartX, textStartY);
-                        
                         ctx.font = 'bold 46px Arial';
-                        ctx.fillText(userPhone, textStartX, textStartY + 65);
+                        // Name and phone on the same row
+                        ctx.fillText(`${userName}    ${userPhone}`, textStartX, textStartY + 40);
                         
                         // Build location path line (NO designation - only location hierarchy)
                         // Show full hierarchical path: Country, Zone, State, Div, District, Tehsil, Pincode, Village
@@ -728,12 +726,12 @@
                         
                         // Draw the combined 3rd line - may wrap to 2 lines if too long
                         if (thirdLine) {
-                            ctx.font = '36px Arial';
+                            ctx.font = 'bold 36px Arial';
                             ctx.fillStyle = '#92400e';
                             const maxWidth = userPhoto ? 780 : 960;
                             const words = thirdLine.split(' ');
                             let line = '';
-                            let y = textStartY + 130;
+                            let y = textStartY + 105;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
@@ -742,15 +740,6 @@
                                     ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
                                     y += 45;
-                                } else {
-                                    line = testLine;
-                                }
-                            }
-                            ctx.fillText(line.trim(), textStartX, y);
-                        }
-                        
-                        // Return as data URL (no logo)
-                        resolve(canvas.toDataURL('image/png'));
                     };
                     
                     // Check if user has a photo
@@ -916,13 +905,10 @@
                         const textStartX = userPhoto ? 250 : 60;
                         const textStartY = detailsStartY + 60;
                         
-                        // Draw user details text with larger font sizes
+                        // Draw user details text — name and phone on the same row
                         ctx.fillStyle = '#7c2d12';
-                        ctx.font = 'bold 52px Arial';
-                        ctx.fillText(userName, textStartX, textStartY);
-                        
                         ctx.font = 'bold 46px Arial';
-                        ctx.fillText(userPhone, textStartX, textStartY + 65);
+                        ctx.fillText(`${userName}    ${userPhone}`, textStartX, textStartY + 40);
                         
                         // Build combined location and designation line (3rd line format)
                         // Show full hierarchical path with all available location fields
@@ -957,12 +943,12 @@
                         
                         // Draw the location path line - may wrap to 2 lines if too long
                         if (thirdLine) {
-                            ctx.font = '36px Arial';
+                            ctx.font = 'bold 36px Arial';
                             ctx.fillStyle = '#92400e';
                             const maxWidth = userPhoto ? 780 : 960;
                             const words = thirdLine.split(' ');
                             let line = '';
-                            let y = textStartY + 130;
+                            let y = textStartY + 105;
                             
                             for (let word of words) {
                                 let testLine = line + word + ' ';
@@ -971,15 +957,6 @@
                                     ctx.fillText(line.trim(), textStartX, y);
                                     line = word + ' ';
                                     y += 45;
-                                } else {
-                                    line = testLine;
-                                }
-                            }
-                            ctx.fillText(line.trim(), textStartX, y);
-                        }
-                        
-                        // Download the canvas as image (no logo)
-                        canvas.toBlob((blob) => {
                             const url = URL.createObjectURL(blob);
                             const link = document.createElement('a');
                             link.href = url;
@@ -997,7 +974,7 @@
                         userPhotoImg.crossOrigin = 'anonymous';
                         
                         userPhotoImg.onload = () => {
-                            // Draw user photo (circular) with professional styling
+                            // Draw user photo (square) with professional styling
                             const photoSize = 160;
                             const photoX = 60;
                             const photoY = detailsStartY + 60;
@@ -1010,21 +987,19 @@
                             ctx.shadowOffsetY = 5;
                             
                             ctx.beginPath();
-                            ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
+                            ctx.rect(photoX, photoY, photoSize, photoSize);
                             ctx.closePath();
                             ctx.clip();
                             ctx.drawImage(userPhotoImg, photoX, photoY, photoSize, photoSize);
                             ctx.restore();
                             
-                            // Draw photo border with gradient
+                            // Draw square photo border with gradient
                             const borderGradient = ctx.createLinearGradient(photoX, photoY, photoX, photoY + photoSize);
                             borderGradient.addColorStop(0, '#f59e0b');
                             borderGradient.addColorStop(1, '#d97706');
                             ctx.strokeStyle = borderGradient;
                             ctx.lineWidth = 6;
-                            ctx.beginPath();
-                            ctx.arc(photoX + photoSize/2, photoY + photoSize/2, photoSize/2, 0, Math.PI * 2);
-                            ctx.stroke();
+                            ctx.strokeRect(photoX, photoY, photoSize, photoSize);
                             
                             // Draw details and download
                             drawDetailsAndDownload();
