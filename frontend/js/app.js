@@ -4367,7 +4367,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
             hierarchyRowsHTML += `
                 <tr style="${rowStyle}">
                     <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; font-weight: 800; line-height: 1.15;">${level.position}</td>
-                    <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: left; padding-left: 14px; line-height: 1.15; font-weight: 700;">${level.area || ''}</td>
+                    <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: left; padding-left: 14px; line-height: 1.15; font-weight: 700; text-transform: capitalize;">${level.area || ''}</td>
                     ${informationCells}
                 </tr>
             `;
