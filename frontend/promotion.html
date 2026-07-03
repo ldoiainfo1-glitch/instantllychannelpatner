@@ -701,59 +701,42 @@
                             ctx.fillText(userDesignation, textStartX, textStartY + 82);
                         }
                         
-                        // Build location path line (NO designation - only location hierarchy)
-                        // Show full hierarchical path: Country, Zone, State, Div, District, Tehsil, Pincode, Village
+                        // Build location segments: label bold, value normal-weight
                         const capWords = s => s ? s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : s;
-                        let thirdLine = '';
-                        
-                        // Always start with Country
-                        thirdLine = `Country: ${capWords(userCountry)}`;
-                        
-                        // Add Zone if available
-                        if (userZone) thirdLine += `, Zone: ${capWords(userZone)}`;
-                        
-                        // Add State if available
-                        if (userState) thirdLine += `, State: ${capWords(userState)}`;
-                        
-                        // Add Division if available
-                        if (userDivision) thirdLine += `, Div: ${capWords(userDivision)}`;
-                        
-                        // Add District if available
-                        if (userDistrict) thirdLine += `, District: ${capWords(userDistrict)}`;
-                        
-                        // Add Tehsil if available
-                        if (userTehsil) thirdLine += `, Tehsil: ${capWords(userTehsil)}`;
-                        
-                        // Add Pincode if available
-                        if (userPincode) thirdLine += `, Pincode: ${userPincode}`;
-                        
-                        // Add Village if available
-                        if (userVillage) thirdLine += `, Village: ${capWords(userVillage)}`;
-                        
-                        // NO Designation added - only location path
-                        
-                        // Draw the combined 3rd line - may wrap to 2 lines if too long
-                        if (thirdLine) {
+                        const locSegs = [{ label: 'Country', value: capWords(userCountry) }];
+                        if (userZone)     locSegs.push({ label: 'Zone',     value: capWords(userZone) });
+                        if (userState)    locSegs.push({ label: 'State',    value: capWords(userState) });
+                        if (userDivision) locSegs.push({ label: 'Division', value: capWords(userDivision) });
+                        if (userDistrict) locSegs.push({ label: 'District', value: capWords(userDistrict) });
+                        if (userTehsil)   locSegs.push({ label: 'Tehsil',   value: capWords(userTehsil) });
+                        if (userPincode)  locSegs.push({ label: 'Pincode',  value: userPincode });
+                        if (userVillage)  locSegs.push({ label: 'Village',  value: capWords(userVillage) });
+
+                        const maxWidth = userPhoto ? 780 : 960;
+                        let locX = textStartX;
+                        let locY = textStartY + 130;
+                        const locLineH = 45;
+
+                        locSegs.forEach((seg, i) => {
+                            const labelTxt = seg.label + ': ';
+                            const valueTxt = seg.value + (i < locSegs.length - 1 ? ',   ' : '');
+                            ctx.font = 'bold 36px Arial';
+                            const lw = ctx.measureText(labelTxt).width;
+                            ctx.font = '36px Arial';
+                            const vw = ctx.measureText(valueTxt).width;
+                            if (locX + lw + vw > textStartX + maxWidth && locX > textStartX) {
+                                locX = textStartX;
+                                locY += locLineH;
+                            }
                             ctx.font = 'bold 36px Arial';
                             ctx.fillStyle = '#92400e';
-                            const maxWidth = userPhoto ? 780 : 960;
-                            const words = thirdLine.split(' ');
-                            let line = '';
-                            let y = textStartY + 130;
-                            
-                            for (let word of words) {
-                                let testLine = line + word + ' ';
-                                let metrics = ctx.measureText(testLine);
-                                if (metrics.width > maxWidth && line !== '') {
-                                    ctx.fillText(line.trim(), textStartX, y);
-                                    line = word + ' ';
-                                    y += 45;
-                                } else {
-                                    line = testLine;
-                                }
-                            }
-                            ctx.fillText(line.trim(), textStartX, y);
-                        }
+                            ctx.fillText(labelTxt, locX, locY);
+                            locX += lw;
+                            ctx.font = '36px Arial';
+                            ctx.fillStyle = '#a16207';
+                            ctx.fillText(valueTxt, locX, locY);
+                            locX += vw;
+                        });
                         
                         // Return as data URL
                         resolve(canvas.toDataURL('image/png'));
@@ -932,58 +915,42 @@
                             ctx.fillText(userDesignation, textStartX, textStartY + 82);
                         }
                         
-                        // Build combined location and designation line (3rd line format)
-                        // Show full hierarchical path with all available location fields
+                        // Build location segments: label bold, value normal-weight
                         const capWords2 = s => s ? s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : s;
-                        let thirdLine = '';
-                        
-                        // Always start with Country
-                        thirdLine = `Country: ${capWords2(userCountry)}`;
-                        // Add Zone if available
-                        if (userZone) thirdLine += `, Zone: ${capWords2(userZone)}`;
-                        
-                        // Add State if available
-                        if (userState) thirdLine += `, State: ${capWords2(userState)}`;
-                        
-                        // Add Division if available
-                        if (userDivision) thirdLine += `, Div: ${capWords2(userDivision)}`;
-                        
-                        // Add District if available
-                        if (userDistrict) thirdLine += `, District: ${capWords2(userDistrict)}`;
-                        
-                        // Add Tehsil if available
-                        if (userTehsil) thirdLine += `, Tehsil: ${capWords2(userTehsil)}`;
-                        
-                        // Add Pincode if available
-                        if (userPincode) thirdLine += `, Pincode: ${userPincode}`;
-                        
-                        // Add Village if available
-                        if (userVillage) thirdLine += `, Village: ${capWords2(userVillage)}`;
-                        
-                        // NO Designation added - only location path
-                        
-                        // Draw the location path line - may wrap to 2 lines if too long
-                        if (thirdLine) {
+                        const locSegs2 = [{ label: 'Country', value: capWords2(userCountry) }];
+                        if (userZone)     locSegs2.push({ label: 'Zone',     value: capWords2(userZone) });
+                        if (userState)    locSegs2.push({ label: 'State',    value: capWords2(userState) });
+                        if (userDivision) locSegs2.push({ label: 'Division', value: capWords2(userDivision) });
+                        if (userDistrict) locSegs2.push({ label: 'District', value: capWords2(userDistrict) });
+                        if (userTehsil)   locSegs2.push({ label: 'Tehsil',   value: capWords2(userTehsil) });
+                        if (userPincode)  locSegs2.push({ label: 'Pincode',  value: userPincode });
+                        if (userVillage)  locSegs2.push({ label: 'Village',  value: capWords2(userVillage) });
+
+                        const maxWidth2 = userPhoto ? 780 : 960;
+                        let locX2 = textStartX;
+                        let locY2 = textStartY + 130;
+                        const locLineH2 = 45;
+
+                        locSegs2.forEach((seg, i) => {
+                            const labelTxt = seg.label + ': ';
+                            const valueTxt = seg.value + (i < locSegs2.length - 1 ? ',   ' : '');
+                            ctx.font = 'bold 36px Arial';
+                            const lw = ctx.measureText(labelTxt).width;
+                            ctx.font = '36px Arial';
+                            const vw = ctx.measureText(valueTxt).width;
+                            if (locX2 + lw + vw > textStartX + maxWidth2 && locX2 > textStartX) {
+                                locX2 = textStartX;
+                                locY2 += locLineH2;
+                            }
                             ctx.font = 'bold 36px Arial';
                             ctx.fillStyle = '#92400e';
-                            const maxWidth = userPhoto ? 780 : 960;
-                            const words = thirdLine.split(' ');
-                            let line = '';
-                            let y = textStartY + 130;
-                            
-                            for (let word of words) {
-                                let testLine = line + word + ' ';
-                                let metrics = ctx.measureText(testLine);
-                                if (metrics.width > maxWidth && line !== '') {
-                                    ctx.fillText(line.trim(), textStartX, y);
-                                    line = word + ' ';
-                                    y += 45;
-                                } else {
-                                    line = testLine;
-                                }
-                            }
-                            ctx.fillText(line.trim(), textStartX, y);
-                        }
+                            ctx.fillText(labelTxt, locX2, locY2);
+                            locX2 += lw;
+                            ctx.font = '36px Arial';
+                            ctx.fillStyle = '#a16207';
+                            ctx.fillText(valueTxt, locX2, locY2);
+                            locX2 += vw;
+                        });
                         
                         // Download the canvas as image
                         canvas.toBlob((blob) => {
