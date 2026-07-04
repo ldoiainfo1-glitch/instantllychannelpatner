@@ -95,6 +95,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
       district,
       tehsil,
       pincode,
+      positionPincode,
       village
     } = req.body;
     

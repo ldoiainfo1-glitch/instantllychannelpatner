@@ -8,3 +8,6 @@ backend/.env
 .idea/
 dist/
 build/
+
+*.pem
+uploads/

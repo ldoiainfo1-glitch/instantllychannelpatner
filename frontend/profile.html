@@ -151,6 +151,104 @@
         .login-card-shadow {
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
+
+        /* ── Vertical Sidebar Nav ── */
+        .profile-sidebar {
+            background: white;
+            border-radius: 14px;
+            padding: 14px 0;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 80px;
+            overflow: hidden;
+        }
+        .profile-sidebar ul { padding: 0; margin: 0; }
+        .profile-sidebar .nav-item { width: 100%; }
+        .profile-sidebar .nav-link {
+            color: #4b5563;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border-radius: 0;
+            padding: 13px 20px;
+            margin-bottom: 0;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: none;
+            transition: background 0.18s, color 0.18s;
+            white-space: nowrap;
+        }
+        .profile-sidebar .nav-link:hover {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+        .profile-sidebar .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+        }
+        .profile-sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+        @media (max-width: 767px) {
+            .profile-sidebar {
+                position: static;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                padding: 8px;
+                margin-bottom: 16px;
+                border-radius: 12px;
+                overflow: visible;
+            }
+            .profile-sidebar .nav-item { width: auto; }
+            .profile-sidebar .nav-link {
+                font-size: 0.82rem;
+                padding: 8px 12px;
+                border-radius: 8px;
+                width: auto;
+            }
+        }
+
+        /* ── Network sub-tab pills ── */
+        #networkSubTabs .nav-link {
+            color: #4b5563;
+            font-weight: 500;
+        }
+        #networkSubTabs .nav-link.active {
+            background: #3b82f6;
+            color: #ffffff !important;
+        }
+        #networkSubTabs .nav-link:hover:not(.active) {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: white;
+            transition: box-shadow 0.2s;
+        }
+        .network-position-card:hover { box-shadow: 0 2px 12px rgba(102,126,234,0.15); }
+        .network-member-card {
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            background: white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+        }
+        .network-member-card.completed { border-left-color: #10b981; }
+        .network-member-card.pending   { border-left-color: #f59e0b; }
+        .badge-pending   { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+        .badge-completed { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
     </style>
 </head>
 
@@ -365,57 +463,69 @@
                 </div>
             </div>
 
-            <!-- Tabs -->
-            <ul class="nav nav-tabs mb-4" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profileTab">
-                        <i class="fas fa-user me-2"></i>Profile Information
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#applicationsTab">
-                        <i class="fas fa-file-alt me-2"></i>My Applications
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#creditsTableTab">
-                        <i class="fas fa-wallet me-2"></i>Credits
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#creditsTab">
-                        <i class="fas fa-history me-2"></i>Credits History
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#commissionsTab">
-                        <i class="fas fa-hand-holding-dollar me-2"></i>Commissions
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transferTab">
-                        <i class="fas fa-exchange-alt me-2"></i>Transfer Credits
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#securityTab">
-                        <i class="fas fa-lock me-2"></i>Security
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#documentsTab">
-                        <i class="fas fa-file-upload me-2"></i>Documents
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#advertisementsTab">
-                        <i class="fas fa-ad me-2"></i>My Advertisements
-                    </button>
-                </li>
-            </ul>
+            <!-- Tabs + Content: Vertical Layout -->
+            <div class="row">
+                <!-- Vertical Sidebar -->
+                <div class="col-md-3 mb-3">
+                    <div class="profile-sidebar">
+                        <ul class="nav flex-column" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#profileTab">
+                                    <i class="fas fa-user"></i>Profile Info
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#networkTab" id="networkTabBtn" onclick="loadMyNetwork()">
+                                    <i class="fas fa-sitemap"></i>My Network
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#applicationsTab">
+                                    <i class="fas fa-file-alt"></i>My Applications
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#creditsTableTab">
+                                    <i class="fas fa-wallet"></i>Credits
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#creditsTab">
+                                    <i class="fas fa-history"></i>Credits History
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#commissionsTab">
+                                    <i class="fas fa-hand-holding-dollar"></i>Commissions
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#transferTab">
+                                    <i class="fas fa-exchange-alt"></i>Transfer Credits
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#securityTab">
+                                    <i class="fas fa-lock"></i>Security
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#documentsTab">
+                                    <i class="fas fa-file-upload"></i>Documents
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#advertisementsTab">
+                                    <i class="fas fa-ad"></i>My Ads
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
 
-            <!-- Tab Content -->
-            <div class="tab-content">
+                <!-- Tab Content -->
+                <div class="col-md-9">
+                <div class="tab-content">
                 <!-- Profile Tab -->
                 <div class="tab-pane fade show active" id="profileTab">
                     <div class="info-card">
@@ -1112,9 +1222,264 @@
                         </form>
                     </div>
                 </div>
-            </div>
+
+                <!-- ══════════════════════════════════════════════ -->
+                <!-- MY NETWORK TAB                                  -->
+                <!-- ══════════════════════════════════════════════ -->
+                <div class="tab-pane fade" id="networkTab">
+                    <div class="info-card mb-4">
+
+                        <!-- Sub-tabs -->
+                        <ul class="nav nav-pills mb-4" id="networkSubTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="addMemberTabBtn" data-bs-toggle="pill" data-bs-target="#addMemberPane" type="button">
+                                    <i class="fas fa-user-plus me-2"></i>Add Member
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="myMembersTabBtn" data-bs-toggle="pill" data-bs-target="#myMembersPane" type="button" onclick="loadNetworkMembers()">
+                                    <i class="fas fa-users me-2"></i>My Network Members
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <!-- ADD MEMBER PANE -->
+                            <div class="tab-pane fade show active" id="addMemberPane">
+                                <p class="text-muted mb-3">Select a position below and add a member to it. The application will go to <strong>Pending</strong> until admin approves.</p>
+
+                                <!-- Search + Filters (same as home page) -->
+                                <div class="card shadow-sm mb-3">
+                                    <div class="card-body">
+                                        <div class="row g-3 mb-2">
+                                            <div class="col-md-3">
+                                                <input type="text" class="form-control" id="net2SearchName" placeholder="Search by name...">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type="text" class="form-control" id="net2SearchPhone" placeholder="Search by phone...">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button class="btn btn-primary w-100" onclick="net2Search()">
+                                                    <i class="fas fa-search me-1"></i>Search
+                                                </button>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button class="btn btn-success w-100" onclick="net2Refresh()">
+                                                    <i class="fas fa-sync-alt me-1"></i>Refresh
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Location filters -->
+                                        <div class="row g-2 mt-1" id="net2FilterRow">
+                                            <div class="col-auto" style="width:120px;">
+                                                <label class="form-label fw-bold text-muted mb-1" style="font-size:0.75rem;">COUNTRY</label>
+                                                <select class="form-select" id="net2FilterCountry">
+                                                    <option value="India">India</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-auto" style="width:140px;">
+                                                <label class="form-label fw-bold text-muted mb-1" style="font-size:0.75rem;">ZONE</label>
+                                                <div class="filter-container">
+                                                    <input type="text" class="form-control searchable-filter" id="net2FilterZone" placeholder="Zones..." readonly inputmode="none">
+                                                    <button type="button" class="btn-clear-filter" id="net2ClearZone" style="display:none;" onclick="net2ClearFilter('Zone')"><i class="fas fa-times"></i></button>
+                                                    <div class="filter-dropdown" id="net2ZoneDropdown"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto" style="width:140px;">
+                                                <label class="form-label fw-bold text-muted mb-1" style="font-size:0.75rem;">STATE</label>
+                                                <div class="filter-container">
+                                                    <input type="text" class="form-control searchable-filter" id="net2FilterState" placeholder="States..." readonly inputmode="none">
+                                                    <button type="button" class="btn-clear-filter" id="net2ClearState" style="display:none;" onclick="net2ClearFilter('State')"><i class="fas fa-times"></i></button>
+                                                    <div class="filter-dropdown" id="net2StateDropdown"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto" style="width:140px;">
+                                                <label class="form-label fw-bold text-muted mb-1" style="font-size:0.75rem;">DIVISION</label>
+                                                <div class="filter-container">
+                                                    <input type="text" class="form-control searchable-filter" id="net2FilterDivision" placeholder="Divisions..." readonly inputmode="none">
+                                                    <button type="button" class="btn-clear-filter" id="net2ClearDivision" style="display:none;" onclick="net2ClearFilter('Division')"><i class="fas fa-times"></i></button>
+                                                    <div class="filter-dropdown" id="net2DivisionDropdown"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto" style="width:140px;">
+                                                <label class="form-label fw-bold text-muted mb-1" style="font-size:0.75rem;">DISTRICT</label>
+                                                <div class="filter-container">
+                                                    <input type="text" class="form-control searchable-filter" id="net2FilterDistrict" placeholder="Districts..." readonly inputmode="none">
+                                                    <button type="button" class="btn-clear-filter" id="net2ClearDistrict" style="display:none;" onclick="net2ClearFilter('District')"><i class="fas fa-times"></i></button>
+                                                    <div class="filter-dropdown" id="net2DistrictDropdown"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto" style="width:140px;">
+                                                <label class="form-label fw-bold text-muted mb-1" style="font-size:0.75rem;">TEHSIL</label>
+                                                <div class="filter-container">
+                                                    <input type="text" class="form-control searchable-filter" id="net2FilterTehsil" placeholder="Tehsils..." readonly inputmode="none">
+                                                    <button type="button" class="btn-clear-filter" id="net2ClearTehsil" style="display:none;" onclick="net2ClearFilter('Tehsil')"><i class="fas fa-times"></i></button>
+                                                    <div class="filter-dropdown" id="net2TehsilDropdown"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto" style="width:140px;">
+                                                <label class="form-label fw-bold text-muted mb-1" style="font-size:0.75rem;">PINCODE</label>
+                                                <div class="filter-container">
+                                                    <input type="text" class="form-control searchable-filter" id="net2FilterPincode" placeholder="Pincodes..." readonly inputmode="none">
+                                                    <button type="button" class="btn-clear-filter" id="net2ClearPincode" style="display:none;" onclick="net2ClearFilter('Pincode')"><i class="fas fa-times"></i></button>
+                                                    <div class="filter-dropdown" id="net2PincodeDropdown"></div>
+                                                </div>
+                                            </div>
+                                            <div class="col-auto" style="width:140px;">
+                                                <label class="form-label fw-bold text-muted mb-1" style="font-size:0.75rem;">VILLAGE</label>
+                                                <div class="filter-container">
+                                                    <input type="text" class="form-control searchable-filter" id="net2FilterVillage" placeholder="Villages..." readonly inputmode="none">
+                                                    <button type="button" class="btn-clear-filter" id="net2ClearVillage" style="display:none;" onclick="net2ClearFilter('Village')"><i class="fas fa-times"></i></button>
+                                                    <div class="filter-dropdown" id="net2VillageDropdown"></div>
+                                                </div>
+                                            </div>
+                                            <div class="w-100"></div>
+                                            <div class="col-auto" style="padding-top:8px;">
+                                                <button class="btn btn-outline-secondary" onclick="net2ClearAllFilters()">
+                                                    <i class="fas fa-times me-1"></i>Clear
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Positions Table (identical to home page) -->
+                                <div class="card shadow">
+                                    <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0"><i class="fas fa-list me-2"></i>List of Area Wise Channel Partners</h5>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="table-dark">
+                                                    <tr>
+                                                        <th>Sr No.</th>
+                                                        <th>ID</th>
+                                                        <th>Name</th>
+                                                        <th>Area Head of</th>
+                                                        <th>Photo</th>
+                                                        <th>Phone No.</th>
+                                                        <th>Introduced By</th>
+                                                        <th>Days</th>
+                                                        <th>Status</th>
+                                                        <th>Others</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="net2PositionsTableBody">
+                                                    <tr><td colspan="10" class="text-center py-4 text-muted"><div class="spinner-border text-primary me-2"></div>Loading positions...</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- MY MEMBERS PANE -->
+                            <div class="tab-pane fade" id="myMembersPane">
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <h5 class="mb-0"><i class="fas fa-users me-2 text-primary"></i>My Network Members</h5>
+                                    </div>
+                                    <div class="col-auto">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="loadNetworkMembers()">
+                                            <i class="fas fa-sync me-1"></i>Refresh
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Pending Members -->
+                                <div class="mb-4">
+                                    <h6 class="fw-bold text-warning mb-2"><i class="fas fa-clock me-2"></i>Pending Approval</h6>
+                                    <div id="networkPendingList">
+                                        <p class="text-muted text-center py-3">Loading...</p>
+                                    </div>
+                                </div>
+
+                                <hr>
+
+                                <!-- Completed/Approved Members -->
+                                <div>
+                                    <h6 class="fw-bold text-success mb-2"><i class="fas fa-check-circle me-2"></i>Approved Members</h6>
+                                    <div id="networkApprovedList">
+                                        <p class="text-muted text-center py-3">Loading...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div><!-- /network tab-content -->
+
+                    </div><!-- /info-card -->
+                </div><!-- /networkTab -->
+
+            </div><!-- /tab-content -->
+                </div><!-- /col-md-10 -->
+            </div><!-- /row -->
         </div>
     </section>
+
+    <!-- Ad Confirmation Modal -->
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- ADD MEMBER MODAL (no payment plan)             -->
+    <!-- ══════════════════════════════════════════════ -->
+    <div class="modal fade" id="addMemberModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h5 class="modal-title text-white"><i class="fas fa-user-plus me-2"></i>Add Member</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Position: <strong id="addMemberPositionLabel">—</strong>
+                    </div>
+                    <form id="addMemberForm">
+                        <input type="hidden" id="addMemberPositionId">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Full Name *</label>
+                                <input type="text" class="form-control" id="addMemberName" required placeholder="Member's full name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Phone Number *</label>
+                                <input type="tel" class="form-control" id="addMemberPhone" required maxlength="10" pattern="[0-9]{10}" placeholder="10-digit number" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Pincode *</label>
+                                <input type="text" class="form-control" id="addMemberPincode" required maxlength="6" pattern="[0-9]{6}" placeholder="6-digit pincode" oninput="this.value=this.value.replace(/\D/g,'').slice(0,6)">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Photo (Optional)</label>
+                                <input type="file" class="form-control" id="addMemberPhoto" accept="image/*,application/pdf">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Company Name (Optional)</label>
+                                <input type="text" class="form-control" id="addMemberCompany" placeholder="Company name">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Business Name (Optional)</label>
+                                <input type="text" class="form-control" id="addMemberBusiness" placeholder="Business name">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Address (Optional)</label>
+                                <textarea class="form-control" id="addMemberAddress" rows="2" placeholder="Member's address"></textarea>
+                            </div>
+                        </div>
+                        <div class="alert alert-success mt-3 mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>You will be set as the referrer.</strong> After submission, the application will appear in <em>Pending</em> in your My Network tab until admin approves it.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="submitAddMemberBtn" onclick="submitAddMember()">
+                        <i class="fas fa-paper-plane me-2"></i>Submit Application
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Ad Confirmation Modal -->
     <div class="modal fade" id="adConfirmationModal" tabindex="-1" aria-labelledby="adConfirmationModalLabel"
@@ -3999,6 +4364,358 @@
                 alert('Failed to load referred people. Please try again.');
             }
         }
+    </script>
+
+    <!-- ══════════════════════════════════════════════ -->
+    <!-- MY NETWORK JAVASCRIPT                          -->
+    <!-- ══════════════════════════════════════════════ -->
+    <script>
+    (function () {
+        'use strict';
+
+        const NET_API = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? 'http://localhost:5000/api'
+            : 'https://api.channel-partner.instantllycards.com/api';
+
+        let net2AllPositions = [];
+        let net2LocationData  = {};
+        let net2Loaded        = false;
+        // Safe store: avoid embedding large JSON in onclick attributes
+        const net2PosStore = {};
+
+        /* ══ Entry point when tab clicked ══ */
+        window.loadMyNetwork = async function () {
+            if (net2Loaded) return;
+            await net2LoadLocations();
+            await net2LoadPositions();
+            net2Loaded = true;
+        };
+
+        /* ══ Load location data for filter dropdowns ══ */
+        async function net2LoadLocations() {
+            try {
+                const res  = await fetch(`${NET_API}/locations/all?format=distinct&_t=${Date.now()}`, { cache: 'no-store' });
+                const data = await res.json();
+                net2LocationData = data;
+                net2PopulateDropdowns(data);
+            } catch (e) { console.warn('net2 locations error', e); }
+        }
+
+        function net2PopulateDropdowns(data) {
+            const levels = ['Zone','State','Division','District','Tehsil','Pincode','Village'];
+            levels.forEach(level => {
+                const key   = level.toLowerCase() + 's';   // zones, states …
+                const items = (data[key] || data[level.toLowerCase()] || []);
+                const dropdown = document.getElementById(`net2${level}Dropdown`);
+                const input    = document.getElementById(`net2Filter${level}`);
+                if (!dropdown || !input) return;
+
+                // build items list
+                dropdown.innerHTML = items.map(v =>
+                    `<div class="filter-dropdown-item" data-value="${v}" onclick="net2SelectFilter('${level}','${v}')">${v}</div>`
+                ).join('') || '<div class="filter-dropdown-item text-muted">No data available</div>';
+
+                // click to open
+                input.addEventListener('click', () => {
+                    document.querySelectorAll('#net2FilterRow .filter-dropdown').forEach(d => {
+                        if (d !== dropdown) d.classList.remove('show');
+                    });
+                    dropdown.classList.toggle('show');
+                });
+            });
+
+            // close dropdowns when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#net2FilterRow')) {
+                    document.querySelectorAll('#net2FilterRow .filter-dropdown').forEach(d => d.classList.remove('show'));
+                }
+            });
+        }
+
+        window.net2SelectFilter = function (level, value) {
+            const input    = document.getElementById(`net2Filter${level}`);
+            const clearBtn = document.getElementById(`net2Clear${level}`);
+            const dropdown = document.getElementById(`net2${level}Dropdown`);
+            if (input)    { input.value = value; input.classList.add('has-value'); }
+            if (clearBtn) clearBtn.style.display = 'block';
+            if (dropdown) dropdown.classList.remove('show');
+            net2LoadPositions();
+        };
+
+        window.net2ClearFilter = function (level) {
+            const input    = document.getElementById(`net2Filter${level}`);
+            const clearBtn = document.getElementById(`net2Clear${level}`);
+            if (input)    { input.value = ''; input.classList.remove('has-value'); }
+            if (clearBtn) clearBtn.style.display = 'none';
+            net2LoadPositions();
+        };
+
+        window.net2ClearAllFilters = function () {
+            ['Zone','State','Division','District','Tehsil','Pincode','Village'].forEach(l => net2ClearFilter(l));
+        };
+
+        /* ══ Load + render positions ══ */
+        async function net2LoadPositions() {
+            const tbody = document.getElementById('net2PositionsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4"><div class="spinner-border text-primary"></div></td></tr>';
+
+            try {
+                const params = new URLSearchParams();
+                const v = (id) => (document.getElementById(id)?.value || '').trim();
+
+                const country  = v('net2FilterCountry')  || 'India';
+                const zone     = v('net2FilterZone');
+                const state    = v('net2FilterState');
+                const division = v('net2FilterDivision');
+                const district = v('net2FilterDistrict');
+                const tehsil   = v('net2FilterTehsil');
+                const pincode  = v('net2FilterPincode');
+                const village  = v('net2FilterVillage');
+                const name     = v('net2SearchName');
+                const phone    = v('net2SearchPhone');
+
+                if (country)  params.append('country',  country);
+                if (zone)     params.append('zone',     zone);
+                if (state)    params.append('state',    state);
+                if (division) params.append('division', division);
+                if (district) params.append('district', district);
+                if (tehsil)   params.append('tehsil',   tehsil);
+                if (pincode)  params.append('pincode',  pincode);
+                if (village)  params.append('village',  village);
+                if (name)     params.append('name',     name);
+                if (phone)    params.append('phone',    phone);
+                params.append('_t', Date.now());
+
+                const res  = await fetch(`${NET_API}/dynamic-positions?${params}`, { cache: 'no-store' });
+                const data = await res.json();
+                const positions = (data.positions || data || []).map((p, i) => ({ ...p, sNo: i + 1 }));
+                net2AllPositions = positions;
+                net2RenderTable(positions);
+            } catch (e) {
+                console.error('net2LoadPositions error', e);
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Error loading positions. Please refresh.</td></tr>';
+            }
+        }
+
+        window.net2Search  = function () { net2LoadPositions(); };
+        window.net2Refresh = function () { net2Loaded = false; net2LoadPositions(); };
+
+        /* ══ Render table rows ══ */
+        function net2RenderTable(positions) {
+            const tbody = document.getElementById('net2PositionsTableBody');
+            if (!tbody) return;
+
+            if (!positions.length) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center py-4 text-muted"><i class="fas fa-search fa-2x mb-2 d-block"></i>No positions found matching your criteria</td></tr>';
+                return;
+            }
+
+            // Store positions by _id so onclick can look them up safely
+            positions.forEach(pos => {
+                const key = pos._id || pos.positionId || '';
+                if (key) net2PosStore[key] = pos;
+            });
+
+            tbody.innerHTML = positions.map((pos, idx) => {
+                const loc = pos.location || {};
+                // _id holds the positionId string (e.g. "president - india")
+                const posKey = pos._id || pos.positionId || '';
+                const statusClass = pos.status === 'Available' ? 'success'
+                    : pos.status === 'Approved' ? 'primary'
+                    : pos.status === 'Pending'  ? 'warning' : 'secondary';
+
+                // Name / Add Member button — pass safe key only, not full JSON
+                let nameCell = '-';
+                if (pos.status === 'Available') {
+                    const safeKey = posKey.replace(/'/g, "\\'");
+                    nameCell = `<button class="btn btn-success btn-sm" onclick="openAddMemberModal('${safeKey}')">
+                        <i class="fas fa-user-plus me-1"></i>Add Member
+                    </button>`;
+                } else if (pos.applicantDetails?.name) {
+                    nameCell = pos.applicantDetails.name;
+                }
+
+                // Area head of (most specific location)
+                const areaHead = loc.village || loc.pincode || loc.tehsil || loc.district || loc.division || loc.state || loc.zone || loc.country || '-';
+
+                // Photo
+                let photoCell = '<i class="fas fa-user-circle fa-3x text-muted"></i>';
+                if (pos.applicantDetails?.photo) {
+                    const src = pos.applicantDetails.photo.startsWith('data:') ? pos.applicantDetails.photo : pos.applicantDetails.photo + '?t=' + Date.now();
+                    photoCell = `<img src="${src}" alt="photo" class="rounded-circle" style="width:50px;height:50px;object-fit:cover;" onerror="this.style.display='none'">`;
+                }
+
+                const phoneNo    = pos.applicantDetails?.phone || '-';
+                const cleanPhone = phoneNo.replace(/\D/g, '');
+                const introCell  = phoneNo !== '-'
+                    ? `<span id="net2ref-${cleanPhone}"><div class="spinner-border spinner-border-sm text-primary" style="width:1rem;height:1rem;"></div></span>`
+                    : '-';
+                const days = pos.applicantDetails?.days !== undefined ? pos.applicantDetails.days : '-';
+
+                return `<tr>
+                    <td>${pos.sNo || idx + 1}</td>
+                    <td style="font-size:0.8rem;">${posKey || '-'}</td>
+                    <td>${nameCell}</td>
+                    <td>${areaHead}</td>
+                    <td class="text-center">${photoCell}</td>
+                    <td>${phoneNo}</td>
+                    <td>${introCell}</td>
+                    <td>${days}</td>
+                    <td><span class="badge bg-${statusClass}">${pos.status || '-'}</span></td>
+                    <td>-</td>
+                </tr>`;
+            }).join('');
+
+            net2FetchIntroCounts(positions);
+        }
+
+        async function net2FetchIntroCounts(positions) {
+            for (const pos of positions) {
+                if (!pos.applicantDetails?.phone) continue;
+                const phone      = pos.applicantDetails.phone;
+                const cleanPhone = phone.replace(/\D/g, '');
+                const cell       = document.getElementById(`net2ref-${cleanPhone}`);
+                if (!cell) continue;
+                try {
+                    const res  = await fetch(`${NET_API}/applications?introducedBy=${phone}&status=approved`);
+                    const data = await res.json();
+                    const count = Array.isArray(data) ? data.length : 0;
+                    cell.innerHTML = count > 0 ? `<span class="badge bg-primary">${count}</span>` : '<span class="text-muted">0</span>';
+                } catch { cell.innerHTML = '<span class="text-muted">-</span>'; }
+            }
+        }
+
+        /* ══ Open Add Member modal ══ */
+        window.openAddMemberModal = function (posKey) {
+            const pos = net2PosStore[posKey] || {};
+            const posId = pos._id || pos.positionId || posKey;
+            document.getElementById('addMemberForm').reset();
+            document.getElementById('addMemberPositionId').value        = posId;
+            document.getElementById('addMemberPositionLabel').textContent = posId;
+            window._netCurrentPos = pos;
+            new bootstrap.Modal(document.getElementById('addMemberModal')).show();
+        };
+
+        /* ══ Submit Add Member (no payment plan) ══ */
+        window.submitAddMember = async function () {
+            const name     = document.getElementById('addMemberName').value.trim();
+            const phone    = document.getElementById('addMemberPhone').value.trim();
+            const pincode  = document.getElementById('addMemberPincode').value.trim();
+            const posId    = document.getElementById('addMemberPositionId').value;
+            const photo    = document.getElementById('addMemberPhoto').files[0];
+
+            if (!name || name.length < 3)  { alert('Please enter a valid full name (min 3 characters).'); return; }
+            if (!/^\d{10}$/.test(phone))   { alert('Phone number must be exactly 10 digits.'); return; }
+            if (!/^\d{6}$/.test(pincode))  { alert('Pincode must be exactly 6 digits.'); return; }
+            if (photo && photo.size > 5*1024*1024) { alert('Photo must be less than 5MB.'); return; }
+
+            const btn = document.getElementById('submitAddMemberBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
+
+            try {
+                const stored  = JSON.parse(sessionStorage.getItem('userProfile') || '{}');
+                const myPhone = stored.phone || localStorage.getItem('currentUserPhone') || '';
+                const pos     = window._netCurrentPos || {};
+                const loc     = pos.location || {};
+
+                const fd = new FormData();
+                fd.append('positionId',   posId);
+                fd.append('name',         name);
+                fd.append('phone',        phone);
+                fd.append('pincode',      pincode);
+                fd.append('companyName',  document.getElementById('addMemberCompany').value.trim());
+                fd.append('businessName', document.getElementById('addMemberBusiness').value.trim());
+                fd.append('address',      document.getElementById('addMemberAddress').value.trim());
+                fd.append('introducedBy', myPhone || 'Self');
+                fd.append('paymentStatus','pending');
+                if (photo) fd.append('photo', photo);
+                ['country','zone','state','division','district','tehsil','positionPincode','village'].forEach(k => {
+                    if (loc[k]) fd.append(k, loc[k]);
+                });
+
+                const res    = await fetch(`${NET_API}/applications`, { method: 'POST', body: fd });
+                const result = await res.json();
+
+                if (res.ok) {
+                    bootstrap.Modal.getInstance(document.getElementById('addMemberModal'))?.hide();
+                    alert('✅ Application submitted! It will appear in My Network → Pending until admin approves.');
+                    net2Loaded = false;
+                    net2LoadPositions();
+                } else {
+                    alert('❌ ' + (result.message || result.error || 'Submission failed. Please try again.'));
+                }
+            } catch (err) {
+                console.error('submitAddMember error:', err);
+                alert('Network error. Please try again.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Submit Application';
+            }
+        };
+
+        /* ══ Load My Network Members ══ */
+        window.loadNetworkMembers = async function () {
+            const pendingEl  = document.getElementById('networkPendingList');
+            const approvedEl = document.getElementById('networkApprovedList');
+            if (!pendingEl || !approvedEl) return;
+
+            const spinner = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+            pendingEl.innerHTML = approvedEl.innerHTML = spinner;
+
+            try {
+                // Use the same keys as profile.html login stores
+                const token   = localStorage.getItem('authToken') || '';
+                const stored  = JSON.parse(sessionStorage.getItem('userProfile') || '{}');
+                const myPhone = stored.phone || localStorage.getItem('currentUserPhone') || '';
+
+                if (!token || !myPhone) {
+                    pendingEl.innerHTML = approvedEl.innerHTML = '<p class="text-muted text-center py-2">Please log in to view your network.</p>';
+                    return;
+                }
+
+                const res  = await fetch(`${NET_API}/applications?introducedBy=${encodeURIComponent(myPhone)}`,
+                    { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+                const data = await res.json();
+                const list = Array.isArray(data) ? data : (data.applications || []);
+
+                net2RenderMemberCards(pendingEl,  list.filter(a => (a.status||'').toLowerCase() === 'pending'),  'pending');
+                net2RenderMemberCards(approvedEl, list.filter(a => (a.status||'').toLowerCase() === 'approved'), 'approved');
+            } catch (e) {
+                pendingEl.innerHTML  = '<div class="alert alert-danger py-2">Failed to load. Try again.</div>';
+                approvedEl.innerHTML = '<div class="alert alert-danger py-2">Failed to load. Try again.</div>';
+            }
+        };
+
+        function net2RenderMemberCards(container, members, type) {
+            if (!members.length) {
+                container.innerHTML = `<p class="text-muted text-center py-3">No ${type} members yet.</p>`;
+                return;
+            }
+            container.innerHTML = members.map(m => {
+                const sc    = type === 'approved' ? 'completed' : 'pending';
+                const badge = type === 'approved'
+                    ? '<span class="badge badge-completed rounded-pill px-2 py-1" style="font-size:0.75rem;">✓ Approved</span>'
+                    : '<span class="badge badge-pending rounded-pill px-2 py-1" style="font-size:0.75rem;">⏳ Pending</span>';
+                const date  = m.createdAt ? new Date(m.createdAt).toLocaleDateString('en-IN') : '—';
+                const info  = m.applicantInfo || {};
+                return `<div class="network-member-card ${sc}">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <div class="fw-semibold">${info.name || m.name || '—'}</div>
+                            <div class="text-muted" style="font-size:0.8rem;">
+                                <i class="fas fa-phone me-1"></i>${info.phone || m.phone || '—'}&nbsp;
+                                <i class="fas fa-map-pin me-1"></i>${m.positionId || '—'}
+                            </div>
+                            <div class="text-muted" style="font-size:0.75rem;"><i class="fas fa-calendar me-1"></i>Applied: ${date}</div>
+                        </div>
+                        ${badge}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+    })();
     </script>
 </body>
 
