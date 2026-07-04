@@ -1355,9 +1355,9 @@
                                                 <thead class="table-dark">
                                                     <tr>
                                                         <th>Sr No.</th>
-                                                        <th>ID</th>
                                                         <th>Name</th>
                                                         <th>Area Head of</th>
+                                                        <th>Add Member</th>
                                                         <th>Photo</th>
                                                         <th>Phone No.</th>
                                                         <th>Introduced By</th>
@@ -4525,16 +4525,16 @@
                     : pos.status === 'Approved' ? 'primary'
                     : pos.status === 'Pending'  ? 'warning' : 'secondary';
 
-                // Name / Add Member button — pass safe key only, not full JSON
-                let nameCell = '-';
-                if (pos.status === 'Available') {
-                    const safeKey = posKey.replace(/'/g, "\\'");
-                    nameCell = `<button class="btn btn-success btn-sm" onclick="openAddMemberModal('${safeKey}')">
+                // Name cell — just the applicant name or '-'
+                const nameCell = pos.applicantDetails?.name || '-';
+
+                // Add Member button — only for Available positions
+                const safeKey = posKey.replace(/'/g, "\\'");
+                const addMemberCell = pos.status === 'Available'
+                    ? `<button class="btn btn-success btn-sm" onclick="openAddMemberModal('${safeKey}')">
                         <i class="fas fa-user-plus me-1"></i>Add Member
-                    </button>`;
-                } else if (pos.applicantDetails?.name) {
-                    nameCell = pos.applicantDetails.name;
-                }
+                       </button>`
+                    : '<span class="text-muted small">—</span>';
 
                 // Area head of (most specific location)
                 const areaHead = loc.village || loc.pincode || loc.tehsil || loc.district || loc.division || loc.state || loc.zone || loc.country || '-';
@@ -4555,9 +4555,9 @@
 
                 return `<tr>
                     <td>${pos.sNo || idx + 1}</td>
-                    <td style="font-size:0.8rem;">${posKey || '-'}</td>
                     <td>${nameCell}</td>
                     <td>${areaHead}</td>
+                    <td>${addMemberCell}</td>
                     <td class="text-center">${photoCell}</td>
                     <td>${phoneNo}</td>
                     <td>${introCell}</td>
