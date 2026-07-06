@@ -1258,10 +1258,10 @@
                             <div class="col-md-6">
                                 <label for="introducedBy" class="form-label">Referred By (Optional)</label>
                                 <div style="position: relative;">
-                                    <input type="text" class="form-control" id="introducedBy" name="introducedBy" placeholder="Type phone number (e.g., 88...)" autocomplete="off">
+                                    <input type="text" class="form-control" id="introducedBy" name="introducedBy" placeholder="Search by phone number..." autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
                                     <div id="referralDropdown" class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 0; right: 0; max-height: 250px; overflow-y: auto; z-index: 1060; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 1px solid #ddd;"></div>
                                 </div>
-                                <small class="text-muted">Type referrer's phone number to search</small>
+                                <small class="text-muted"><i class="fas fa-phone me-1"></i>Enter referrer's 10-digit phone number</small>
                             </div>
                             <div class="col-12">
                                 <label for="applicantAddress" class="form-label">Address</label>

@@ -1923,7 +1923,8 @@ async function submitApplication(event) {
             companyName: formData.get('companyName'),
             businessName: formData.get('businessName'),
             address: formData.get('address'),
-            introducedBy: formData.get('introducedBy'),
+            // Only pass introducedBy if it is a 10-digit phone number; otherwise omit (backend will set 'Self')
+            introducedBy: (() => { const v=(formData.get('introducedBy')||'').replace(/\D/g,''); return v.length===10 ? v : ''; })(),
             photo: photoInput.files[0],
             location: window.currentPosition.location,
             positionLevel: window.currentPosition.level
@@ -2259,7 +2260,9 @@ async function submitApplicationWithScreenshot() {
         formData.append('companyName', tempApplicationData.companyName || '');
         formData.append('businessName', tempApplicationData.businessName || '');
         formData.append('address', tempApplicationData.address || '');
-        formData.append('introducedBy', tempApplicationData.introducedBy || 'Self');
+        // Only send introducedBy if it's a 10-digit phone; backend normalizes anyway
+        const rawRef = (tempApplicationData.introducedBy || '').replace(/\D/g, '');
+        formData.append('introducedBy', rawRef.length === 10 ? rawRef : 'Self');
         
         if (tempApplicationData.photo) {
             formData.append('photo', tempApplicationData.photo);

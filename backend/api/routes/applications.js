@@ -216,7 +216,12 @@ router.post('/', upload.single('photo'), async (req, res) => {
         pincode: positionPincode || null,
         village: village || null
       },
-      introducedBy: introducedBy ? introducedBy.trim() : 'Self',
+      introducedBy: (() => {
+        // Only store a 10-digit phone number; anything else (names, empty) → 'Self'
+        const raw = (introducedBy || '').trim();
+        const digits = raw.replace(/\D/g, '');
+        return digits.length === 10 ? digits : 'Self';
+      })(),
       status: 'pending',
       appliedDate: new Date()
     });
@@ -660,7 +665,12 @@ router.post('/with-payment', upload.fields([
         status: paymentStatus || 'pending', // pending verification by admin
         paidAt: new Date()
       },
-      introducedBy: introducedBy ? introducedBy.trim() : 'Self',
+      introducedBy: (() => {
+        // Only store a 10-digit phone number; anything else (names, empty) → 'Self'
+        const raw = (introducedBy || '').trim();
+        const digits = raw.replace(/\D/g, '');
+        return digits.length === 10 ? digits : 'Self';
+      })(),
       status: 'pending', // Application pending admin approval and payment verification
       appliedDate: new Date(),
       creditsAllocated: false
