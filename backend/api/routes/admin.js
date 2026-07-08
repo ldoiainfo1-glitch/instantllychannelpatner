@@ -1194,7 +1194,7 @@ router.get('/users-stats', async (req, res) => {
     
     console.log(`📋 Channel Partner: ${cpUserCount} users, ${cpTotalCredits} credits`);
     
-    // 2. Instantlly Cards App users
+    // 2. IPNL users
     let appUserCount = 0;
     let appTotalCredits = 0;
     
@@ -1805,7 +1805,7 @@ router.post('/search-users', async (req, res) => {
       });
     });
 
-    // 2. Search Instantlly Cards App users (main database)
+    // 2. Search IPNL users (main database)
     try {
       console.log('🔄 Attempting to connect to instantlly database...');
       console.log('🔗 Current connection:', mongoose.connection.name);
@@ -1841,7 +1841,7 @@ router.post('/search-users', async (req, res) => {
         .limit(20)
         .toArray();
 
-      console.log(`📱 Found ${appUsers.length} Instantlly Cards App users`);
+      console.log(`📱 Found ${appUsers.length} IPNL users`);
       if (appUsers.length > 0) {
         console.log('📱 Sample app user:', JSON.stringify(appUsers[0], null, 2));
       }
@@ -1897,7 +1897,7 @@ router.post('/transfer-credits', async (req, res) => {
 
     // Determine which database to use based on source
     if (source === 'instantlly' || userType === 'App User') {
-      // Transfer to Instantlly Cards App user
+      // Transfer to IPNL user
       isAppUser = true;
       console.log('📱 Transferring to App User in instantlly database');
       
