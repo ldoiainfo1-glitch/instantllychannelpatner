@@ -4401,37 +4401,118 @@
             } catch (e) { console.warn('net2 locations error', e); }
         }
 
-        function net2PopulateDropdowns(data) {
-            const levels = ['Zone','State','Division','District','Tehsil','Pincode','Village'];
-            levels.forEach(level => {
-                const key   = level.toLowerCase() + 's';   // zones, states …
-                const items = (data[key] || data[level.toLowerCase()] || []);
-                const dropdown = document.getElementById(`net2${level}Dropdown`);
-                const input    = document.getElementById(`net2Filter${level}`);
-                if (!dropdown || !input) return;
+       function net2PopulateDropdowns(data) {
+    const levels = ['Zone', 'State', 'Division', 'District', 'Tehsil', 'Pincode', 'Village'];
 
-                // build items list
-                dropdown.innerHTML = items.map(v =>
-                    `<div class="filter-dropdown-item" data-value="${v}" onclick="net2SelectFilter('${level}','${v}')">${v}</div>`
-                ).join('') || '<div class="filter-dropdown-item text-muted">No data available</div>';
+    levels.forEach(level => {
+        const key = level.toLowerCase() + 's';
+        const items = (data[key] || data[level.toLowerCase()] || []);
 
-                // click to open
-                input.addEventListener('click', () => {
-                    document.querySelectorAll('#net2FilterRow .filter-dropdown').forEach(d => {
-                        if (d !== dropdown) d.classList.remove('show');
-                    });
-                    dropdown.classList.toggle('show');
-                });
-            });
+        const dropdown = document.getElementById(`net2${level}Dropdown`);
+        const input = document.getElementById(`net2Filter${level}`);
 
-            // close dropdowns when clicking outside
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('#net2FilterRow')) {
-                    document.querySelectorAll('#net2FilterRow .filter-dropdown').forEach(d => d.classList.remove('show'));
+        if (!dropdown || !input) return;
+
+        // Build dropdown with search input
+        dropdown.innerHTML = `
+            <input
+                type="text"
+                class="filter-search-input"
+                placeholder="Type to search..."
+                id="search_${level}"
+                autocomplete="off">
+
+            <div class="filter-options" id="options_${level}">
+                ${items.length
+                    ? items.map(v => `
+                        <div class="filter-dropdown-item"
+                             data-value="${v}">
+                            ${v}
+                        </div>
+                    `).join('')
+                    : `<div class="filter-dropdown-item text-muted">
+                            No data available
+                       </div>`
                 }
+            </div>
+        `;
+
+        const searchBox = document.getElementById(`search_${level}`);
+        const optionContainer = document.getElementById(`options_${level}`);
+
+        // Search filter
+        searchBox.addEventListener("input", function () {
+            const value = this.value.toLowerCase();
+
+            optionContainer.querySelectorAll(".filter-dropdown-item").forEach(item => {
+                if (item.classList.contains("text-muted")) return;
+
+                item.style.display = item.textContent
+                    .toLowerCase()
+                    .includes(value)
+                    ? ""
+                    : "none";
             });
+        });
+
+        // Click option
+        optionContainer.querySelectorAll(".filter-dropdown-item").forEach(item => {
+
+            if (item.classList.contains("text-muted")) return;
+
+            item.addEventListener("click", function () {
+
+                const value = this.dataset.value;
+
+                net2SelectFilter(level, value);
+
+                dropdown.classList.remove("show");
+
+                searchBox.value = "";
+
+                optionContainer.querySelectorAll(".filter-dropdown-item").forEach(i => {
+                    i.style.display = "";
+                });
+
+            });
+
+        });
+
+        // Open dropdown
+        input.addEventListener("click", function (e) {
+
+            e.stopPropagation();
+
+            document.querySelectorAll("#net2FilterRow .filter-dropdown").forEach(d => {
+                if (d !== dropdown) d.classList.remove("show");
+            });
+
+            dropdown.classList.toggle("show");
+
+            if (dropdown.classList.contains("show")) {
+                setTimeout(() => searchBox.focus(), 100);
+            }
+
+        });
+
+    });
+
+    // Close dropdowns
+    document.addEventListener("click", function (e) {
+
+        if (!e.target.closest("#net2FilterRow")) {
+
+            document.querySelectorAll("#net2FilterRow .filter-dropdown").forEach(d => {
+
+                d.classList.remove("show");
+
+            });
+
         }
 
+    });
+
+}
         window.net2SelectFilter = function (level, value) {
             const input    = document.getElementById(`net2Filter${level}`);
             const clearBtn = document.getElementById(`net2Clear${level}`);
