@@ -325,285 +325,357 @@
         </div>
     </section>
 
-       <!-- Partner Network Tree Section -->
-    <style>
-        /* Partner Network Tree Styles (prefixed pnt- to avoid clashes) */
-        .pnt-section { background: #f9fafb; padding: 60px 0; }
-        .pnt-header { text-align: center; margin-bottom: 30px; }
-        .pnt-header h2 { font-weight: 700; }
-        .pnt-header p { color: #6b7280; }
+<!-- Partner Network Tree Section -->
+<style>
+    /* Partner Network Tree Styles (prefixed pnt- to avoid clashes) */
+    .pnt-section { background: #f9fafb; padding: 60px 0; }
+    .pnt-header { text-align: center; margin-bottom: 30px; }
+    .pnt-header h2 { font-weight: 700; }
+    .pnt-header p { color: #6b7280; }
 
-        .pnt-stats { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
-        .pnt-stat-pill {
-            display: inline-flex; align-items: center; gap: 6px;
-            background: white; border-radius: 20px; padding: 8px 18px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.1); font-size: 0.9rem;
-            font-weight: 600; color: #374151;
-        }
-        .pnt-stat-pill i { font-size: 1rem; }
+    .pnt-stats { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+    .pnt-stat-pill {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: white; border-radius: 20px; padding: 8px 18px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.1); font-size: 0.9rem;
+        font-weight: 600; color: #374151;
+    }
+    .pnt-stat-pill i { font-size: 1rem; }
 
-        .pnt-controls { max-width: 700px; margin: 0 auto 24px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
-        .pnt-controls .input-group { max-width: 380px; }
+    .pnt-controls { max-width: 700px; margin: 0 auto 24px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
+    .pnt-controls .input-group { max-width: 380px; }
 
-        .pnt-tree-wrap { max-width: 800px; margin: 0 auto; }
+    .pnt-tree-wrap { max-width: 800px; margin: 0 auto; }
 
-        .pnt-node {
-            border-left: 3px solid #3b82f6;
-            border-radius: 8px;
-            background: white;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            margin-bottom: 6px;
-            transition: box-shadow 0.2s;
-        }
-        .pnt-node:hover { box-shadow: 0 3px 10px rgba(59,130,246,0.18); }
-        .pnt-node.level-0 { border-left-color: #7c3aed; }
-        .pnt-node.level-1 { border-left-color: #3b82f6; }
-        .pnt-node.level-2 { border-left-color: #10b981; }
-        .pnt-node.level-3 { border-left-color: #f59e0b; }
-        .pnt-node.level-4 { border-left-color: #ef4444; }
+    .pnt-node {
+        border-left: 3px solid #3b82f6;
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        margin-bottom: 6px;
+        transition: box-shadow 0.2s;
+    }
+    .pnt-node:hover { box-shadow: 0 3px 10px rgba(59,130,246,0.18); }
+    .pnt-node.level-0 { border-left-color: #7c3aed; }
+    .pnt-node.level-1 { border-left-color: #3b82f6; }
+    .pnt-node.level-2 { border-left-color: #10b981; }
+    .pnt-node.level-3 { border-left-color: #f59e0b; }
+    .pnt-node.level-4 { border-left-color: #ef4444; }
 
-        .pnt-node-header {
-            cursor: pointer;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            user-select: none;
-        }
-        .pnt-node-header:hover { background: #f0f9ff; border-radius: 6px; }
+    .pnt-node-header {
+        cursor: pointer;
+        padding: 12px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        user-select: none;
+    }
+    .pnt-node-header:hover { background: #f0f9ff; border-radius: 6px; }
 
-        .pnt-avatar {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #e5e7eb;
-            flex-shrink: 0;
-        }
-        .pnt-avatar-default {
-            width: 40px; height: 40px;
-            border-radius: 50%;
-            background: #e0e7ff;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            font-size: 1.2rem; color: #4f46e5;
-        }
+    .pnt-avatar {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #e5e7eb;
+        flex-shrink: 0;
+    }
+    .pnt-avatar-default {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        background: #e0e7ff;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        font-size: 1.2rem; color: #4f46e5;
+    }
 
-        .pnt-info { flex: 1; min-width: 0; }
-        .pnt-name { font-weight: 600; color: #1f2937; font-size: 0.95rem; }
-        .pnt-meta { font-size: 0.78rem; color: #6b7280; }
+    .pnt-info { flex: 1; min-width: 0; }
+    .pnt-name { font-weight: 600; color: #1f2937; font-size: 0.95rem; }
+    .pnt-meta { font-size: 0.78rem; color: #6b7280; }
 
-        .pnt-badge {
-            font-size: 0.7rem; padding: 2px 8px; border-radius: 20px;
-            font-weight: 600; flex-shrink: 0;
-        }
-        .pnt-badge-approved { background: #d1fae5; color: #065f46; }
-        .pnt-badge-children { background: #ede9fe; color: #5b21b6; }
+    .pnt-badge {
+        font-size: 0.7rem; padding: 2px 8px; border-radius: 20px;
+        font-weight: 600; flex-shrink: 0;
+    }
+    .pnt-badge-approved { background: #d1fae5; color: #065f46; }
+    .pnt-badge-children { background: #ede9fe; color: #5b21b6; }
 
-        .pnt-toggle-icon { color: #9ca3af; font-size: 0.85rem; flex-shrink: 0; transition: transform 0.2s; }
-        .pnt-toggle-icon.open { transform: rotate(90deg); }
+    .pnt-toggle-icon { color: #9ca3af; font-size: 0.85rem; flex-shrink: 0; transition: transform 0.2s; }
+    .pnt-toggle-icon.open { transform: rotate(90deg); }
 
-        .pnt-children {
-            padding-left: 24px;
-            border-left: 1px dashed #d1d5db;
-            margin-left: 20px;
-            margin-top: 4px;
-        }
+    .pnt-children {
+        padding-left: 24px;
+        border-left: 1px dashed #d1d5db;
+        margin-left: 20px;
+        margin-top: 4px;
+    }
 
-        .pnt-loading { text-align: center; padding: 50px 20px; color: #9ca3af; }
-    </style>
-    <section id="partner-network" class="pnt-section">
-        <div class="container">
-            <div class="pnt-header">
-                <h2 class="display-6"><i class="fas fa-sitemap me-2 text-primary"></i>Our Partner Network</h2>
-                <p class="lead">See how our Channel Partner community connects and grows across India</p>
+    .pnt-loading { text-align: center; padding: 50px 20px; color: #9ca3af; }
+</style>
+<section id="partner-network" class="pnt-section">
+    <div class="container">
+        <div class="pnt-header">
+            <h2 class="display-6"><i class="fas fa-sitemap me-2 text-primary"></i>Our Partner Network</h2>
+            <p class="lead">See how our Channel Partner community connects and grows across India</p>
+        </div>
+
+        <div class="pnt-stats">
+            <span class="pnt-stat-pill"><i class="fas fa-users text-primary"></i> <span id="pntStatTotal">—</span> Partners</span>
+            <span class="pnt-stat-pill"><i class="fas fa-code-branch text-success"></i> <span id="pntStatRoots">—</span> Top-Level Referrers</span>
+        </div>
+
+        <div class="pnt-controls">
+            <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                <input type="text" class="form-control" id="pntSearchInput" placeholder="Search by name or phone..." oninput="pntDebouncedFilter()">
+                <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('pntSearchInput').value=''; pntFilterTree()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="pntExpandAll()"><i class="fas fa-expand-alt me-1"></i>Expand All</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="pntCollapseAll()"><i class="fas fa-compress-alt me-1"></i>Collapse All</button>
+        </div>
 
-            <div class="pnt-stats">
-                <span class="pnt-stat-pill"><i class="fas fa-users text-primary"></i> <span id="pntStatTotal">—</span> Partners</span>
-                <span class="pnt-stat-pill"><i class="fas fa-code-branch text-success"></i> <span id="pntStatRoots">—</span> Top-Level Referrers</span>
-            </div>
-
-            <div class="pnt-controls">
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" class="form-control" id="pntSearchInput" placeholder="Search by name or phone..." oninput="pntFilterTree()">
-                    <button class="btn btn-outline-secondary" type="button" onclick="document.getElementById('pntSearchInput').value=''; pntFilterTree()">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <button class="btn btn-sm btn-outline-secondary" onclick="pntExpandAll()"><i class="fas fa-expand-alt me-1"></i>Expand All</button>
-                <button class="btn btn-sm btn-outline-secondary" onclick="pntCollapseAll()"><i class="fas fa-compress-alt me-1"></i>Collapse All</button>
-            </div>
-
-            <div class="pnt-tree-wrap" id="pntTreeContainer">
-                <div class="pnt-loading">
-                    <div class="spinner-border text-primary mb-3"></div>
-                    <p>Loading partner network...</p>
-                </div>
+        <div class="pnt-tree-wrap" id="pntTreeContainer">
+            <div class="pnt-loading">
+                <div class="spinner-border text-primary mb-3"></div>
+                <p>Loading partner network...</p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <script>
-    (function () {
-        'use strict';
+<script>
+(function () {
+    'use strict';
 
-        // Uses the same public endpoint already used elsewhere on this page for
-        // approved applications — no auth token, and only approved (public-facing)
-        // partners are shown, so no pending/private applicant data is exposed.
-        const PNT_API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
+    // Public, approved-only endpoint — verified safe (no pending/private data returned).
+    const PNT_API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
+    const PNT_ROOT_BATCH = 20;   // how many top-level partners render per "page"
 
-        let pntApplications = [];
-        let pntTreeData = {};
-        let pntRoots = [];
+    let pntApplications = [];
+    let pntTreeData = {};
+    let pntRoots = [];
+    let pntRootsShown = 0;
+    let pntSearchTimer = null;
+    let pntLoaded = false;
 
-        window.pntLoadTree = async function () {
-            const container = document.getElementById('pntTreeContainer');
-            try {
-                const res = await fetch(`${PNT_API_BASE_URL}/applications?status=approved`);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                pntApplications = Array.isArray(data) ? data : (data.applications || []);
-
-                document.getElementById('pntStatTotal').textContent = pntApplications.length;
-
-                pntBuildTree();
-                document.getElementById('pntStatRoots').textContent = pntRoots.length;
-                pntRenderTree(pntApplications);
-            } catch (e) {
-                console.error('pntLoadTree error:', e);
-                container.innerHTML = `<div class="alert alert-danger">Unable to load partner network right now.</div>`;
-            }
-        };
-
-        function pntBuildTree() {
-            pntTreeData = {};
-            pntRoots = [];
-
-            pntApplications.forEach(app => {
-                const phone = app.applicantInfo?.phone || '';
-                if (!phone) return;
-                pntTreeData[phone] = { app, children: [] };
-            });
-
-            pntApplications.forEach(app => {
-                const phone = app.applicantInfo?.phone || '';
-                const introducedBy = (app.introducedBy || '').trim();
-
-                if (introducedBy && introducedBy !== 'Self' && pntTreeData[introducedBy]) {
-                    pntTreeData[introducedBy].children.push(phone);
-                } else {
-                    pntRoots.push(phone);
+    // ── Defer fetch/render until the section is actually scrolled near ──
+    function pntInit() {
+        const sectionEl = document.getElementById('partner-network');
+        if (!sectionEl || !('IntersectionObserver' in window)) {
+            pntLoadTree();
+            return;
+        }
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !pntLoaded) {
+                    pntLoaded = true;
+                    pntLoadTree();
+                    observer.disconnect();
                 }
             });
+        }, { rootMargin: '200px' });
+        observer.observe(sectionEl);
+    }
 
-            pntRoots = [...new Set(pntRoots)];
-        }
+    window.pntLoadTree = async function () {
+        const container = document.getElementById('pntTreeContainer');
+        try {
+            const res = await fetch(`${PNT_API_BASE_URL}/applications?status=approved`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            pntApplications = Array.isArray(data) ? data : (data.applications || []);
 
-        function pntRenderTree(appsToShow) {
-            const container = document.getElementById('pntTreeContainer');
+            document.getElementById('pntStatTotal').textContent = pntApplications.length;
 
-            if (!appsToShow.length) {
-                container.innerHTML = '<div class="pnt-loading"><i class="fas fa-tree fa-3x mb-3"></i><p>No partners to show yet.</p></div>';
-                return;
-            }
-
-            const searchTerm = document.getElementById('pntSearchInput').value.trim().toLowerCase();
-            if (searchTerm) {
-                const filtered = appsToShow.filter(app => {
-                    const name = (app.applicantInfo?.name || '').toLowerCase();
-                    const phone = (app.applicantInfo?.phone || '').toLowerCase();
-                    return name.includes(searchTerm) || phone.includes(searchTerm);
-                });
-                container.innerHTML = filtered.length
-                    ? filtered.map(app => pntRenderSubtree(app.applicantInfo?.phone || '', 0)).join('')
-                    : '<div class="pnt-loading">No results found.</div>';
-                return;
-            }
-
-            container.innerHTML = pntRoots.map(phone => {
-                const node = pntTreeData[phone];
-                return node ? pntRenderSubtree(phone, 0) : '';
-            }).join('');
-        }
-
-        function pntRenderSubtree(phone, level) {
-            const node = pntTreeData[phone];
-            if (!node) return '';
-            const { app, children } = node;
-            const hasChildren = children.length > 0;
-            const safeId = phone.replace(/\D/g, '');
-            const nodeId = `pnt-node-${safeId}`;
-            const childrenId = `pnt-children-${safeId}`;
-
-            const photo = app.applicantInfo?.photo || '';
-            const name = app.applicantInfo?.name || '—';
-            const phn = app.applicantInfo?.phone || '—';
-            const pos = app.positionId || '—';
-            const introducedBy = app.introducedBy || 'Self';
-            const levelClass = `level-${Math.min(level, 4)}`;
-
-            const avatarHtml = photo
-                ? `<img src="${photo}" class="pnt-avatar" onerror="this.style.display='none'">`
-                : `<div class="pnt-avatar-default"><i class="fas fa-user"></i></div>`;
-
-            const childrenHtml = hasChildren
-                ? `<div class="pnt-children" id="${childrenId}" style="display:none;">
-                    ${children.map(c => pntRenderSubtree(c, level + 1)).join('')}
-                   </div>`
-                : '';
-
-            return `
-                <div class="pnt-node ${levelClass}" id="${nodeId}">
-                    <div class="pnt-node-header" onclick="pntToggleNode('${childrenId}', this)" ${!hasChildren ? 'style="cursor:default;"' : ''}>
-                        ${hasChildren ? '<i class="fas fa-chevron-right pnt-toggle-icon me-1"></i>' : '<i class="fas fa-minus pnt-toggle-icon me-1" style="opacity:0.3"></i>'}
-                        ${avatarHtml}
-                        <div class="pnt-info">
-                            <div class="pnt-name">${name}</div>
-                            <div class="pnt-meta">
-                                <i class="fas fa-phone me-1"></i>${phn}
-                                &nbsp;·&nbsp;
-                                <i class="fas fa-map-pin me-1"></i>${pos}
-                                ${introducedBy !== 'Self' ? `&nbsp;·&nbsp;<i class="fas fa-user-friends me-1"></i>via ${introducedBy}` : ''}
-                            </div>
-                        </div>
-                        <span class="pnt-badge pnt-badge-approved">✓ Approved</span>
-                        ${hasChildren ? `<span class="pnt-badge pnt-badge-children ms-1"><i class="fas fa-users me-1"></i>${children.length}</span>` : ''}
-                    </div>
-                    ${childrenHtml}
-                </div>`;
-        }
-
-        window.pntToggleNode = function (childrenId, headerEl) {
-            const childrenDiv = document.getElementById(childrenId);
-            if (!childrenDiv) return;
-            const icon = headerEl.querySelector('.pnt-toggle-icon');
-            const isOpen = childrenDiv.style.display !== 'none';
-            childrenDiv.style.display = isOpen ? 'none' : 'block';
-            icon?.classList.toggle('open', !isOpen);
-        };
-
-        window.pntExpandAll = function () {
-            document.querySelectorAll('.pnt-children').forEach(el => { el.style.display = 'block'; });
-            document.querySelectorAll('.pnt-toggle-icon').forEach(el => el.classList.add('open'));
-        };
-        window.pntCollapseAll = function () {
-            document.querySelectorAll('.pnt-children').forEach(el => { el.style.display = 'none'; });
-            document.querySelectorAll('.pnt-toggle-icon').forEach(el => el.classList.remove('open'));
-        };
-
-        window.pntFilterTree = function () {
+            pntBuildTree();
+            document.getElementById('pntStatRoots').textContent = pntRoots.length;
             pntRenderTree(pntApplications);
-        };
-
-        // Load once the DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', pntLoadTree);
-        } else {
-            pntLoadTree();
+        } catch (e) {
+            console.error('pntLoadTree error:', e);
+            container.innerHTML = `<div class="alert alert-danger">Unable to load partner network right now.</div>`;
         }
-    })();
-    </script>
+    };
+
+    function pntBuildTree() {
+        pntTreeData = {};
+        pntRoots = [];
+
+        pntApplications.forEach(app => {
+            const phone = app.applicantInfo?.phone || '';
+            if (!phone) return;
+            pntTreeData[phone] = { app, children: [] };
+        });
+
+        pntApplications.forEach(app => {
+            const phone = app.applicantInfo?.phone || '';
+            const introducedBy = (app.introducedBy || '').trim();
+
+            if (introducedBy && introducedBy !== 'Self' && pntTreeData[introducedBy]) {
+                pntTreeData[introducedBy].children.push(phone);
+            } else {
+                pntRoots.push(phone);
+            }
+        });
+
+        pntRoots = [...new Set(pntRoots)];
+    }
+
+    // ── Renders ONE node. Children container is left EMPTY (lazy) ──
+    function pntRenderNode(phone, level) {
+        const node = pntTreeData[phone];
+        if (!node) return '';
+        const { app, children } = node;
+        const hasChildren = children.length > 0;
+        const safeId = phone.replace(/\D/g, '');
+        const nodeId = `pnt-node-${safeId}`;
+        const childrenId = `pnt-children-${safeId}`;
+
+        const photo = app.applicantInfo?.photo || '';
+        const name = app.applicantInfo?.name || '—';
+        const phn = app.applicantInfo?.phone || '—';
+        const pos = app.positionId || '—';
+        const introducedBy = app.introducedBy || 'Self';
+        const levelClass = `level-${Math.min(level, 4)}`;
+
+        const avatarHtml = photo
+            ? `<img src="${photo}" class="pnt-avatar" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+            : `<div class="pnt-avatar-default"><i class="fas fa-user"></i></div>`;
+
+        // Children div is EMPTY until expanded — data attrs let us build it on demand
+        const childrenHtml = hasChildren
+            ? `<div class="pnt-children" id="${childrenId}" data-phone="${phone}" data-level="${level + 1}" style="display:none;"></div>`
+            : '';
+
+        return `
+            <div class="pnt-node ${levelClass}" id="${nodeId}">
+                <div class="pnt-node-header" onclick="pntToggleNode('${childrenId}', this)" ${!hasChildren ? 'style="cursor:default;"' : ''}>
+                    ${hasChildren ? '<i class="fas fa-chevron-right pnt-toggle-icon me-1"></i>' : '<i class="fas fa-minus pnt-toggle-icon me-1" style="opacity:0.3"></i>'}
+                    ${avatarHtml}
+                    <div class="pnt-info">
+                        <div class="pnt-name">${name}</div>
+                        <div class="pnt-meta">
+                            <i class="fas fa-phone me-1"></i>${phn}
+                            &nbsp;·&nbsp;
+                            <i class="fas fa-map-pin me-1"></i>${pos}
+                            ${introducedBy !== 'Self' ? `&nbsp;·&nbsp;<i class="fas fa-user-friends me-1"></i>via ${introducedBy}` : ''}
+                        </div>
+                    </div>
+                    <span class="pnt-badge pnt-badge-approved">✓ Approved</span>
+                    ${hasChildren ? `<span class="pnt-badge pnt-badge-children ms-1"><i class="fas fa-users me-1"></i>${children.length}</span>` : ''}
+                </div>
+                ${childrenHtml}
+            </div>`;
+    }
+
+    // ── Build a children container's contents the first time it's opened ──
+    function pntBuildChildren(div) {
+        if (!div || div.dataset.built === 'true') return;
+        const parentPhone = div.dataset.phone;
+        const level = parseInt(div.dataset.level, 10) || 0;
+        const node = pntTreeData[parentPhone];
+        if (!node) return;
+        div.innerHTML = node.children.map(c => pntRenderNode(c, level)).join('');
+        div.dataset.built = 'true';
+    }
+
+    window.pntToggleNode = function (childrenId, headerEl) {
+        const div = document.getElementById(childrenId);
+        if (!div) return;
+        const icon = headerEl.querySelector('.pnt-toggle-icon');
+        const isOpen = div.style.display !== 'none';
+        if (!isOpen) pntBuildChildren(div);   // build only when opening
+        div.style.display = isOpen ? 'none' : 'block';
+        icon?.classList.toggle('open', !isOpen);
+    };
+
+    // ── Root-level pagination ──
+    function pntRenderRootBatch(reset) {
+        const container = document.getElementById('pntTreeContainer');
+        if (reset) {
+            pntRootsShown = 0;
+            container.innerHTML = '';
+        }
+        const nextRoots = pntRoots.slice(pntRootsShown, pntRootsShown + PNT_ROOT_BATCH);
+        nextRoots.forEach(phone => {
+            if (pntTreeData[phone]) container.insertAdjacentHTML('beforeend', pntRenderNode(phone, 0));
+        });
+        pntRootsShown += nextRoots.length;
+
+        const oldBtn = document.getElementById('pntLoadMoreWrap');
+        if (oldBtn) oldBtn.remove();
+        if (pntRootsShown < pntRoots.length) {
+            const remaining = pntRoots.length - pntRootsShown;
+            container.insertAdjacentHTML('beforeend',
+                `<div id="pntLoadMoreWrap" class="text-center mt-3">
+                    <button class="btn btn-outline-primary btn-sm" onclick="pntRenderRootBatch(false)">
+                        Load More Partners (${remaining} remaining)
+                    </button>
+                 </div>`);
+        }
+    }
+    window.pntRenderRootBatch = pntRenderRootBatch;
+
+    function pntRenderTree(appsToShow) {
+        const container = document.getElementById('pntTreeContainer');
+
+        if (!appsToShow.length) {
+            container.innerHTML = '<div class="pnt-loading"><i class="fas fa-tree fa-3x mb-3"></i><p>No partners to show yet.</p></div>';
+            return;
+        }
+
+        const searchTerm = document.getElementById('pntSearchInput').value.trim().toLowerCase();
+        if (searchTerm) {
+            const filtered = appsToShow.filter(app => {
+                const name = (app.applicantInfo?.name || '').toLowerCase();
+                const phone = (app.applicantInfo?.phone || '').toLowerCase();
+                return name.includes(searchTerm) || phone.includes(searchTerm);
+            });
+            const oldBtn = document.getElementById('pntLoadMoreWrap');
+            if (oldBtn) oldBtn.remove();
+            container.innerHTML = filtered.length
+                ? filtered.map(app => pntRenderNode(app.applicantInfo?.phone || '', 0)).join('')
+                : '<div class="pnt-loading">No results found.</div>';
+            return;
+        }
+
+        pntRenderRootBatch(true);
+    }
+
+    // ── Expand all: lazily builds every branch, then opens it ──
+    window.pntExpandAll = function () {
+        let unbuilt;
+        do {
+            unbuilt = Array.from(document.querySelectorAll('.pnt-children:not([data-built="true"])'));
+            unbuilt.forEach(div => pntBuildChildren(div));
+        } while (unbuilt.length > 0);
+
+        document.querySelectorAll('.pnt-children').forEach(el => { el.style.display = 'block'; });
+        document.querySelectorAll('.pnt-toggle-icon').forEach(el => el.classList.add('open'));
+    };
+
+    window.pntCollapseAll = function () {
+        document.querySelectorAll('.pnt-children').forEach(el => { el.style.display = 'none'; });
+        document.querySelectorAll('.pnt-toggle-icon').forEach(el => el.classList.remove('open'));
+    };
+
+    window.pntFilterTree = function () {
+        pntRenderTree(pntApplications);
+    };
+
+    // ── Debounce search so we're not re-rendering on every keystroke ──
+    window.pntDebouncedFilter = function () {
+        clearTimeout(pntSearchTimer);
+        pntSearchTimer = setTimeout(pntFilterTree, 300);
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', pntInit);
+    } else {
+        pntInit();
+    }
+})();
+</script>
 
     <!-- Positions Section -->
     <section id="positions" class="py-5 bg-light">
