@@ -230,21 +230,27 @@ router.get('/applications/pending', async (req, res) => {
 // Get all approved applications
 router.get('/applications/approved', async (req, res) => {
   try {
-    const approvedApplications = await Application.find({ status: 'approved' })
-      .populate('userId')
-      .sort({ approvedDate: -1 });
-    
-    // Update photo from User model if available
-    const updatedApplications = approvedApplications.map(app => {
-      const appObj = app.toObject();
-      if (app.userId && app.userId.photo) {
-        appObj.applicantInfo.photo = app.userId.photo;
+    const approvedApplications = await Application.find(
+      { status: 'approved' },
+      {
+        "payment.paymentScreenshot": 0
       }
-      return appObj;
-    });
-    
+    )
+    .populate("userId", "photo")
+    .sort({ approvedDate: -1 })
+    .lean();
+
+    const updatedApplications = approvedApplications.map(app => {
+  if (app.userId?.photo && app.applicantInfo) {
+    app.applicantInfo.photo = app.userId.photo;
+  }
+  return app;
+});
+
     res.json(updatedApplications);
+
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 });
