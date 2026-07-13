@@ -433,6 +433,7 @@
             </div>
             <button class="btn btn-sm btn-outline-secondary" onclick="pntExpandAll()"><i class="fas fa-expand-alt me-1"></i>Expand All</button>
             <button class="btn btn-sm btn-outline-secondary" onclick="pntCollapseAll()"><i class="fas fa-compress-alt me-1"></i>Collapse All</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="pntForceRefresh()"><i class="fas fa-sync-alt me-1"></i>Refresh</button>
         </div>
 
         <div class="pnt-tree-wrap" id="pntTreeContainer">
@@ -451,6 +452,8 @@
     // Public, approved-only endpoint — verified safe (no pending/private data returned).
     const PNT_API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
     const PNT_ROOT_BATCH = 10;   // how many top-level partners render per "page"
+    const PNT_CACHE_KEY = 'pnt_network_cache_v1';
+    const PNT_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes — bump this if referrals change rarely
 
     let pntApplications = [];
     let pntTreeData = {};
@@ -480,6 +483,18 @@
 
     window.pntLoadTree = async function () {
         const container = document.getElementById('pntTreeContainer');
+
+        // ── Try cache first — skip the network entirely if it's still fresh ──
+        const cached = pntReadCache();
+        if (cached) {
+            pntApplications = cached;
+            document.getElementById('pntStatTotal').textContent = pntApplications.length;
+            pntBuildTree();
+            document.getElementById('pntStatRoots').textContent = pntRoots.length;
+            pntRenderTree(pntApplications);
+            return;
+        }
+
         try {
             const res = await fetch(`${PNT_API_BASE_URL}/applications?status=approved`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -491,10 +506,42 @@
             pntBuildTree();
             document.getElementById('pntStatRoots').textContent = pntRoots.length;
             pntRenderTree(pntApplications);
+
+            pntWriteCache(pntApplications);
         } catch (e) {
             console.error('pntLoadTree error:', e);
             container.innerHTML = `<div class="alert alert-danger">Unable to load partner network right now.</div>`;
         }
+    };
+
+    function pntReadCache() {
+        try {
+            const raw = localStorage.getItem(PNT_CACHE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || !parsed.ts || !Array.isArray(parsed.data)) return null;
+            if (Date.now() - parsed.ts > PNT_CACHE_TTL_MS) return null;
+            return parsed.data;
+        } catch (e) {
+            return null; // storage disabled, corrupted, or unavailable — just fetch fresh
+        }
+    }
+
+    function pntWriteCache(data) {
+        try {
+            localStorage.setItem(PNT_CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+        } catch (e) {
+            // Quota exceeded (photos can be large) or storage disabled — caching is just
+            // an optimization, so fail silently rather than breaking the page.
+            console.warn('Partner network cache skipped:', e.message);
+        }
+    }
+
+    window.pntForceRefresh = function () {
+        try { localStorage.removeItem(PNT_CACHE_KEY); } catch (e) { /* ignore */ }
+        const container = document.getElementById('pntTreeContainer');
+        container.innerHTML = `<div class="pnt-loading"><div class="spinner-border text-primary mb-3"></div><p>Refreshing partner network...</p></div>`;
+        pntLoadTree();
     };
 
     function pntBuildTree() {
