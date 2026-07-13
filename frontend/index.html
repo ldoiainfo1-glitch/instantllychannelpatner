@@ -530,13 +530,33 @@
         }
     }
 
+    function pntStripPhotosForCache(apps) {
+        // Photos are base64 and can be 50-150KB each — way too large to cache
+        // for hundreds of partners. Cache everything except the photo; it gets
+        // re-fetched live on the next cache miss / manual refresh.
+        return apps.map(app => {
+            const clone = { ...app };
+            if (clone.applicantInfo) {
+                clone.applicantInfo = { ...clone.applicantInfo };
+                delete clone.applicantInfo.photo;
+            }
+            return clone;
+        });
+    }
+
     function pntWriteCache(data) {
+        const payload = JSON.stringify({ ts: Date.now(), data: pntStripPhotosForCache(data) });
         try {
-            localStorage.setItem(PNT_CACHE_KEY, JSON.stringify({ ts: Date.now(), data }));
+            localStorage.setItem(PNT_CACHE_KEY, payload);
         } catch (e) {
-            // Quota exceeded (photos can be large) or storage disabled — caching is just
-            // an optimization, so fail silently rather than breaking the page.
-            console.warn('Partner network cache skipped:', e.message);
+            // Retry once after clearing any stale entry, then give up quietly —
+            // caching is just an optimization, not required for the tree to work.
+            try {
+                localStorage.removeItem(PNT_CACHE_KEY);
+                localStorage.setItem(PNT_CACHE_KEY, payload);
+            } catch (e2) {
+                console.warn('Partner network cache skipped:', e2.message);
+            }
         }
     }
 
