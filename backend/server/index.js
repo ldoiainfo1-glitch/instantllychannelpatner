@@ -144,8 +144,8 @@ const connectDB = async () => {
       serverSelectionTimeoutMS: 30000, // 30s to select server
       socketTimeoutMS: 120000, // 120s socket timeout (doubled for slow queries)
       connectTimeoutMS: 30000, // 30s connection timeout
-      maxPoolSize: 5, // Increase pool for better concurrent handling
-      minPoolSize: 2,
+      maxPoolSize: 25, // Raised from 5 -> 25 to handle public traffic concurrency
+      minPoolSize: 5,  // Raised from 2 -> 5 so pool doesn't cold-start under bursts
       maxIdleTimeMS: 30000, // 30s idle timeout
       heartbeatFrequencyMS: 10000, // Check connection every 10s
       family: 4, // Force IPv4 for better compatibility
@@ -172,18 +172,21 @@ const connectDB = async () => {
 // Set mongoose global timeout
 mongoose.set('bufferTimeoutMS', 30000); // 30 second buffer timeout
 
-// Enable MongoDB query debugging (shows all queries with timing)
-mongoose.set('debug', true);
-
-// Custom debug logger with timing
-mongoose.set('debug', (collectionName, method, query, doc, options) => {
-  const timestamp = new Date().toISOString();
-  console.log(`📊 [${timestamp}] MongoDB Query:`);
-  console.log(`   Collection: ${collectionName}`);
-  console.log(`   Method: ${method}`);
-  console.log(`   Query:`, JSON.stringify(query).substring(0, 200));
-  if (options) console.log(`   Options:`, JSON.stringify(options).substring(0, 100));
-});
+// Enable MongoDB query debugging ONLY outside production.
+// The previous unconditional debug logger ran on every single query in prod,
+// adding real CPU/I/O overhead on the public-facing endpoints.
+if (process.env.NODE_ENV !== 'production') {
+  mongoose.set('debug', (collectionName, method, query, doc, options) => {
+    const timestamp = new Date().toISOString();
+    console.log(`📊 [${timestamp}] MongoDB Query:`);
+    console.log(`   Collection: ${collectionName}`);
+    console.log(`   Method: ${method}`);
+    console.log(`   Query:`, JSON.stringify(query).substring(0, 200));
+    if (options) console.log(`   Options:`, JSON.stringify(options).substring(0, 100));
+  });
+} else {
+  console.log('ℹ️ NODE_ENV=production — Mongoose query debug logging disabled');
+}
 
 connectDB();
 

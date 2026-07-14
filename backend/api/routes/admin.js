@@ -228,8 +228,25 @@ router.get('/applications/pending', async (req, res) => {
 });
 
 // Get all approved applications
+// Simple in-memory cache for the public-facing approved applications list.
+// This endpoint is now hit by every visitor to the public Partner Network
+// Tree (index.html), not just admins, so we avoid hitting Mongo (200ms+
+// round trip per query) on every single page load / scroll event.
+let approvedApplicationsCache = { data: null, timestamp: 0 };
+const APPROVED_CACHE_TTL_MS = 60 * 1000; // 60 seconds
+
+// Get all approved applications
 router.get('/applications/approved', async (req, res) => {
   try {
+    const now = Date.now();
+    const isCacheFresh =
+      approvedApplicationsCache.data &&
+      now - approvedApplicationsCache.timestamp < APPROVED_CACHE_TTL_MS;
+
+    if (isCacheFresh) {
+      return res.json(approvedApplicationsCache.data);
+    }
+
     const approvedApplications = await Application.find(
       { status: 'approved' },
       {
@@ -241,16 +258,26 @@ router.get('/applications/approved', async (req, res) => {
     .lean();
 
     const updatedApplications = approvedApplications.map(app => {
-  if (app.userId?.photo && app.applicantInfo) {
-    app.applicantInfo.photo = app.userId.photo;
-  }
-  return app;
-});
+      if (app.userId?.photo && app.applicantInfo) {
+        app.applicantInfo.photo = app.userId.photo;
+      }
+      return app;
+    });
+
+    approvedApplicationsCache = { data: updatedApplications, timestamp: now };
 
     res.json(updatedApplications);
 
   } catch (error) {
     console.error(error);
+
+    // If Mongo errors out but we still have a stale cached copy,
+    // serve that instead of failing the request outright.
+    if (approvedApplicationsCache.data) {
+      console.warn('⚠️ Serving stale approved-applications cache due to DB error');
+      return res.json(approvedApplicationsCache.data);
+    }
+
     res.status(500).json({ error: error.message });
   }
 });
