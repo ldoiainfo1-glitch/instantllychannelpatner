@@ -2061,6 +2061,51 @@ router.put('/applications/:id/edit', async (req, res) => {
 });
 
 // Transfer Position - Move application to different position
+// Preview occupant of a position BEFORE transferring — lets the admin see who
+// (if anyone) is currently at a position so they can review before confirming
+// a transfer/swap, instead of finding out only after submitting.
+router.get('/applications/position/:positionId/occupant', async (req, res) => {
+  try {
+    const { positionId } = req.params;
+    const { exclude } = req.query; // optional application id to exclude (the one being moved)
+
+    let normalizedPositionId = positionId;
+    if (!normalizedPositionId.startsWith('pos_')) {
+      normalizedPositionId = `pos_${normalizedPositionId}`;
+    }
+
+    const query = {
+      positionId: normalizedPositionId,
+      status: { $in: ['pending', 'approved'] }
+    };
+    if (exclude) {
+      query._id = { $ne: exclude };
+    }
+
+    const occupant = await Application.findOne(query);
+
+    if (!occupant) {
+      return res.json({ occupied: false, positionId: normalizedPositionId });
+    }
+
+    res.json({
+      occupied: true,
+      positionId: normalizedPositionId,
+      occupant: {
+        applicationId: occupant._id,
+        name: occupant.applicantInfo?.name || 'N/A',
+        phone: occupant.applicantInfo?.phone || 'N/A',
+        email: occupant.applicantInfo?.email || 'N/A',
+        status: occupant.status,
+        appliedDate: occupant.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error checking position occupant:', error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 router.put('/applications/:id/transfer', async (req, res) => {
   try {
     const { id } = req.params;
@@ -2102,12 +2147,13 @@ router.put('/applications/:id/transfer', async (req, res) => {
       _id: { $ne: id } // Exclude current application
     });
 
-    if (existingApplication) {
-      console.error(`❌ Position already occupied by: ${existingApplication.applicantInfo.name}`);
-      return res.status(400).json({ 
-        message: "This position is already occupied",
-        occupiedBy: existingApplication.applicantInfo.name
-      });
+    // NOTE: previously this endpoint rejected the transfer with a 400 whenever
+    // the destination position was occupied, which forced admins to delete the
+    // occupant first. Instead, when occupied, we now SWAP the two applications'
+    // positionId/location so both users end up transferred and nobody is deleted.
+    const isSwap = !!existingApplication;
+    if (isSwap) {
+      console.log(`🔁 Destination occupied by ${existingApplication.applicantInfo.name} — performing swap instead of rejecting`);
     }
 
     // Parse position ID to extract location hierarchy
@@ -2170,6 +2216,30 @@ router.put('/applications/:id/transfer', async (req, res) => {
 
     // Parse new location from position ID
     const newLocation = parseLocationFromPositionId(newPositionId);
+    // Parse old location too, in case we need to hand it to the swap partner
+    const oldLocation = parseLocationFromPositionId(oldPositionId);
+
+    const User = require('../models/User');
+
+    // If swapping, move the occupant into the vacated old position FIRST
+    if (isSwap) {
+      existingApplication.positionId = oldPositionId;
+      existingApplication.location = oldLocation;
+      await existingApplication.save();
+      console.log(`✅ Swap partner application moved: ${existingApplication.applicantInfo.name} -> ${oldPositionId}`);
+
+      if (existingApplication.status === 'approved' && existingApplication.userId) {
+        const swapUser = await User.findById(existingApplication.userId);
+        if (swapUser) {
+          swapUser.positionId = oldPositionId;
+          swapUser.location = oldLocation;
+          await swapUser.save();
+          console.log(`✅ Swap partner user updated: ${swapUser.name} -> ${oldPositionId}`);
+        } else {
+          console.warn(`⚠️ Swap partner user not found for ID: ${existingApplication.userId}`);
+        }
+      }
+    }
 
     // Update application's position AND location (store WITH pos_ prefix)
     application.positionId = newPositionId;
@@ -2179,7 +2249,6 @@ router.put('/applications/:id/transfer', async (req, res) => {
 
     // If application is approved, also update the User record
     if (application.status === 'approved' && application.userId) {
-      const User = require('../models/User');
       const user = await User.findById(application.userId);
       
       if (user) {
@@ -2195,13 +2264,24 @@ router.put('/applications/:id/transfer', async (req, res) => {
 
     console.log(`✅ Transferred ${application.applicantInfo.name} from ${oldPositionId} to ${newPositionId}`);
     console.log(`   New location:`, newLocation);
+    if (isSwap) {
+      console.log(`   Swapped with: ${existingApplication.applicantInfo.name} (now at ${oldPositionId})`);
+    }
 
     res.json({
       success: true,
-      message: "Position transferred successfully",
+      message: isSwap
+        ? `Position swapped successfully with ${existingApplication.applicantInfo.name}`
+        : "Position transferred successfully",
       application,
       oldPosition: oldPositionId,
-      newPosition: newPositionId
+      newPosition: newPositionId,
+      swapped: isSwap,
+      swappedWith: isSwap ? {
+        applicationId: existingApplication._id,
+        name: existingApplication.applicantInfo.name,
+        newPosition: oldPositionId
+      } : undefined
     });
   } catch (error) {
     console.error('❌ Transfer position error:', error);
@@ -4305,4 +4385,3 @@ router.put('/applications/:applicationId/phone', async (req, res) => {
 });
 
 module.exports = router;
-
