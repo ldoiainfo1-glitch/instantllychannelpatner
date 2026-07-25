@@ -2959,11 +2959,11 @@ function setupSearchableFilters() {
             });
 
             // Setup hover to show dropdown (desktop only)
-            input.addEventListener('mouseenter', () => {
-                if (!dropdown.classList.contains('show')) {
-                    showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
-                }
-            });
+            // input.addEventListener('mouseenter', () => {
+            //     if (!dropdown.classList.contains('show')) {
+            //         showFilterDropdown(filter.id, filter.dropdown, filter.dataKey);
+            //     }
+            // });
 
             // Setup clear button
             clearBtn.addEventListener('click', (e) => {
