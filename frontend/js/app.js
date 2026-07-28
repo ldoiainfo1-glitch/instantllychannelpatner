@@ -3767,7 +3767,7 @@ function fallbackCopyTextToClipboard(text) {
 }
 
 // Show ID Card with download option
-// async function showIDCard(name, phone, photo, positionId) {
+// async function showIDCard(name, phone, photo, positionLocation, positionId) {
 //     try {
 //         // Fetch user details
 //         const response = await fetch(`${API_BASE_URL}/admin/test-user/${phone}`, {
@@ -4474,7 +4474,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                                     <div style="flex-shrink: 0;">
                                         <div style="width: 132px; height: 132px; border: 4px solid #FFFFFF; border-radius: 12px; overflow: hidden; background: #FFFFFF; box-shadow: 0 2px 9px rgba(8,40,95,0.18);">
                                             <img src="${photo}" 
-                                                 style="width: 100%; height: 100%; object-fit: cover;">
+                                                 style="width: 100%; height: 100%; object-fit: cover; object-position: center top;">
                                         </div>
                                     </div>
                                     
