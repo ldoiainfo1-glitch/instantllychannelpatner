@@ -1942,6 +1942,8 @@ async function submitApplication(event) {
     pincode: pincode,
     companyName: formData.get('companyName'),
     businessName: formData.get('businessName'),
+    gender: formData.get('gender') || '',
+    staffName: formData.get('staffName') || '',
     address: formData.get('address'),
     introducedBy: (() => {
         const v = (formData.get('introducedBy') || '').replace(/\D/g, '');
@@ -2281,6 +2283,8 @@ async function submitApplicationWithScreenshot() {
         formData.append('pincode', tempApplicationData.pincode);
         formData.append('companyName', tempApplicationData.companyName || '');
         formData.append('businessName', tempApplicationData.businessName || '');
+        formData.append('gender', tempApplicationData.gender || '');
+        formData.append('staffName', tempApplicationData.staffName || '');
         formData.append('address', tempApplicationData.address || '');
         // Only send introducedBy if it's a 10-digit phone; backend normalizes anyway
         const rawRef = (tempApplicationData.introducedBy || '').replace(/\D/g, '');
