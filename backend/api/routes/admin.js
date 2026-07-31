@@ -2066,7 +2066,7 @@ router.put('/applications/:id/edit', async (req, res) => {
 // applies that staff name to every matching application in one go.
 router.post('/applications/bulk-assign-staff', async (req, res) => {
   try {
-    const { phones, staffName } = req.body;
+    const { phones, staffName, dryRun } = req.body;
 
     const VALID_STAFF = ['Chirag', 'Sonu', 'Roy', 'Divya', 'Deepa', 'Kaushal'];
 
@@ -2086,14 +2086,31 @@ router.post('/applications/bulk-assign-staff', async (req, res) => {
         .filter(p => p.length === 10)
     )];
 
-    console.log(`📋 Bulk-assigning staff "${staffName}" to ${normalizedPhones.length} phone numbers`);
-
     const matchedApplications = await Application.find({
       'applicantInfo.phone': { $in: normalizedPhones }
     });
 
     const matchedPhones = new Set(matchedApplications.map(a => a.applicantInfo.phone));
     const notFound = normalizedPhones.filter(p => !matchedPhones.has(p));
+
+    // Preview mode: just report what WOULD happen, no writes
+    if (dryRun) {
+      console.log(`🔎 Preview: staff "${staffName}" would match ${matchedApplications.length} of ${normalizedPhones.length} numbers`);
+      return res.json({
+        success: true,
+        dryRun: true,
+        staffName,
+        requested: normalizedPhones.length,
+        matches: matchedApplications.map(a => ({
+          phone: a.applicantInfo.phone,
+          name: a.applicantInfo.name,
+          currentStaffName: a.applicantInfo.staffName || ''
+        })),
+        notFound
+      });
+    }
+
+    console.log(`📋 Bulk-assigning staff "${staffName}" to ${normalizedPhones.length} phone numbers`);
 
     let updated = 0;
     for (const app of matchedApplications) {
