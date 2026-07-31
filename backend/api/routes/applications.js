@@ -87,6 +87,8 @@ router.post('/', upload.single('photo'), async (req, res) => {
       introducedBy, 
       companyName, 
       businessName,
+      gender,
+      staffName,
       // Location fields
       country,
       zone,
@@ -204,7 +206,9 @@ router.post('/', upload.single('photo'), async (req, res) => {
         photo: photoBase64,
         address: address ? address.trim() : '',
         companyName: companyName ? companyName.trim() : '',
-        businessName: businessName ? businessName.trim() : ''
+        businessName: businessName ? businessName.trim() : '',
+        gender: gender ? gender.trim() : '',
+        staffName: staffName ? staffName.trim() : ''
       },
       location: {
         country: country || 'India',
@@ -518,6 +522,8 @@ router.post('/with-payment', upload.fields([
       introducedBy, 
       companyName, 
       businessName,
+      gender,
+      staffName,
       country,
       zone,
       state,
@@ -642,7 +648,9 @@ router.post('/with-payment', upload.fields([
         photo: photoBase64,
         address: address ? address.trim() : '',
         companyName: companyName ? companyName.trim() : '',
-        businessName: businessName ? businessName.trim() : ''
+        businessName: businessName ? businessName.trim() : '',
+        gender: gender ? gender.trim() : '',
+        staffName: staffName ? staffName.trim() : ''
       },
       location: {
         country: country || 'India',

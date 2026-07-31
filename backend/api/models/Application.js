@@ -46,6 +46,18 @@ const applicationSchema = new mongoose.Schema({
       required: false,
       default: ''
     },
+    gender: {
+      type: String,
+      enum: ['Male', 'Female', 'Other', ''],
+      required: false,
+      default: ''
+    },
+    staffName: {
+      type: String,
+      enum: ['Chirag', 'Sonu', 'Roy', 'Divya', 'Deepa', 'Kaushal', ''],
+      required: false,
+      default: ''
+    },
     pincode: {
       type: String,
       required: false, // Made optional for backward compatibility with old applications

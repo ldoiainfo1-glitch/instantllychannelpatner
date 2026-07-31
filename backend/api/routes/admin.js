@@ -2014,13 +2014,13 @@ router.post('/transfer-credits', async (req, res) => {
   }
 });
 
-// Edit Application - Update name and phone
+// Edit Application - Update name, phone, gender, and staff name
 router.put('/applications/:id/edit', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, phone } = req.body;
+    const { name, phone, gender, staffName } = req.body;
 
-    console.log(`📝 Editing application ${id}:`, { name, phone });
+    console.log(`📝 Editing application ${id}:`, { name, phone, gender, staffName });
 
     // Find the application
     const application = await Application.findById(id);
@@ -2032,6 +2032,8 @@ router.put('/applications/:id/edit', async (req, res) => {
     // Update application info
     if (name) application.applicantInfo.name = name;
     if (phone) application.applicantInfo.phone = phone;
+    if (gender !== undefined) application.applicantInfo.gender = gender;
+    if (staffName !== undefined) application.applicantInfo.staffName = staffName;
     await application.save();
 
     // If application is approved, also update the User record

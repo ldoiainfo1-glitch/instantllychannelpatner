@@ -23,6 +23,34 @@
         #zoneDropdown.show {
             max-height: 500px !important;
         }
+
+        /* Gender pill selector */
+        .gender-pill-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .gender-pill {
+            padding: 0.45rem 1.25rem;
+            border-radius: 50px;
+            border: 1.5px solid #d0d5dd;
+            background-color: #fff;
+            color: #475467;
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .gender-pill:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+        .btn-check:checked + .gender-pill {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.35);
+        }
     </style>
     <script>
         // Aggressive fix for zone dropdown height - v5 with detailed debugging
@@ -1552,6 +1580,31 @@
                             <div class="col-md-6">
                                 <label for="businessName" class="form-label">Business Name</label>
                                 <input type="text" class="form-control" id="businessName" name="businessName" placeholder="Optional">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label d-block">Gender</label>
+                                <div class="gender-pill-group" role="group" aria-label="Gender selection">
+                                    <input type="radio" class="btn-check" name="gender" id="genderMale" value="Male" autocomplete="off">
+                                    <label class="gender-pill" for="genderMale">Male</label>
+
+                                    <input type="radio" class="btn-check" name="gender" id="genderFemale" value="Female" autocomplete="off">
+                                    <label class="gender-pill" for="genderFemale">Female</label>
+
+                                    <input type="radio" class="btn-check" name="gender" id="genderOther" value="Other" autocomplete="off">
+                                    <label class="gender-pill" for="genderOther">Other</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="staffName" class="form-label">Staff Name</label>
+                                <select class="form-select" id="staffName" name="staffName">
+                                    <option value="" selected disabled>Select Staff</option>
+                                    <option value="Chirag">Chirag</option>
+                                    <option value="Sonu">Sonu</option>
+                                    <option value="Roy">Roy</option>
+                                    <option value="Divya">Divya</option>
+                                    <option value="Deepa">Deepa</option>
+                                    <option value="Kaushal">Kaushal</option>
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label for="applicantPhoto" class="form-label">Photo</label>
