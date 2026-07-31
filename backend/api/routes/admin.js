@@ -2062,6 +2062,61 @@ router.put('/applications/:id/edit', async (req, res) => {
   }
 });
 
+// Bulk Assign Staff - paste a list of phone numbers + pick one staff name,
+// applies that staff name to every matching application in one go.
+router.post('/applications/bulk-assign-staff', async (req, res) => {
+  try {
+    const { phones, staffName } = req.body;
+
+    const VALID_STAFF = ['Chirag', 'Sonu', 'Roy', 'Divya', 'Deepa', 'Kaushal'];
+
+    if (!staffName || !VALID_STAFF.includes(staffName)) {
+      return res.status(400).json({ message: `staffName must be one of: ${VALID_STAFF.join(', ')}` });
+    }
+
+    if (!Array.isArray(phones) || phones.length === 0) {
+      return res.status(400).json({ message: "phones must be a non-empty array" });
+    }
+
+    // Normalize: keep digits only, take last 10 digits, drop blanks/duplicates
+    const normalizedPhones = [...new Set(
+      phones
+        .map(p => String(p).replace(/\D/g, ''))
+        .map(p => p.length > 10 ? p.slice(-10) : p)
+        .filter(p => p.length === 10)
+    )];
+
+    console.log(`📋 Bulk-assigning staff "${staffName}" to ${normalizedPhones.length} phone numbers`);
+
+    const matchedApplications = await Application.find({
+      'applicantInfo.phone': { $in: normalizedPhones }
+    });
+
+    const matchedPhones = new Set(matchedApplications.map(a => a.applicantInfo.phone));
+    const notFound = normalizedPhones.filter(p => !matchedPhones.has(p));
+
+    let updated = 0;
+    for (const app of matchedApplications) {
+      app.applicantInfo.staffName = staffName;
+      await app.save();
+      updated++;
+    }
+
+    console.log(`✅ Bulk staff assign complete: ${updated} updated, ${notFound.length} not found`);
+
+    res.json({
+      success: true,
+      staffName,
+      requested: normalizedPhones.length,
+      updated,
+      notFound
+    });
+  } catch (error) {
+    console.error('❌ Bulk assign staff error:', error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+});
+
 // Transfer Position - Move application to different position
 // Preview occupant of a position BEFORE transferring — lets the admin see who
 // (if anyone) is currently at a position so they can review before confirming
