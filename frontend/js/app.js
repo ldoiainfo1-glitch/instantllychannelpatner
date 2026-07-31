@@ -48,11 +48,10 @@ document.addEventListener('DOMContentLoaded', function () {
     initializeApp();
     setupEventListeners();
 
-    // Load table data immediately for fast initial display
-    loadApplications();
+    // Don't load positions automatically — wait for the user to search/filter
+    showInitialPositionsState();
 
     // Load location data in background (lazy loading - only when filters are used)
-    // This prevents blocking the initial table load
     setTimeout(() => {
         loadLocationData();
     }, 500); // Load after 500ms delay
@@ -578,9 +577,27 @@ function clearDependentSelects(selectIds) {
     });
 }
 
+// Hide the entire positions card (header + table) until the user searches/filters
+function showInitialPositionsState() {
+    const section = document.getElementById('positionsSection');
+    if (section) {
+        section.style.display = 'none';
+    }
+}
+
+// Reveal the positions card (header + table) — call this whenever a search/filter starts
+function revealPositionsSection() {
+    const section = document.getElementById('positionsSection');
+    if (section) {
+        section.style.display = '';
+    }
+}
+
 // Load dynamic positions based on location filters - generates positions for each location level
 async function loadApplications() {
     try {
+        revealPositionsSection();
+
         const tbody = document.getElementById('positionsTableBody');
 
         // Show minimal loading state (don't block UI)
@@ -1523,6 +1540,7 @@ async function handleSearch() {
     }
 
     try {
+        revealPositionsSection();
         showLoading(true);
 
         // Determine if we should use global search or location-filtered search
@@ -1715,8 +1733,10 @@ function clearFilters() {
     updateSelectedFiltersBadges();
 
     // Reload applications with default India filter
-    loadApplications();
+   // Go back to the "please search" placeholder instead of loading everything
+    showInitialPositionsState();
     showNotification('Filters cleared', 'info');
+
 }
 
 // Open application modal for applying to positions .
@@ -1915,22 +1935,22 @@ async function submitApplication(event) {
 
         // Store form data temporarily
         const formData = new FormData(form);
-        tempApplicationData = {
-            positionId: window.currentPosition.id,
-            name: name,
-            phone: phone,
-            pincode: pincode,
-            companyName: formData.get('companyName'),
-            businessName: formData.get('businessName'),
-            gender: formData.get('gender') || '',
-            staffName: formData.get('staffName') || '',
-            address: formData.get('address'),
-            // Only pass introducedBy if it is a 10-digit phone number; otherwise omit (backend will set 'Self')
-            introducedBy: (() => { const v=(formData.get('introducedBy')||'').replace(/\D/g,''); return v.length===10 ? v : ''; })(),
-            photo: photoInput.files[0],
-            location: window.currentPosition.location,
-            positionLevel: window.currentPosition.level
-        };
+       tempApplicationData = {
+    positionId: window.currentPosition.id,
+    name: name,
+    phone: phone,
+    pincode: pincode,
+    companyName: formData.get('companyName'),
+    businessName: formData.get('businessName'),
+    address: formData.get('address'),
+    introducedBy: (() => {
+        const v = (formData.get('introducedBy') || '').replace(/\D/g, '');
+        return v.length === 10 ? v : '';
+    })(),
+    photo: photoInput.files[0],
+    location: window.currentPosition.location,
+    positionLevel: window.currentPosition.level
+};
 
         // Close application modal
         const applicationModal = bootstrap.Modal.getInstance(document.getElementById('applicationModal'));
@@ -2261,8 +2281,6 @@ async function submitApplicationWithScreenshot() {
         formData.append('pincode', tempApplicationData.pincode);
         formData.append('companyName', tempApplicationData.companyName || '');
         formData.append('businessName', tempApplicationData.businessName || '');
-        formData.append('gender', tempApplicationData.gender || '');
-        formData.append('staffName', tempApplicationData.staffName || '');
         formData.append('address', tempApplicationData.address || '');
         // Only send introducedBy if it's a 10-digit phone; backend normalizes anyway
         const rawRef = (tempApplicationData.introducedBy || '').replace(/\D/g, '');
@@ -4432,7 +4450,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     </div>
 
                     <div class="modal-body">
-                        <div id="idCardContent" style="width: 540px; height: 772px; max-width: 540px; margin: 0 auto; background: #ffffff; display: flex; flex-direction: column; border: 3px solid #08285f; border-radius: 10px; box-sizing: border-box; overflow: hidden; position: relative;">
+                       <div id="idCardContent" style="width: 540px; aspect-ratio: 540 / 772; max-width: 540px; margin: 0 auto; ..."; background: #ffffff; display: flex; flex-direction: column; border: 3px solid #08285f; border-radius: 10px; box-sizing: border-box; overflow: hidden; position: relative;">
                             <!-- Header Section: India Property Network -->
                             <div style="background: #ffffff; color: #08285f; padding: 12px 12px 10px 4px; flex-shrink: 0; display: flex; align-items: center; gap: 8px; height: 184px; box-sizing: border-box; border-bottom: 0;">
                                 <div style="width: 155px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-start;">
