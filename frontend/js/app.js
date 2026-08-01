@@ -20,13 +20,13 @@ function fetchWithCacheBusting(url, options = {}) {
     // Add cache-busting timestamp to URL
     const separator = url.includes('?') ? '&' : '?';
     const cacheBustedUrl = `${url}${separator}_t=${Date.now()}`;
-    
+
     // Add cache control headers
     const defaultHeaders = {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache'
     };
-    
+
     const mergedOptions = {
         ...options,
         cache: 'no-store',
@@ -35,7 +35,7 @@ function fetchWithCacheBusting(url, options = {}) {
             ...(options.headers || {})
         }
     };
-    
+
     return fetch(cacheBustedUrl, mergedOptions);
 }
 
@@ -82,7 +82,7 @@ function setupEventListeners() {
     document.getElementById('searchBtn').addEventListener('click', handleSearch);
     document.getElementById('refreshBtn').addEventListener('click', handleSearch);
     document.getElementById('clearFilters').addEventListener('click', clearFilters);
-    
+
     // Add auto-search on input (with debounce to avoid too many searches)
     let searchTimeout;
     const debounceSearch = () => {
@@ -92,7 +92,7 @@ function setupEventListeners() {
             handleSearch();
         }, 500); // Wait 500ms after user stops typing
     };
-    
+
     document.getElementById('searchName').addEventListener('input', debounceSearch);
     document.getElementById('searchPhone').addEventListener('input', debounceSearch);
 
@@ -101,19 +101,19 @@ function setupEventListeners() {
 
     // Application form
     document.getElementById('submitApplication').addEventListener('click', submitApplication);
-    
+
     // Phone number validation with visual feedback
     const phoneInput = document.getElementById('applicantPhone');
     if (phoneInput) {
         let checkTimeout;
-        phoneInput.addEventListener('input', async function() {
+        phoneInput.addEventListener('input', async function () {
             const phoneHelp = document.getElementById('phoneHelp');
             const value = this.value.replace(/[^0-9]/g, '');
             this.value = value; // Only allow numbers
-            
+
             // Clear previous timeout
             clearTimeout(checkTimeout);
-            
+
             if (value.length === 0) {
                 phoneHelp.textContent = '10 digit phone number only';
                 phoneHelp.className = 'text-muted';
@@ -128,12 +128,12 @@ function setupEventListeners() {
                 phoneHelp.textContent = '⏳ Checking availability...';
                 phoneHelp.className = 'text-info';
                 this.classList.remove('is-valid', 'is-invalid');
-                
+
                 checkTimeout = setTimeout(async () => {
                     try {
                         const response = await fetch(`${API_BASE_URL}/applications/check-phone/${value}`);
                         const data = await response.json();
-                        
+
                         if (data.exists) {
                             phoneHelp.textContent = '❌ This number is already registered! Please use a different number';
                             phoneHelp.className = 'text-danger fw-bold';
@@ -649,7 +649,7 @@ async function loadApplications() {
         }
 
         const data = await response.json();
-        
+
         // Handle both old array format and new {success, positions} format
         const positions = data.positions || data || [];
 
@@ -663,7 +663,7 @@ async function loadApplications() {
 
         // Update selected filters display
         updateSelectedFiltersBadges();
-        
+
         // Update Position Statistics table with same filters
         const filters = {};
         if (zone) filters.zone = zone;
@@ -674,7 +674,7 @@ async function loadApplications() {
         if (pincode) filters.pincode = pincode;
         if (village) filters.village = village;
         filters.country = country;
-        
+
         if (typeof loadPositionStatistics === 'function') {
             loadPositionStatistics(filters);
         }
@@ -733,20 +733,20 @@ function displayPositions(positions) {
 // Fetch referral counts for all positions asynchronously
 async function fetchReferralCountsForPositions(positions) {
     console.log('🔄 Fetching referral counts for positions');
-    
+
     for (const position of positions) {
         if (!position.applicantDetails || !position.applicantDetails.phone) {
             continue;
         }
-        
+
         const phone = position.applicantDetails.phone;
         const name = position.applicantDetails.name;
         const cleanPhone = phone.replace(/\D/g, '');
-        
+
         try {
             // Fetch applications where this phone is the introducer
             const response = await fetch(`${API_BASE_URL}/applications?introducedBy=${phone}&status=approved`);
-            
+
             let referredApps = [];
             if (response.ok) {
                 referredApps = await response.json();
@@ -754,10 +754,10 @@ async function fetchReferralCountsForPositions(positions) {
                     referredApps = [];
                 }
             }
-            
+
             const count = referredApps.length;
             console.log(`✅ ${name} has ${count} referrals`);
-            
+
             const cell = document.getElementById(`referrer-${cleanPhone}`);
             if (cell) {
                 if (count > 0) {
@@ -778,29 +778,29 @@ async function fetchReferralCountsForPositions(positions) {
             if (cell) cell.innerHTML = '<span class="text-muted">0</span>';
         }
     }
-    
+
     console.log('✅ Finished fetching all referral counts');
 }
 
 // Show referred people modal for public channel partner view
 async function showReferredPeoplePublic(referrerPhone, referrerName) {
     console.log(`📊 Fetching referred people for ${referrerName} (${referrerPhone})`);
-    
+
     try {
         const url = `${API_BASE_URL}/applications?introducedBy=${referrerPhone}&status=approved`;
         console.log(`🌐 API URL:`, url);
-        
+
         const response = await fetch(url);
 
         console.log(`📡 Response status:`, response.status, response.statusText);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const applications = await response.json();
         console.log(`✅ Applications response:`, applications);
-        
+
         const applicationsArray = Array.isArray(applications) ? applications : [];
         console.log(`✅ Found ${applicationsArray.length} referred people`);
 
@@ -836,39 +836,39 @@ async function showReferredPeoplePublic(referrerPhone, referrerName) {
                                         </thead>
                                         <tbody>
                                             ${applicationsArray.map((app, index) => {
-                                                const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
-                                                
-                                                // Extract position level and actual area from positionId
-                                                let positionDisplay = '-';
-                                                if (app.positionId) {
-                                                    const parts = app.positionId.split('_');
-                                                    if (parts.length >= 2) {
-                                                        const level = parts[1];
-                                                        let levelName = '';
-                                                        
-                                                        if (level.includes('state')) levelName = 'State';
-                                                        else if (level.includes('division')) levelName = 'Division';
-                                                        else if (level.includes('district')) levelName = 'District';
-                                                        else if (level.includes('zone')) levelName = 'Zone';
-                                                        else if (level.includes('tehsil')) levelName = 'Tehsil';
-                                                        else if (level.includes('village')) levelName = 'Village';
-                                                        else if (level.includes('pincode')) levelName = 'Pincode';
-                                                        else if (level.includes('president')) levelName = 'President';
-                                                        
-                                                        const locationRaw = parts[parts.length - 1] || '-';
-                                                        const location = locationRaw.split('-').map(word => 
-                                                            word.charAt(0).toUpperCase() + word.slice(1)
-                                                        ).join(' ');
-                                                        
-                                                        if (levelName && location !== '-') {
-                                                            positionDisplay = `${levelName}(${location})`;
-                                                        } else {
-                                                            positionDisplay = location;
-                                                        }
-                                                    }
-                                                }
-                                                
-                                                return `
+            const appliedDate = app.appliedDate ? new Date(app.appliedDate).toLocaleDateString('en-IN') : '-';
+
+            // Extract position level and actual area from positionId
+            let positionDisplay = '-';
+            if (app.positionId) {
+                const parts = app.positionId.split('_');
+                if (parts.length >= 2) {
+                    const level = parts[1];
+                    let levelName = '';
+
+                    if (level.includes('state')) levelName = 'State';
+                    else if (level.includes('division')) levelName = 'Division';
+                    else if (level.includes('district')) levelName = 'District';
+                    else if (level.includes('zone')) levelName = 'Zone';
+                    else if (level.includes('tehsil')) levelName = 'Tehsil';
+                    else if (level.includes('village')) levelName = 'Village';
+                    else if (level.includes('pincode')) levelName = 'Pincode';
+                    else if (level.includes('president')) levelName = 'President';
+
+                    const locationRaw = parts[parts.length - 1] || '-';
+                    const location = locationRaw.split('-').map(word =>
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ');
+
+                    if (levelName && location !== '-') {
+                        positionDisplay = `${levelName}(${location})`;
+                    } else {
+                        positionDisplay = location;
+                    }
+                }
+            }
+
+            return `
                                                     <tr>
                                                         <td><strong>${index + 1}</strong></td>
                                                         <td>${app.applicantInfo?.name || '-'}</td>
@@ -877,7 +877,7 @@ async function showReferredPeoplePublic(referrerPhone, referrerName) {
                                                         <td>${appliedDate}</td>
                                                     </tr>
                                                 `;
-                                            }).join('')}
+        }).join('')}
                                         </tbody>
                                     </table>
                                 </div>
@@ -903,7 +903,7 @@ async function showReferredPeoplePublic(referrerPhone, referrerName) {
         // Show modal
         const modal = new bootstrap.Modal(document.getElementById('referredPeopleModal'));
         modal.show();
-        
+
     } catch (error) {
         console.error('❌ Error loading referred people:', error);
         alert('Failed to load referred people. Please try again.');
@@ -980,13 +980,13 @@ function createPositionRow(position) {
         console.log(`   Photo length: ${position.applicantDetails.photo.length} chars`);
         console.log(`   Photo preview: ${position.applicantDetails.photo.substring(0, 50)}...`);
         console.log(`   Is base64: ${position.applicantDetails.photo.startsWith('data:')}`);
-        
+
         // Photo is now stored as base64 in MongoDB
         // Add cache-busting timestamp to force fresh photo load
-        const photoSrc = position.applicantDetails.photo.startsWith('data:') 
-            ? position.applicantDetails.photo 
+        const photoSrc = position.applicantDetails.photo.startsWith('data:')
+            ? position.applicantDetails.photo
             : `${position.applicantDetails.photo}?t=${Date.now()}`;
-        
+
         photoCell = `<img src="${photoSrc}" 
                          alt="${position.applicantDetails.name || 'Applicant'}" 
                          class="rounded-circle"
@@ -1006,7 +1006,7 @@ function createPositionRow(position) {
 
     // Handle introduced count - will be fetched asynchronously
     const cleanPhone = phoneNo.replace(/\D/g, '');
-    const introducedBy = phoneNo !== '-' 
+    const introducedBy = phoneNo !== '-'
         ? `<span id="referrer-${cleanPhone}"><div class="spinner-border spinner-border-sm text-primary" role="status" style="width: 1rem; height: 1rem;"></div></span>`
         : '-';
 
@@ -1017,21 +1017,21 @@ function createPositionRow(position) {
 
     // Others column - Actions dropdown or Expand button
     let othersCell = '';
-    
+
     // Determine if this position has potential child levels
     const locationHierarchy = {
         'zone': 'state',
-        'state': 'division', 
+        'state': 'division',
         'division': 'district',
         'district': 'tehsil',
         'tehsil': 'pincode',
         'pincode': 'village'
     };
-    
+
     // Detect current level and check if it has children
     let currentLevel = null;
     let hasChildren = false;
-    
+
     if (position.location) {
         if (position.location.pincode && !position.location.village) {
             currentLevel = 'pincode';
@@ -1053,14 +1053,14 @@ function createPositionRow(position) {
             hasChildren = true;
         }
     }
-    
+
     if (hasChildren && (position.status === 'Approved' || position.status === 'Verified')) {
         // Show BOTH expand button AND actions dropdown for any level with children
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
         const locationJson = JSON.stringify(position.location).replace(/"/g, '&quot;');
-        
+
         othersCell = `
             <div class="d-flex gap-2 align-items-center">
                 <button class="btn btn-sm btn-info" onclick="toggleChildLocations('${position._id}', '${currentLevel}', ${locationJson}); return false;" 
@@ -1173,30 +1173,30 @@ async function toggleChildLocations(positionId, parentLevel, parentLocation) {
     const expandBtn = document.getElementById(`expandBtn_${positionId}`);
     const expandIcon = document.getElementById(`expandIcon_${positionId}`);
     const parentRow = document.querySelector(`tr:has(#expandBtn_${positionId})`);
-    
+
     if (!parentRow) {
         console.error('Parent row not found');
         return;
     }
-    
+
     // Check if already expanded
     if (expandedLocations.has(positionId)) {
         // Collapse: Remove all nested rows
         const nestedRows = document.querySelectorAll(`tr[data-parent-id="${positionId}"]`);
         nestedRows.forEach(row => row.remove());
         expandedLocations.delete(positionId);
-        
+
         // Update button icon
         expandIcon.className = 'fas fa-chevron-down me-1';
         expandIcon.style.fontSize = '0.7rem';
         expandBtn.innerHTML = '<i class="fas fa-chevron-down me-1" style="font-size: 0.7rem;"></i>See 1 more level';
         return;
     }
-    
+
     // Expand: Fetch and display child locations
     expandBtn.disabled = true;
     expandBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Loading...';
-    
+
     try {
         // Build query params based on parent location
         const queryParams = new URLSearchParams();
@@ -1207,20 +1207,20 @@ async function toggleChildLocations(positionId, parentLevel, parentLocation) {
         if (parentLocation.district) queryParams.append('district', parentLocation.district);
         if (parentLocation.tehsil) queryParams.append('tehsil', parentLocation.tehsil);
         if (parentLocation.pincode) queryParams.append('pincode', parentLocation.pincode);
-        
+
         // Fetch child positions
         const response = await fetch(`${API_BASE_URL}/dynamic-positions?${queryParams.toString()}`);
         const data = await response.json();
-        
+
         if (!data.positions || data.positions.length === 0) {
             alert('No child positions found for this location');
             return;
         }
-        
+
         // Filter for immediate child level only
         const childPositions = data.positions.filter(pos => {
             if (!pos.location) return false;
-            
+
             // Check if this is the immediate child level
             if (parentLevel === 'zone') {
                 return pos.location.state && pos.location.zone === parentLocation.zone && !pos.location.division;
@@ -1237,19 +1237,19 @@ async function toggleChildLocations(positionId, parentLevel, parentLocation) {
             }
             return false;
         });
-        
+
         if (childPositions.length === 0) {
             alert('No child-level positions found');
             return;
         }
-        
+
         // Mark as expanded
         expandedLocations.set(positionId, true);
-        
+
         // Get current nesting level from parent row
         const parentNestLevel = parseInt(parentRow.getAttribute('data-nest-level') || '0');
         const childNestLevel = parentNestLevel + 1;
-        
+
         // Create nested rows
         let lastInsertedRow = parentRow;
         childPositions.forEach((childPos, index) => {
@@ -1257,12 +1257,12 @@ async function toggleChildLocations(positionId, parentLevel, parentLocation) {
             lastInsertedRow.insertAdjacentElement('afterend', nestedRow);
             lastInsertedRow = nestedRow;
         });
-        
+
         // Update button icon
         expandIcon.className = 'fas fa-chevron-up me-1';
         expandIcon.style.fontSize = '0.7rem';
         expandBtn.innerHTML = '<i class="fas fa-chevron-up me-1" style="font-size: 0.7rem;"></i>Hide level';
-        
+
     } catch (error) {
         console.error('Error fetching child locations:', error);
         alert('Failed to load child locations. Please try again.');
@@ -1276,11 +1276,11 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
     const row = document.createElement('tr');
     row.setAttribute('data-parent-id', parentId);
     row.setAttribute('data-nest-level', nestLevel);
-    
+
     // Calculate background color based on nesting level
     const bgColors = ['#f8f9fa', '#f0f1f3', '#e8e9eb', '#e0e1e3', '#d8d9db'];
     row.style.backgroundColor = bgColors[Math.min(nestLevel - 1, bgColors.length - 1)];
-    
+
     const statusClass = getStatusClass(position.status);
     let statusText = position.status;
     if (position.applicantDetails) {
@@ -1292,10 +1292,10 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
             statusText = 'Pending Admin Review';
         }
     }
-    
+
     // Calculate indentation based on nesting level
     const indentPx = 20 + (nestLevel * 20);
-    
+
     // Name cell
     let nameCell = '';
     if (position.status === 'Available') {
@@ -1313,7 +1313,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
     } else {
         nameCell = '-';
     }
-    
+
     // Area Head For - show only the most specific location name
     let areaHeadFor = '-';
     if (position.location) {
@@ -1336,33 +1336,33 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
             areaHeadFor = position.location.country;
         }
     }
-    
+
     // Photo
     let photoCell = '';
     if (position.applicantDetails && position.applicantDetails.photo) {
-        const photoSrc = position.applicantDetails.photo.startsWith('data:') 
-            ? position.applicantDetails.photo 
+        const photoSrc = position.applicantDetails.photo.startsWith('data:')
+            ? position.applicantDetails.photo
             : `${position.applicantDetails.photo}?t=${Date.now()}`;
         photoCell = `<img src="${photoSrc}" alt="${position.applicantDetails.name || 'Applicant'}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover;">`;
     } else {
         photoCell = '<i class="fas fa-user-circle fa-3x text-muted"></i>';
     }
-    
+
     // Phone, Introduced, Days
     const phoneNo = position.applicantDetails && position.applicantDetails.phone ? position.applicantDetails.phone : '-';
     const introducedBy = position.applicantDetails && position.applicantDetails.introducedCount !== undefined
         ? position.applicantDetails.introducedCount : (position.applicantDetails ? 0 : '-');
     const days = position.applicantDetails && position.applicantDetails.days !== undefined ? position.applicantDetails.days : '-';
-    
+
     // Check if this nested row can also expand
     const locationHierarchy = {
         'zone': 'state', 'state': 'division', 'division': 'district',
         'district': 'tehsil', 'tehsil': 'pincode', 'pincode': 'village'
     };
-    
+
     let currentLevel = null;
     let hasChildren = false;
-    
+
     if (position.location) {
         if (position.location.pincode && !position.location.village) {
             currentLevel = 'pincode'; hasChildren = true;
@@ -1376,7 +1376,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
             currentLevel = 'state'; hasChildren = true;
         }
     }
-    
+
     // Actions or Expand button
     let othersCell = '';
     if (hasChildren && position.applicantDetails && (position.status === 'Approved' || position.status === 'Verified')) {
@@ -1384,7 +1384,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
         const locationJson = JSON.stringify(position.location).replace(/"/g, '&quot;');
-        
+
         othersCell = `
             <div class="d-flex gap-2 align-items-center">
                 <button class="btn btn-sm btn-info" onclick="toggleChildLocations('${position._id}', '${currentLevel}', ${locationJson}); return false;" 
@@ -1409,7 +1409,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
         const phone = position.applicantDetails.phone || '';
         const name = position.applicantDetails.name || '';
         const photo = position.applicantDetails.photo || '';
-        
+
         othersCell = `
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="actionMenu${position._id}" data-bs-toggle="dropdown">
@@ -1428,10 +1428,10 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
     } else {
         othersCell = '<button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" disabled title="Available after admin approval">Actions ▼</button>';
     }
-    
+
     // Indent indicator based on nest level
     const indentIndicator = '→ '.repeat(nestLevel);
-    
+
     row.innerHTML = `
         <td style="padding-left: ${indentPx}px;"><span class="text-muted">${indentIndicator}</span>${subIndex}</td>
         <td>${nameCell}</td>
@@ -1443,7 +1443,7 @@ function createNestedRow(position, parentId, subIndex, nestLevel) {
         <td><span class="badge ${statusClass}">${statusText}</span></td>
         <td>${othersCell}</td>
     `;
-    
+
     return row;
 }
 
@@ -1532,7 +1532,7 @@ async function handleSearch() {
         division,
         district
     });
-    
+
     // Check if search is provided
     if (!searchName && !searchPhone) {
         showNotification('Please enter a name or phone number to search', 'info');
@@ -1545,7 +1545,7 @@ async function handleSearch() {
 
         // Determine if we should use global search or location-filtered search
         const hasLocationFilters = zone || state || division || district || tehsil || pincode || village;
-        
+
         let url;
         if (!hasLocationFilters) {
             // Use global search endpoint when no location filters
@@ -1569,7 +1569,7 @@ async function handleSearch() {
             params.append('_t', Date.now()); // Cache-busting
             url = `${API_BASE_URL}/dynamic-positions?${params.toString()}`;
         }
-        
+
         console.log('🌐 FRONTEND: Fetching positions from:', url);
         const response = await fetch(url, {
             cache: 'no-store',
@@ -1578,17 +1578,17 @@ async function handleSearch() {
                 'Pragma': 'no-cache'
             }
         });
-        
+
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }
-        
+
         const data = await response.json();
         const positions = data.positions || data || [];
-        
+
         currentPositions = positions;
         console.log('📥 FRONTEND: Received', currentPositions.length, 'positions');
-        
+
         // Log positions with applicants
         const withApplicants = currentPositions.filter(p => p.applicantDetails);
         console.log('👥 FRONTEND: Positions with applicants:', withApplicants.length);
@@ -1604,7 +1604,7 @@ async function handleSearch() {
         if (hasLocationFilters && (searchName || searchPhone)) {
             console.log('🔎 Applying client-side search filters on location-filtered results...');
             console.log(`   Search term: "${searchName}" (name) or "${searchPhone}" (phone)`);
-            
+
             filteredPositions = currentPositions.filter(position => {
                 // Must have applicant details
                 if (!position.applicantDetails) {
@@ -1615,12 +1615,12 @@ async function handleSearch() {
                 if (searchName) {
                     const positionName = (position.applicantDetails.name || '').toLowerCase();
                     const matches = positionName.includes(searchName);
-                    
+
                     // Log first 10 comparisons
                     if (filteredPositions.length < 10) {
                         console.log(`  Name: "${positionName}" includes "${searchName}" = ${matches}`);
                     }
-                    
+
                     if (!matches) {
                         return false;
                     }
@@ -1630,11 +1630,11 @@ async function handleSearch() {
                 if (searchPhone) {
                     const positionPhone = position.applicantDetails.phone || '';
                     const matches = positionPhone.includes(searchPhone);
-                    
+
                     if (filteredPositions.length < 10) {
                         console.log(`  Phone: "${positionPhone}" includes "${searchPhone}" = ${matches}`);
                     }
-                    
+
                     if (!matches) {
                         return false;
                     }
@@ -1667,20 +1667,20 @@ async function refreshPositionsData() {
     try {
         const refreshBtn = document.getElementById('refreshBtn');
         const icon = refreshBtn.querySelector('i');
-        
+
         // Show spinning animation
         icon.classList.add('fa-spin');
         refreshBtn.disabled = true;
-        
+
         // Force reload location data (clear cache)
         locationDataLoaded = false;
         await loadLocationData();
-        
+
         // Reload current positions
         await loadApplications();
-        
+
         showNotification('✅ Data refreshed successfully!', 'success');
-        
+
         // Stop spinning after delay
         setTimeout(() => {
             icon.classList.remove('fa-spin');
@@ -1689,7 +1689,7 @@ async function refreshPositionsData() {
     } catch (error) {
         console.error('❌ Error refreshing data:', error);
         showNotification('Error refreshing data: ' + error.message, 'error');
-        
+
         const refreshBtn = document.getElementById('refreshBtn');
         const icon = refreshBtn.querySelector('i');
         icon.classList.remove('fa-spin');
@@ -1733,7 +1733,7 @@ function clearFilters() {
     updateSelectedFiltersBadges();
 
     // Reload applications with default India filter
-   // Go back to the "please search" placeholder instead of loading everything
+    // Go back to the "please search" placeholder instead of loading everything
     showInitialPositionsState();
     showNotification('Filters cleared', 'info');
 
@@ -1859,33 +1859,33 @@ async function submitApplication(event) {
     const phone = document.getElementById('applicantPhone').value.trim();
     const pincode = document.getElementById('applicantPincode').value.trim();
     const photoInput = document.getElementById('applicantPhoto');
-    
+
     // Validate name
     if (!name) {
         showNotification('Please enter your full name', 'error');
         document.getElementById('applicantName').focus();
         return;
     }
-    
+
     if (name.length < 3) {
         showNotification('Name must be at least 3 characters long', 'error');
         document.getElementById('applicantName').focus();
         return;
     }
-    
+
     // Validate phone number
     if (!phone) {
         showNotification('Please enter your phone number', 'error');
         document.getElementById('applicantPhone').focus();
         return;
     }
-    
+
     if (!/^\d{10}$/.test(phone)) {
         showNotification('Phone number must be exactly 10 digits', 'error');
         document.getElementById('applicantPhone').focus();
         return;
     }
-    
+
     // Check if phone number already exists
     const phoneInput = document.getElementById('applicantPhone');
     if (phoneInput.getAttribute('data-phone-exists') === 'true') {
@@ -1893,33 +1893,33 @@ async function submitApplication(event) {
         phoneInput.focus();
         return;
     }
-    
+
     // Validate pincode
     if (!pincode) {
         showNotification('Please enter your pincode', 'error');
         document.getElementById('applicantPincode').focus();
         return;
     }
-    
+
     if (!/^\d{6}$/.test(pincode)) {
         showNotification('Pincode must be exactly 6 digits', 'error');
         document.getElementById('applicantPincode').focus();
         return;
     }
-    
+
     // Validate photo file if uploaded
     if (photoInput.files.length > 0) {
         const photoFile = photoInput.files[0];
         const isImage = photoFile.type.startsWith('image/');
         const isPDF = photoFile.type === 'application/pdf';
-        
+
         if (!isImage && !isPDF) {
             showNotification('Photo must be an image file (JPG, PNG) or PDF', 'error');
             photoInput.value = '';
             photoInput.focus();
             return;
         }
-        
+
         // Check file size (max 5MB)
         if (photoFile.size > 5 * 1024 * 1024) {
             showNotification('Photo file size must be less than 5MB', 'error');
@@ -1935,24 +1935,24 @@ async function submitApplication(event) {
 
         // Store form data temporarily
         const formData = new FormData(form);
-       tempApplicationData = {
-    positionId: window.currentPosition.id,
-    name: name,
-    phone: phone,
-    pincode: pincode,
-    companyName: formData.get('companyName'),
-    businessName: formData.get('businessName'),
-    gender: formData.get('gender') || '',
-    staffName: formData.get('staffName') || '',
-    address: formData.get('address'),
-    introducedBy: (() => {
-        const v = (formData.get('introducedBy') || '').replace(/\D/g, '');
-        return v.length === 10 ? v : '';
-    })(),
-    photo: photoInput.files[0],
-    location: window.currentPosition.location,
-    positionLevel: window.currentPosition.level
-};
+        tempApplicationData = {
+            positionId: window.currentPosition.id,
+            name: name,
+            phone: phone,
+            pincode: pincode,
+            companyName: formData.get('companyName'),
+            businessName: formData.get('businessName'),
+            gender: formData.get('gender') || '',
+            staffName: formData.get('staffName') || '',
+            address: formData.get('address'),
+            introducedBy: (() => {
+                const v = (formData.get('introducedBy') || '').replace(/\D/g, '');
+                return v.length === 10 ? v : '';
+            })(),
+            photo: photoInput.files[0],
+            location: window.currentPosition.location,
+            positionLevel: window.currentPosition.level
+        };
 
         // Close application modal
         const applicationModal = bootstrap.Modal.getInstance(document.getElementById('applicationModal'));
@@ -1975,17 +1975,17 @@ async function showPaymentPlansModal() {
     const subtitle = document.getElementById('paymentModalSubtitle');
     const container = document.getElementById('paymentTiersContainer');
     const customNotice = document.getElementById('customPricingNotice');
-    
+
     // Get position level for pricing
     const positionLevel = tempApplicationData.positionLevel;
-    
+
     // Update subtitle
     subtitle.textContent = `Payment plans for ${positionLevel} Head position`;
-    
+
     // Fetch custom pricing if admin has set it
     let pricingTiers = DEFAULT_PRICING_TIERS[positionLevel] || [];
     let isCustomPricing = false;
-    
+
     // Try to fetch custom pricing from backend
     try {
         const response = await fetch(`${API_BASE_URL}/positions/${tempApplicationData.positionId}/custom-pricing`);
@@ -2002,7 +2002,7 @@ async function showPaymentPlansModal() {
     } catch (error) {
         console.log('⚠️ Error fetching custom pricing, using default:', error.message);
     }
-    
+
     // Filter pricing tiers based on visibleFor field
     // Only show tiers that are marked as visible for this position level
     if (!isCustomPricing) {
@@ -2016,14 +2016,14 @@ async function showPaymentPlansModal() {
         });
         console.log(`✅ Filtered ${pricingTiers.length} plans visible for ${positionLevel}`);
     }
-    
+
     // Show/hide custom pricing notice
     if (isCustomPricing) {
         customNotice.classList.remove('d-none');
     } else {
         customNotice.classList.add('d-none');
     }
-    
+
     // Render pricing tiers
     container.innerHTML = '';
     pricingTiers.forEach((tier, index) => {
@@ -2032,11 +2032,11 @@ async function showPaymentPlansModal() {
         const tierCard = createPaymentTierCard(tier, index, isRecommended);
         container.appendChild(tierCard);
     });
-    
+
     // Reset selected tier
     selectedPaymentTier = null;
     document.getElementById('proceedToPayment').disabled = true;
-    
+
     modal.show();
 }
 
@@ -2044,7 +2044,7 @@ async function showPaymentPlansModal() {
 function createPaymentTierCard(tier, index, isRecommended) {
     const col = document.createElement('div');
     col.className = 'col-6 col-md-6 col-lg-4';
-    
+
     col.innerHTML = `
         <div class="card payment-tier-card h-100" onclick="selectPaymentTier(${index}, ${tier.pay}, ${tier.profit}, ${tier.credit})">
             <div class="selected-check">
@@ -2089,7 +2089,7 @@ function createPaymentTierCard(tier, index, isRecommended) {
             </div>
         </div>
     `;
-    
+
     return col;
 }
 
@@ -2099,16 +2099,16 @@ function selectPaymentTier(index, pay, profit, credit) {
     document.querySelectorAll('.payment-tier-card').forEach(card => {
         card.classList.remove('selected');
     });
-    
+
     // Add selected class to clicked card
     event.currentTarget.classList.add('selected');
-    
+
     // Store selected tier
     selectedPaymentTier = { index, pay, profit, credit };
-    
+
     // Enable proceed button
     document.getElementById('proceedToPayment').disabled = false;
-    
+
     // Update button text with amount
     document.getElementById('proceedToPayment').innerHTML = `
         <i class="fas fa-lock me-2"></i>Pay ₹${(pay / 1000).toFixed(0)}K
@@ -2119,10 +2119,10 @@ function selectPaymentTier(index, pay, profit, credit) {
 function backToApplicationForm() {
     const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentPlansModal'));
     paymentModal.hide();
-    
+
     const applicationModal = new bootstrap.Modal(document.getElementById('applicationModal'));
     applicationModal.show();
-    
+
     // Re-enable submit button
     const submitBtn = document.getElementById('submitApplication');
     submitBtn.disabled = false;
@@ -2130,18 +2130,18 @@ function backToApplicationForm() {
 }
 
 // Proceed to manual payment with scanner
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const proceedBtn = document.getElementById('proceedToPayment');
     if (proceedBtn) {
         proceedBtn.addEventListener('click', showPaymentScanner);
     }
-    
+
     // Setup screenshot upload handler
     const screenshotInput = document.getElementById('paymentScreenshot');
     if (screenshotInput) {
         screenshotInput.addEventListener('change', handleScreenshotSelect);
     }
-    
+
     // Setup submit button
     const submitBtn = document.getElementById('submitPaymentScreenshot');
     if (submitBtn) {
@@ -2155,28 +2155,28 @@ function showPaymentScanner() {
         showNotification('Please select a payment plan', 'error');
         return;
     }
-    
+
     // Hide payment plans modal
     const paymentPlansModal = bootstrap.Modal.getInstance(document.getElementById('paymentPlansModal'));
     if (paymentPlansModal) {
         paymentPlansModal.hide();
     }
-    
+
     // Show scanner modal
     const scannerModal = new bootstrap.Modal(document.getElementById('paymentScannerModal'));
     scannerModal.show();
-    
+
     // Update payment amount display
     const amountDisplay = document.getElementById('paymentAmountDisplay');
     if (amountDisplay) {
         amountDisplay.textContent = `₹${selectedPaymentTier.pay.toLocaleString('en-IN')}`;
     }
-    
+
     // Reset screenshot input and preview
     const screenshotInput = document.getElementById('paymentScreenshot');
     const screenshotPreview = document.getElementById('screenshotPreview');
     const submitBtn = document.getElementById('submitPaymentScreenshot');
-    
+
     if (screenshotInput) screenshotInput.value = '';
     if (screenshotPreview) screenshotPreview.classList.add('d-none');
     if (submitBtn) submitBtn.disabled = false; // Enable by default since screenshot is optional
@@ -2190,29 +2190,29 @@ function handleScreenshotSelect(event) {
     const pdfPreview = document.getElementById('pdfPreview');
     const pdfFileName = document.getElementById('pdfFileName');
     const submitBtn = document.getElementById('submitPaymentScreenshot');
-    
+
     if (file) {
         // Validate file type (accept images and PDFs)
         const isImage = file.type.startsWith('image/');
         const isPDF = file.type === 'application/pdf';
-        
+
         if (!isImage && !isPDF) {
             showNotification('Please upload an image file (JPG, PNG) or PDF', 'error');
             event.target.value = '';
             return;
         }
-        
+
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             showNotification('File size must be less than 5MB', 'error');
             event.target.value = '';
             return;
         }
-        
+
         // Show appropriate preview
         if (isImage) {
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = function (e) {
                 previewImage.src = e.target.result;
                 previewImage.classList.remove('d-none');
                 if (pdfPreview) pdfPreview.classList.add('d-none');
@@ -2242,7 +2242,7 @@ function cancelPayment() {
     if (scannerModal) {
         scannerModal.hide();
     }
-    
+
     // Show payment plans modal again
     const paymentPlansModal = new bootstrap.Modal(document.getElementById('paymentPlansModal'));
     paymentPlansModal.show();
@@ -2252,29 +2252,29 @@ function cancelPayment() {
 async function submitApplicationWithScreenshot() {
     const screenshotInput = document.getElementById('paymentScreenshot');
     const submitBtn = document.getElementById('submitPaymentScreenshot');
-    
+
     // Validate screenshot if provided
     if (screenshotInput.files[0]) {
         const file = screenshotInput.files[0];
         const isImage = file.type.startsWith('image/');
         const isPDF = file.type === 'application/pdf';
-        
+
         if (!isImage && !isPDF) {
             showNotification('Payment screenshot must be an image (JPG, PNG) or PDF', 'error');
             return;
         }
-        
+
         if (file.size > 5 * 1024 * 1024) {
             showNotification('File size must be less than 5MB', 'error');
             return;
         }
     }
-    
+
     try {
         // Disable submit button
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Submitting...';
-        
+
         // Prepare application data with payment screenshot
         const formData = new FormData();
         formData.append('positionId', tempApplicationData.positionId);
@@ -2289,11 +2289,11 @@ async function submitApplicationWithScreenshot() {
         // Only send introducedBy if it's a 10-digit phone; backend normalizes anyway
         const rawRef = (tempApplicationData.introducedBy || '').replace(/\D/g, '');
         formData.append('introducedBy', rawRef.length === 10 ? rawRef : 'Self');
-        
+
         if (tempApplicationData.photo) {
             formData.append('photo', tempApplicationData.photo);
         }
-        
+
         // Add location data
         const location = tempApplicationData.location;
         if (location.country) formData.append('country', location.country);
@@ -2304,12 +2304,12 @@ async function submitApplicationWithScreenshot() {
         if (location.tehsil) formData.append('tehsil', location.tehsil);
         if (location.positionPincode) formData.append('positionPincode', location.positionPincode);
         if (location.village) formData.append('village', location.village);
-        
+
         // Add payment information
         formData.append('paymentAmount', selectedPaymentTier.pay);
         formData.append('paymentProfit', selectedPaymentTier.profit);
         formData.append('paymentCredit', selectedPaymentTier.credit);
-        
+
         // Add payment screenshot only if uploaded (optional)
         if (screenshotInput.files[0]) {
             formData.append('paymentScreenshot', screenshotInput.files[0]);
@@ -2317,30 +2317,30 @@ async function submitApplicationWithScreenshot() {
         } else {
             formData.append('paymentStatus', 'pending'); // Mark as pending even without screenshot
         }
-        
+
         // Submit application with payment screenshot
         const response = await fetch(`${API_BASE_URL}/applications/with-payment`, {
             method: 'POST',
             body: formData
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok) {
             // Close all modals
             const scannerModal = bootstrap.Modal.getInstance(document.getElementById('paymentScannerModal'));
             if (scannerModal) scannerModal.hide();
-            
+
             const paymentModal = bootstrap.Modal.getInstance(document.getElementById('paymentPlansModal'));
             if (paymentModal) paymentModal.hide();
-            
+
             // Clear temp data
             tempApplicationData = null;
             selectedPaymentTier = null;
-            
+
             // Show success message
             showNotification('✅ Application submitted successfully! Your payment will be verified by admin.', 'success');
-            
+
             // Reload page after delay
             setTimeout(() => {
                 window.location.reload(true);
@@ -2348,11 +2348,11 @@ async function submitApplicationWithScreenshot() {
         } else {
             throw new Error(result.error || 'Application submission failed');
         }
-        
+
     } catch (error) {
         console.error('❌ Error:', error);
         showNotification(error.message || 'Failed to submit application', 'error');
-        
+
         // Re-enable submit button
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-check me-1"></i>Submit Application';
@@ -4281,7 +4281,7 @@ function fallbackCopyTextToClipboard(text) {
 async function getCompleteLocationPath(location) {
     try {
         console.log('🔍 Getting complete path for:', location);
-        
+
         // Determine the person's area head level (the lowest level that has a value)
         let personLevel = null;
         if (location.village) personLevel = 'village';
@@ -4292,29 +4292,29 @@ async function getCompleteLocationPath(location) {
         else if (location.state) personLevel = 'state';
         else if (location.zone) personLevel = 'zone';
         else personLevel = 'country';
-        
+
         console.log('👤 Person is Area Head at level:', personLevel);
-        
+
         // Get the value to lookup
-        const lookupValue = location.village || location.pincode || location.tehsil || 
-                           location.district || location.division || location.state || 
-                           location.zone || location.country;
-        
+        const lookupValue = location.village || location.pincode || location.tehsil ||
+            location.district || location.division || location.state ||
+            location.zone || location.country;
+
         if (!lookupValue) {
             return location; // Return as-is if nothing is set
         }
-        
+
         // Call backend API to get reverse lookup
         const response = await fetch(`${API_BASE_URL}/locations/reverse-lookup/${encodeURIComponent(lookupValue)}`);
-        
+
         if (!response.ok) {
             console.warn('⚠️ Could not fetch location hierarchy, using provided data');
             return location;
         }
-        
+
         const fullPath = await response.json();
         console.log('✅ Got complete path:', fullPath);
-        
+
         // Build the result - fill hierarchy UP TO person's level, leave rest empty
         const result = {
             country: "India", // Always show country
@@ -4326,19 +4326,19 @@ async function getCompleteLocationPath(location) {
             pincode: "",
             village: ""
         };
-        
+
         // Fill hierarchy from top down, UP TO the person's level only
         const hierarchy = ['country', 'zone', 'state', 'division', 'district', 'tehsil', 'pincode', 'village'];
         const personLevelIndex = hierarchy.indexOf(personLevel);
-        
+
         for (let i = 0; i <= personLevelIndex; i++) {
             const level = hierarchy[i];
             // Use original location value first, then fullPath, then empty
             result[level] = location[level] || fullPath[level] || "";
         }
-        
+
         console.log('📍 Final hierarchy (up to', personLevel + '):', result);
-        
+
         return result;
     } catch (error) {
         console.error('❌ Error getting location path:', error);
@@ -4368,22 +4368,22 @@ async function showIDCard(name, phone, photo, positionLocation) {
         // Fetch hierarchy data from API endpoint
         console.log('📇 Fetching hierarchy for ID card from API...');
         const hierarchyResponse = await fetch(`${API_BASE_URL}/dynamic-positions/hierarchy/${phone}`);
-        
+
         if (!hierarchyResponse.ok) {
             throw new Error('Could not fetch hierarchy data');
         }
-        
+
         const hierarchyData = await hierarchyResponse.json();
         console.log('✅ Hierarchy data received:', hierarchyData);
-        
+
         const hierarchy = hierarchyData.hierarchy;
         const userPincode = hierarchyData.user?.pincode || 'N/A';
-        
+
         // Build the hierarchy table rows
         let hierarchyRowsHTML = '';
         hierarchy.forEach((level) => {
-            const rowStyle = level.isCurrentUser 
-                ? 'background: linear-gradient(90deg, rgba(231, 245, 222, 0.98), rgba(241, 250, 235, 0.98)); color: #1f6f28; font-weight: 800;' 
+            const rowStyle = level.isCurrentUser
+                ? 'background: linear-gradient(90deg, rgba(231, 245, 222, 0.98), rgba(241, 250, 235, 0.98)); color: #1f6f28; font-weight: 800;'
                 : 'background: rgba(255, 255, 255, 0.88); color: #0a2458;';
             const hasInformation = Boolean(level.cpName || level.cpMob);
             const informationCells = hasInformation
@@ -4392,7 +4392,7 @@ async function showIDCard(name, phone, photo, positionLocation) {
                     <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: center; line-height: 1.15;">${level.cpMob || '-'}</td>
                 `
                 : `<td colspan="2" style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; text-align: center; line-height: 1.15;">-</td>`;
-            
+
             hierarchyRowsHTML += `
                 <tr style="${rowStyle}">
                     <td style="padding: 5px 9px; border: 1px solid rgba(10, 36, 88, 0.32); font-size: 12px; font-weight: 800; line-height: 1.15;">${level.position}</td>
@@ -4551,13 +4551,13 @@ async function showIDCard(name, phone, photo, positionLocation) {
         if (existing) existing.remove();
 
         document.body.insertAdjacentHTML("beforeend", modalHTML);
-        
+
         // Remove loading overlay
         const loadingOverlayToRemove = document.getElementById('idCardLoadingOverlay');
         if (loadingOverlayToRemove) {
             loadingOverlayToRemove.remove();
         }
-        
+
         new bootstrap.Modal(document.getElementById("idCardModal")).show();
 
     } catch (err) {
@@ -4579,7 +4579,7 @@ async function downloadIDCardAsImage(name) {
         alert('ID Card content not found. Please try again.');
         return;
     }
-    
+
     const imageRestores = [];
 
     const waitForImage = (img) => new Promise((resolve) => {
@@ -4628,26 +4628,29 @@ async function downloadIDCardAsImage(name) {
         svgImg.src = await convertSvgBlobToPngDataUrl(svgBlob);
         await waitForImage(svgImg);
     }
-    
+
     // Temporarily remove the scale transform to capture full-size image
     const originalTransform = element.style.transform;
     element.style.transform = 'none';
-    
+
     // Wait for browser to reflow
     await new Promise(resolve => setTimeout(resolve, 100));
     await Promise.all(Array.from(element.querySelectorAll('img')).map(waitForImage));
 
     try {
         // Get actual element dimensions - fixed at 540x772
+        const rect = element.getBoundingClientRect();
+        console.log("Element Size:", element.offsetWidth, element.offsetHeight);
         const canvas = await html2canvas(element, {
             scale: 2,
-            width: 540,
-            height: 772,
+            width: rect.width,
+            height: rect.height,
+            windowWidth: rect.width,
+            windowHeight: rect.height,
             backgroundColor: "#ffffff",
             useCORS: true,
-            windowHeight: 772,
-            scrollY: -window.scrollY,
-            scrollX: -window.scrollX
+            scrollX: 0,
+            scrollY: 0
         });
 
         const url = canvas.toDataURL("image/png");
@@ -4901,13 +4904,13 @@ async function openPromotion(userId, name, phone, photo, location, designation) 
             (hierData.hierarchy || []).forEach(level => {
                 const area = level.area || '';
                 switch (level.position) {
-                    case 'Zone':     if (!fullLocation.zone)     fullLocation.zone     = area; break;
-                    case 'State':    if (!fullLocation.state)    fullLocation.state    = area; break;
+                    case 'Zone': if (!fullLocation.zone) fullLocation.zone = area; break;
+                    case 'State': if (!fullLocation.state) fullLocation.state = area; break;
                     case 'Division': if (!fullLocation.division) fullLocation.division = area; break;
                     case 'District': if (!fullLocation.district) fullLocation.district = area; break;
-                    case 'Tehsil':   if (!fullLocation.tehsil)   fullLocation.tehsil   = area; break;
-                    case 'Pincode':  if (!fullLocation.pincode)  fullLocation.pincode  = area; break;
-                    case 'Village':  if (!fullLocation.village)  fullLocation.village  = area; break;
+                    case 'Tehsil': if (!fullLocation.tehsil) fullLocation.tehsil = area; break;
+                    case 'Pincode': if (!fullLocation.pincode) fullLocation.pincode = area; break;
+                    case 'Village': if (!fullLocation.village) fullLocation.village = area; break;
                 }
             });
             console.log('✅ Location enriched for promotion:', fullLocation);
@@ -4936,7 +4939,7 @@ async function openPromotion(userId, name, phone, photo, location, designation) 
 
 // Initialize forgot password on page load
 if (document.getElementById('forgotPasswordLink')) {
-    document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+    document.getElementById('forgotPasswordLink').addEventListener('click', function (e) {
         e.preventDefault();
         const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
         modal.show();
@@ -4948,17 +4951,17 @@ async function sendResetOTP() {
     const phone = document.getElementById('resetPhone').value.trim();
     const sendOtpBtn = document.getElementById('sendOtpBtn');
     const resetAlert = document.getElementById('resetAlert');
-    
+
     // Validate phone number
     if (!phone || phone.length !== 10 || !/^\d{10}$/.test(phone)) {
         showResetAlert('Please enter a valid 10-digit phone number', 'danger');
         return;
     }
-    
+
     // Show loading state
     sendOtpBtn.disabled = true;
     sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/users/forgot-password/request-otp`, {
             method: 'POST',
@@ -4967,17 +4970,17 @@ async function sendResetOTP() {
             },
             body: JSON.stringify({ phone })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             // Show OTP in console for development (remove in production)
             if (result._debug?.otp) {
                 console.log('🔐 Development OTP:', result._debug.otp);
             }
-            
+
             showResetAlert('OTP sent successfully to ' + phone, 'success');
-            
+
             // Switch to verify step
             setTimeout(() => {
                 document.getElementById('requestOtpStep').style.display = 'none';
@@ -5001,35 +5004,35 @@ async function sendResetOTP() {
 // Reset password with OTP verification
 async function resetPassword(event) {
     event.preventDefault();
-    
+
     const phone = document.getElementById('resetPhone').value.trim();
     const otp = document.getElementById('otpCode').value.trim();
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const resetBtn = document.getElementById('resetBtn');
-    
+
     // Validate passwords match
     if (newPassword !== confirmPassword) {
         showResetAlert('Passwords do not match', 'danger');
         return;
     }
-    
+
     // Validate password length
     if (newPassword.length < 6) {
         showResetAlert('Password must be at least 6 characters long', 'danger');
         return;
     }
-    
+
     // Validate OTP
     if (!otp || otp.length !== 6) {
         showResetAlert('Please enter a valid 6-digit OTP', 'danger');
         return;
     }
-    
+
     // Show loading state
     resetBtn.disabled = true;
     resetBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Resetting...';
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/users/forgot-password/reset`, {
             method: 'POST',
@@ -5042,18 +5045,18 @@ async function resetPassword(event) {
                 newPassword
             })
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             showResetAlert('Password reset successfully! Redirecting to login...', 'success');
-            
+
             // Close modal and clear fields after 2 seconds
             setTimeout(() => {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
                 modal.hide();
                 resetForgotPasswordForm();
-                
+
                 // Auto-fill phone in login if on login page
                 if (document.getElementById('phone')) {
                     document.getElementById('phone').value = phone;
@@ -5078,7 +5081,7 @@ function showResetAlert(message, type) {
     resetAlert.className = `alert alert-${type} mt-3`;
     resetAlert.textContent = message;
     resetAlert.style.display = 'block';
-    
+
     // Auto-hide success messages
     if (type === 'success') {
         setTimeout(() => {
@@ -5092,7 +5095,7 @@ function backToRequestOtp() {
     document.getElementById('verifyOtpStep').style.display = 'none';
     document.getElementById('requestOtpStep').style.display = 'block';
     document.getElementById('resetAlert').style.display = 'none';
-    
+
     // Re-enable send OTP button
     const sendOtpBtn = document.getElementById('sendOtpBtn');
     sendOtpBtn.disabled = false;
@@ -5108,12 +5111,12 @@ function resetForgotPasswordForm() {
     document.getElementById('requestOtpStep').style.display = 'block';
     document.getElementById('verifyOtpStep').style.display = 'none';
     document.getElementById('resetAlert').style.display = 'none';
-    
+
     // Reset buttons
     const sendOtpBtn = document.getElementById('sendOtpBtn');
     sendOtpBtn.disabled = false;
     sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
-    
+
     const resetBtn = document.getElementById('resetBtn');
     resetBtn.disabled = false;
     resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Reset Password';
