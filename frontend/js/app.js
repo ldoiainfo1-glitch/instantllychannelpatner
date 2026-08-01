@@ -4630,27 +4630,27 @@ async function downloadIDCardAsImage(name) {
     }
 
     // Temporarily remove the scale transform to capture full-size image
-    const originalTransform = element.style.transform;
-    element.style.transform = 'none';
 
     // Wait for browser to reflow
     await new Promise(resolve => setTimeout(resolve, 100));
     await Promise.all(Array.from(element.querySelectorAll('img')).map(waitForImage));
 
     try {
-        // Get actual element dimensions - fixed at 540x772
-        const rect = element.getBoundingClientRect();
-        console.log("Element Size:", element.offsetWidth, element.offsetHeight);
+        await Promise.all(Array.from(element.querySelectorAll("img")).map(waitForImage));
+
+        console.log("Bounding Rect:", element.getBoundingClientRect());
+        console.log("Client:", element.clientWidth, element.clientHeight);
+        console.log("Offset:", element.offsetWidth, element.offsetHeight);
+        console.log("Scroll:", element.scrollWidth, element.scrollHeight);
+        console.log(element.outerHTML);
+
         const canvas = await html2canvas(element, {
             scale: 2,
-            width: rect.width,
-            height: rect.height,
-            windowWidth: rect.width,
-            windowHeight: rect.height,
             backgroundColor: "#ffffff",
             useCORS: true,
             scrollX: 0,
-            scrollY: 0
+            scrollY: 0,
+            logging: true
         });
 
         const url = canvas.toDataURL("image/png");
@@ -4659,193 +4659,191 @@ async function downloadIDCardAsImage(name) {
         link.href = url;
         link.download = `ID_Card_${name}.png`;
         link.click();
+
     } finally {
-        element.style.transform = originalTransform;
         imageRestores.forEach(({ img, src }) => {
             img.src = src;
         });
     }
-}
 
+    // Download ID Card as PDF (landscape)
+    // async function downloadIDCard(name, phone, photo, personCode) {
+    //     try {
+    //         const element = document.getElementById('idCardContent');
 
-// Download ID Card as PDF (landscape)
-// async function downloadIDCard(name, phone, photo, personCode) {
-//     try {
-//         const element = document.getElementById('idCardContent');
+    //         if (!element) {
+    //             alert('ID Card content not found. Please try again.');
+    //             return;
+    //         }
 
-//         if (!element) {
-//             alert('ID Card content not found. Please try again.');
-//             return;
-//         }
+    //         // Show loading message
+    //         const downloadBtn = event.target;
+    //         const originalText = downloadBtn.innerHTML;
+    //         downloadBtn.disabled = true;
+    //         downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
 
-//         // Show loading message
-//         const downloadBtn = event.target;
-//         const originalText = downloadBtn.innerHTML;
-//         downloadBtn.disabled = true;
-//         downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating PDF...';
+    //         console.log('🎨 Starting PDF generation...');
+    //         console.log('📋 Name:', name, 'Phone:', phone, 'Partner ID:', personCode);
 
-//         console.log('🎨 Starting PDF generation...');
-//         console.log('📋 Name:', name, 'Phone:', phone, 'Partner ID:', personCode);
+    //         // Convert all images to base64 to avoid CORS issues
+    //         const images = element.querySelectorAll('img');
+    //         console.log('🖼️ Found', images.length, 'images to process');
 
-//         // Convert all images to base64 to avoid CORS issues
-//         const images = element.querySelectorAll('img');
-//         console.log('🖼️ Found', images.length, 'images to process');
+    //         for (let i = 0; i < images.length; i++) {
+    //             const img = images[i];
+    //             console.log(`🔄 Processing image ${i + 1}:`, img.src.substring(0, 50) + '...');
 
-//         for (let i = 0; i < images.length; i++) {
-//             const img = images[i];
-//             console.log(`🔄 Processing image ${i + 1}:`, img.src.substring(0, 50) + '...');
+    //             try {
+    //                 // If it's already base64, skip
+    //                 if (img.src.startsWith('data:')) {
+    //                     console.log(`✓ Image ${i + 1} already base64`);
+    //                     continue;
+    //                 }
 
-//             try {
-//                 // If it's already base64, skip
-//                 if (img.src.startsWith('data:')) {
-//                     console.log(`✓ Image ${i + 1} already base64`);
-//                     continue;
-//                 }
+    //                 // Convert to base64
+    //                 const canvas = document.createElement('canvas');
+    //                 const ctx = canvas.getContext('2d');
 
-//                 // Convert to base64
-//                 const canvas = document.createElement('canvas');
-//                 const ctx = canvas.getContext('2d');
+    //                 // Wait for image to load
+    //                 await new Promise((resolve, reject) => {
+    //                     if (img.complete && img.naturalWidth > 0) {
+    //                         resolve();
+    //                     } else {
+    //                         img.onload = () => resolve();
+    //                         img.onerror = () => reject(new Error('Image failed to load'));
+    //                         setTimeout(() => reject(new Error('Image load timeout')), 5000);
+    //                     }
+    //                 });
 
-//                 // Wait for image to load
-//                 await new Promise((resolve, reject) => {
-//                     if (img.complete && img.naturalWidth > 0) {
-//                         resolve();
-//                     } else {
-//                         img.onload = () => resolve();
-//                         img.onerror = () => reject(new Error('Image failed to load'));
-//                         setTimeout(() => reject(new Error('Image load timeout')), 5000);
-//                     }
-//                 });
+    //                 canvas.width = img.naturalWidth || img.width;
+    //                 canvas.height = img.naturalHeight || img.height;
+    //                 ctx.drawImage(img, 0, 0);
 
-//                 canvas.width = img.naturalWidth || img.width;
-//                 canvas.height = img.naturalHeight || img.height;
-//                 ctx.drawImage(img, 0, 0);
+    //                 // Convert to base64
+    //                 const base64 = canvas.toDataURL('image/jpeg', 0.95);
+    //                 img.src = base64;
+    //                 console.log(`✅ Image ${i + 1} converted to base64 (${base64.length} chars)`);
 
-//                 // Convert to base64
-//                 const base64 = canvas.toDataURL('image/jpeg', 0.95);
-//                 img.src = base64;
-//                 console.log(`✅ Image ${i + 1} converted to base64 (${base64.length} chars)`);
+    //             } catch (imgError) {
+    //                 console.warn(`⚠️ Failed to convert image ${i + 1}:`, imgError.message);
+    //                 // Use placeholder for failed images
+    //                 img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4=';
+    //             }
+    //         }
 
-//             } catch (imgError) {
-//                 console.warn(`⚠️ Failed to convert image ${i + 1}:`, imgError.message);
-//                 // Use placeholder for failed images
-//                 img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTUwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDE1MCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzUiIGN5PSI3NSIgcj0iNzUiIGZpbGw9IiNlMmU4ZjAiLz48L3N2Zz4=';
-//             }
-//         }
+    //         console.log('⏳ Waiting for DOM to settle...');
+    //         await new Promise(resolve => setTimeout(resolve, 1500));
 
-//         console.log('⏳ Waiting for DOM to settle...');
-//         await new Promise(resolve => setTimeout(resolve, 1500));
+    //         console.log('📄 Generating PDF with html2pdf...');
 
-//         console.log('📄 Generating PDF with html2pdf...');
+    //         // Standard ID card size: 90mm × 54mm
+    //         // At 300 DPI: 1063px × 638px
+    //         // We'll use half scale for reasonable file size: 850px × 510px
+    //         const opt = {
+    //             margin: 0,
+    //             filename: `ID_Card_${name.replace(/\s+/g, '_')}_${Date.now()}.pdf`,
+    //             image: { type: 'jpeg', quality: 1.0 },
+    //             html2canvas: { 
+    //                 scale: 2,
+    //                 useCORS: true,
+    //                 allowTaint: true,
+    //                 logging: true,
+    //                 letterRendering: true,
+    //                 imageTimeout: 0,
+    //                 backgroundColor: null,
+    //                 removeContainer: true,
+    //                 scrollY: 0,
+    //                 scrollX: 0,
+    //                 width: 850,
+    //                 height: 510
+    //             },
+    //             jsPDF: { 
+    //                 unit: 'mm',
+    //                 format: [90, 54],
+    //                 orientation: 'landscape'
+    //             },
+    //             pagebreak: { mode: 'avoid-all' }
+    //         };
 
-//         // Standard ID card size: 90mm × 54mm
-//         // At 300 DPI: 1063px × 638px
-//         // We'll use half scale for reasonable file size: 850px × 510px
-//         const opt = {
-//             margin: 0,
-//             filename: `ID_Card_${name.replace(/\s+/g, '_')}_${Date.now()}.pdf`,
-//             image: { type: 'jpeg', quality: 1.0 },
-//             html2canvas: { 
-//                 scale: 2,
-//                 useCORS: true,
-//                 allowTaint: true,
-//                 logging: true,
-//                 letterRendering: true,
-//                 imageTimeout: 0,
-//                 backgroundColor: null,
-//                 removeContainer: true,
-//                 scrollY: 0,
-//                 scrollX: 0,
-//                 width: 850,
-//                 height: 510
-//             },
-//             jsPDF: { 
-//                 unit: 'mm',
-//                 format: [90, 54],
-//                 orientation: 'landscape'
-//             },
-//             pagebreak: { mode: 'avoid-all' }
-//         };
+    //         // Generate PDF
+    //         const worker = html2pdf().set(opt).from(element);
+    //         await worker.save();
 
-//         // Generate PDF
-//         const worker = html2pdf().set(opt).from(element);
-//         await worker.save();
+    //         console.log('✅ PDF generated and downloaded successfully!');
 
-//         console.log('✅ PDF generated and downloaded successfully!');
+    //         // Restore button
+    //         downloadBtn.disabled = false;
+    //         downloadBtn.innerHTML = originalText;
 
-//         // Restore button
-//         downloadBtn.disabled = false;
-//         downloadBtn.innerHTML = originalText;
+    //         // Show success notification
+    //         showNotification('ID Card PDF downloaded successfully!', 'success');
 
-//         // Show success notification
-//         showNotification('ID Card PDF downloaded successfully!', 'success');
+    //     } catch (error) {
+    //         console.error('❌ Error downloading ID card:', error);
+    //         console.error('Error stack:', error.stack);
 
-//     } catch (error) {
-//         console.error('❌ Error downloading ID card:', error);
-//         console.error('Error stack:', error.stack);
+    //         alert('❌ Error downloading ID card: ' + error.message + '\n\nPlease check:\n1. Images are loading properly\n2. Browser console for detailed errors\n3. Try again after refreshing the page');
 
-//         alert('❌ Error downloading ID card: ' + error.message + '\n\nPlease check:\n1. Images are loading properly\n2. Browser console for detailed errors\n3. Try again after refreshing the page');
+    //         // Restore button if error occurs
+    //         if (event && event.target) {
+    //             event.target.disabled = false;
+    //             event.target.innerHTML = '<i class="fas fa-download me-2"></i>Download as PDF';
+    //         }
+    //     }
+    // }
 
-//         // Restore button if error occurs
-//         if (event && event.target) {
-//             event.target.disabled = false;
-//             event.target.innerHTML = '<i class="fas fa-download me-2"></i>Download as PDF';
-//         }
-//     }
-// }
+    // Phone number search for referral dropdown
+    let searchTimeout;
+    document.addEventListener('DOMContentLoaded', function () {
+        const introducedByInput = document.getElementById('introducedBy');
+        const dropdown = document.getElementById('referralDropdown');
 
-// Phone number search for referral dropdown
-let searchTimeout;
-document.addEventListener('DOMContentLoaded', function () {
-    const introducedByInput = document.getElementById('introducedBy');
-    const dropdown = document.getElementById('referralDropdown');
+        if (introducedByInput && dropdown) {
+            // Hide dropdown when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!introducedByInput.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
 
-    if (introducedByInput && dropdown) {
-        // Hide dropdown when clicking outside
-        document.addEventListener('click', function (e) {
-            if (!introducedByInput.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
-        });
+            // Search as user types
+            introducedByInput.addEventListener('input', async function (e) {
+                const searchTerm = e.target.value.trim();
 
-        // Search as user types
-        introducedByInput.addEventListener('input', async function (e) {
-            const searchTerm = e.target.value.trim();
+                // Clear previous timeout
+                clearTimeout(searchTimeout);
 
-            // Clear previous timeout
-            clearTimeout(searchTimeout);
+                // Hide dropdown if search is empty or too short
+                if (searchTerm.length < 2) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
 
-            // Hide dropdown if search is empty or too short
-            if (searchTerm.length < 2) {
-                dropdown.style.display = 'none';
-                return;
-            }
+                // Debounce search
+                searchTimeout = setTimeout(async () => {
+                    try {
+                        // Search users by phone prefix
+                        const response = await fetch(`${API_BASE_URL}/admin/search-users`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ phonePrefix: searchTerm })
+                        });
 
-            // Debounce search
-            searchTimeout = setTimeout(async () => {
-                try {
-                    // Search users by phone prefix
-                    const response = await fetch(`${API_BASE_URL}/admin/search-users`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ phonePrefix: searchTerm })
-                    });
+                        if (!response.ok) {
+                            console.error('Failed to search users');
+                            return;
+                        }
 
-                    if (!response.ok) {
-                        console.error('Failed to search users');
-                        return;
-                    }
+                        const data = await response.json();
+                        const users = data.users || [];
 
-                    const data = await response.json();
-                    const users = data.users || [];
+                        if (users.length === 0) {
+                            dropdown.style.display = 'none';
+                            return;
+                        }
 
-                    if (users.length === 0) {
-                        dropdown.style.display = 'none';
-                        return;
-                    }
-
-                    // Build dropdown HTML
-                    const dropdownHTML = users.map(user => `
+                        // Build dropdown HTML
+                        const dropdownHTML = users.map(user => `
                         <a href="#" class="dropdown-item py-2" onclick="selectReferrer('${user.phone}', '${(user.name || 'Unknown').replace(/'/g, "\\'")}'); return false;">
                             <div>
                                 <strong>+91 ${user.phone}</strong>
@@ -4854,276 +4852,276 @@ document.addEventListener('DOMContentLoaded', function () {
                         </a>
                     `).join('');
 
-                    dropdown.innerHTML = dropdownHTML;
-                    dropdown.style.display = 'block';
-                    dropdown.style.position = 'absolute';
-                    dropdown.style.zIndex = '1000';
+                        dropdown.innerHTML = dropdownHTML;
+                        dropdown.style.display = 'block';
+                        dropdown.style.position = 'absolute';
+                        dropdown.style.zIndex = '1000';
 
-                } catch (error) {
-                    console.error('Error searching users:', error);
-                    dropdown.style.display = 'none';
-                }
-            }, 300);
-        });
-    }
-});
-
-// Select referrer from dropdown
-function selectReferrer(phone, name) {
-    const introducedByInput = document.getElementById('introducedBy');
-    const dropdown = document.getElementById('referralDropdown');
-
-    if (introducedByInput) {
-        introducedByInput.value = phone;
-        introducedByInput.setAttribute('data-referrer-name', name);
-    }
-
-    if (dropdown) {
-        dropdown.style.display = 'none';
-    }
-}
-
-// Open Promotion Page with sessionStorage (avoids URI_TOO_LONG error)
-async function openPromotion(userId, name, phone, photo, location, designation) {
-    // Fetch full hierarchy from API (same as ID card) to get complete location data
-    let fullLocation = {
-        country: location?.country || 'India',
-        zone: location?.zone || '',
-        state: location?.state || '',
-        division: location?.division || '',
-        district: location?.district || '',
-        tehsil: location?.tehsil || '',
-        pincode: location?.pincode || '',
-        village: location?.village || ''
-    };
-
-    try {
-        const hierResp = await fetch(`${API_BASE_URL}/dynamic-positions/hierarchy/${phone}`);
-        if (hierResp.ok) {
-            const hierData = await hierResp.json();
-            (hierData.hierarchy || []).forEach(level => {
-                const area = level.area || '';
-                switch (level.position) {
-                    case 'Zone': if (!fullLocation.zone) fullLocation.zone = area; break;
-                    case 'State': if (!fullLocation.state) fullLocation.state = area; break;
-                    case 'Division': if (!fullLocation.division) fullLocation.division = area; break;
-                    case 'District': if (!fullLocation.district) fullLocation.district = area; break;
-                    case 'Tehsil': if (!fullLocation.tehsil) fullLocation.tehsil = area; break;
-                    case 'Pincode': if (!fullLocation.pincode) fullLocation.pincode = area; break;
-                    case 'Village': if (!fullLocation.village) fullLocation.village = area; break;
-                }
+                    } catch (error) {
+                        console.error('Error searching users:', error);
+                        dropdown.style.display = 'none';
+                    }
+                }, 300);
             });
-            console.log('✅ Location enriched for promotion:', fullLocation);
         }
-    } catch (e) {
-        console.warn('⚠️ Could not fetch hierarchy for promotion, using position data:', e);
-    }
-
-    const promotionData = {
-        userId: userId,
-        name: name,
-        phone: phone,
-        photo: photo,
-        ...fullLocation,
-        designation: designation
-    };
-
-    console.log('📦 Storing promotion data in sessionStorage:', promotionData);
-    sessionStorage.setItem('promotionData', JSON.stringify(promotionData));
-    window.location.href = 'promotion.html';
-}
-
-// ====================================
-// FORGOT PASSWORD FUNCTIONALITY
-// ====================================
-
-// Initialize forgot password on page load
-if (document.getElementById('forgotPasswordLink')) {
-    document.getElementById('forgotPasswordLink').addEventListener('click', function (e) {
-        e.preventDefault();
-        const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
-        modal.show();
     });
-}
 
-// Send OTP for password reset
-async function sendResetOTP() {
-    const phone = document.getElementById('resetPhone').value.trim();
-    const sendOtpBtn = document.getElementById('sendOtpBtn');
-    const resetAlert = document.getElementById('resetAlert');
+    // Select referrer from dropdown
+    function selectReferrer(phone, name) {
+        const introducedByInput = document.getElementById('introducedBy');
+        const dropdown = document.getElementById('referralDropdown');
 
-    // Validate phone number
-    if (!phone || phone.length !== 10 || !/^\d{10}$/.test(phone)) {
-        showResetAlert('Please enter a valid 10-digit phone number', 'danger');
-        return;
+        if (introducedByInput) {
+            introducedByInput.value = phone;
+            introducedByInput.setAttribute('data-referrer-name', name);
+        }
+
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
     }
 
-    // Show loading state
-    sendOtpBtn.disabled = true;
-    sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+    // Open Promotion Page with sessionStorage (avoids URI_TOO_LONG error)
+    async function openPromotion(userId, name, phone, photo, location, designation) {
+        // Fetch full hierarchy from API (same as ID card) to get complete location data
+        let fullLocation = {
+            country: location?.country || 'India',
+            zone: location?.zone || '',
+            state: location?.state || '',
+            division: location?.division || '',
+            district: location?.district || '',
+            tehsil: location?.tehsil || '',
+            pincode: location?.pincode || '',
+            village: location?.village || ''
+        };
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/forgot-password/request-otp`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ phone })
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            // Show OTP in console for development (remove in production)
-            if (result._debug?.otp) {
-                console.log('🔐 Development OTP:', result._debug.otp);
+        try {
+            const hierResp = await fetch(`${API_BASE_URL}/dynamic-positions/hierarchy/${phone}`);
+            if (hierResp.ok) {
+                const hierData = await hierResp.json();
+                (hierData.hierarchy || []).forEach(level => {
+                    const area = level.area || '';
+                    switch (level.position) {
+                        case 'Zone': if (!fullLocation.zone) fullLocation.zone = area; break;
+                        case 'State': if (!fullLocation.state) fullLocation.state = area; break;
+                        case 'Division': if (!fullLocation.division) fullLocation.division = area; break;
+                        case 'District': if (!fullLocation.district) fullLocation.district = area; break;
+                        case 'Tehsil': if (!fullLocation.tehsil) fullLocation.tehsil = area; break;
+                        case 'Pincode': if (!fullLocation.pincode) fullLocation.pincode = area; break;
+                        case 'Village': if (!fullLocation.village) fullLocation.village = area; break;
+                    }
+                });
+                console.log('✅ Location enriched for promotion:', fullLocation);
             }
+        } catch (e) {
+            console.warn('⚠️ Could not fetch hierarchy for promotion, using position data:', e);
+        }
 
-            showResetAlert('OTP sent successfully to ' + phone, 'success');
+        const promotionData = {
+            userId: userId,
+            name: name,
+            phone: phone,
+            photo: photo,
+            ...fullLocation,
+            designation: designation
+        };
 
-            // Switch to verify step
-            setTimeout(() => {
-                document.getElementById('requestOtpStep').style.display = 'none';
-                document.getElementById('verifyOtpStep').style.display = 'block';
-                document.getElementById('sentToPhone').textContent = phone;
-                resetAlert.style.display = 'none';
-            }, 1500);
-        } else {
-            showResetAlert(result.error || 'Failed to send OTP', 'danger');
+        console.log('📦 Storing promotion data in sessionStorage:', promotionData);
+        sessionStorage.setItem('promotionData', JSON.stringify(promotionData));
+        window.location.href = 'promotion.html';
+    }
+
+    // ====================================
+    // FORGOT PASSWORD FUNCTIONALITY
+    // ====================================
+
+    // Initialize forgot password on page load
+    if (document.getElementById('forgotPasswordLink')) {
+        document.getElementById('forgotPasswordLink').addEventListener('click', function (e) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('forgotPasswordModal'));
+            modal.show();
+        });
+    }
+
+    // Send OTP for password reset
+    async function sendResetOTP() {
+        const phone = document.getElementById('resetPhone').value.trim();
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const resetAlert = document.getElementById('resetAlert');
+
+        // Validate phone number
+        if (!phone || phone.length !== 10 || !/^\d{10}$/.test(phone)) {
+            showResetAlert('Please enter a valid 10-digit phone number', 'danger');
+            return;
+        }
+
+        // Show loading state
+        sendOtpBtn.disabled = true;
+        sendOtpBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/forgot-password/request-otp`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ phone })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Show OTP in console for development (remove in production)
+                if (result._debug?.otp) {
+                    console.log('🔐 Development OTP:', result._debug.otp);
+                }
+
+                showResetAlert('OTP sent successfully to ' + phone, 'success');
+
+                // Switch to verify step
+                setTimeout(() => {
+                    document.getElementById('requestOtpStep').style.display = 'none';
+                    document.getElementById('verifyOtpStep').style.display = 'block';
+                    document.getElementById('sentToPhone').textContent = phone;
+                    resetAlert.style.display = 'none';
+                }, 1500);
+            } else {
+                showResetAlert(result.error || 'Failed to send OTP', 'danger');
+                sendOtpBtn.disabled = false;
+                sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
+            }
+        } catch (error) {
+            console.error('❌ Error sending OTP:', error);
+            showResetAlert('Network error. Please try again.', 'danger');
             sendOtpBtn.disabled = false;
             sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
         }
-    } catch (error) {
-        console.error('❌ Error sending OTP:', error);
-        showResetAlert('Network error. Please try again.', 'danger');
-        sendOtpBtn.disabled = false;
-        sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
-    }
-}
-
-// Reset password with OTP verification
-async function resetPassword(event) {
-    event.preventDefault();
-
-    const phone = document.getElementById('resetPhone').value.trim();
-    const otp = document.getElementById('otpCode').value.trim();
-    const newPassword = document.getElementById('newPassword').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const resetBtn = document.getElementById('resetBtn');
-
-    // Validate passwords match
-    if (newPassword !== confirmPassword) {
-        showResetAlert('Passwords do not match', 'danger');
-        return;
     }
 
-    // Validate password length
-    if (newPassword.length < 6) {
-        showResetAlert('Password must be at least 6 characters long', 'danger');
-        return;
-    }
+    // Reset password with OTP verification
+    async function resetPassword(event) {
+        event.preventDefault();
 
-    // Validate OTP
-    if (!otp || otp.length !== 6) {
-        showResetAlert('Please enter a valid 6-digit OTP', 'danger');
-        return;
-    }
+        const phone = document.getElementById('resetPhone').value.trim();
+        const otp = document.getElementById('otpCode').value.trim();
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const resetBtn = document.getElementById('resetBtn');
 
-    // Show loading state
-    resetBtn.disabled = true;
-    resetBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Resetting...';
+        // Validate passwords match
+        if (newPassword !== confirmPassword) {
+            showResetAlert('Passwords do not match', 'danger');
+            return;
+        }
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/users/forgot-password/reset`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                phone,
-                otp,
-                newPassword
-            })
-        });
+        // Validate password length
+        if (newPassword.length < 6) {
+            showResetAlert('Password must be at least 6 characters long', 'danger');
+            return;
+        }
 
-        const result = await response.json();
+        // Validate OTP
+        if (!otp || otp.length !== 6) {
+            showResetAlert('Please enter a valid 6-digit OTP', 'danger');
+            return;
+        }
 
-        if (result.success) {
-            showResetAlert('Password reset successfully! Redirecting to login...', 'success');
+        // Show loading state
+        resetBtn.disabled = true;
+        resetBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Resetting...';
 
-            // Close modal and clear fields after 2 seconds
-            setTimeout(() => {
-                const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
-                modal.hide();
-                resetForgotPasswordForm();
+        try {
+            const response = await fetch(`${API_BASE_URL}/users/forgot-password/reset`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    phone,
+                    otp,
+                    newPassword
+                })
+            });
 
-                // Auto-fill phone in login if on login page
-                if (document.getElementById('phone')) {
-                    document.getElementById('phone').value = phone;
-                }
-            }, 2000);
-        } else {
-            showResetAlert(result.error || 'Failed to reset password', 'danger');
+            const result = await response.json();
+
+            if (result.success) {
+                showResetAlert('Password reset successfully! Redirecting to login...', 'success');
+
+                // Close modal and clear fields after 2 seconds
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('forgotPasswordModal'));
+                    modal.hide();
+                    resetForgotPasswordForm();
+
+                    // Auto-fill phone in login if on login page
+                    if (document.getElementById('phone')) {
+                        document.getElementById('phone').value = phone;
+                    }
+                }, 2000);
+            } else {
+                showResetAlert(result.error || 'Failed to reset password', 'danger');
+                resetBtn.disabled = false;
+                resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Reset Password';
+            }
+        } catch (error) {
+            console.error('❌ Error resetting password:', error);
+            showResetAlert('Network error. Please try again.', 'danger');
             resetBtn.disabled = false;
             resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Reset Password';
         }
-    } catch (error) {
-        console.error('❌ Error resetting password:', error);
-        showResetAlert('Network error. Please try again.', 'danger');
+    }
+
+    // Show alert in forgot password modal
+    function showResetAlert(message, type) {
+        const resetAlert = document.getElementById('resetAlert');
+        resetAlert.className = `alert alert-${type} mt-3`;
+        resetAlert.textContent = message;
+        resetAlert.style.display = 'block';
+
+        // Auto-hide success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                resetAlert.style.display = 'none';
+            }, 3000);
+        }
+    }
+
+    // Back to request OTP step
+    function backToRequestOtp() {
+        document.getElementById('verifyOtpStep').style.display = 'none';
+        document.getElementById('requestOtpStep').style.display = 'block';
+        document.getElementById('resetAlert').style.display = 'none';
+
+        // Re-enable send OTP button
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        sendOtpBtn.disabled = false;
+        sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
+    }
+
+    // Reset forgot password form
+    function resetForgotPasswordForm() {
+        document.getElementById('resetPhone').value = '';
+        document.getElementById('otpCode').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        document.getElementById('requestOtpStep').style.display = 'block';
+        document.getElementById('verifyOtpStep').style.display = 'none';
+        document.getElementById('resetAlert').style.display = 'none';
+
+        // Reset buttons
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        sendOtpBtn.disabled = false;
+        sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
+
+        const resetBtn = document.getElementById('resetBtn');
         resetBtn.disabled = false;
         resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Reset Password';
     }
-}
 
-// Show alert in forgot password modal
-function showResetAlert(message, type) {
-    const resetAlert = document.getElementById('resetAlert');
-    resetAlert.className = `alert alert-${type} mt-3`;
-    resetAlert.textContent = message;
-    resetAlert.style.display = 'block';
-
-    // Auto-hide success messages
-    if (type === 'success') {
-        setTimeout(() => {
-            resetAlert.style.display = 'none';
-        }, 3000);
+    // Reset form when modal is closed
+    if (document.getElementById('forgotPasswordModal')) {
+        document.getElementById('forgotPasswordModal').addEventListener('hidden.bs.modal', resetForgotPasswordForm);
     }
 }
-
-// Back to request OTP step
-function backToRequestOtp() {
-    document.getElementById('verifyOtpStep').style.display = 'none';
-    document.getElementById('requestOtpStep').style.display = 'block';
-    document.getElementById('resetAlert').style.display = 'none';
-
-    // Re-enable send OTP button
-    const sendOtpBtn = document.getElementById('sendOtpBtn');
-    sendOtpBtn.disabled = false;
-    sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
-}
-
-// Reset forgot password form
-function resetForgotPasswordForm() {
-    document.getElementById('resetPhone').value = '';
-    document.getElementById('otpCode').value = '';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-    document.getElementById('requestOtpStep').style.display = 'block';
-    document.getElementById('verifyOtpStep').style.display = 'none';
-    document.getElementById('resetAlert').style.display = 'none';
-
-    // Reset buttons
-    const sendOtpBtn = document.getElementById('sendOtpBtn');
-    sendOtpBtn.disabled = false;
-    sendOtpBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Send OTP';
-
-    const resetBtn = document.getElementById('resetBtn');
-    resetBtn.disabled = false;
-    resetBtn.innerHTML = '<i class="fas fa-check me-2"></i>Reset Password';
-}
-
-// Reset form when modal is closed
-if (document.getElementById('forgotPasswordModal')) {
-    document.getElementById('forgotPasswordModal').addEventListener('hidden.bs.modal', resetForgotPasswordForm);
-}
-
