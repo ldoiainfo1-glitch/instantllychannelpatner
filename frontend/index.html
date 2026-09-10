@@ -481,7 +481,7 @@
     'use strict';
 
     // Public, approved-only endpoint — verified safe (no pending/private data returned).
-    const PNT_API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
+    const PNT_API_BASE_URL = '/api';
     const PNT_ROOT_BATCH = 10;   // how many top-level partners render per "page"
     const PNT_CACHE_KEY = 'pnt_network_cache_v1';
     const PNT_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes — bump this if referrals change rarely
@@ -1880,7 +1880,7 @@
             try {
                 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
                     ? 'http://localhost:5000/api'
-                    : 'https://api.channel-partner.instantllycards.com/api';
+                    : '/api';
                 
                 console.log('📊 Loading position statistics...');
                 
@@ -1992,7 +1992,7 @@
 
         // Get filtered statistics based on location filters
         async function getFilteredStatistics(filters, statsData, locationsData) {
-            const API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
+            const API_BASE_URL = '/api';
             const givenPositions = statsData.givenPositions || {};
             
             // Check if any meaningful filter is selected (excluding just 'country: India')
@@ -2245,7 +2245,7 @@
                 console.log(`🔍 Fetching approved applications for level: ${positionLevel}`);
                 
                 // Fetch approved applications directly (same endpoint used for statistics)
-                const API_BASE_URL = 'https://api.channel-partner.instantllycards.com/api';
+                const API_BASE_URL = '/api';
                 const response = await fetch(`${API_BASE_URL}/applications?status=approved`);
                 
                 if (!response.ok) {

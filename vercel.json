@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://instantlly-cards-backend-6ki0.onrender.com/api/$1"
+      "destination": "http://54.226.18.187:5000/api/$1"
     }
   ],
   "headers": [

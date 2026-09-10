@@ -2,7 +2,7 @@
 class VideoManager {
     constructor() {
         // Use the backend API URL
-        this.baseURL = 'https://api.channel-partner.instantllycards.com';
+        this.baseURL = '';
     }
 
     // Show fallback message
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const videoManager = new VideoManager();
     
     // Check if API is available before initializing
-    fetch('https://api.channel-partner.instantllycards.com/health')
+    fetch('/api/health')
         .then(response => {
             if (response.ok) {
                 videoManager.init();
