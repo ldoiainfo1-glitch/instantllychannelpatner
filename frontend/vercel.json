@@ -26,6 +26,10 @@
     {
       "source": "/.well-known/assetlinks.json",
       "destination": "/.well-known/assetlinks.json"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "http://54.226.18.187:5000/api/$1"
     }
   ],
   "headers": [
