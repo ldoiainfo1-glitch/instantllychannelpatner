@@ -238,6 +238,7 @@ const positionsRoutes = require('../api/routes/positions');
 const paymentsRoutes = require('../api/routes/payments');
 const pricingManagerRoutes = require('../api/routes/pricing-manager');
 const loginHelpRoutes = require('../api/routes/login-help');
+const adminAuthRoutes = require('../api/routes/admin-auth');
 
 // Routes
 app.use('/api/positions', positionsRoutes); // Add positions route FIRST for photo fix
@@ -245,6 +246,7 @@ app.use('/api/pricing-manager', pricingManagerRoutes); // Dynamic Pricing & Cred
 app.use('/api/dynamic-positions', dynamicPositionsRoutes);
 app.use('/api/applications', applicationsRoutes);
 app.use('/api/locations', locationsRoutes);
+app.use('/api/admin-auth', adminAuthRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/video', videoRoutes);
 app.use('/api/users', usersRoutes);
