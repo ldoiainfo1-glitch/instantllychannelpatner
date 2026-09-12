@@ -271,10 +271,12 @@ router.get('/', async (req, res) => {
     if (introducedBy) applicationFilter.introducedBy = introducedBy;
     
     // Get all applications from applications collection (no position population needed)
+    // maxTimeMS prevents an indefinite hang (and resulting 502 from the Vercel proxy) if the query is slow
     const applications = await Application.find(applicationFilter)
       .lean()
       .limit(500)
-      .sort({ appliedDate: -1 });
+      .sort({ appliedDate: -1 })
+      .maxTimeMS(15000);
     
     console.log(`📊 Found ${applications.length} applications in database`);
 

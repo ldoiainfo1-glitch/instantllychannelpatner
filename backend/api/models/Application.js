@@ -89,7 +89,8 @@ const applicationSchema = new mongoose.Schema({
   },
   introducedBy: {
     type: String,
-    default: 'Self'
+    default: 'Self',
+    index: true // Add index - frequently filtered on for referral lookups
   },
   // Payment information
   payment: {
@@ -112,7 +113,8 @@ const applicationSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
+    default: 'pending',
+    index: true // Add index - status is a common query filter
   },
   creditsAllocated: {
     type: Boolean,
