@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "http://54.224.225.21:5000/api/$1"
+      "destination": "http://75.101.245.92:5000/api/$1"
     }
   ],
   "headers": [
