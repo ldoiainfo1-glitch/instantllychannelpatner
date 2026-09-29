@@ -260,7 +260,8 @@ router.get('/', async (req, res) => {
       tehsil, 
       pincode, 
       village,
-      introducedBy 
+      introducedBy,
+      includePhoto
     } = req.query;
     
     console.log('📋 Loading applications with filters:', { status, country, zone, state, division, district, tehsil, pincode, village, introducedBy });
@@ -270,9 +271,15 @@ router.get('/', async (req, res) => {
     if (status) applicationFilter.status = status;
     if (introducedBy) applicationFilter.introducedBy = introducedBy;
     
+    // Unfiltered/large result sets embed a base64 photo per applicant which can balloon the
+    // response past 100MB and trip Vercel's proxy size/time limits (causing 502s). Only
+    // include photos when the caller explicitly opts in or is fetching a small, filtered set.
+    const shouldIncludePhoto = includePhoto === 'true' || !!introducedBy;
+    const projection = shouldIncludePhoto ? null : '-applicantInfo.photo';
+
     // Get all applications from applications collection (no position population needed)
     // maxTimeMS prevents an indefinite hang (and resulting 502 from the Vercel proxy) if the query is slow
-    const applications = await Application.find(applicationFilter)
+    const applications = await Application.find(applicationFilter, projection)
       .lean()
       .limit(500)
       .sort({ appliedDate: -1 })
