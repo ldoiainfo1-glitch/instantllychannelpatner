@@ -4,7 +4,7 @@
   "description": "Backend for Instantly Cards Channel Partner Application System",
   "main": "server/index.js",
   "scripts": {
-    "start": "node --max-old-space-size=460 server/index.js",
+    "start": "node --max-old-space-size=1400 server/index.js",
     "dev": "nodemon server/index.js",
     "import-csv": "node import-positions-from-csv.js",
     "create-indexes": "node utils/createIndexes.js",
